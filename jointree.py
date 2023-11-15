@@ -1,17 +1,19 @@
 from treenode import *
+from enumsType import *
 
 class Edge:
+    _id = 0
     def __init__(self, node1: TreeNode, node2: TreeNode) -> None:
-        self.src = node1
-        self.dst = node2
-        self._id = 0
+        self.src = node1    # parent
+        self.dst = node2    # chilren
+        self.id = Edge._id
         self._addId
     
     @property
-    def _addId(self): self._id += 1
+    def _addId(self): Edge._id += 1
     
     @property
-    def getId(self): return self._id
+    def getId(self): return self.id
     
     def __str__(self) -> str:
         return self.src.getNodeAlias + str('->') + self.dst.getNodeAlias
@@ -42,8 +44,11 @@ class JoinTree:
         node: TreeNode = self.node[id]
         return node.getNodeAlias
     
-    def getNode(self, id: int):
+    def getNode(self, id: int) -> TreeNode:
         return self.node[id]
+    
+    def getRelations(self) -> dict[int, Edge]:
+        return self.edge
     
     def findNode(self, id: int):            # test whether already added, nodeId set
         if self.node.get(id, False):
@@ -66,3 +71,9 @@ class JoinTree:
         edge.src.children.append(edge.dst)
         edge.dst.parent = edge.src
         self.edge[edge.getId] = edge   
+        
+    def removeEdge(self, edge: Edge):
+        self.edge.pop(edge.getId)
+        parent = edge.src
+        child = edge.dst
+        parent.removeChild(child)

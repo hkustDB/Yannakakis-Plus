@@ -1,14 +1,6 @@
-from enum import Enum
-
-"""
-All relations: TableScanRelation, TableAggRelation, AggregatedRelation, AuxiliaryRelation, BagRelation
-"""
-class RelationType(Enum):
-    TableScanRelation = 0
-    TableAggRelation = 1
-    AggregatedRelation = 2
-    AuxiliaryRelation = 3
-    BagRelation = 4
+from enumsType import *
+from reduce import *
+from enumerate import *
 
 class TreeNode:
     def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str):
@@ -23,6 +15,8 @@ class TreeNode:
         
         self.estimateSize = -1      # estimate relation size
         self.relationType = None
+        self.ReducePhase = None     # Attach reduce information to the node
+        self.EnumeratePhase = None  # Attach enumerate information to the node
     
     @property
     def getcol2vars(self): 
@@ -44,6 +38,9 @@ class TreeNode:
     def depth(self):
         return 1 + max([0] + [c.depth for c in self.children])
     
+    def removeChild(self, child):
+        self.children.remove(child)
+    
     def __repr__(self) -> str:
         return 'TreeNode[' + str(self.id) + ']: ' + self.alias
     
@@ -51,6 +48,12 @@ class TreeNode:
         ret = str(self.id) + str('\n') + str(self.source) + str('\n') + str(self.cols)
         ret += str('\n') + str(self.alias) + str('\n') + str(self.col2vars)
         return ret
+    
+    def setReducePhase(self, reducePhase: ReducePhase):
+        self.ReducePhase = reducePhase
+        
+    def setEnumeratePhase(self, enumeratePhase: EnumeratePhase):
+        self.EnumeratePhase = enumeratePhase
 
 class AuxTreeNode(TreeNode):
     def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, supRelationId: int):

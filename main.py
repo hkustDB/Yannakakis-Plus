@@ -7,6 +7,8 @@ Usage:
 from treenode import *
 from comparison import Comparison
 from jointree import Edge, JoinTree
+from codegen import *
+from random import randint
 
 
 BASE_PATH = '/Users/chenbingnan/Desktop/SparkSQLPlus/examples/query/q11/'
@@ -155,6 +157,10 @@ def parseRelation(line: list[str], JT: JoinTree, table2vars: dict[str, str]) -> 
                 if col in cols:
                     auxCols.append(col)
                     auxVars.append(supAlias + '.' + supVars[index])
+                    
+            # replace source name [T] to Txxx
+            if '[' in source and ']' in source:
+                source = source.replace('[', '').replace(']', str(randint(0, 100)))
             
             auxNode = AuxTreeNode(id, source, auxCols, [auxCols, auxVars], alias, supportId)
             JT.addNode(auxNode)
@@ -182,7 +188,9 @@ def parseRelation(line: list[str], JT: JoinTree, table2vars: dict[str, str]) -> 
                     allBagVars.add(eachCol)
                     allBagVarMap[eachCol] =  eachAlias + '.' + eachVars[index]
         vars = [allBagVarMap[col] for col in cols]
-        bagNode = BagTreeNode(id, ','.join(inAlias), cols, [cols, vars], alias, insideId, inAlias)
+        source = [JT.getNode(id).source for id in insideId]
+        source = source.join(',')
+        bagNode = BagTreeNode(id,  source, cols, [cols, vars], alias, insideId, inAlias)
         JT.addNode(bagNode)
         
     return id
@@ -244,10 +252,11 @@ def parse_jt(isFull: bool, table2vars: dict[str, str]):
         
     return JT, CompareList
 
-    
+
 if __name__ == '__main__':
     path_ddl = ''
     table2vars = parse_ddl()
     outputVariables, isFull = parse_outVar()
     JT, COMP = parse_jt(isFull, table2vars)
-    print(JT.getRoot.depth)
+    reduceList, enumerateList = generateIR(JT, COMP)
+    codeGen(reduceList, enumerateList)
