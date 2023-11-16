@@ -13,10 +13,10 @@ class TreeNode:
         self.children: list[TreeNode] = []
         self.parent: TreeNode = None
         
-        self.estimateSize = -1      # estimate relation size
+        self.estimateSize = -1                      # estimate relation size
         self.relationType = None
-        self.ReducePhase = None     # Attach reduce information to the node
-        self.EnumeratePhase = None  # Attach enumerate information to the node
+        self.reducePhase: ReducePhase = None        # Attach reduce information to the node
+        self.enumeratePhase: EnumeratePhase = None  # Attach enumerate information to the node
     
     @property
     def getcol2vars(self): 

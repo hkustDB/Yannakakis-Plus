@@ -1,20 +1,22 @@
 from enumsType import *
-import sys
-import random
 
 class Comparison:
-    '''map from nodeId to mfId, share by all comparisons'''
-    helperAttr: dict[int, int] = dict()    
+    # map from (col, MfType)(e.g. (v1, MIN/MAX)) -> mfId, own by all comparisons
+    # helperAttr: dict[tuple[str, MfType], int] = dict()    
     
     def __init__(self) -> None:
         self.id = -1
         self.op = None
-        self.left = None
-        self.right = None
+        self.left = None        # formular on the op left
+        self.right = None       # formular on the op right
         self.path = None        # [[1, 2], [2, 4], [4, 3]]
-        self.predType = None
-        self.beginNode = None   # recognize begin & end nodeId
+        self.predType = None    # Short/Long
+        self.beginNode = None   # update for each delete path
         self.endNode = None
+        self.originBeginNode = None                     # no changing begin
+        self.originEndNode = None                       # no changing end
+        self.originPath = None                          # no deleting path
+        self.helperAttr: list[list[str]] = None         # path record of mf name
         
     def setAttr(self, id: int, op: str, left: str, right: str, path: list[str]):
         # path = ['4<->1', '1<->2', '2<->3', '3<->5']
@@ -36,14 +38,11 @@ class Comparison:
                 path[i + 1][0], path[i + 1][1] = path[i + 1][1], path[i + 1][0]
         
         self.path = path
-        mapping = set(sum(path, []))
-        # TODO: root don't need mf nodes
-        for nodeId in iter(mapping):
-            if nodeId not in Comparison.helperAttr:
-                Comparison.helperAttr[nodeId] = random.randint(0, sys.maxsize)
+        self.originPath = path
         self.predType = predType.Short if len(path) == 1 else predType.Long
-        self.beginNode = path[0][0]
-        self.endNode = path[len(path)-1][1]
+        self.beginNode = self.originBeginNode = path[0][0]
+        self.endNode = self.originEndNode = path[len(path)-1][1]
+        self.helperAttr = [[''] * 2] * len(self.path)
         
     def parseOP(self, OP: str):
         if 'LessThanOrEqualTo' in OP:
@@ -97,9 +96,3 @@ class Comparison:
         self.beginNode = self.path[0][0]
         self.endNode = self.path[len(self.path)-1][1]
         
-    def reverseOp(self):
-        self.left, self.right = self.right, self.left
-        if 'Less' in self.op:
-            self.op.replace('Less', 'Greater')
-        else:
-            self.op.replace('Greater', 'Less')

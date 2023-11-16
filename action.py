@@ -3,9 +3,13 @@ Common part for each action in reduce & enumerate phase
 '''
 
 class Action:
+    '''
+    fromTable: it could be view which has no id corresponds to TreeNode, so use table alias
+    If it has alias, parse it into list([source] as [alias])
+    '''
     _viewId = 0
     _sampleRate = 100
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: int) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str) -> None:
         self.viewName = viewName
         self.selectAttrs = selectAttrs
         self.selectAttrAlias = selectAttrAlias

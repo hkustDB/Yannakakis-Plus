@@ -50,7 +50,7 @@ class EnumerateType(Enum):
     CreateSample = 0
     SelectMaxRn = 1
     SelectTargetSource = 2
-    enumerateEnd = 3
+    stageEnd = 3
     
 
 class ReduceType(Enum):
@@ -60,6 +60,11 @@ class ReduceType(Enum):
     CreateBagView = 3
     CreateAuxView = 4
     CreateTableAggView = 5
+    CreateSemiJoinView = 6
+    
+class PhaseType(Enum):
+    SemiJoin = 0
+    CQC = 1
     
 '''
 JT, COMP should not be changed
@@ -68,3 +73,9 @@ class Direction(Enum):
     Left = 0
     Right = 1
     SemiJoin = 2
+    RootLeft = 3
+    RootRight = 4
+    
+class MfType(Enum):
+    MIN = 0
+    MAX = 1
