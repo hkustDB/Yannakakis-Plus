@@ -7,13 +7,16 @@ Usage:
 from treenode import *
 from comparison import Comparison
 from jointree import Edge, JoinTree
+from generateIR import *
 from codegen import *
 from random import randint
+import os
 
 
-BASE_PATH = '/Users/chenbingnan/Desktop/SparkSQLPlus/examples/query/q11/'
-DDL_NAME = 'rst.ddl'
-JT_PATH = 'JoinTree1.txt'
+BASE_PATH = '/Users/chenbingnan/Desktop/SparkSQLPlus/examples/query/q1/'
+DDL_NAME = 'graph.ddl'
+OUT_NAME = 'rewrite.txt'
+JT_PATH = ''
 OUT_PATH = 'outputVariables.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
@@ -205,12 +208,12 @@ def parseComparison(line: list[str]):
     return id, op, left, right, path
         
     
-def parse_jt(isFull: bool, table2vars: dict[str, str]):
-    f = open(BASE_PATH + JT_PATH)
+def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
+    f = open(jtPath)
     line = f.readline().rstrip()
     flag = 0
     JT = JoinTree(isFull)
-    CompareList = []
+    CompareMap: dict[int, Comparison] = dict()
     
     while line:
         if 'jt.root:' in line  or 'edge:' in line  or 'relation in subset:' in line  or 'comparison hypergraph edge:' in line: 
@@ -246,11 +249,25 @@ def parse_jt(isFull: bool, table2vars: dict[str, str]):
             id, op, left, right, path = parseComparison(line)
             Compare = Comparison()
             Compare.setAttr(id, op, left, right, path)
-            CompareList.append(Compare)
+            CompareMap[Compare.id] = Compare
             
         line = f.readline().rstrip()
         
-    return JT, CompareList
+    return JT, CompareMap
+
+'''Use JoinTree with minimum depth'''
+def parse_jt(isFull: bool, table2vars: dict[str, str]):
+    g = os.walk(BASE_PATH)
+    JT: JoinTree = None
+    COMP: dict[int, Comparison] = None
+    for path,dir_list,file_list in g:  
+        for file_name in file_list:  
+            if 'JoinTree' in file_name: 
+                jt, comp = parse_one_jt(isFull, table2vars, BASE_PATH + file_name)
+                if jt.root.depth < JT.root.depth:
+                    JT, COMP = jt, comp
+
+    return JT, COMP
 
 
 if __name__ == '__main__':
@@ -259,4 +276,4 @@ if __name__ == '__main__':
     outputVariables, isFull = parse_outVar()
     JT, COMP = parse_jt(isFull, table2vars)
     reduceList, enumerateList = generateIR(JT, COMP)
-    codeGen(reduceList, enumerateList)
+    codeGen(reduceList, enumerateList, BASE_PATH + OUT_NAME)
