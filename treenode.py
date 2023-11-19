@@ -15,8 +15,10 @@ class TreeNode:
         
         self.estimateSize = -1                      # estimate relation size
         self.relationType = None
+        self.createViewAlready: bool = False        # create view TableAgg, Aux, bag already
         self.reducePhase: ReducePhase = None        # Attach reduce information to the node
         self.enumeratePhase: EnumeratePhase = None  # Attach enumerate information to the node
+        self.JoinResView: Join2tables = None        # record the name of previous join
     
     @property
     def getcol2vars(self): 
@@ -83,7 +85,7 @@ class TableAggTreeNode(TreeNode):
         super().__init__(id, source, cols, col2vars, alias)
         self.relationType = RelationType.TableAggRelation
         self.aggRelation = aggRelation  # list of agg id
-        
+
         
 class BagTreeNode(TreeNode):
     def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, insideId: list[int], insideAlias: list[str]):

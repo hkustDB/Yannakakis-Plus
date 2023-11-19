@@ -8,6 +8,9 @@ class CreateSample(Action):
         self.enumerateType = EnumerateType.CreateSample
         self.whereCond = "rn" + " % " + str(self._sampleRate) + " = 1"
         
+    def __repr__(self) -> str:
+        return self.viewName + ' AS SELECT ' + str(self.selectAttrAlias) + ' FROM ' + self.fromTable + ' WHERE ' + self.whereCond
+        
         
 class SelectMaxRn(Action):
     def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], joinCond: str, whereCond: str, groupCond: list[str]) -> None:
@@ -19,6 +22,9 @@ class SelectMaxRn(Action):
         self.groupCond = groupCond
         self.enumerateType = EnumerateType.SelectMaxRn
 
+    def __repr__(self) -> str:
+        return self.viewName + ' AS SELECT ' + str(self.selectAttrAlias) + ', max(rn) as mrn FROM ' + self.fromTable + ' JOIN ' + self.joinTable + 'using(' + self.joinKey + ') WHERE ' + self.whereCond + ' GROUP BY ' + self.joinKey
+
 
 class SelectTargetSource(Action):
     def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], joinCond: str = '') -> None:
@@ -26,8 +32,11 @@ class SelectTargetSource(Action):
         self.joinTable = joinTable
         self.joinKey = joinKey
         self.joinCond = joinCond
-        self.whereCond = joinTable + ".rn < " + "mrn + " + str(self._sampleRate)
+        self.whereCond = "rn < " + "mrn + " + str(self._sampleRate)
         self.enumerateType = EnumerateType.SelectTargetSource
+        
+    def __repr__(self) -> str:
+        return self.viewName + ' AS SELECT ' + str(self.selectAttrAlias) + ' FROM ' + self.fromTable + ' JOIN ' + self.joinTable + ' using(' + ', '.join(self.joinKey) + ') WHERE ' + self.whereCond
         
         
 class StageEnd(Action):
@@ -38,6 +47,9 @@ class StageEnd(Action):
         self.joinCond = joinCond
         self.whereCond = whereCond
         self.enumerateType = EnumerateType.stageEnd
+        
+    def __repr__(self) -> str:
+        return 
 
 
 class EnumeratePhase:

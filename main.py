@@ -264,9 +264,13 @@ def parse_jt(isFull: bool, table2vars: dict[str, str]):
         for file_name in file_list:  
             if 'JoinTree' in file_name: 
                 jt, comp = parse_one_jt(isFull, table2vars, BASE_PATH + file_name)
-                if jt.root.depth < JT.root.depth:
+                if JT is not None and jt.root.depth < JT.root.depth:
+                    JT, COMP = jt, comp
+                elif JT is None:
                     JT, COMP = jt, comp
 
+    print(type(COMP))
+    print(type(COMP.values()))
     return JT, COMP
 
 
