@@ -17,6 +17,9 @@ class Edge:
     
     def __str__(self) -> str:
         return self.src.getNodeAlias + str('->') + self.dst.getNodeAlias
+    
+    def __repr__(self) -> str:
+        return self.src.getNodeAlias + str('->') + self.dst.getNodeAlias
         
 class JoinTree:
     def __init__(self, isFull: bool) -> None:

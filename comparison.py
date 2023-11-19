@@ -1,4 +1,5 @@
 from enumsType import *
+import copy
 
 class Comparison:
     # map from (col, MfType)(e.g. (v1, MIN/MAX)) -> mfId, own by all comparisons
@@ -11,10 +12,10 @@ class Comparison:
         self.right = None       # formular on the op right
         self.path = None        # [[1, 2], [2, 4], [4, 3]]
         self.predType = None    # Short/Long
-        self.beginNode = None   # update for each delete path
-        self.endNode = None
-        self.originBeginNode = None                     # no changing begin
-        self.originEndNode = None                       # no changing end
+        self.beginNodeId = None   # update for each delete path
+        self.endNodeId = None
+        self.originBeginNodeId = None                     # no changing begin
+        self.originEndNodeId = None                       # no changing end
         self.originPath = None                          # no deleting path
         self.helperAttr: list[list[str]] = None         # path record of mf name
         
@@ -38,10 +39,10 @@ class Comparison:
                 path[i + 1][0], path[i + 1][1] = path[i + 1][1], path[i + 1][0]
         
         self.path = path
-        self.originPath = path
+        self.originPath = copy.deepcopy(path)
         self.predType = predType.Short if len(path) == 1 else predType.Long
-        self.beginNode = self.originBeginNode = path[0][0]
-        self.endNode = self.originEndNode = path[len(path)-1][1]
+        self.beginNodeId = self.originBeginNodeId = path[0][0]
+        self.endNodeId = self.originEndNodeId = path[len(path)-1][1]
         self.helperAttr = [[''] * 2] * len(self.path)
         
     def parseOP(self, OP: str):
@@ -58,13 +59,16 @@ class Comparison:
         
     def parseLR(self, LR: str):
         if LR.count('SingleVariableExpression') == 1:
-            return LR.split('(')[1].split(':')  # "v1"
+            return LR.split('(')[1][:-1].split(':')[0]  # "v1"
             
         else:   # "v1 * v2 ..."
             raise NotImplementedError("Complex +/* with multiple variables is not implemented! ")
         
     def __str__(self) -> str:
         return str(self.id) + '\n' + str(self.op) + '\n' + str(self.left) + '\n' + str(self.right) + '\n' + str(self.path)
+    
+    def __repr__(self) -> str:
+        return str(self.id) + ', ' + str(self.left) + str(self.op) + str(self.right) + ', Comparison path: ' + str(self.path)
     
     @property
     def getComparisonLength(self):
@@ -79,12 +83,12 @@ class Comparison:
         return self.predType
     
     @property
-    def getBeginNode(self):
-        return self.beginNode
+    def getBeginNodeId(self):
+        return self.beginNodeId
     
     @property
-    def getEndNode(self):
-        return self.endNode
+    def getEndNodeId(self):
+        return self.endNodeId
     
     def deletePath(self, direction: Direction):
         if len(self.path) < 1:
