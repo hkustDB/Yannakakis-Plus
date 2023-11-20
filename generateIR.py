@@ -41,15 +41,16 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode) -> CreateTableAggView:
             aggJoinVars = aggNode.cols[:-1]
             if len(aggJoinVars) > 1:
                 raise NotImplementedError("More than 2 values in group by")
-            joinIdx = 0
-            tabelJoinName = childNode.col2vars[1][joinIdx]
+            tableJoinKeyIdx = childNode.cols.index(aggNode.cols[0])
+            tabelJoinName = childNode.col2vars[1][tableJoinKeyIdx]
             whereCond = childNode.source + '.' + tabelJoinName + ' = ' + aggNode.alias + '.' + aggNode.col2vars[1][0]
             whereCondList.append(whereCond)
             aggFuncVars.append(aggNode.cols[1])
-
+        
+        # TODO: Add childNode.alias + '.' + joinKey
         originalVars = [] # need as `alias` else ''
         for idx, each in enumerate(childNode.col2vars[0]):
-            val = childNode.col2vars[1][idx] if each not in aggFuncVars else ''
+            val = childNode.source + '.' + childNode.col2vars[1][idx] if each not in aggFuncVars else ''
             originalVars.append(val)
 
         prepareView = CreateTableAggView(childNode.alias, originalVars, childNode.cols, fromTable, joinTableList, whereCondList)
@@ -84,13 +85,13 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             fromTable = childNode.alias
             
         joinKey = list(set(childNode.cols) & set(parentNode.cols))
-        orderKey = ''
+        orderKey = []
         AESC = True
         if direction == Direction.Left or direction == Direction.RootLeft:
-            orderKey = helperLeft[0]
+            orderKey.append(helperLeft[0])
             AESC = True if '<' in comp.op else False 
         elif direction == Direction.Right or direction == Direction.RootRight:
-            orderKey = helperRight[0]
+            orderKey.append(helperRight[0])
             AESC = True if '>' in comp.op else False
             
         if childNode.relationType == RelationType.TableScanRelation: # TableAgg cast alias when preparing the view   
@@ -112,23 +113,22 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         selectAttributes, selectAttributesAs = [], []
         if parentNode.JoinResView is not None: # already has alias 
             selectAttributesAs = parentNode.JoinResView.selectAttrAlias + [mfAttr[1]]
-            
-        elif parentNode.relationType == RelationType.TableScanRelation: # no previous view and extra mf JoinResView=None
+        else:
             selectAttributes = parentNode.col2vars[1] + ['']
             selectAttributesAs = parentNode.cols + [mfAttr[1]]
-            joinCondList = []
-            # still need alias casting, new table join
-            for eachKey in joinKey:
-                cond = ''
-                # not root, cast to alias already in the first one side
-                if direction != Direction.RootLeft and direction != Direction.RootRight:
-                    originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)]
-                    cond = parentNode.alias + '.' + originalName + '=' + minView.viewName + '.' + eachKey
-                
-                joinCondList.append(cond)
-            joinCond = ' and '.join(joinCondList)
-        else:
-            selectAttributesAs = parentNode.cols + [mfAttr[1]]
+        joinCondList = []
+        # still need alias casting, new table join
+        for eachKey in joinKey:
+            cond = ''
+            # not root, cast to alias already in the first one side
+            if parentNode.JoinResView is None: # use original
+                originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)]
+                cond = parentNode.alias + '.' + originalName + '=' + minView.viewName + '.' + eachKey
+            # else:  previous join view already cast to alias
+                # cond = parentNode.JoinResView.viewName + '.' + eachKey + '=' + minView.viewName + '.' + eachKey
+            
+            joinCondList.append(cond)
+        joinCond = ' and '.join(joinCondList)
             
         # original table or previous view
         fromTable = ''
@@ -340,7 +340,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
     
     
     '''Step2: Enumerate'''
-    enumerateOrder = [enum for enum in reduceList if JT.getNode(enum.corresNodeId) in JT.subset] if not JT.isFull else reduceList
+    enumerateOrder = [enum for enum in reduceList if JT.getNode(enum.corresNodeId) in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
     for enum in enumerateOrder:
         previousView = enumerateOrder[0].joinView if enumerateList == [] else enumerateList[-1].stageEnd

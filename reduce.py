@@ -22,12 +22,13 @@ class CreateAuxView(Action):
     def __repr__(self) -> str:
         return self.viewName + ' AS SELECT '
 
-'''fromTable: tableScan, joinTableList: internal PK join aggNodes'''
+'''fromTable: tableScan, joinKeyList: a set of using()'''
 '''Only matching selectAttrs is not '' need alias trans '''
 class CreateTableAggView(Action):
     def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTableList: list[str], whereCondList: list[str]) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
-        self.joinTableList = joinTableList
+        self.joinTableList = joinTableList 
+        # self.joinKeyList = joinKeyList  # used for internal aggNode join
         self.whereCondList = whereCondList
         self.reduceType = ReduceType.CreateTableAggView
         
@@ -71,14 +72,14 @@ class Join2tables(Action):
         self.joinCond = joinCond
         self.whereCond = whereCond
         self.reduceType = ReduceType.Join2tables
+        self._joinFlag = ' JOIN ' if self.joinCond == '' else ', '
         
     def __repr__(self) -> str:
-        joinFlag = ' JOIN ' if self.joinCond == '' else ', '
-        ret = self.viewName + ' AS SELECT ' + str(self.selectAttrAlias) + ' AS ' + str(self.selectAttrs) + ' FROM ' + self.fromTable + joinFlag + self.joinTable
+        ret = self.viewName + ' AS SELECT ' + str(self.selectAttrAlias) + ' AS ' + str(self.selectAttrs) + ' FROM ' + self.fromTable + self._joinFlag + self.joinTable
         ret += 'using(' + ', '.join(self.joinKey) + ')' if self.joinCond == '' else ''
         ret += self.joinCond + self.whereCond
         return ret
-    
+
 
 # TODO: Add semijoin action
 class SemiJoin(Action):
