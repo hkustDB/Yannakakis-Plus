@@ -2,10 +2,12 @@ from action import Action
 from enumsType import *
 from comparison import *
 
-class CreateBagView(Action):    # use joinTableList only
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTableList: list[str]) -> None:
+class CreateBagView(Action):    
+    # use joinTableList only, whereCondList is for connext internal 3 nodes
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTableList: list[str], whereCondList: list[str]) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.joinTableList = joinTableList
+        self.whereCondList = whereCondList
         self.reduceType = ReduceType.CreateBagView
     
     # TODO: later process how to join the internal tables

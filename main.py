@@ -13,7 +13,7 @@ from random import randint
 import os
 
 
-BASE_PATH = '/Users/chenbingnan/Desktop/SparkSQLPlus/examples/query/q1/'
+BASE_PATH = '/Users/chenbingnan/Desktop/SparkSQLPlus/examples/query/q2/'
 DDL_NAME = 'graph.ddl'
 OUT_NAME = 'rewrite.txt'
 JT_PATH = ''
@@ -69,7 +69,7 @@ def parse_outVar():
         elif flag == 2:
             isFull = True if line == 'full' else False
         line = f.readline()
-    return outputVariables, isFull
+    return list(set(outputVariables)), isFull
 
 def parseLine(line: str) -> list[str]:
         name = line.split(';', 1)[0]
@@ -100,7 +100,7 @@ def parseRelation(line: list[str], JT: JoinTree, table2vars: dict[str, str]) -> 
             # codegen: select vars[0] as cols[0], vars[1] as col[1] from alias
             tsNode = TableTreeNode(id, source, cols, [cols, vars], alias)
             JT.addNode(tsNode)
-            
+        
         elif relationName == 'AggregatedRelation':
             group = int(line[5][line[5].index('(')+1 : line[5].index(')')])
             func = line[6].split('=')[1]
@@ -183,6 +183,7 @@ def parseRelation(line: list[str], JT: JoinTree, table2vars: dict[str, str]) -> 
         # remember all variables in the bag
         allBagVars = set()
         allBagVarMap = dict()
+        source = []
         for eachId in insideId:
             eachCols, eachVars = JT.getCol2vars(eachId)
             eachAlias = JT.getNodeAlias(eachId)
@@ -190,10 +191,10 @@ def parseRelation(line: list[str], JT: JoinTree, table2vars: dict[str, str]) -> 
                 if eachCol not in allBagVars: 
                     allBagVars.add(eachCol)
                     allBagVarMap[eachCol] =  eachAlias + '.' + eachVars[index]
+
         vars = [allBagVarMap[col] for col in cols]
-        source = [JT.getNode(id).source for id in insideId]
-        source = source.join(',')
-        bagNode = BagTreeNode(id,  source, cols, [cols, vars], alias, insideId, inAlias)
+        source = ', '.join(source)
+        bagNode = BagTreeNode(id, alias, cols, [cols, vars], alias, insideId, inAlias)
         JT.addNode(bagNode)
         
     return id
@@ -280,4 +281,4 @@ if __name__ == '__main__':
     outputVariables, isFull = parse_outVar()
     JT, COMP = parse_jt(isFull, table2vars)
     reduceList, enumerateList = generateIR(JT, COMP)
-    codeGen(reduceList, enumerateList, BASE_PATH + OUT_NAME)
+    codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + OUT_NAME, isFull=isFull)

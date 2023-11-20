@@ -1,5 +1,6 @@
 from enumsType import *
 import copy
+import re
 
 class Comparison:
     # map from (col, MfType)(e.g. (v1, MIN/MAX)) -> mfId, own by all comparisons
@@ -61,9 +62,19 @@ class Comparison:
         if LR.count('SingleVariableExpression') == 1:
             return LR.split('(')[1][:-1].split(':')[0]  # "v1"
             
-        else:   # "v1 * v2 ..."
-            raise NotImplementedError("Complex +/* with multiple variables is not implemented! ")
-        
+        else:   # "v1 * v2 ..." Currently only support simple +/* with numbers, not applying combinations
+            pattern = re.compile('v[0-9]+')
+            vars = pattern.findall(LR)
+            pattern = re.compile('IntervalLiteralExpression\([0-9]+')
+            finds = pattern.findall(LR)
+            finds = [float(each.split('(')[1]) for each in finds]
+            vars += finds
+            
+            if 'Plus' in LR:
+                return '+'.join(vars)
+            elif 'Times' in LR:
+                return '*'.join(vars)     
+            
     def __str__(self) -> str:
         return str(self.id) + '\n' + str(self.op) + '\n' + str(self.left) + '\n' + str(self.right) + '\n' + str(self.path)
     

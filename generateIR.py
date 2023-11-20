@@ -11,18 +11,40 @@ import re
    incidentComp: [first] long, [second] short
 '''
 
+def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
+    whereCondList = []
+    joinKey = set(inNode.cols) & set(preNode.cols)
+    joinKey1 = [preNode.col2vars[1][preNode.col2vars[0].index(key)] for key in joinKey]
+    joinKey2 = [inNode.col2vars[1][inNode.col2vars[0].index(key)] for key in joinKey]
+    # not using alias for var any more
+    for i in range(len(joinKey1)):
+        whereCond = preNode.alias + '.' + joinKey1[i] + '=' + inNode.alias + '.' + joinKey2[i]
+        whereCondList.append(whereCond)
+        
+    return whereCondList
+
 def buildPrepareView(JT: JoinTree, childNode: TreeNode) -> CreateTableAggView:
     if childNode.createViewAlready: return None
     
     prepareView = None
     if childNode.relationType == RelationType.BagRelation:
-        joinTableList = []
-        for id in childNode.insideId:
-            node = JT.getNode(id)
+        joinTableList, whereCondList = [], []
+        for index, id in enumerate(childNode.insideId):
+            inNode = JT.getNode(id)
+            if inNode.relationType == RelationType.TableScanRelation: # still need source alias
+                joinTableList.append(inNode.source + ' as ' + inNode.alias) 
+            else :
+                joinTableList.append(inNode.alias)
+            # NOTE: Assume internal nodes arrange by circle sequence
+            if index > 0:
+                preNode = JT.getNode(childNode.insideId[index-1])
+                subWhereCondList = buildJoinRelation(preNode, inNode)
+                whereCondList.extend(subWhereCondList)
         
-        prepareView = CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', childNode.inAlias)
+        whereCondList.extend(buildJoinRelation(JT.getNode(id), JT.getNode(childNode.insideId[0])))
+        prepareView = CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', joinTableList, whereCondList)
     
-    elif childNode.relationType == RelationType.AuxiliaryRelation:
+    elif childNode.relationType == RelationType.AuxiliaryRelation: # must have child
         supNode = JT.getNode(childNode.supRelationId)
         fromTable = supNode.source + ' as ' + supNode.alias if supNode.alias != supNode.source else supNode.source
         prepareView = CreateAuxView(childNode.alias, childNode.col2vars[1], childNode.cols, fromTable)
@@ -85,7 +107,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             fromTable = childNode.alias
             
         joinKey = list(set(childNode.cols) & set(parentNode.cols))
-        orderKey = []
+        orderKey = [] # leave for primary key space in orderKey
         AESC = True
         if direction == Direction.Left or direction == Direction.RootLeft:
             orderKey.append(helperLeft[0])
@@ -93,11 +115,38 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         elif direction == Direction.Right or direction == Direction.RootRight:
             orderKey.append(helperRight[0])
             AESC = True if '>' in comp.op else False
+
+        # need append new col, only root relation happens
+        extraAlias, extraAttr = '', ''
+        transVarList = []
+        if orderKey[-1] not in childNode.cols:
+            if childNode.relationType != RelationType.TableScanRelation: # can use alias directly
+                extraAttr = orderKey[-1]
+            else: # Can only be TableScan
+                op = ''
+                if '*' in orderKey[-1]:
+                    varAlias = orderKey[-1].split('*')
+                    op = '*'
+                elif '+' in orderKey[-1]:
+                    varAlias = orderKey[-1].split('+')
+                    op = '+'
+                else:
+                    raise NotImplementedError("Not implement other op! ") 
+                
+                for var in varAlias:
+                    idx = childNode.cols.index(var)
+                    transVar = childNode.alias + '.' + childNode.col2vars[1][idx]
+                    transVarList.append(transVar)
+                
+                extraAttr = op.join(transVarList)
+            extraAlias = 'ori' + ('Left' if (direction == Direction.Left or direction == Direction.RootLeft) else 'Right')
+            helperLeft[0] = extraAlias if 'Left' in extraAlias else helperLeft[0]
+            helperRight[0] = extraAlias if 'Right' in extraAlias else helperRight[0]
             
         if childNode.relationType == RelationType.TableScanRelation: # TableAgg cast alias when preparing the view   
-            orderView = CreateOrderView(viewName, childNode.col2vars[1], childNode.cols, fromTable, joinKey, orderKey, AESC)
+            orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, joinKey, orderKey, AESC)
         else:
-            orderView = CreateOrderView(viewName, [], childNode.cols, fromTable, joinKey, orderKey, AESC)
+            orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.cols))] + [extraAttr], childNode.cols + [extraAlias], fromTable, joinKey, orderKey, AESC)
             
     # 3. minView
         viewName = 'minView' + str(randint(0, maxsize))
