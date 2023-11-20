@@ -13,6 +13,7 @@ class LRType(Enum):
     LongTimesLongExpression = 5
     DoubleTimesDoubleExpression = 6
     SingleVariableExpression = 7
+    IntervalLiteralExpression = 9 # number, TimeStamp
     
 
 class opType(Enum):

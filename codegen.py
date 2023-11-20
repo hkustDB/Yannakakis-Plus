@@ -13,6 +13,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     
     selectData = []
     for index, alias in enumerate(selectAttrAlias):
+        if selectAttrAlias[index] == '': continue
         if selectAttrs[index] != '':
             selectData.append(selectAttrs[index] + ' as ' + selectAttrAlias[index])
         else:
@@ -21,7 +22,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     ret = ', '.join(selectData) + extraAdd
     return ret
 
-def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], outPath: str, isFull = True):
+def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], outputVariables: list[str], outPath: str, isFull = True):
     outFile = open(outPath, 'w+')
     dropView = []
     # 1. reduceList rewrite
@@ -34,7 +35,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             outFile.write('# 0. Prepare\n')
             for prepare in reduce.prepareView:
                 if prepare.reduceType == ReduceType.CreateBagView:
-                    pass
+                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 elif prepare.reduceType == ReduceType.CreateAuxView:
                     pass
                 else:   # TableAgg
@@ -86,14 +87,10 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         dropView.append(enum.stageEnd.viewName)
         outFile.write(line)
         
-    if isFull:
-        line = 'select count(*) from ' + enum.stageEnd.viewName + END
-    else:
-        line = ''
-        raise NotImplementedError("Need last line for noon-full case! ")
+    line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + enum.stageEnd.viewName + END
     outFile.write(line)
     
-    line = '# drop view ' + ', '.join(dropView)
+    line = '# drop view ' + ', '.join(dropView) + END
     outFile.write(line)
     
     outFile.close()
