@@ -24,6 +24,7 @@ class CreateAuxView(Action):
     def __repr__(self) -> str:
         return self.viewName + ' AS SELECT '
 
+
 '''fromTable: tableScan, joinKeyList: a set of using()'''
 '''Only matching selectAttrs is not '' need alias trans '''
 class CreateTableAggView(Action):

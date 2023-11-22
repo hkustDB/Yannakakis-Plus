@@ -29,39 +29,38 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     outFile.write('## Reduce Phase: \n')
     for reduce in reduceList:
         outFile.write('\n# Reduce' + str(reduce.reducePhaseId) + '\n')
-        if len(reduce.prepareView) == 0:
-            pass
-        else:
+        if len(reduce.prepareView) != 0:
             outFile.write('# 0. Prepare\n')
             for prepare in reduce.prepareView:
                 if prepare.reduceType == ReduceType.CreateBagView:
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 elif prepare.reduceType == ReduceType.CreateAuxView:
-                    pass
+                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + END
                 else:   # TableAgg
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 
                 dropView.append(prepare.viewName)
                 outFile.write(line)
-        outFile.write('# 1. orderView\n')
-        line = BEGIN + reduce.orderView.viewName + ' as select ' + transSelectData(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, row_numer=True) + ' over (partition by ' + ', '.join(reduce.orderView.joinKey) + ' order by ' + ', '.join(reduce.orderView.orderKey) + (' DESC' if not reduce.orderView.AESC else '') + ') as rn ' + 'from ' + reduce.orderView.fromTable + END
-        dropView.append(reduce.orderView.viewName)
-        outFile.write(line)
-        outFile.write('# 2. minView\n')
-        line = BEGIN + reduce.minView.viewName + ' as select ' + transSelectData(reduce.minView.selectAttrs, reduce.minView.selectAttrAlias) + ' from ' + reduce.minView.fromTable + ' where ' + reduce.minView.whereCond + END
-        dropView.append(reduce.minView.viewName)
-        outFile.write(line)
-        outFile.write('# 3. joinView\n')
-        line = BEGIN + reduce.joinView.viewName + ' as select ' + transSelectData(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias) + ' from '
-        joinSentence = reduce.joinView.fromTable
-        if reduce.joinView._joinFlag == ' JOIN ':
-            joinSentence +=' join ' + reduce.joinView.joinTable + ' using(' + ', '.join(reduce.joinView.joinKey) + ')'
-        else:
-            joinSentence += ', ' + reduce.joinView.joinTable
-        whereSentence = reduce.joinView.joinCond + (' and ' if reduce.joinView.joinCond != '' and reduce.joinView.whereCond else '') + reduce.joinView.whereCond
-        line += joinSentence + ((' where ' + whereSentence) if whereSentence != '' else '') + END
-        dropView.append(reduce.joinView.viewName)
-        outFile.write(line)
+        if reduce.orderView is not None:    # if orderView is None, pass do nothing (aux support relation output)
+            outFile.write('# 1. orderView\n')
+            line = BEGIN + reduce.orderView.viewName + ' as select ' + transSelectData(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, row_numer=True) + ' over (partition by ' + ', '.join(reduce.orderView.joinKey) + ' order by ' + ', '.join(reduce.orderView.orderKey) + (' DESC' if not reduce.orderView.AESC else '') + ') as rn ' + 'from ' + reduce.orderView.fromTable + END
+            dropView.append(reduce.orderView.viewName)
+            outFile.write(line)
+            outFile.write('# 2. minView\n')
+            line = BEGIN + reduce.minView.viewName + ' as select ' + transSelectData(reduce.minView.selectAttrs, reduce.minView.selectAttrAlias) + ' from ' + reduce.minView.fromTable + ' where ' + reduce.minView.whereCond + END
+            dropView.append(reduce.minView.viewName)
+            outFile.write(line)
+            outFile.write('# 3. joinView\n')
+            line = BEGIN + reduce.joinView.viewName + ' as select ' + transSelectData(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias) + ' from '
+            joinSentence = reduce.joinView.fromTable
+            if reduce.joinView._joinFlag == ' JOIN ':
+                joinSentence +=' join ' + reduce.joinView.joinTable + ' using(' + ', '.join(reduce.joinView.joinKey) + ')'
+            else:
+                joinSentence += ', ' + reduce.joinView.joinTable
+            whereSentence = reduce.joinView.joinCond + (' and ' if reduce.joinView.joinCond != '' and reduce.joinView.whereCond else '') + reduce.joinView.whereCond
+            line += joinSentence + ((' where ' + whereSentence) if whereSentence != '' else '') + END
+            dropView.append(reduce.joinView.viewName)
+            outFile.write(line)
     
     # 2. enumerateList rewrite
     outFile.write('\n## Enumerate Phase: \n')
@@ -87,7 +86,10 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         dropView.append(enum.stageEnd.viewName)
         outFile.write(line)
         
-    line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + enum.stageEnd.viewName + END
+    if len(enumerateList) == 0:
+        line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + reduce.joinView.viewName + END
+    else:
+        line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + enum.stageEnd.viewName + END
     outFile.write(line)
     
     line = '\n# drop view ' + ', '.join(dropView) + END
