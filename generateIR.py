@@ -6,6 +6,7 @@ from enumsType import *
 from random import choice, randint
 from sys import maxsize
 import re
+import copy
 
 '''helperAttrLeft/Right: helper attribute name change[from, to]
    incidentComp: [first] long, [second] short
@@ -44,10 +45,10 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode) -> CreateTableAggView:
         whereCondList.extend(buildJoinRelation(JT.getNode(id), JT.getNode(childNode.insideId[0])))
         prepareView = CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', joinTableList, whereCondList)
     
-    elif childNode.relationType == RelationType.AuxiliaryRelation: # must have child
+    elif childNode.relationType == RelationType.AuxiliaryRelation: # must have child, only need alias
         supNode = JT.getNode(childNode.supRelationId)
         fromTable = supNode.source + ' as ' + supNode.alias if supNode.alias != supNode.source else supNode.source
-        prepareView = CreateAuxView(childNode.alias, childNode.col2vars[1], childNode.cols, fromTable)
+        prepareView = CreateAuxView(childNode.alias, '', childNode.cols, fromTable)
 
     elif childNode.relationType == RelationType.TableAggRelation: 
         aggNodes = childNode.aggRelation
@@ -81,7 +82,6 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode) -> CreateTableAggView:
     else: 
         return None
     
-    childNode.createViewAlready = True
     return prepareView
     
 
@@ -101,12 +101,20 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     # 2. orderView
         viewName = 'orderView' + str(randint(0, maxsize))
         comp = incidentComp[0]
-        if childNode.relationType != RelationType.TableAggRelation:
+        noAliasFlag = False
+        if childNode.JoinResView is not None:
+            fromTable = childNode.JoinResView.viewName
+            noAliasFlag = True
+        elif childNode.relationType != RelationType.TableAggRelation:
             fromTable = childNode.source + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
         else:
             fromTable = childNode.alias
             
-        joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        if noAliasFlag:
+            joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
+        else:
+            joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        partiKey = joinKey.copy()
         orderKey = [] # leave for primary key space in orderKey
         AESC = True
         if direction == Direction.Left or direction == Direction.RootLeft:
@@ -119,7 +127,10 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         # need append new col, only root relation happens
         extraAlias, extraAttr = '', ''
         transVarList = []
-        if orderKey[-1] not in childNode.cols:
+        if noAliasFlag: # v1 * v2 * v3
+            if orderKey[-1] not in childNode.JoinResView.selectAttrAlias and 'mf' not in orderKey[-1]:
+                extraAttr = orderKey[-1]
+        elif orderKey[-1] not in childNode.cols and 'mf' not in orderKey[-1]:
             if childNode.relationType != RelationType.TableScanRelation: # can use alias directly
                 extraAttr = orderKey[-1]
             else: # Can only be TableScan
@@ -142,11 +153,33 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             extraAlias = 'ori' + ('Left' if (direction == Direction.Left or direction == Direction.RootLeft) else 'Right')
             helperLeft[0] = extraAlias if 'Left' in extraAlias else helperLeft[0]
             helperRight[0] = extraAlias if 'Right' in extraAlias else helperRight[0]
-            
-        if childNode.relationType == RelationType.TableScanRelation: # TableAgg cast alias when preparing the view   
-            orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, joinKey, orderKey, AESC)
+        
+        # process orderKey alias in TableScan case, need alias casting
+        if not noAliasFlag and 'mf' not in orderKey[-1] and childNode.relationType == RelationType.TableScanRelation:
+            idx = childNode.cols.index(orderKey[-1])
+            orderKey[-1] = childNode.col2vars[1][idx]
+        
+        # process partitionByKey alias in TableScan case, need alias casting
+        if not noAliasFlag and childNode.relationType == RelationType.TableScanRelation:
+            for i in range(len(partiKey)): # multi joinKey
+                idx = childNode.cols.index(partiKey[i])
+                partiKey[i] = childNode.col2vars[1][idx]
+        
+        if noAliasFlag:
+            if extraAlias == '':
+                orderView = CreateOrderView(viewName, [], childNode.JoinResView.selectAttrAlias, fromTable, partiKey, orderKey, AESC)
+            else:
+                orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.JoinResView.selectAttrAlias))] + [extraAttr], childNode.JoinResView.selectAttrAlias + [extraAlias], fromTable, partiKey, orderKey, AESC)
+        elif childNode.relationType == RelationType.TableScanRelation: # TableAgg cast alias when preparing the view  
+            if  extraAlias == '':
+                orderView = CreateOrderView(viewName, childNode.col2vars[1], childNode.cols, fromTable, partiKey, orderKey, AESC)
+            else:
+                orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC)
         else:
-            orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.cols))] + [extraAttr], childNode.cols + [extraAlias], fromTable, joinKey, orderKey, AESC)
+            if extraAlias == '':
+                orderView = CreateOrderView(viewName, [], childNode.cols, fromTable, partiKey, orderKey, AESC)
+            else:
+                orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.cols))] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC)
             
     # 3. minView
         viewName = 'minView' + str(randint(0, maxsize))
@@ -198,6 +231,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         raise NotImplementedError("SemiJoin case is not implemented! ")
     
     # End
+    parentNode.createViewAlready = True
     type = PhaseType.SemiJoin if direction == Direction.SemiJoin else PhaseType.CQC
     retReducePhase = ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, incidentComp)
     return retReducePhase
@@ -268,10 +302,10 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase) -> En
     return retEnum
 
 def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase], list[EnumeratePhase]]:
-    jointree = JT
+    jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     print(COMP)
-    comparisons = COMP.values()    
+    comparisons = list(COMP.values())   
     print(type(comparisons))         
     reduceList: list[ReducePhase] = []
     enumerateList: list[EnumeratePhase] = []
@@ -283,7 +317,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
         
     '''Get incident comparisons'''
     def getCompRelation(relation: Edge) -> list[Comparison]:
-        corresComp = [comp for comp in comparisons if rel.dst.id == comp.beginNodeId or rel.dst.id == comp.endNodeId]
+        corresComp = [comp for comp in comparisons if relation.dst.id == comp.beginNodeId or relation.dst.id == comp.endNodeId]
         numLong = len([comp for comp in corresComp if len(comp.path) > 1])
         if numLong < 2 and not relation.dst.isRoot:
             return corresComp

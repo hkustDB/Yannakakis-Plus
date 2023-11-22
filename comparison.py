@@ -108,6 +108,6 @@ class Comparison:
             self.path.pop(0)
         else: self.path.pop(-1)
         self.predType = predType.Short if len(self.path) == 1 else predType.Long
-        self.beginNode = self.path[0][0]
-        self.endNode = self.path[len(self.path)-1][1]
+        self.beginNodeId = self.path[0][0]
+        self.endNodeId = self.path[len(self.path)-1][1]
         

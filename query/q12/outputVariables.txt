@@ -1,0 +1,8 @@
+outputVariables:
+v1:IntDataType
+v2:IntDataType
+v4:IntDataType
+v6:IntDataType
+v8:IntDataType
+isFull:
+full
