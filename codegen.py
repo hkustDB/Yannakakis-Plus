@@ -90,7 +90,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + enum.stageEnd.viewName + END
     outFile.write(line)
     
-    line = '# drop view ' + ', '.join(dropView) + END
+    line = '\n# drop view ' + ', '.join(dropView) + END
     outFile.write(line)
     
     outFile.close()

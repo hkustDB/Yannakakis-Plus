@@ -12,64 +12,75 @@ from codegen import *
 from random import randint
 import os
 
+GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = '/Users/chenbingnan/Desktop/SparkSQLPlus/examples/query/q2/'
+BASE_PATH = 'query/q13/'
 DDL_NAME = 'graph.ddl'
+QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 JT_PATH = ''
 OUT_PATH = 'outputVariables.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
+def get_tree():
+    cmdline = f'java -jar {GET_TREE} -d {BASE_PATH}{DDL_NAME} -o {BASE_PATH} {BASE_PATH}{QUERY_NAME}'
+    out = os.popen(cmdline, mode='r').readlines()
 
 def parse_ddl():
-    f = open(BASE_PATH + DDL_NAME)
-    table2vars = dict()
-    line = f.readline()
-    flag = 0
-    tableName = ''
-    cols = []
-    while line:
-        if 'TABLE' in line:         # begin attributes
-            flag = 1
-            line = line.split(' ')
-            tableName = line[line.index('TABLE') + 1]
-            cols.clear()
-            line = f.readline()
-            continue
-        elif 'WITH' in line: 
-            flag = 2                # finish one table
-            table2vars[tableName] = cols
-            line = f.readline()
-            continue
-    
-        if flag == 1:
-            line = line.lstrip().rstrip().split(' ')[0]
-            cols.append(line)
+    try:
+        f = open(BASE_PATH + DDL_NAME)
+        table2vars = dict()
         line = f.readline()
+        flag = 0
+        tableName = ''
+        cols = []
+        while line:
+            if 'TABLE' in line:         # begin attributes
+                flag = 1
+                line = line.split(' ')
+                tableName = line[line.index('TABLE') + 1]
+                cols.clear()
+                line = f.readline()
+                continue
+            elif 'WITH' in line: 
+                flag = 2                # finish one table
+                table2vars[tableName] = cols
+                line = f.readline()
+                continue
     
-    # TODO: Add PK-FK description
-    return table2vars
-
+            if flag == 1:
+                line = line.lstrip().rstrip().split(' ')[0]
+                cols.append(line)
+            line = f.readline()
+    
+        # TODO: Add PK-FK description
+        return table2vars
+    except FileNotFoundError:
+        raise FileNotFoundError("DDL file not exist! ")
 
 def parse_outVar():
-    f = open(BASE_PATH + OUT_PATH)
-    line = f.readline()
-    flag = 0
-    outputVariables = []
-    isFull = True
-    while line:
-        if 'outputVariables:' in line  or 'isFull:' in line: 
-            if 'outputVariables:' in line: flag = 1
-            else: flag = 2
-            line = f.readline()
-            continue
-        if flag == 1:
-            name = line.split(':')[0]
-            outputVariables.append(name)
-        elif flag == 2:
-            isFull = True if line == 'full' else False
+    try :
+        f = open(BASE_PATH + OUT_PATH)
         line = f.readline()
-    return list(set(outputVariables)), isFull
+        flag = 0
+        outputVariables = []
+        isFull = True
+        while line:
+            if 'outputVariables:' in line  or 'isFull:' in line: 
+                if 'outputVariables:' in line: flag = 1
+                else: flag = 2
+                line = f.readline()
+                continue
+            if flag == 1:
+                name = line.split(':')[0]
+                outputVariables.append(name)
+            elif flag == 2:
+                isFull = True if line == 'full' else False
+            line = f.readline()
+        return list(set(outputVariables)), isFull
+    except:
+        get_tree()
+        return parse_outVar()
 
 def parseLine(line: str) -> list[str]:
         name = line.split(';', 1)[0]
