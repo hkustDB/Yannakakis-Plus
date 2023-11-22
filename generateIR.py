@@ -5,8 +5,10 @@ from comparison import *
 from enumsType import *
 from random import choice, randint
 from sys import maxsize
+from typing import Union
 import re
 import copy
+
 
 '''helperAttrLeft/Right: helper attribute name change[from, to]
    incidentComp: [first] long, [second] short
@@ -25,7 +27,7 @@ def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
     return whereCondList
 
 def buildPrepareView(JT: JoinTree, childNode: TreeNode) -> CreateTableAggView:
-    if childNode.createViewAlready: return None
+    if childNode.createViewAlready: return None # only means creave view about bag/tableagg/aux relation, not use for other join
     
     prepareView = None
     if childNode.relationType == RelationType.BagRelation:
@@ -45,11 +47,6 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode) -> CreateTableAggView:
         whereCondList.extend(buildJoinRelation(JT.getNode(id), JT.getNode(childNode.insideId[0])))
         prepareView = CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', joinTableList, whereCondList)
     
-    elif childNode.relationType == RelationType.AuxiliaryRelation: # must have child, only need alias
-        supNode = JT.getNode(childNode.supRelationId)
-        fromTable = supNode.source + ' as ' + supNode.alias if supNode.alias != supNode.source else supNode.source
-        prepareView = CreateAuxView(childNode.alias, '', childNode.cols, fromTable)
-
     elif childNode.relationType == RelationType.TableAggRelation: 
         aggNodes = childNode.aggRelation
         fromTable = childNode.source # + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
@@ -78,10 +75,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode) -> CreateTableAggView:
 
         prepareView = CreateTableAggView(childNode.alias, originalVars, childNode.cols, fromTable, joinTableList, whereCondList)
     
-    # TableScan
-    else: 
-        return None
-    
+    childNode.createViewAlready = True # only apply for tableAgg & bag relation
     return prepareView
     
 
@@ -91,16 +85,51 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     prepareView = []
     orderView = minView = joinView = semiView = None
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
-    if childNode.isLeaf:
+    if childNode.isLeaf and childNode.relationType:
         ret = buildPrepareView(JT, childNode)
         if ret is not None: prepareView.append(ret)
     ret = buildPrepareView(JT, parentNode)
     if ret is not None: prepareView.append(ret)
     
+    # Extra end
+    type = PhaseType.SemiJoin if direction == Direction.SemiJoin else PhaseType.CQC
+    
     if direction != Direction.SemiJoin and len(incidentComp) == 1 :
+        comp = incidentComp[0]
+        
+        # use JoinView to create aux view
+        if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
+            viewName = childNode.source if childNode.JoinResView is None else childNode.JoinResView.viewName # leaf or join result
+            mfAttr = helperLeft if direction == Direction.Left or direction == Direction.RootLeft else helperRight
+            if mfAttr[1] not in parentNode.cols:
+                if childNode.relationType != RelationType.TableScanRelation: # can use alias directly
+                    selectAttributes = parentNode.col2vars[1] + ['']
+                    selectAttributesAs = parentNode.cols + [mfAttr[1]]
+                else :
+                    idx = childNode.cols.index(mfAttr[1])
+                    selectAttributes = parentNode.col2vars[1] + [childNode.col2vars[1][idx]]
+                    selectAttributesAs = parentNode.cols + [mfAttr[1]]
+            else:
+                selectAttributes = parentNode.col2vars[1]
+                selectAttributesAs = parentNode.cols
+            supNode = JT.getNode(parentNode.supRelationId)
+            # source name directly (abandon alias) or previous join result name
+            if childNode.JoinResView is not None:
+                fromTable = childNode.JoinResView.viewName 
+                prepareView.append(CreateAuxView(parentNode.alias, [], selectAttributesAs, fromTable))
+            elif childNode.relationType != RelationType.TableScanRelation:
+                fromTable = childNode.alias
+                prepareView.append(CreateAuxView(parentNode.alias, [], selectAttributesAs, fromTable))
+            else:
+                fromTable = childNode.source
+                prepareView.append(CreateAuxView(parentNode.alias, selectAttributes, selectAttributesAs, fromTable))
+            
+            # pass aux viewName for later
+            joinView = Join2tables(prepareView[-1].viewName, selectAttributes, selectAttributesAs, '', '', [], '', '')     # pass comparison attributes
+            return ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, incidentComp)
+        
     # 2. orderView
         viewName = 'orderView' + str(randint(0, maxsize))
-        comp = incidentComp[0]
         noAliasFlag = False
         if childNode.JoinResView is not None:
             fromTable = childNode.JoinResView.viewName
@@ -211,7 +240,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             
             joinCondList.append(cond)
         joinCond = ' and '.join(joinCondList)
-            
+        
         # original table or previous view
         fromTable = ''
         if parentNode.JoinResView is None:
@@ -231,8 +260,6 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         raise NotImplementedError("SemiJoin case is not implemented! ")
     
     # End
-    parentNode.createViewAlready = True
-    type = PhaseType.SemiJoin if direction == Direction.SemiJoin else PhaseType.CQC
     retReducePhase = ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, incidentComp)
     return retReducePhase
 
@@ -268,7 +295,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase) -> En
     
     if errorFlag:
         raise RuntimeError("Mf value error! ")
-        
+    
     # used as stageEnd whereCond as well
     whereCond = leftMf + corReducePhase.reduceOp + rightMf
     selectMax = SelectMaxRn(viewName, [], selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, groupCond)
@@ -314,6 +341,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
         # TODO: Change needs for Complex comparison's two sides
         leafRelation = [rel for rel in relations if rel.dst.isLeaf and not rel.dst.isRoot]
         return leafRelation
+    
+    def getSupportRelation(relations: list[Edge]) -> list[Edge]:
+        supportRelation = [rel for rel in relations if rel.src.relationType == RelationType.AuxiliaryRelation and rel.dst.id == rel.src.supRelationId]
+        return supportRelation
         
     '''Get incident comparisons'''
     def getCompRelation(relation: Edge) -> list[Comparison]:
@@ -333,14 +364,16 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                     compList[index].deletePath(Direction.Left) # compList reference to comparisons
                 elif update == Direction.Right:
                     compList[index].deletePath(Direction.Right)
-                    
-        # print(comparisons)
-                    
+     
     
     '''Step1: Reduce'''
     while len(remainRelations) > 1:
         leafRelation = getLeafRelation(remainRelations)
-        rel = choice(leafRelation)
+        supportRelation = getSupportRelation(leafRelation)
+        if len(supportRelation) == 0:
+            rel = choice(leafRelation)
+        else:
+            rel = choice(supportRelation)
         incidentComp = getCompRelation(rel)
         updateDirection = []
         retReduce = None
@@ -350,17 +383,18 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
             elif len(incidentComp) == 1:
                 onlyComp = incidentComp[0]
                 if (onlyComp.getPredType == predType.Long):
+                    supportRelationFlag = True if rel.src.relationType == RelationType.AuxiliaryRelation and rel.dst.id == rel.src.supRelationId else False
                     if rel.dst.id == onlyComp.getBeginNodeId:
                         pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
                         helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
-                        helperLeftTo = 'mfL' + str(randint(0, maxsize))
+                        helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
                         onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo]
                         retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Left, [helperLeftFrom, helperLeftTo], ['', ''])
                         updateDirection.append(Direction.Left)
                     elif rel.dst.id == onlyComp.getEndNodeId:
                         pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
                         helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
-                        helperRightTo = 'mfR' + str(randint(0, maxsize))
+                        helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
                         onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom]
                         retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Right, ['', ''], [helperRightFrom, helperRightTo])
                         updateDirection.append(Direction.Right)
@@ -421,8 +455,12 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
     # attach ReducePhase to the TreeNode
     JT.getNode(rel.dst.id).reducePhase = retReduce
     
-    
+
     '''Step2: Enumerate'''
+    # only root node
+    if len(JT.subset) == 1:
+        return reduceList, []
+    
     enumerateOrder = [enum for enum in reduceList if JT.getNode(enum.corresNodeId) in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
     for enum in enumerateOrder:

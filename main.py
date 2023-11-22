@@ -14,7 +14,7 @@ import os
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q13/'
+BASE_PATH = 'query/q10/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -44,13 +44,15 @@ def parse_ddl():
                 continue
             elif 'WITH' in line: 
                 flag = 2                # finish one table
-                table2vars[tableName] = cols
+                table2vars[tableName] = cols.copy()
+                cols.clear()
                 line = f.readline()
                 continue
     
             if flag == 1:
                 line = line.lstrip().rstrip().split(' ')[0]
                 cols.append(line)
+              
             line = f.readline()
     
         # TODO: Add PK-FK description
@@ -170,12 +172,14 @@ def parseRelation(line: list[str], JT: JoinTree, table2vars: dict[str, str]) -> 
             for index, col in enumerate(supCols):
                 if col in cols:
                     auxCols.append(col)
-                    auxVars.append(supAlias + '.' + supVars[index])
+                    auxVars.append(supVars[index])
                     
             # replace source name [T] to Txxx
             if '[' in source and ']' in source:
                 source = source.replace('[', '').replace(']', str(randint(0, 100)))
             
+            # extra process for its alias
+            alias = alias.replace('[', '').replace(']', '') + 'Aux' + str(randint(0, 100))
             auxNode = AuxTreeNode(id, source, auxCols, [auxCols, auxVars], alias, supportId)
             JT.addNode(auxNode)
     
