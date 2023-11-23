@@ -74,8 +74,6 @@ class Direction(Enum):
     Left = 0
     Right = 1
     SemiJoin = 2
-    RootLeft = 3
-    RootRight = 4
     
 class MfType(Enum):
     MIN = 0

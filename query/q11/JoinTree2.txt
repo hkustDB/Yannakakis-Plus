@@ -9,4 +9,4 @@ TableScanRelation;id=1;source=R;cols=(v1:IntDataType,v2:IntDataType);tableDispla
 TableScanRelation;id=2;source=S;cols=(v2:IntDataType,v4:IntDataType);tableDisplayName=s
 AuxiliaryRelation;id=4;source=[T];cols=(v4:IntDataType,v8:IntDataType);tableDisplayName=[t];supportingRelation=TableScanRelation;id=3;source=T;cols=(v4:IntDataType,v6:IntDataType,v7:IntDataType,v8:IntDataType);tableDisplayName=t
 comparison hypergraph edge:
-Comparison;id=2;op=intLessThan;left=SingleVariableExpression(v1:IntDataType);right=SingleVariableExpression(v7:IntDataType);path=2<->1,2<->4,4<->3
+Comparison;id=2;op=intLessThan;left=SingleVariableExpression(v7:IntDataType);right=SingleVariableExpression(v1:IntDataType);path=4<->3,2<->4,2<->1

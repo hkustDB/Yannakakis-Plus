@@ -75,7 +75,7 @@ class Join2tables(Action):
         self.joinCond = joinCond
         self.whereCond = whereCond
         self.reduceType = ReduceType.Join2tables
-        self._joinFlag = ' JOIN ' if self.joinCond == '' else ', '
+        self._joinFlag = ' JOIN ' if len(self.joinKey) != 0 else ', '
         
     def __repr__(self) -> str:
         ret = self.viewName + ' AS SELECT ' + str(self.selectAttrAlias) + ' AS ' + str(self.selectAttrs) + ' FROM ' + self.fromTable + self._joinFlag + self.joinTable

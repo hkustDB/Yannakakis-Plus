@@ -1,0 +1,9 @@
+jt.root:
+TableAggRelation;id=5;source=Graph;cols=(v5:IntDataType,v2:IntDataType,v6:LongDataType);tableDisplayName=g1;AggList=List(AggregatedRelation;id=3;source=Graph;cols=(v5:IntDataType,v6:LongDataType);tableDisplayName=c1;group=(0);func=COUNT)
+edge:
+TableAggRelation;id=5;source=Graph;cols=(v5:IntDataType,v2:IntDataType,v6:LongDataType);tableDisplayName=g1;AggList=List(AggregatedRelation;id=3;source=Graph;cols=(v5:IntDataType,v6:LongDataType);tableDisplayName=c1;group=(0);func=COUNT)->TableAggRelation;id=6;source=Graph;cols=(v2:IntDataType,v4:IntDataType,v8:LongDataType);tableDisplayName=g2;AggList=List(AggregatedRelation;id=4;source=Graph;cols=(v4:IntDataType,v8:LongDataType);tableDisplayName=c2;group=(0);func=COUNT)
+relation in subset:
+TableAggRelation;id=5;source=Graph;cols=(v5:IntDataType,v2:IntDataType,v6:LongDataType);tableDisplayName=g1;AggList=List(AggregatedRelation;id=3;source=Graph;cols=(v5:IntDataType,v6:LongDataType);tableDisplayName=c1;group=(0);func=COUNT)
+TableAggRelation;id=6;source=Graph;cols=(v2:IntDataType,v4:IntDataType,v8:LongDataType);tableDisplayName=g2;AggList=List(AggregatedRelation;id=4;source=Graph;cols=(v4:IntDataType,v8:LongDataType);tableDisplayName=c2;group=(0);func=COUNT)
+comparison hypergraph edge:
+Comparison;id=1;op=longLessThan;left=SingleVariableExpression(v8:LongDataType);right=SingleVariableExpression(v6:LongDataType);path=5<->6
