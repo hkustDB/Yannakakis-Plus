@@ -111,3 +111,10 @@ class Comparison:
         self.beginNodeId = self.path[0][0]
         self.endNodeId = self.path[len(self.path)-1][1]
         
+    def reversePath(self):
+        self.path = [[i[1], i[0]] for i in self.path]
+        self.path.reverse()
+        
+        self.originPath = copy.deepcopy(self.path)
+        self.beginNodeId = self.originBeginNodeId = self.path[0][0]
+        self.endNodeId = self.originEndNodeId = self.path[len(self.path)-1][1]

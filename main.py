@@ -265,6 +265,9 @@ def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
             id, op, left, right, path = parseComparison(line)
             Compare = Comparison()
             Compare.setAttr(id, op, left, right, path)
+            leftAlias = JT.node[Compare.beginNodeId].cols
+            if Compare.left.split('+')[0].split('*')[0] not in leftAlias:
+                Compare.reversePath()
             CompareMap[Compare.id] = Compare
             
         line = f.readline().rstrip()
@@ -280,6 +283,11 @@ def parse_jt(isFull: bool, table2vars: dict[str, str]):
         for file_name in file_list:  
             if 'JoinTree' in file_name: 
                 jt, comp = parse_one_jt(isFull, table2vars, BASE_PATH + file_name)
+                '''
+                leafRelation = [rel.dst.id for rel in list(jt.edge.values()) if rel.dst.isLeaf]
+                if jt.root.id in leafRelation:
+                    continue    # not statidfied jointree, specific for one edge jointree
+                '''
                 if JT is not None and jt.root.depth < JT.root.depth:
                     JT, COMP = jt, comp
                 elif JT is None:

@@ -100,7 +100,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         # use JoinView to create aux view
         if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
             viewName = childNode.source if childNode.JoinResView is None else childNode.JoinResView.viewName # leaf or join result
-            mfAttr = helperLeft if direction == Direction.Left or direction == Direction.RootLeft else helperRight
+            mfAttr = helperLeft if direction == Direction.Left else helperRight
             if mfAttr[1] not in parentNode.cols:
                 if childNode.relationType != RelationType.TableScanRelation: # can use alias directly
                     selectAttributes = parentNode.col2vars[1] + ['']
@@ -146,10 +146,10 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         partiKey = joinKey.copy()
         orderKey = [] # leave for primary key space in orderKey
         AESC = True
-        if direction == Direction.Left or direction == Direction.RootLeft:
+        if direction == Direction.Left:
             orderKey.append(helperLeft[0])
             AESC = True if '<' in comp.op else False 
-        elif direction == Direction.Right or direction == Direction.RootRight:
+        elif direction == Direction.Right:
             orderKey.append(helperRight[0])
             AESC = True if '>' in comp.op else False
 
@@ -179,7 +179,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                     transVarList.append(transVar)
                 
                 extraAttr = op.join(transVarList)
-            extraAlias = 'ori' + ('Left' if (direction == Direction.Left or direction == Direction.RootLeft) else 'Right')
+            extraAlias = 'ori' + ('Left' if (direction == Direction.Left) else 'Right')
             helperLeft[0] = extraAlias if 'Left' in extraAlias else helperLeft[0]
             helperRight[0] = extraAlias if 'Right' in extraAlias else helperRight[0]
         
@@ -212,7 +212,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             
     # 3. minView
         viewName = 'minView' + str(randint(0, maxsize))
-        mfAttr = helperLeft if direction == Direction.Left or direction == Direction.RootLeft else helperRight
+        mfAttr = helperLeft if direction == Direction.Left else helperRight
         mfWords = mfAttr[0] + ' as ' + mfAttr[1]
         selectAttrAlias = joinKey + [mfWords]
         fromTable = orderView.viewName
@@ -224,35 +224,75 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         selectAttributes, selectAttributesAs = [], []
         if parentNode.JoinResView is not None: # already has alias 
             selectAttributesAs = parentNode.JoinResView.selectAttrAlias + [mfAttr[1]]
+        elif parentNode.relationType != RelationType.TableScanRelation: # create view node already
+            selectAttributesAs = parentNode.cols + [mfAttr[1]]
         else:
             selectAttributes = parentNode.col2vars[1] + ['']
             selectAttributesAs = parentNode.cols + [mfAttr[1]]
+            
+        def splitLR(LR: str):
+            if '*' in LR: return LR.split('*'), '*'
+            elif '+': return LR.split('+'), '+'
+            else: return [LR], ''
+        
+        def joinSplit(splitVars: list[str], op: str):
+            return op.join(splitVars)
+        
+        # handle extra mf comaprison alias
+        whereCond = [helperLeft[1], comp.op, helperRight[1]]
+        if len(comp.path) == 1:
+            if direction == Direction.Left:     # change right
+                if parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation:
+                    splitVars, op = splitLR(whereCond[2])
+                    for idx, item in enumerate(splitVars):
+                        index = parentNode.cols.index(item)
+                        newName = parentNode.col2vars[1][index]
+                        splitVars[idx] = newName
+                    whereCond[2] = joinSplit(splitVars, op)
+            elif direction == Direction.Right:  # change left
+                if parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation:
+                    splitVars, op = splitLR(whereCond[0])
+                    for idx, item in enumerate(splitVars):
+                        index = parentNode.cols.index(item)
+                        newName = parentNode.col2vars[1][index]
+                        splitVars[idx] = newName
+                    whereCond[2] = joinSplit(splitVars, op)
+            
         joinCondList = []
         # still need alias casting, new table join
         for eachKey in joinKey:
             cond = ''
             # not root, cast to alias already in the first one side
-            if parentNode.JoinResView is None: # use original
+            if parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation: 
+                # use original
                 originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)]
                 cond = parentNode.alias + '.' + originalName + '=' + minView.viewName + '.' + eachKey
+                joinKey.remove(eachKey) # remove it from using syntax
+            # else:
+                # cond = eachKey
             # else:  previous join view already cast to alias
                 # cond = parentNode.JoinResView.viewName + '.' + eachKey + '=' + minView.viewName + '.' + eachKey
             
             joinCondList.append(cond)
+        
         joinCond = ' and '.join(joinCondList)
+        
         
         # original table or previous view
         fromTable = ''
-        if parentNode.JoinResView is None:
+        if parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation:
             fromTable = parentNode.source + ' AS ' + parentNode.alias
-        else:
+        elif parentNode.JoinResView is not None:
             fromTable = parentNode.JoinResView.viewName
+        else:
+            fromTable = parentNode.alias
         
-        if direction != Direction.RootLeft and direction != Direction.RootRight:
+        if len(comp.path) == 1:   # Root of the comparison, need add mf_left < mf_right
+            joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, joinCond, ''.join(whereCond))
+        else:
             joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, joinCond)
-        else:   # Root join, need add mf_left < mf_right
-            joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, joinCond, helperLeft[1] + comp.op + helperRight[1])
-    
+        
+
     elif len(incidentComp) > 1:
         raise NotImplementedError("# Comparisons >= 2 case is not implemented yet! ")
     
@@ -276,23 +316,21 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase) -> En
     joinTable = createSample.viewName
     leftMf, rightMf = re.split('\s*[<>]=?\s*', previousView.whereCond)
     oriMfFrom, oriMfTo = corReducePhase.minView.selectAttrAlias[-1].split(' as ')
-    errorFlag = False
-    changeSide = 0      # 0: change left Mf value, 1: change right
-    if (corReducePhase.reduceDirection == Direction.Left or corReducePhase.reduceDirection == Direction.RootLeft) and '<' in corReducePhase.reduceOp:
-        errorFlag = True if leftMf != oriMfTo else False
-        leftMf = oriMfFrom 
-    elif (corReducePhase.reduceDirection == Direction.Left or corReducePhase.reduceDirection == Direction.RootLeft) and '>' in corReducePhase.reduceOp:
-        errorFlag = True if rightMf != oriMfTo else False
-        rightMf = oriMfFrom
-        changeSide = 1 
-    elif (corReducePhase.reduceDirection == Direction.Right or corReducePhase.reduceDirection == Direction.RootRight) and '<' in corReducePhase.reduceOp:
-        errorFlag = True if rightMf != oriMfTo else False
-        rightMf = oriMfFrom
-        changeSide = 1
-    elif (corReducePhase.reduceDirection == Direction.Right or corReducePhase.reduceDirection == Direction.RootRight) and '>' in corReducePhase.reduceOp:
-        errorFlag = True if leftMf != oriMfTo else False
-        leftMf = oriMfFrom 
     
+    errorFlag = False
+    # changeSide = 0      # 0: change left Mf value, 1: change right
+    if (corReducePhase.reduceDirection == Direction.Left):
+        errorFlag = True if leftMf != oriMfTo else False
+        leftMf = oriMfFrom 
+        # right remain, fix alias problem; only for short comparison
+        if rightMf in corReducePhase.joinView.selectAttrs:
+            rightMf = corReducePhase.joinView.selectAttrAlias[corReducePhase.joinView.selectAttrs.index(rightMf)]
+    elif (corReducePhase.reduceDirection == Direction.Right):
+        errorFlag = True if rightMf != oriMfTo else False
+        rightMf = oriMfFrom
+        # left remain, fix alias problem; only for short comparison
+        if leftMf in corReducePhase.joinView.selectAttrs:
+            leftMf = corReducePhase.joinView.selectAttrAlias[corReducePhase.joinView.selectAttrs.index(leftMf)]
     if errorFlag:
         raise RuntimeError("Mf value error! ")
     
@@ -364,7 +402,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                     compList[index].deletePath(Direction.Left) # compList reference to comparisons
                 elif update == Direction.Right:
                     compList[index].deletePath(Direction.Right)
-     
+    
     
     '''Step1: Reduce'''
     while len(remainRelations) > 1:
@@ -382,28 +420,36 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                 retReduce = buildReducePhase(rel, JT, incidentComp, Direction.SemiJoin)
             elif len(incidentComp) == 1:
                 onlyComp = incidentComp[0]
-                if (onlyComp.getPredType == predType.Long):
+                if (onlyComp.getPredType == predType.Long or onlyComp.getPredType == predType.Short):
                     supportRelationFlag = True if rel.src.relationType == RelationType.AuxiliaryRelation and rel.dst.id == rel.src.supRelationId else False
                     if rel.dst.id == onlyComp.getBeginNodeId:
                         pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
                         helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
                         helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
+                        # use orioginal short comparison
+                        if onlyComp.getPredType == predType.Short:
+                            helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if len(onlyComp.originPath) > 1 else onlyComp.right
+                        else:
+                            helperRightFrom = ''
                         onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo]
-                        retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Left, [helperLeftFrom, helperLeftTo], ['', ''])
+                        retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom])
                         updateDirection.append(Direction.Left)
                     elif rel.dst.id == onlyComp.getEndNodeId:
                         pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
+                        # use orioginal short comparison
+                        if onlyComp.getPredType == predType.Short:
+                            helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1]  if len(onlyComp.originPath) > 1 else onlyComp.left
+                        else :
+                            helperLeftFrom = ''
                         helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                         helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
                         onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom]
-                        retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Right, ['', ''], [helperRightFrom, helperRightTo])
+                        retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo])
                         updateDirection.append(Direction.Right)
                     else:
                         raise RuntimeError("Should not happen! ")
                 else:
-                    # short comparison
-                    raise NotImplementedError("Need to support short comparison!")
-                
+                    raise NotImplementedError("Error type! ")
             else :
                 # use reverseOp to judge the case
                 raise NotImplementedError("Need to two incident comparison!")
@@ -431,16 +477,18 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                     pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
                     helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
                     helperLeftTo = 'mfL' + str(randint(0, maxsize))
-                    helperRightFrom = onlyComp.helperAttr[pathIdx+1][0]
+                    # orioginal short comparison
+                    helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if len(onlyComp.originPath) > 1 else onlyComp.right
                     onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo] # update
-                    retReduce = buildReducePhase(rel, JT, incidentComp, Direction.RootLeft, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom])
+                    retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom])
                 elif rel.dst.id == onlyComp.getEndNodeId: # root <- dst
                     pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
-                    helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] # left mf, no alias any more
+                    # original short comparison
+                    helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1]  if len(onlyComp.originPath) > 1 else onlyComp.left
                     helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                     helperRightTo = 'mfR' + str(randint(0, maxsize))
                     onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom] # update
-                    retReduce = buildReducePhase(rel, JT, incidentComp, Direction.RootRight, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo])
+                    retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo])
                 else:
                     raise RuntimeError("Last comparison error! ")
             else:
