@@ -363,6 +363,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         origiNode = JT.getNode(corReducePhase.corresNodeId)
         selectAttr, selectAttrAlias = [], []
         joinKey, joinCondList = [], []
+        
         joinCond = ''
         
         if origiNode.JoinResView is None and origiNode.relationType == RelationType.TableScanRelation:
@@ -395,8 +396,8 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                 originalName = origiNode.col2vars[1][origiNode.col2vars[0].index(eachKey)]
                 cond = origiNode.alias + '.' + originalName + '=' + previousView.viewName + '.' + eachKey
                 joinKey.remove(eachKey) # remove it from using syntax
-            
-            joinCondList.append(cond)
+                
+                joinCondList.append(cond)
         
         joinCond = ' and '.join(joinCondList)
             
