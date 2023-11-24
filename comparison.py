@@ -13,12 +13,12 @@ class Comparison:
         self.right = None       # formular on the op right
         self.path = None        # [[1, 2], [2, 4], [4, 3]]
         self.predType = None    # Short/Long
-        self.beginNodeId = None   # update for each delete path
-        self.endNodeId = None
+        self.beginNodeId = None     # update for each delete path, -1 means no comparison edge undone anymore
+        self.endNodeId = None       
         self.originBeginNodeId = None                     # no changing begin
         self.originEndNodeId = None                       # no changing end
-        self.originPath = None                          # no deleting path
-        self.helperAttr: list[list[str]] = None         # path record of mf name
+        self.originPath = None                            # no deleting path
+        self.helperAttr: list[list[str]] = None           # path record of mf name
         
     def setAttr(self, id: int, op: str, left: str, right: str, path: list[str]):
         # path = ['4<->1', '1<->2', '2<->3', '3<->5']
@@ -108,8 +108,8 @@ class Comparison:
             self.path.pop(0)
         else: self.path.pop(-1)
         self.predType = predType.Short if len(self.path) == 1 else predType.Long
-        self.beginNodeId = self.path[0][0]
-        self.endNodeId = self.path[len(self.path)-1][1]
+        self.beginNodeId = self.path[0][0] if len(self.path) != 0 else -1
+        self.endNodeId = self.path[len(self.path)-1][1] if len(self.path) != 0 else -1
         
     def reversePath(self):
         self.path = [[i[1], i[0]] for i in self.path]

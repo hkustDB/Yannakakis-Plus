@@ -91,6 +91,7 @@ class SemiJoin(Action):
         self.inLeft = inLeft
         self.inRight = inRight
         self.reduceType = ReduceType.CreateSemiJoinView
+        self.semiFlag = 1
 
 class ReducePhase:
     '''
