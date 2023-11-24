@@ -26,6 +26,7 @@ def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
         
     return whereCondList
 
+# prepareView is ahead of joinView
 def buildPrepareView(JT: JoinTree, childNode: TreeNode) -> CreateTableAggView:
     if childNode.createViewAlready: return None # only means creave view about bag/tableagg/aux relation, not use for other join
     
@@ -97,7 +98,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     if direction != Direction.SemiJoin and len(incidentComp) == 1 :
         comp = incidentComp[0]
         
-        # use JoinView to create aux view
+        # Support Relation for auxiliary relation case, all aux relations will be create here
         if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
             viewName = childNode.source if childNode.JoinResView is None else childNode.JoinResView.viewName # leaf or join result
             mfAttr = helperLeft if direction == Direction.Left else helperRight
@@ -127,6 +128,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             # pass aux viewName for later
             joinView = Join2tables(prepareView[-1].viewName, selectAttributes, selectAttributesAs, '', '', [], '', '')     # pass comparison attributes
             return ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, incidentComp)
+        # END
         
     # 2. orderView
         viewName = 'orderView' + str(randint(0, maxsize))
@@ -296,16 +298,114 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     elif len(incidentComp) > 1:
         raise NotImplementedError("# Comparisons >= 2 case is not implemented yet! ")
     
-    else:
-        raise NotImplementedError("SemiJoin case is not implemented! ")
-    
+    else: # Semijoin
+        viewName = 'semiJoinView' + str(randint(0, maxsize))
+        selectAttributes, selectAttributesAs = [], []
+        fromTable = ''
+        if parentNode.JoinResView is not None: # already has alias 
+            selectAttributesAs = parentNode.JoinResView.selectAttrAlias
+            fromTable = parentNode.JoinResView.viewName
+        elif parentNode.relationType != RelationType.TableScanRelation: # create view node already
+            selectAttributesAs = parentNode.cols
+            fromTable = parentNode.alias
+        else:
+            selectAttributes = parentNode.col2vars[1]
+            selectAttributesAs = parentNode.cols
+            fromTable = parentNode.source + ' AS ' + parentNode.alias
+            
+        joinTable = ''
+        if childNode.JoinResView is not None: # already has alias 
+            joinTable = childNode.JoinResView.viewName
+        elif childNode.relationType != RelationType.TableScanRelation: # create view node already
+            joinTable = childNode.alias
+        else:
+            joinTable = childNode.source + ' AS ' + childNode.alias
+        
+        joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        # joinCondition setting
+        # original variable name
+        inLeft, inRight = [], []
+        parentFlag = parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation
+        childFlag = childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation
+        for eachKey in joinKey:
+            # Flag: need alias casting, add to condList
+            # alias/JoinViewName.original else alias/JoinViewName.eachKey
+            originalNameP = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)]
+            originalNameC = childNode.col2vars[1][childNode.col2vars[0].index(eachKey)]
+            if parentFlag and childFlag:        
+                # both alias/JoinViewName.original
+                inLeft.append(originalNameP) 
+                inRight.append(originalNameC)
+            elif not parentFlag and childFlag:  
+                # parent alias/JoinViewName.eachKey; child alias/JoinViewName.original
+                inLeft.append(eachKey)
+                inRight.append(originalNameC)
+            elif parentFlag and not childFlag:  
+                # parent alias/JoinViewName.original; child alias/JoinViewName.eachKey
+                inLeft.append(originalNameP)
+                inRight.append(eachKey)
+            else :
+                inLeft.append(eachKey)
+                inRight.append(eachKey)
+        
+        semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight)
+        retReducePhase = ReducePhase(prepareView, None, None, None, semiView, childNode.id, direction, type, '', [])
+        return retReducePhase
     # End
     retReducePhase = ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, incidentComp)
     return retReducePhase
 
 
-def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase) -> EnumeratePhase:
-    createSample = selectMax = selectTarget = stageEnd = None
+def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree) -> EnumeratePhase:
+    createSample = selectMax = selectTarget = stageEnd = semiEnumerate = None
+    if (corReducePhase.reduceDirection == Direction.SemiJoin):
+        viewName = 'semiEnum' + str(randint(0, maxsize))
+        origiNode = JT.getNode(corReducePhase.corresNodeId)
+        selectAttr, selectAttrAlias = [], []
+        joinKey, joinCondList = [], []
+        joinCond = ''
+        
+        if origiNode.JoinResView is None and origiNode.relationType == RelationType.TableScanRelation:
+            # need alias casting for origiNode 
+            joinTable = origiNode.source + ' as ' + origiNode.alias
+            selectAttrAlias = list(set(origiNode.cols) | set(previousView.selectAttrAlias))
+            for alias in selectAttrAlias:
+                if alias in previousView.selectAttrAlias:
+                    selectAttr.append('')
+                else:
+                    selectAttr.append(origiNode.col2vars[1][origiNode.cols.index(alias)])
+                    
+            joinKey = list(set(origiNode.cols) & set(previousView.selectAttrAlias))
+            
+        elif origiNode.JoinResView is not None:
+            joinTable = origiNode.JoinResView.viewName
+            selectAttrAlias = list(set(origiNode.JoinResView.selectAttrAlias) | set(previousView.selectAttrAlias))
+            joinKey = list(set(origiNode.JoinResView.selectAttrAlias) & set(previousView.selectAttrAlias))
+            
+        else:
+            joinTable = origiNode.alias
+            selectAttrAlias = list(set(origiNode.cols) | set(previousView.selectAttrAlias))
+            joinKey = list(set(origiNode.cols) & set(previousView.selectAttrAlias))
+            
+        for eachKey in joinKey:
+            cond = ''
+            # not root, cast to alias already in the first one side
+            if origiNode.JoinResView is None and origiNode.relationType == RelationType.TableScanRelation: 
+                # use original
+                originalName = origiNode.col2vars[1][origiNode.col2vars[0].index(eachKey)]
+                cond = origiNode.alias + '.' + originalName + '=' + previousView.viewName + '.' + eachKey
+                joinKey.remove(eachKey) # remove it from using syntax
+            
+            joinCondList.append(cond)
+        
+        joinCond = ' and '.join(joinCondList)
+            
+        fromTable = previousView.viewName
+        
+        semiEnumerate = SemiEnumerate(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, joinCond)
+        retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
+        return retEnum
+        
     # 1. createSample
     viewName = 'sample' + str(randint(0, maxsize))
     createSample = CreateSample(viewName, [], ['*'], corReducePhase.orderView.viewName)
@@ -331,6 +431,10 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase) -> En
         # left remain, fix alias problem; only for short comparison
         if leftMf in corReducePhase.joinView.selectAttrs:
             leftMf = corReducePhase.joinView.selectAttrAlias[corReducePhase.joinView.selectAttrs.index(leftMf)]
+    
+    else:
+        raise RuntimeError("SemiJoin case should be handle earlier! ")
+    
     if errorFlag:
         raise RuntimeError("Mf value error! ")
     
@@ -363,7 +467,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase) -> En
     joinKey = selectMax.joinKey
     stageEnd = StageEnd(viewName, [], selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond)
 
-    retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
+    retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
     return retEnum
 
 def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase], list[EnumeratePhase]]:
@@ -461,7 +565,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
         reduceList.append(retReduce)
         # Attach reduce to JoinTree & update previous join result view name
         JT.getNode(rel.dst.id).reducePhase = retReduce  
-        JT.getNode(rel.src.id).JoinResView = retReduce.joinView
+        if retReduce.joinView:
+            JT.getNode(rel.src.id).JoinResView = retReduce.joinView
+        else:
+            JT.getNode(rel.src.id).JoinResView = retReduce.semiView
             
     # remianRelations == 1
     rel = list(remainRelations)[0]
@@ -502,7 +609,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
     reduceList.append(retReduce)
     # attach ReducePhase to the TreeNode
     JT.getNode(rel.dst.id).reducePhase = retReduce
-    
+    if retReduce.joinView:
+        JT.getNode(rel.src.id).JoinResView = retReduce.joinView
+    else:
+        JT.getNode(rel.src.id).JoinResView = retReduce.semiView
 
     '''Step2: Enumerate'''
     # only root node
@@ -512,8 +622,12 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
     enumerateOrder = [enum for enum in reduceList if JT.getNode(enum.corresNodeId) in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
     for enum in enumerateOrder:
-        previousView = enumerateOrder[0].joinView if enumerateList == [] else enumerateList[-1].stageEnd
-        retEnum = buildEnumeratePhase(previousView, enum)
+        beginPrevious = enumerateOrder[0].joinView if enumerateOrder[0].joinView else enumerateOrder[0].semiView
+        if enumerateList == []: 
+            previousView = beginPrevious 
+        else:
+            previousView = enumerateList[-1].stageEnd if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate
+        retEnum = buildEnumeratePhase(previousView, enum, JT)
         enumerateList.append(retEnum)
         
     return reduceList, enumerateList

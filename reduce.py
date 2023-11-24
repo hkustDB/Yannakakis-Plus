@@ -83,13 +83,14 @@ class Join2tables(Action):
         ret += self.joinCond + self.whereCond
         return ret
 
-
 # TODO: Add semijoin action
 class SemiJoin(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, inLeft: list[str], inRight: list[str]) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
-
-
+        self.joinTable = joinTable
+        self.inLeft = inLeft
+        self.inRight = inRight
+        self.reduceType = ReduceType.CreateSemiJoinView
 
 class ReducePhase:
     '''
