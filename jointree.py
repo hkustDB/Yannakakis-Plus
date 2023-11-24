@@ -33,7 +33,7 @@ class JoinTree:
         return str(self.node) + '\n' + str(self.edge) + '\n' + str(self.root) + '\n' + str(self.isFull) + '\n' + str(self.subset)
         
     def __str__(self) -> str:
-        ret = str(self.node) + '\n' + str(self.edge) + '\n' + str(self.root) + '\n' + str(self.isFull) + '\n' + str(self.subset)
+        ret = str(self.root) + '\n' + str(self.isFull)
         return ret
     
     @property

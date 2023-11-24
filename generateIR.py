@@ -407,6 +407,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
         return retEnum
         
+    # Not semi enumerate
     # 1. createSample
     viewName = 'sample' + str(randint(0, maxsize))
     createSample = CreateSample(viewName, [], ['*'], corReducePhase.orderView.viewName)
@@ -415,7 +416,16 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     selectAttrAlias = joinKey = groupCond = corReducePhase.joinView.joinKey
     fromTable = previousView.viewName
     joinTable = createSample.viewName
-    leftMf, rightMf = re.split('\s*[<>]=?\s*', previousView.whereCond)
+    
+    # must be the case: corReducePhase.reduceDirection != Direction.SemiJoin
+    if not previousView.semiFlag:
+        # previous is not semi join, can find where cond
+        leftMf, rightMf = re.split('\s*[<>]=?\s*', previousView.whereCond)
+    else:
+        # reduce semi result
+        # here should not be semi enumerate (semi should be handled at the beginning judge) can only find where cond from corPhase view
+        leftMf, rightMf = re.split('\s*[<>]=?\s*', corReducePhase.joinView.whereCond)
+        
     oriMfFrom, oriMfTo = corReducePhase.minView.selectAttrAlias[-1].split(' as ')
     
     errorFlag = False
@@ -474,9 +484,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
 def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase], list[EnumeratePhase]]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
-    print(COMP)
-    comparisons = list(COMP.values())   
-    print(type(comparisons))         
+    comparisons = list(COMP.values())        
     reduceList: list[ReducePhase] = []
     enumerateList: list[EnumeratePhase] = []
     

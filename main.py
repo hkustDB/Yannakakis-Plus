@@ -11,6 +11,7 @@ from generateIR import *
 from codegen import *
 from random import randint
 import os
+import re
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
@@ -277,31 +278,41 @@ def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
 '''Use JoinTree with minimum depth'''
 def parse_jt(isFull: bool, table2vars: dict[str, str]):
     g = os.walk(BASE_PATH)
-    JT: JoinTree = None
-    COMP: dict[int, Comparison] = None
-    for path,dir_list,file_list in g:  
-        for file_name in file_list:  
-            if 'JoinTree' in file_name: 
+    optJT: JoinTree = None
+    optCOMP: dict[int, Comparison] = None
+    allRes = []
+    for path,dir_list,file_list in g:
+        for file_name in file_list:
+            if 'JoinTree' in file_name:
                 jt, comp = parse_one_jt(isFull, table2vars, BASE_PATH + file_name)
                 '''
                 leafRelation = [rel.dst.id for rel in list(jt.edge.values()) if rel.dst.isLeaf]
                 if jt.root.id in leafRelation:
                     continue    # not statidfied jointree, specific for one edge jointree
                 '''
-                if JT is not None and jt.root.depth < JT.root.depth:
-                    JT, COMP = jt, comp
-                elif JT is None:
-                    JT, COMP = jt, comp
+                if optJT is not None and jt.root.depth < optJT.root.depth:
+                    optJT, optCOMP = jt, comp
+                elif optJT is None:
+                    optJT, optCOMP = jt, comp
+                allRes.append([jt, comp, file_name])       
 
-    print(type(COMP))
-    print(type(COMP.values()))
-    return JT, COMP
+    return optJT, optCOMP, allRes
 
 
 if __name__ == '__main__':
     path_ddl = ''
     table2vars = parse_ddl()
     outputVariables, isFull = parse_outVar()
-    JT, COMP = parse_jt(isFull, table2vars)
-    reduceList, enumerateList = generateIR(JT, COMP)
-    codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + OUT_NAME, isFull=isFull)
+    optJT, optCOMP, allRes = parse_jt(isFull, table2vars)
+    # sign for whether process all JT
+    optFlag = True
+    if optFlag:
+        reduceList, enumerateList = generateIR(optJT, optCOMP)
+        codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + OUT_NAME, isFull=isFull)
+    else:
+        for jt, comp, name in allRes:
+            pattern = re.compile(r'\d+')
+            index = pattern.findall(name)[0]
+            outName = OUT_NAME.split('.')[0] + index + '.' + OUT_NAME.split('.')[1]
+            reduceList, enumerateList = generateIR(jt, comp)
+            codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + outName, isFull=isFull)

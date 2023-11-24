@@ -17,6 +17,7 @@ class Action:
         self.reduceType = None                  # set in each type
         self.viewId = Action._viewId
         self._addViewId
+        self.semiFlag = 0
     
     @property
     def _addViewId(self):

@@ -59,6 +59,7 @@ class SemiEnumerate(Action):
         self.joinKey = joinKey
         self.joinCond = joinCond
         self.enumerateType = EnumerateType.SemiEnumerate
+        self.semiFlag = 1
 
 class EnumeratePhase:
     _enumeratePhaseId = 0
