@@ -51,7 +51,8 @@ class EnumerateType(Enum):
     CreateSample = 0
     SelectMaxRn = 1
     SelectTargetSource = 2
-    stageEnd = 3
+    StageEnd = 3
+    SemiEnumerate = 4
     
 
 class ReduceType(Enum):

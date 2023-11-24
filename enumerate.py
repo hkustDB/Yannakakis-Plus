@@ -46,20 +46,28 @@ class StageEnd(Action):
         self.joinKey = joinKey
         self.joinCond = joinCond
         self.whereCond = whereCond
-        self.enumerateType = EnumerateType.stageEnd
+        self.enumerateType = EnumerateType.StageEnd
     
     # TODO:
     def __repr__(self) -> str:
         return 
-
+    
+class SemiEnumerate(Action):
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], joinCond: str) -> None:
+        super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
+        self.joinTable = joinTable
+        self.joinKey = joinKey
+        self.joinCond = joinCond
+        self.enumerateType = EnumerateType.SemiEnumerate
 
 class EnumeratePhase:
     _enumeratePhaseId = 0
-    def __init__(self, createSample: CreateSample, selectMax: SelectMaxRn, selectTarget: SelectTargetSource, stageEnd: StageEnd, corresNodeId: int, enumerateDirection: Direction, phaseType: PhaseType) -> None:
+    def __init__(self, createSample: CreateSample, selectMax: SelectMaxRn, selectTarget: SelectTargetSource, stageEnd: StageEnd, semiEnumerate: SemiEnumerate, corresNodeId: int, enumerateDirection: Direction, phaseType: PhaseType) -> None:
         self.createSample = createSample
         self.selectMax = selectMax
         self.selectTarget = selectTarget
         self.stageEnd = stageEnd
+        self.semiEnumerate = semiEnumerate
         self.enumeratePhaseId = EnumeratePhase._enumeratePhaseId
         self._addEnumeratePhaseId
         self.corresNodeId = corresNodeId       # corresponds to nodeId in JoinTree

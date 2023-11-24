@@ -29,6 +29,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     outFile.write('## Reduce Phase: \n')
     for reduce in reduceList:
         outFile.write('\n# Reduce' + str(reduce.reducePhaseId) + '\n')
+        
         if len(reduce.prepareView) != 0:
             outFile.write('# 0. Prepare\n')
             for prepare in reduce.prepareView:
@@ -41,7 +42,17 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                 
                 dropView.append(prepare.viewName)
                 outFile.write(line)
-        if reduce.orderView is not None:    # if orderView is None, pass do nothing (aux support relation output)
+        
+        if reduce.semiView is not None:
+            outFile.write('# +. SemiJoin\n')
+            line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + ', '.join(reduce.semiView.inRight) + ' from ' + reduce.semiView.joinTable + ')' + END
+            outFile.write(line)
+            dropView.append(reduce.semiView.viewName)
+            continue
+                
+        # CQC part, if orderView is None, pass do nothing (for aux support relation output case)
+        if reduce.orderView is not None:    
+            
             outFile.write('# 1. orderView\n')
             line = BEGIN + reduce.orderView.viewName + ' as select ' + transSelectData(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, row_numer=True) + ' over (partition by ' + ', '.join(reduce.orderView.joinKey) + ' order by ' + ', '.join(reduce.orderView.orderKey) + (' DESC' if not reduce.orderView.AESC else '') + ') as rn ' + 'from ' + reduce.orderView.fromTable + END
             dropView.append(reduce.orderView.viewName)
@@ -66,6 +77,18 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     outFile.write('\n## Enumerate Phase: \n')
     for enum in enumerateList:
         outFile.write('\n# Enumerate' + str(enum.enumeratePhaseId) + '\n')
+        if enum.semiEnumerate is not None:
+            outFile.write('# +. SemiEnumerate\n')
+            line = BEGIN + enum.semiEnumerate.viewName + ' as select ' + transSelectData(enum.semiEnumerate.selectAttrs, enum.semiEnumerate.selectAttrAlias) + ' from ' + enum.semiEnumerate.fromTable
+            line += ' join ' if len(enum.semiEnumerate.joinKey) != 0 else ', '
+            line += enum.semiEnumerate.joinTable
+            line += ' using(' + ', '.join(enum.semiEnumerate.joinKey) + ')' if len(enum.semiEnumerate.joinKey) != 0 else ''
+            line += ' where ' + enum.semiEnumerate.joinCond if enum.semiEnumerate.joinCond != '' else ''
+            line += END
+            outFile.write(line)
+            dropView.append(enum.semiEnumerate.viewName)
+            continue
+        
         outFile.write('# 1. createSample\n')
         line = BEGIN + enum.createSample.viewName + ' as select ' + enum.createSample.selectAttrAlias[0] + ' from ' + enum.createSample.fromTable + ' where ' + enum.createSample.whereCond + END
         dropView.append(enum.createSample.viewName)
@@ -87,9 +110,11 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         outFile.write(line)
         
     if len(enumerateList) == 0:
-        line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + reduce.joinView.viewName + END
+        fromTable = reduce.joinView.viewName if reduce.joinView else reduce.semiView.viewName
+        line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + END
     else:
-        line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + enum.stageEnd.viewName + END
+        fromTable = enum.stageEnd.viewName if enum.stageEnd else enum.semiEnumerate.viewName
+        line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + END
     outFile.write(line)
     
     line = '\n# drop view ' + ', '.join(dropView) + END

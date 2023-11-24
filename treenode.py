@@ -14,7 +14,7 @@ class TreeNode:
         self.parent: TreeNode = None
         
         self.estimateSize = -1                      # estimate relation size
-        self.relationType = None
+        self.relationType: RelationType = None
         self.createViewAlready: bool = False        # create view TableAgg, Aux, bag already
         self.reducePhase: ReducePhase = None        # Attach reduce information to the node
         self.enumeratePhase: EnumeratePhase = None  # Attach enumerate information to the node
