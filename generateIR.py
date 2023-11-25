@@ -235,7 +235,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             
         def splitLR(LR: str):
             if '*' in LR: return LR.split('*'), '*'
-            elif '+': return LR.split('+'), '+'
+            elif '+' in LR: return LR.split('+'), '+'
             else: return [LR], ''
         
         def joinSplit(splitVars: list[str], op: str):
@@ -259,8 +259,8 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                         index = parentNode.cols.index(item)
                         newName = parentNode.col2vars[1][index]
                         splitVars[idx] = newName
-                    whereCond[2] = joinSplit(splitVars, op)
-            
+                    whereCond[0] = joinSplit(splitVars, op)
+        
         joinCondList = []
         
         alterJoinKey = joinKey.copy()
