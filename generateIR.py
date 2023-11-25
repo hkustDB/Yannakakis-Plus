@@ -127,7 +127,8 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             
             # pass aux viewName for later
             joinView = Join2tables(prepareView[-1].viewName, selectAttributes, selectAttributesAs, '', '', [], '', '')     # pass comparison attributes
-            return ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, incidentComp)
+            remainPathComp = copy.deepcopy(incidentComp)
+            return ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, remainPathComp, incidentComp, reduceRel)
         # END
         
     # 2. orderView
@@ -261,15 +262,17 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                     whereCond[2] = joinSplit(splitVars, op)
             
         joinCondList = []
+        
+        alterJoinKey = joinKey.copy()
         # still need alias casting, new table join
-        for eachKey in joinKey:
+        for eachKey in alterJoinKey:
             cond = ''
             # not root, cast to alias already in the first one side
             if parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation: 
                 # use original
                 originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)]
                 cond = parentNode.alias + '.' + originalName + '=' + minView.viewName + '.' + eachKey
-                joinKey.remove(eachKey) # remove it from using syntax
+                alterJoinKey.remove(eachKey) # remove it from using syntax
             # else:
                 # cond = eachKey
             # else:  previous join view already cast to alias
@@ -290,9 +293,9 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             fromTable = parentNode.alias
         
         if len(comp.path) == 1:   # Root of the comparison, need add mf_left < mf_right
-            joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, joinCond, ''.join(whereCond))
+            joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, ''.join(whereCond))
         else:
-            joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, joinCond)
+            joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond)
         
 
     elif len(incidentComp) > 1:
@@ -349,10 +352,12 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 inRight.append(eachKey)
         
         semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight)
-        retReducePhase = ReducePhase(prepareView, None, None, None, semiView, childNode.id, direction, type, '', [])
+        retReducePhase = ReducePhase(prepareView, None, None, None, semiView, childNode.id, direction, type, '', [], [], reduceRel)
         return retReducePhase
     # End
-    retReducePhase = ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, incidentComp)
+    remainPathComp = copy.deepcopy(incidentComp)
+    
+    retReducePhase = ReducePhase(prepareView, orderView, minView, joinView, semiView, childNode.id, direction, type, comp.op, remainPathComp, incidentComp, reduceRel)
     return retReducePhase
 
 
@@ -387,7 +392,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
             joinTable = origiNode.alias
             selectAttrAlias = list(set(origiNode.cols) | set(previousView.selectAttrAlias))
             joinKey = list(set(origiNode.cols) & set(previousView.selectAttrAlias))
-            
+        
         for eachKey in joinKey:
             cond = ''
             # not root, cast to alias already in the first one side
@@ -417,37 +422,28 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     fromTable = previousView.viewName
     joinTable = createSample.viewName
     
-    # must be the case: corReducePhase.reduceDirection != Direction.SemiJoin
-    if not previousView.semiFlag:
-        # previous is not semi join, can find where cond
-        leftMf, rightMf = re.split('\s*[<>]=?\s*', previousView.whereCond)
-    else:
-        # reduce semi result
-        # here should not be semi enumerate (semi should be handled at the beginning judge) can only find where cond from corPhase view
-        leftMf, rightMf = re.split('\s*[<>]=?\s*', corReducePhase.joinView.whereCond)
-        
-    oriMfFrom, oriMfTo = corReducePhase.minView.selectAttrAlias[-1].split(' as ')
+    # previous view is not semi view, must have have where: 
+    # 1. last joinview of reduce 2. previous enumerate stageEnd
     
-    errorFlag = False
-    # changeSide = 0      # 0: change left Mf value, 1: change right
-    if (corReducePhase.reduceDirection == Direction.Left):
-        errorFlag = True if leftMf != oriMfTo else False
-        leftMf = oriMfFrom 
-        # right remain, fix alias problem; only for short comparison
-        if rightMf in corReducePhase.joinView.selectAttrs:
-            rightMf = corReducePhase.joinView.selectAttrAlias[corReducePhase.joinView.selectAttrs.index(rightMf)]
-    elif (corReducePhase.reduceDirection == Direction.Right):
-        errorFlag = True if rightMf != oriMfTo else False
-        rightMf = oriMfFrom
-        # left remain, fix alias problem; only for short comparison
-        if leftMf in corReducePhase.joinView.selectAttrs:
-            leftMf = corReducePhase.joinView.selectAttrAlias[corReducePhase.joinView.selectAttrs.index(leftMf)]
-    
-    else:
-        raise RuntimeError("SemiJoin case should be handle earlier! ")
-    
-    if errorFlag:
-        raise RuntimeError("Mf value error! ")
+    # TODO: Here only find the first comparison
+    corComp = corReducePhase.remainPathComp[0]
+    l, r = corComp.getBeginNodeId, corComp.getEndNodeId
+    totalLen = len(corComp.originPath)
+    leftMf, rightMf = '', ''
+    lFlag, rFlag= 1, 1          # sign for still set up MF value
+    for i in range(totalLen):
+        if lFlag == 1 and (corComp.originPath[i][0] == l or corComp.originPath[i][1] == l):
+            lFlag = 0
+            inIdx = 0 if corComp.originPath[i][0] == l else 1
+            leftMf = corReducePhase.incidentComp[0].helperAttr[i][inIdx] if not 'mfR' in corReducePhase.incidentComp[0].helperAttr[i][inIdx] else corReducePhase.incidentComp[0].left
+            
+        if rFlag == 1 and (corComp.originPath[totalLen-i-1][0] == r or corComp.originPath[totalLen-i-1][1] == r):
+            rFlag = 0
+            inIdx = 0 if corComp.originPath[totalLen-i-1][0] == r else 1
+            rightMf = corReducePhase.incidentComp[0].helperAttr[totalLen-i-1][inIdx] if not 'mfL' in corReducePhase.incidentComp[0].helperAttr[totalLen-i-1][inIdx] else corReducePhase.incidentComp[0].right
+            
+        if not lFlag and not rFlag:
+            break
     
     # used as stageEnd whereCond as well
     whereCond = leftMf + corReducePhase.reduceOp + rightMf
@@ -525,6 +521,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
             rel = choice(leafRelation)
         else:
             rel = choice(supportRelation)
+        # print(rel)
         incidentComp = getCompRelation(rel)
         updateDirection = []
         retReduce = None
@@ -541,7 +538,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                         helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
                         # use orioginal short comparison
                         if onlyComp.getPredType == predType.Short:
-                            helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if len(onlyComp.originPath) > 1 else onlyComp.right
+                            if len(onlyComp.originPath) > 1 and pathIdx + 1 < len(onlyComp.originPath):
+                                helperRightFrom = onlyComp.helperAttr[pathIdx+1][0]
+                            else:
+                                helperRightFrom = onlyComp.right
                         else:
                             helperRightFrom = ''
                         onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo]
@@ -551,7 +551,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                         pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
                         # use orioginal short comparison
                         if onlyComp.getPredType == predType.Short:
-                            helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1]  if len(onlyComp.originPath) > 1 else onlyComp.left
+                            if len(onlyComp.originPath) > 1 and pathIdx - 1 >= 0:
+                                helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1]
+                            else:
+                                helperLeftFrom = onlyComp.left
                         else :
                             helperLeftFrom = ''
                         helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
@@ -581,6 +584,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
             
     # remianRelations == 1
     rel = list(remainRelations)[0]
+    # print(rel)
     incidentComp = getCompRelation(rel)
     if len(incidentComp) <= 2:
         if len(incidentComp) == 0:  # semijoin only
@@ -593,14 +597,23 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                     pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
                     helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
                     helperLeftTo = 'mfL' + str(randint(0, maxsize))
-                    # orioginal short comparison
-                    helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if len(onlyComp.originPath) > 1 else onlyComp.right
+                    # original short comparison
+                    # TODO: shoule be both left, but index error, change to path?
+                    if len(onlyComp.originPath) > 1 and pathIdx + 1 < len(onlyComp.originPath):
+                        helperRightFrom = onlyComp.helperAttr[pathIdx+1][0]
+                    else:
+                        helperRightFrom = onlyComp.right
+
                     onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo] # update
                     retReduce = buildReducePhase(rel, JT, incidentComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom])
                 elif rel.dst.id == onlyComp.getEndNodeId: # root <- dst
                     pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
                     # original short comparison
-                    helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1]  if len(onlyComp.originPath) > 1 else onlyComp.left
+                    if len(onlyComp.originPath) > 1 and pathIdx - 1 >= 0:
+                        helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1]
+                    else:
+                        helperLeftFrom = onlyComp.left
+                    
                     helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                     helperRightTo = 'mfR' + str(randint(0, maxsize))
                     onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom] # update
@@ -636,6 +649,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
             previousView = beginPrevious 
         else:
             previousView = enumerateList[-1].stageEnd if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate
+        # print(enum.corresNodeId)
         retEnum = buildEnumeratePhase(previousView, enum, JT)
         enumerateList.append(retEnum)
         

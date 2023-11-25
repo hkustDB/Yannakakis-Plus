@@ -95,10 +95,12 @@ class Comparison:
     
     @property
     def getBeginNodeId(self):
+        self.beginNodeId = self.path[0][0]
         return self.beginNodeId
     
     @property
     def getEndNodeId(self):
+        self.endNodeId = self.path[len(self.path)-1][1]
         return self.endNodeId
     
     def deletePath(self, direction: Direction):
