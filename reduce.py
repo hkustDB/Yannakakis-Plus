@@ -1,6 +1,7 @@
 from action import Action
 from enumsType import *
 from comparison import *
+# from jointree import Edge
 
 class CreateBagView(Action):    
     # use joinTableList only, whereCondList is for connext internal 3 nodes
@@ -68,19 +69,20 @@ joinCond(on): Some attributes don't have the same alias yet, but still put in wh
 whereCond: Use for mf1 < mf2
 '''
 class Join2tables(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], joinCond: str = '', whereCond: str = '') -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], alterJoinKey: list[str], joinCond: str = '', whereCond: str = '') -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.joinTable = joinTable
-        self.joinKey = joinKey
+        self.joinKey = joinKey                  # set intersection, remain original for enumerate usage
+        self.alterJoinKey = alterJoinKey        # can be removed
         self.joinCond = joinCond
         self.whereCond = whereCond
         self.reduceType = ReduceType.Join2tables
-        self._joinFlag = ' JOIN ' if len(self.joinKey) != 0 else ', '
+        self._joinFlag = ' JOIN ' if len(self.alterJoinKey) != 0 else ', '
         
     def __repr__(self) -> str:
         ret = self.viewName + ' AS SELECT ' + str(self.selectAttrAlias) + ' AS ' + str(self.selectAttrs) + ' FROM ' + self.fromTable + self._joinFlag + self.joinTable
         ret += 'using(' + ', '.join(self.joinKey) + ')' if self.joinCond == '' else ''
-        ret += self.joinCond + self.whereCond
+        ret += self.joinCond + ' where ' + self.whereCond
         return ret
 
 # TODO: Add semijoin action
@@ -98,7 +100,7 @@ class ReducePhase:
     prepareView: child + parent(used for join)
     '''
     _reducePhaseId = 0
-    def __init__(self, prepareView: list[Action], orderView: CreateOrderView, minView: SelectMinAttr, joinView: Join2tables, semiView: SemiJoin, corresNodeId: int, reduceDirection: Direction, phaseType: PhaseType, reduceOp: str, incidentComp: list[Comparison]) -> None:
+    def __init__(self, prepareView: list[Action], orderView: CreateOrderView, minView: SelectMinAttr, joinView: Join2tables, semiView: SemiJoin, corresNodeId: int, reduceDirection: Direction, phaseType: PhaseType, reduceOp: str, remainPathComp: list[Comparison], incidentComp: list[Comparison], reduceRel) -> None:
         self.prepareView = prepareView
         self.orderView = orderView
         self.minView = minView
@@ -110,7 +112,9 @@ class ReducePhase:
         self.reduceDirection: Direction = reduceDirection
         self.PhaseType = phaseType
         self.reduceOp = reduceOp
-        self.incidentComp = incidentComp            # attach incident comparison
+        self.remainPathComp = remainPathComp                  # keep path, get begin/end node
+        self.incidentComp = incidentComp                      # attach incident comparison, helperAttr
+        self.reduceRel = reduceRel                            # attach reduction edge
 
     @property
     def _addReducePhaseId(self):

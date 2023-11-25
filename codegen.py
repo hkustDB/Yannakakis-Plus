@@ -65,7 +65,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line = BEGIN + reduce.joinView.viewName + ' as select ' + transSelectData(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias) + ' from '
             joinSentence = reduce.joinView.fromTable
             if reduce.joinView._joinFlag == ' JOIN ':
-                joinSentence +=' join ' + reduce.joinView.joinTable + ' using(' + ', '.join(reduce.joinView.joinKey) + ')'
+                joinSentence +=' join ' + reduce.joinView.joinTable + ' using(' + ', '.join(reduce.joinView.alterJoinKey) + ')'
             else:
                 joinSentence += ', ' + reduce.joinView.joinTable
             whereSentence = reduce.joinView.joinCond + (' and ' if reduce.joinView.joinCond != '' and reduce.joinView.whereCond else '') + reduce.joinView.whereCond

@@ -12,6 +12,7 @@ from codegen import *
 from random import randint
 import os
 import re
+import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
@@ -267,6 +268,7 @@ def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
             Compare = Comparison()
             Compare.setAttr(id, op, left, right, path)
             leftAlias = JT.node[Compare.beginNodeId].cols
+            # NOTE: fix left attrs not in beginNode, only happen in 2 table join
             if Compare.left.split('+')[0].split('*')[0] not in leftAlias:
                 Compare.reversePath()
             CompareMap[Compare.id] = Compare
@@ -305,7 +307,7 @@ if __name__ == '__main__':
     outputVariables, isFull = parse_outVar()
     optJT, optCOMP, allRes = parse_jt(isFull, table2vars)
     # sign for whether process all JT
-    optFlag = True
+    optFlag = False
     if optFlag:
         reduceList, enumerateList = generateIR(optJT, optCOMP)
         codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + OUT_NAME, isFull=isFull)
@@ -314,5 +316,9 @@ if __name__ == '__main__':
             pattern = re.compile(r'\d+')
             index = pattern.findall(name)[0]
             outName = OUT_NAME.split('.')[0] + index + '.' + OUT_NAME.split('.')[1]
-            reduceList, enumerateList = generateIR(jt, comp)
-            codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + outName, isFull=isFull)
+            try:
+                reduceList, enumerateList = generateIR(jt, comp)
+                codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + outName, isFull=isFull)
+            except Exception as e:
+                traceback.print_exc()
+                print("Error JT: " + name)
