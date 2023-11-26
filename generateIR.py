@@ -86,7 +86,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     prepareView = []
     orderView = minView = joinView = semiView = None
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
-    if childNode.isLeaf and childNode.relationType:
+    if childNode.isLeaf:
         ret = buildPrepareView(JT, childNode)
         if ret is not None: prepareView.append(ret)
     ret = buildPrepareView(JT, parentNode)
@@ -124,7 +124,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             else:
                 fromTable = childNode.source
                 prepareView.append(CreateAuxView(parentNode.alias, selectAttributes, selectAttributesAs, fromTable))
-            
+            parentNode.createViewAlready = True
             # pass aux viewName for later
             joinView = Join2tables(prepareView[-1].viewName, selectAttributes, selectAttributesAs, '', '', [], '', '')     # pass comparison attributes
             remainPathComp = copy.deepcopy(incidentComp)
@@ -302,6 +302,22 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         raise NotImplementedError("# Comparisons >= 2 case is not implemented yet! ")
     
     else: # Semijoin
+        if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
+        # aux node create
+            selectAttributes = parentNode.col2vars[1]
+            selectAttributesAs = parentNode.cols
+            # source name directly (abandon alias) or previous join result name
+            if childNode.JoinResView is not None:
+                fromTable = childNode.JoinResView.viewName 
+                prepareView.append(CreateAuxView(parentNode.alias, [], selectAttributesAs, fromTable))
+            elif childNode.relationType != RelationType.TableScanRelation:
+                fromTable = childNode.alias
+                prepareView.append(CreateAuxView(parentNode.alias, [], selectAttributesAs, fromTable))
+            else:
+                fromTable = childNode.source
+                prepareView.append(CreateAuxView(parentNode.alias, selectAttributes, selectAttributesAs, fromTable))
+            parentNode.createViewAlready = True
+            
         viewName = 'semiJoinView' + str(randint(0, maxsize))
         selectAttributes, selectAttributesAs = [], []
         fromTable = ''
@@ -315,6 +331,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             selectAttributes = parentNode.col2vars[1]
             selectAttributesAs = parentNode.cols
             fromTable = parentNode.source + ' AS ' + parentNode.alias
+            
             
         joinTable = ''
         if childNode.JoinResView is not None: # already has alias 
