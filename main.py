@@ -266,7 +266,11 @@ def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
             line = parseLine(line)[1:]
             id, op, left, right, path = parseComparison(line)
             Compare = Comparison()
-            Compare.setAttr(id, op, left, right, path)
+            try:
+                Compare.setAttr(id, op, left, right, path)
+            except:
+                traceback.print_exc()
+                print(jtPath)
             leftAlias = JT.node[Compare.beginNodeId].cols
             # NOTE: fix left attrs not in beginNode, only happen in 2 table join
             if Compare.left.split('+')[0].split('*')[0] not in leftAlias:

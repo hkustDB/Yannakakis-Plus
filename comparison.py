@@ -29,21 +29,42 @@ class Comparison:
         
         path = [i.split('<->') for i in path]
         path = [[int(i[0]), int(i[1])] for i in path]
-        for i in range(len(path)-1):
-            first, second = path[i], path[i + 1]
-            joint = list(set(first) & set(second))[0]
-            firIdx = first.index(joint)
-            secIdx = second.index(joint)
-            if firIdx != 1: # make them connected with common column
-                path[i][0], path[i][1] = path[i][1], path[i][0]
-            if secIdx != 0:
-                path[i + 1][0], path[i + 1][1] = path[i + 1][1], path[i + 1][0]
         
-        self.path = path
-        self.originPath = copy.deepcopy(path)
-        self.predType = predType.Short if len(path) == 1 else predType.Long
-        self.beginNodeId = self.originBeginNodeId = path[0][0]
-        self.endNodeId = self.originEndNodeId = path[len(path)-1][1]
+        allNodes = set()
+        
+        for i in range(len(path)):
+            first, second = path[i][0], path[i][1]
+            if first in allNodes:
+                allNodes.remove(first)
+            else:
+                allNodes.add(first)
+                
+            if second in allNodes:
+                allNodes.remove(second)
+            else:
+                allNodes.add(second)
+                
+        if len(allNodes) != 2:
+            raise RuntimeError("Error begin/end of comparison! ")
+        
+        begin = allNodes.pop()
+        end = allNodes.pop()
+        
+        newPath = []
+        enumNode = begin
+        
+        while enumNode != end and len(path) > 0:
+            beginEdge = [edge for edge in path if enumNode in edge][0]
+            path.remove(beginEdge)
+            beginEdge = [beginEdge[0], beginEdge[1]] if enumNode == beginEdge[0] else [beginEdge[1], beginEdge[0]]
+            newPath.append(beginEdge)
+            enumNode = beginEdge[1]
+        
+        self.path = newPath
+        self.originPath = copy.deepcopy(newPath)
+        self.predType = predType.Short if len(newPath) == 1 else predType.Long
+        self.beginNodeId = self.originBeginNodeId = newPath[0][0]
+        self.endNodeId = self.originEndNodeId = newPath[len(newPath)-1][1]
         self.helperAttr = [[''] * 2] * len(self.path)
         
     def parseOP(self, OP: str):
