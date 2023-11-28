@@ -34,7 +34,7 @@ class opType(Enum):
 class predType(Enum):
     Short = 0
     Long = 1
-    
+    Self = 2
 
 """
 All relations: TableScanRelation, TableAggRelation, AggregatedRelation, AuxiliaryRelation, BagRelation

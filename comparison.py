@@ -8,7 +8,7 @@ class Comparison:
     
     def __init__(self) -> None:
         self.id = -1
-        self.op = None
+        self.op = None          # <, >, <=, >=
         self.left = None        # formular on the op left
         self.right = None       # formular on the op right
         self.path = None        # [[1, 2], [2, 4], [4, 3]]
@@ -44,28 +44,34 @@ class Comparison:
             else:
                 allNodes.add(second)
                 
-        if len(allNodes) != 2:
-            raise RuntimeError("Error begin/end of comparison! ")
         
-        begin = allNodes.pop()
-        end = allNodes.pop()
+        if len(allNodes) != 0:
+            begin = allNodes.pop()
+            end = allNodes.pop()
         
-        newPath = []
-        enumNode = begin
+            newPath = []
+            enumNode = begin
         
-        while enumNode != end and len(path) > 0:
-            beginEdge = [edge for edge in path if enumNode in edge][0]
-            path.remove(beginEdge)
-            beginEdge = [beginEdge[0], beginEdge[1]] if enumNode == beginEdge[0] else [beginEdge[1], beginEdge[0]]
-            newPath.append(beginEdge)
-            enumNode = beginEdge[1]
+            while enumNode != end and len(path) > 0:
+                beginEdge = [edge for edge in path if enumNode in edge][0]
+                path.remove(beginEdge)
+                beginEdge = [beginEdge[0], beginEdge[1]] if enumNode == beginEdge[0] else [beginEdge[1], beginEdge[0]]
+                newPath.append(beginEdge)
+                enumNode = beginEdge[1]
+                
+        else:
+            newPath = path
         
         self.path = newPath
         self.originPath = copy.deepcopy(newPath)
-        self.predType = predType.Short if len(newPath) == 1 else predType.Long
+        self.predType = predType.Long if len(newPath) != 1 else predType.Short
+        self.predType = predType.Self if self.predType == predType.Short and newPath[0][0] == newPath[0][1] else predType.Short
         self.beginNodeId = self.originBeginNodeId = newPath[0][0]
         self.endNodeId = self.originEndNodeId = newPath[len(newPath)-1][1]
         self.helperAttr = [[''] * 2] * len(self.path)
+        
+        if len(allNodes) != 2 and self.predType != predType.Self:
+            raise RuntimeError("Error begin/end of comparison! ")
         
     def parseOP(self, OP: str):
         if 'LessThanOrEqualTo' in OP:

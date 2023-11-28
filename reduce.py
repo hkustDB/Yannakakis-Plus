@@ -17,8 +17,9 @@ class CreateBagView(Action):
 
 
 class CreateAuxView(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, whereCondList: list[str] = []) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
+        self.whereCondList = whereCondList
         self.reduceType = ReduceType.CreateAuxView
         
     # TODO: no cqc, just select out, only non-full, deal later; select all views from children? 
@@ -41,11 +42,12 @@ class CreateTableAggView(Action):
 
 
 class CreateOrderView(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinKey: list[str], orderKey: list[str], AESC: bool) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinKey: list[str], orderKey: list[str], AESC: bool, selfComp: list[str] = [], whereCondList: list[str] = []) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.joinKey = joinKey
         self.orderKey = orderKey
         self.AESC = AESC
+        self.selfComp = selfComp
         self.reduceType = ReduceType.CreateOrderView
         
     def __repr__(self) -> str:
@@ -69,16 +71,16 @@ joinCond(on): Some attributes don't have the same alias yet, but still put in wh
 whereCond: Use for mf1 < mf2
 '''
 class Join2tables(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], alterJoinKey: list[str], joinCond: str = '', whereCond: str = '') -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], alterJoinKey: list[str], joinCond: str = '', whereCondList: list[str] = []) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.joinTable = joinTable
         self.joinKey = joinKey                  # set intersection, remain original for enumerate usage
         self.alterJoinKey = alterJoinKey        # can be removed
         self.joinCond = joinCond
-        self.whereCond = whereCond
+        self.whereCondList = whereCondList
         self.reduceType = ReduceType.Join2tables
         self._joinFlag = ' JOIN ' if len(self.alterJoinKey) != 0 else ', '
-        
+
     def __repr__(self) -> str:
         ret = self.viewName + ' AS SELECT ' + str(self.selectAttrAlias) + ' AS ' + str(self.selectAttrs) + ' FROM ' + self.fromTable + self._joinFlag + self.joinTable
         ret += 'using(' + ', '.join(self.joinKey) + ')' if self.joinCond == '' else ''
@@ -86,12 +88,15 @@ class Join2tables(Action):
         return ret
 
 # TODO: Add semijoin action
+'''where: childnode selfComp; outerWhere: parent node selfComp'''
 class SemiJoin(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, inLeft: list[str], inRight: list[str]) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, inLeft: list[str], inRight: list[str], whereCondList: list[str] = [], outerWhereCondList: list[str] = []) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.joinTable = joinTable
         self.inLeft = inLeft
         self.inRight = inRight
+        self.whereCondList = whereCondList
+        self.outerWhereCondList = outerWhereCondList
         self.reduceType = ReduceType.CreateSemiJoinView
         self.semiFlag = 1
 
@@ -115,7 +120,7 @@ class ReducePhase:
         self.remainPathComp = remainPathComp                  # keep path, get begin/end node
         self.incidentComp = incidentComp                      # attach incident comparison, helperAttr
         self.reduceRel = reduceRel                            # attach reduction edge
-
+        
     @property
     def _addReducePhaseId(self):
         ReducePhase._reducePhaseId += 1
