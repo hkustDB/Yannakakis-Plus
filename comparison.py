@@ -43,7 +43,10 @@ class Comparison:
                 allNodes.remove(second)
             else:
                 allNodes.add(second)
-                
+        
+        errorFlag = 0
+        if len(allNodes) != 2:
+            errorFlag = 1
         
         if len(allNodes) != 0:
             begin = allNodes.pop()
@@ -70,8 +73,8 @@ class Comparison:
         self.endNodeId = self.originEndNodeId = newPath[len(newPath)-1][1]
         self.helperAttr = [[''] * 2] * len(self.path)
         
-        if len(allNodes) != 2 and self.predType != predType.Self:
-            raise RuntimeError("Error begin/end of comparison! ")
+        if errorFlag and self.predType != predType.Self:
+            raise RuntimeError("Error comparison begin/end node! ")
         
     def parseOP(self, OP: str):
         if 'LessThanOrEqualTo' in OP:
