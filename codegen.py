@@ -36,7 +36,9 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                 if prepare.reduceType == ReduceType.CreateBagView:
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 elif prepare.reduceType == ReduceType.CreateAuxView:
-                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + END
+                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable
+                    line += ' where ' if len(prepare.whereCondList) else ''
+                    line += ' and '.join(prepare.whereCondList) + END
                 else:   # TableAgg
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 
@@ -45,7 +47,11 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         
         if reduce.semiView is not None:
             outFile.write('# +. SemiJoin\n')
-            line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + ', '.join(reduce.semiView.inRight) + ' from ' + reduce.semiView.joinTable + ')' + END
+            line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + ', '.join(reduce.semiView.inRight) + ' from ' + reduce.semiView.joinTable
+            line += ' where ' if len(reduce.semiView.whereCondList) != 0 else ''
+            line += ' and '.join(reduce.semiView.whereCondList) + ')' 
+            line += ' and ' if len(reduce.semiView.outerWhereCondList) else ''
+            line += ' and '.join(reduce.semiView.outerWhereCondList) + END
             outFile.write(line)
             dropView.append(reduce.semiView.viewName)
             continue
@@ -54,7 +60,9 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         if reduce.orderView is not None:    
             
             outFile.write('# 1. orderView\n')
-            line = BEGIN + reduce.orderView.viewName + ' as select ' + transSelectData(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, row_numer=True) + ' over (partition by ' + ', '.join(reduce.orderView.joinKey) + ' order by ' + ', '.join(reduce.orderView.orderKey) + (' DESC' if not reduce.orderView.AESC else '') + ') as rn ' + 'from ' + reduce.orderView.fromTable + END
+            line = BEGIN + reduce.orderView.viewName + ' as select ' + transSelectData(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, row_numer=True) + ' over (partition by ' + ', '.join(reduce.orderView.joinKey) + ' order by ' + ', '.join(reduce.orderView.orderKey) + (' DESC' if not reduce.orderView.AESC else '') + ') as rn ' + 'from ' + reduce.orderView.fromTable
+            line += ' where ' if len(reduce.orderView.selfComp) != 0 else ''
+            line += ' and '.join(reduce.orderView.selfComp) + END
             dropView.append(reduce.orderView.viewName)
             outFile.write(line)
             outFile.write('# 2. minView\n')
@@ -68,7 +76,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                 joinSentence +=' join ' + reduce.joinView.joinTable + ' using(' + ', '.join(reduce.joinView.alterJoinKey) + ')'
             else:
                 joinSentence += ', ' + reduce.joinView.joinTable
-            whereSentence = reduce.joinView.joinCond + (' and ' if reduce.joinView.joinCond != '' and reduce.joinView.whereCond else '') + reduce.joinView.whereCond
+            whereSentence = reduce.joinView.joinCond + (' and ' if reduce.joinView.joinCond != '' and len(reduce.joinView.whereCondList) else '') + ' and '.join(reduce.joinView.whereCondList)
             line += joinSentence + ((' where ' + whereSentence) if whereSentence != '' else '') + END
             dropView.append(reduce.joinView.viewName)
             outFile.write(line)
@@ -83,7 +91,14 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line += ' join ' if len(enum.semiEnumerate.joinKey) != 0 else ', '
             line += enum.semiEnumerate.joinTable
             line += ' using(' + ', '.join(enum.semiEnumerate.joinKey) + ')' if len(enum.semiEnumerate.joinKey) != 0 else ''
-            line += ' where ' + enum.semiEnumerate.joinCond if enum.semiEnumerate.joinCond != '' else ''
+            
+            if enum.semiEnumerate.joinCond and len(enum.semiEnumerate.whereCondList):
+                line += ' where ' + enum.semiEnumerate.joinCond + ' and ' + ' and '.join(enum.semiEnumerate.whereCondList)
+            elif enum.semiEnumerate.joinCond:
+                line += ' where ' + enum.semiEnumerate.joinCond
+            elif len(enum.semiEnumerate.whereCondList):
+                line += ' where ' + ' and '.join(enum.semiEnumerate.whereCondList)
+            
             line += END
             outFile.write(line)
             dropView.append(enum.semiEnumerate.viewName)

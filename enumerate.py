@@ -53,11 +53,12 @@ class StageEnd(Action):
         return 
     
 class SemiEnumerate(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], joinCond: str) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], joinCond: str, whereCondList: list[str] = []) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.joinTable = joinTable
         self.joinKey = joinKey
         self.joinCond = joinCond
+        self.whereCondList = whereCondList                  # used for selfComp attach, need add alias for child comparison
         self.enumerateType = EnumerateType.SemiEnumerate
         self.semiFlag = 1
 
