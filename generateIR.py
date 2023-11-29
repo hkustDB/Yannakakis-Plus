@@ -676,45 +676,39 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                 retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin)
             elif len(incidentComp) == 1:
                 onlyComp = incidentComp[0]
-                if (onlyComp.getPredType == predType.Long or onlyComp.getPredType == predType.Short):
-                    supportRelationFlag = True if rel.src.relationType == RelationType.AuxiliaryRelation and rel.dst.id == rel.src.supRelationId else False
-                    if rel.dst.id == onlyComp.getBeginNodeId:
-                        pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
-                        helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
-                        helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
-                        # use orioginal short comparison
-                        if onlyComp.getPredType == predType.Short:
-                            if len(onlyComp.originPath) > 1 and pathIdx + 1 < len(onlyComp.originPath):
-                                helperRightFrom = onlyComp.helperAttr[pathIdx+1][0]
-                            else:
-                                helperRightFrom = onlyComp.right
+                supportRelationFlag = True if rel.src.relationType == RelationType.AuxiliaryRelation and rel.dst.id == rel.src.supRelationId else False
+                if rel.dst.id == onlyComp.getBeginNodeId:
+                    pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
+                    helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
+                    helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
+                    # use orioginal short comparison
+                    if onlyComp.getPredType == predType.Short:
+                        if len(onlyComp.originPath) > 1 and pathIdx + 1 < len(onlyComp.originPath):
+                            helperRightFrom = onlyComp.helperAttr[pathIdx+1][0]
                         else:
-                            helperRightFrom = ''
-                        onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo]
-                        retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom])
-                        updateDirection.append(Direction.Left)
-                    elif rel.dst.id == onlyComp.getEndNodeId:
-                        pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
-                        # use orioginal short comparison
-                        if onlyComp.getPredType == predType.Short:
-                            if len(onlyComp.originPath) > 1 and pathIdx - 1 >= 0:
-                                helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1]
-                            else:
-                                helperLeftFrom = onlyComp.left
-                        else:
-                            helperLeftFrom = ''
-                        helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
-                        helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
-                        onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom]
-                        retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo])
-                        updateDirection.append(Direction.Right)
+                            helperRightFrom = onlyComp.right
                     else:
-                        raise RuntimeError("Should not happen! ")
-                elif onlyComp.getPredType == predType.Self:
-                    # TODO: 
-                    pass
+                        helperRightFrom = ''
+                    onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo]
+                    retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom])
+                    updateDirection.append(Direction.Left)
+                elif rel.dst.id == onlyComp.getEndNodeId:
+                    pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
+                    # use orioginal short comparison
+                    if onlyComp.getPredType == predType.Short:
+                        if len(onlyComp.originPath) > 1 and pathIdx - 1 >= 0:
+                            helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1]
+                        else:
+                            helperLeftFrom = onlyComp.left
+                    else:
+                        helperLeftFrom = ''
+                    helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
+                    helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
+                    onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom]
+                    retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo])
+                    updateDirection.append(Direction.Right)
                 else:
-                    raise NotImplementedError("Error type! ")
+                    raise RuntimeError("Should not happen! ")
             else :
                 # use reverseOp to judge the case
                 raise NotImplementedError("Need to support two incident comparison!")
@@ -741,7 +735,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
             retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin)
         elif len(incidentComp) == 1:
             onlyComp = incidentComp[0]
-            if (onlyComp.getPredType == predType.Short):
+            if (onlyComp.getPredType == predType.Short or onlyComp.getPredType == predType.Self):
                 # last relation mfToLeft #COMP mfToRight
                 if rel.dst.id == onlyComp.getBeginNodeId: # dst -> root
                     pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
@@ -770,12 +764,9 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
                     retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo])
                 else:
                     raise RuntimeError("Last comparison error! ")
-            elif (onlyComp.getPredType == predType.Self):
-                # TODO:
-                pass
             else:
                 # Long comparison
-                raise NotImplementedError("Should only be short comparison!")
+                raise NotImplementedError("Should only be short/self comparison!")
         else :
             # use reverseOp to judge the case
             raise NotImplementedError("Need to support two incident comparison in root!")
