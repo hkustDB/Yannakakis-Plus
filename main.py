@@ -16,7 +16,7 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q14/'
+BASE_PATH = 'query/q5/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -273,7 +273,9 @@ def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
                 print(jtPath)
             leftAlias = JT.node[Compare.beginNodeId].cols
             # NOTE: fix left attrs not in beginNode, only happen in 2 table join
-            if Compare.left.split('+')[0].split('*')[0] not in leftAlias:
+            pattern = re.compile('v[0-9]+')
+            extractLeft = pattern.findall(Compare.left)
+            if len(extractLeft) and extractLeft[0] not in leftAlias:
                 Compare.reversePath()
             CompareMap[Compare.id] = Compare
             
