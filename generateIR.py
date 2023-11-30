@@ -9,6 +9,13 @@ from typing import Union
 import re
 import copy
 
+'''
+Optimize column selection settings: 
+Maintain the key set for all joinkey, used for non-full output attribute optimize
+'''
+allJoinKeySet = set()
+compKeySet = set()
+outVars = []
 
 def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
     whereCondList = []
@@ -238,6 +245,10 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
         else:
             joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        
+        # maintain allJoinKey set
+        allJoinKeySet.update(joinKey)
+        
         partiKey = joinKey.copy()
         orderKey = [] # leave for primary key space in orderKey
         AESC = True
@@ -413,7 +424,23 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             
         if len(comp.path) == 1:   # Root of the comparison, need add mf_left < mf_right
             addiSelfComp.append(''.join(whereCond))
-            joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
+             
+            # Add optimize for selecting attrs
+            if not JT.isFull and len(JT.subset) == 1:
+                optSelectAttributes, optSelectAttributesAs = [], []
+                if len(selectAttributes):
+                    for index, alias in enumerate(selectAttributesAs):
+                        if alias in outVars:
+                            optSelectAttributes.append(selectAttributes[index])
+                            optSelectAttributesAs.append(alias)
+                else:
+                    for index, alias in enumerate(selectAttributesAs):
+                        if alias in outVars:
+                            optSelectAttributesAs.append(alias)
+                
+                joinView = Join2tables(viewName, optSelectAttributes, optSelectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
+            else:
+                joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
         else:
             joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
         
@@ -506,7 +533,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
 
 
-def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree) -> EnumeratePhase:
+def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree, lastEnum: bool = False) -> EnumeratePhase:
     createSample = selectMax = selectTarget = stageEnd = semiEnumerate = None
         
     if (corReducePhase.reduceDirection == Direction.SemiJoin):
@@ -621,9 +648,21 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     # TODO: check alias
     viewName = 'end' + str(randint(0, maxsize))
     selectAttrAlias = set(previousView.selectAttrAlias) | set(selectTarget.selectAttrAlias) # alias union + mf value
-    selectAttrAlias = [alias for alias in selectAttrAlias if 'mf' not in alias]             # remove all old mf first
-    selectAttrAlias += [leftMf] if leftMf != '' and 'mf' in leftMf else []
-    selectAttrAlias += [rightMf] if rightMf != '' and 'mf' in rightMf else []
+    selectAttrAlias = [alias for alias in selectAttrAlias if 'mf' not in alias and (alias in allJoinKeySet or alias in outVars or alias in compKeySet)]             # remove all old mf first
+    
+    # last enum, no need to select mf attributes
+    if not lastEnum:
+        if 'mf' in leftMf and 'mf' in rightMf:
+            mfAdd = ([leftMf] if leftMf != '' and 'mf' in leftMf else []) + ([rightMf] if rightMf != '' and 'mf' in rightMf else [])
+            mfsTarget = [var for var in selectTarget.selectAttrAlias if 'mf' in var]
+            mfAdd = [mf for mf in mfAdd if mf not in mfsTarget]
+            selectAttrAlias += mfAdd
+        
+        elif 'mf' in leftMf: # not append leftMf
+            selectAttrAlias += [rightMf] if rightMf != '' and 'mf' in rightMf else []
+        elif 'mf' in rightMf: # not append rightMf
+            selectAttrAlias += [leftMf] if leftMf != '' and 'mf' in leftMf else []
+        
     fromTable = previousView.viewName
     joinTable = selectTarget.viewName
     joinKey = selectMax.joinKey
@@ -632,17 +671,26 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     whereCondList = []
     for comp in corReducePhase.incidentComp[1:]:
         whereCondList.append(comp.left + comp.op + comp.right)
-        
+    
     stageEnd = StageEnd(viewName, [], selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, whereCondList)
 
     retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
     return retEnum
 
-def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase], list[EnumeratePhase]]:
+def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str]) -> [list[ReducePhase], list[EnumeratePhase]]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     comparisons = list(COMP.values())   
     selfComparisons = [comp for comp in comparisons if comp.getPredType == predType.Self]     
+    
+    global outVars, compKeySet
+    outVars = outputVariables
+    for comp in comparisons:
+        left, _ = splitLR(comp.left)
+        compKeySet.update(left)
+        right, _ = splitLR(comp.right)
+        compKeySet.update(right)
+    
     reduceList: list[ReducePhase] = []
     enumerateList: list[EnumeratePhase] = []
     
@@ -815,8 +863,13 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison]) -> [list[ReducePhase],
             previousView = beginPrevious 
         else:
             previousView = enumerateList[-1].stageEnd if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate
-        # print(enum.corresNodeId)
-        retEnum = buildEnumeratePhase(previousView, enum, JT)
+        
+        # lastEnum = optimize flag
+        if enum != enumerateOrder[-1]:
+            retEnum = buildEnumeratePhase(previousView, enum, JT)
+        else:
+            retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True)
+            
         enumerateList.append(retEnum)
         
     return reduceList, enumerateList

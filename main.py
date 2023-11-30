@@ -16,8 +16,8 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q5/'
-DDL_NAME = 'graph.ddl'
+BASE_PATH = 'query/q11/'
+DDL_NAME = 'rst.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 JT_PATH = ''
@@ -315,7 +315,7 @@ if __name__ == '__main__':
     # sign for whether process all JT
     optFlag = False
     if optFlag:
-        reduceList, enumerateList = generateIR(optJT, optCOMP)
+        reduceList, enumerateList = generateIR(optJT, optCOMP, outputVariables)
         codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + OUT_NAME, isFull=isFull)
     else:
         for jt, comp, name in allRes:
@@ -323,7 +323,7 @@ if __name__ == '__main__':
             index = pattern.findall(name)[0]
             outName = OUT_NAME.split('.')[0] + index + '.' + OUT_NAME.split('.')[1]
             try:
-                reduceList, enumerateList = generateIR(jt, comp)
+                reduceList, enumerateList = generateIR(jt, comp, outputVariables)
                 codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + outName, isFull=isFull)
             except Exception as e:
                 traceback.print_exc()
