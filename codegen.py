@@ -120,10 +120,12 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         outFile.write(line)
         
         outFile.write('# 4. stageEnd\n')
-        line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ' join ' + enum.stageEnd.joinTable + ' using(' + ', '.join(enum.stageEnd.joinKey) + ')' + ' where ' + enum.stageEnd.whereCond + END
+        line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ' join ' + enum.stageEnd.joinTable + ' using(' + ', '.join(enum.stageEnd.joinKey) + ')' + ' where ' + enum.stageEnd.whereCond 
+        line += ' and ' if len(enum.stageEnd.whereCondList) else ''
+        line += ' and '.join(enum.stageEnd.whereCondList) + END
         dropView.append(enum.stageEnd.viewName)
         outFile.write(line)
-        
+    
     if len(enumerateList) == 0:
         fromTable = reduce.joinView.viewName if reduce.joinView else reduce.semiView.viewName
         line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + END

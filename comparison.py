@@ -25,7 +25,10 @@ class Comparison:
         self.id = id
         self.op = self.parseOP(op)
         self.left = self.parseLR(left) # crude left
-        self.right = self.parseLR(right)
+        if self.op == ' LIKE ':
+            self.right = '\'' + self.parseLR(right) + '\''
+        else:
+            self.right = self.parseLR(right)
         
         path = [i.split('<->') for i in path]
         path = [[int(i[0]), int(i[1])] for i in path]
@@ -85,13 +88,50 @@ class Comparison:
             return '>='
         elif 'GreaterThan' in OP:
             return '>'
+        elif 'match' in OP:
+            return ' LIKE '
         else:
             raise NotImplementedError("Not proper relation! ")
         
     def parseLR(self, LR: str):
-        if LR.count('SingleVariableExpression') == 1:
-            return LR.split('(')[1][:-1].split(':')[0]  # "v1"
+        if LR.count('IntPlusIntExpression') == 1:
+            oprands = []
+            if 'IntLiteralExpression' in LR:
+                pattern = re.compile('IntLiteralExpression\([0-9]+')
+                vars = pattern.findall(LR)
+                vars = [var.split('(')[1] for var in vars]
+                oprands.extend(vars)
             
+            if 'SingleVariableExpression' in LR:
+                pattern = re.compile('SingleVariableExpression\(v[0-9]+')
+                vars = pattern.findall(LR)
+                vars = [var.split('(')[1] for var in vars]
+                oprands.extend(vars)
+                
+            return '+'.join(oprands)
+        
+        elif LR.count('DoubleTimesDoubleExpression') == 1:
+            oprands = []
+            if 'DoubleLiteralExpression' in LR:
+                pattern = re.compile('DoubleLiteralExpression\([0-9]+.?[0-9]+')
+                vars = pattern.findall(LR)
+                vars = [var.split('(')[1] for var in vars]
+                oprands.extend(vars)
+            
+            if 'SingleVariableExpression' in LR:
+                pattern = re.compile('SingleVariableExpression\(v[0-9]+')
+                vars = pattern.findall(LR)
+                vars = [var.split('(')[1] for var in vars]
+                oprands.extend(vars)
+                
+            return '*'.join(oprands)
+        
+        elif LR.count('SingleVariableExpression') == 1:
+            return LR.split('(')[1][:-1].split(':')[0]  # "v1"
+        
+        elif LR.count('StringLiteralExpression') == 1:
+            return LR.split('(')[1][:-1]
+        
         else:   # "v1 * v2 ..." Currently only support simple +/* with numbers, not applying combinations
             pattern = re.compile('v[0-9]+')
             vars = pattern.findall(LR)
