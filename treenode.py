@@ -24,6 +24,9 @@ class TreeNode:
     def getcol2vars(self): 
         return self.col2vars
     
+    def setcol2vars(self, col2vars: list[list[str]]):
+        self.col2vars = col2vars
+    
     @property
     def getNodeAlias(self):
         return self.alias
@@ -87,7 +90,7 @@ class TableAggTreeNode(TreeNode):
         self.relationType = RelationType.TableAggRelation
         self.aggRelation = aggRelation  # list of agg id
 
-        
+
 class BagTreeNode(TreeNode):
     def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, insideId: list[int], insideAlias: list[str]):
         super().__init__(id, source, cols, col2vars, alias)
@@ -95,7 +98,7 @@ class BagTreeNode(TreeNode):
         self.insideId = insideId
         self.inAlias = insideAlias
 
-        
+
 class TableTreeNode(TreeNode):
     def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str):
         super().__init__(id, source, cols, col2vars, alias)

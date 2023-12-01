@@ -169,7 +169,7 @@ def makeSelfComp(selfComparisons: list[Comparison], childNode: TreeNode) -> list
 helperAttrLeft/Right: helper attribute name change[from, to]
 incidentComp: [first] long, [second...] short
 '''
-def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Comparison], selfComp: list[Comparison], direction: Direction, helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']) -> ReducePhase:
+def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Comparison], selfComp: list[Comparison], direction: Direction, helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', ''], lastRel: bool = False) -> ReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
@@ -195,6 +195,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         
         # 2. Aux Node: Support Relation for auxiliary relation case, all aux relations will be create here
         if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
+            # NOTE: aux support can not be source, so the source is correct name
             viewName = childNode.source if childNode.JoinResView is None else childNode.JoinResView.viewName # leaf or join result
             mfAttr = helperLeft if direction == Direction.Left else helperRight
             if mfAttr[1] not in parentNode.cols:
@@ -236,7 +237,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         if childNode.JoinResView is not None:
             fromTable = childNode.JoinResView.viewName
             noAliasFlag = True
-        elif childNode.relationType != RelationType.TableAggRelation:
+        elif childNode.relationType == RelationType.TableScanRelation:
             fromTable = childNode.source + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
         else:
             fromTable = childNode.alias
@@ -424,25 +425,24 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             
         if len(comp.path) == 1:   # Root of the comparison, need add mf_left < mf_right
             addiSelfComp.append(''.join(whereCond))
-             
-            # Add optimize for selecting attrs
-            if not JT.isFull and len(JT.subset) == 1:
-                optSelectAttributes, optSelectAttributesAs = [], []
-                if len(selectAttributes):
-                    for index, alias in enumerate(selectAttributesAs):
-                        if alias in outVars:
-                            optSelectAttributes.append(selectAttributes[index])
-                            optSelectAttributesAs.append(alias)
-                else:
-                    for index, alias in enumerate(selectAttributesAs):
-                        if alias in outVars:
-                            optSelectAttributesAs.append(alias)
+        
+        # CHECK: Add optimize for selecting attrs
+        if not JT.isFull and lastRel and len(JT.subset) == 1:
+            optSelectAttributes, optSelectAttributesAs = [], []
+            if len(selectAttributes):
+                for index, alias in enumerate(selectAttributesAs):
+                    if alias in outVars:
+                        optSelectAttributes.append(selectAttributes[index])
+                        optSelectAttributesAs.append(alias)
+            else:
+                for index, alias in enumerate(selectAttributesAs):
+                    if alias in outVars:
+                        optSelectAttributesAs.append(alias)
                 
                 joinView = Join2tables(viewName, optSelectAttributes, optSelectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
-            else:
-                joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
         else:
             joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
+            
         
         # End
         remainPathComp = copy.deepcopy(incidentComp)
@@ -522,14 +522,30 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         if parentFlag and len(parentSelfComp):
             outerWhereCondList = makeSelfComp(parentSelfComp, parentNode)
         
+        # CHECK: optimize for select cols
+        if not JT.isFull and lastRel and len(JT.subset) == 1:
+            optSelectAttributes, optSelectAttributesAs = [], []
+            if len(selectAttributes):
+                for index, alias in enumerate(selectAttributesAs):
+                    if alias in outVars:
+                        optSelectAttributes.append(selectAttributes[index])
+                        optSelectAttributesAs.append(alias)
+            else:
+                for index, alias in enumerate(selectAttributesAs):
+                    if alias in outVars:
+                        optSelectAttributesAs.append(alias)
+                        
+            selectAttributes, selectAttributesAs = optSelectAttributes, optSelectAttributesAs         
+        
         # children self comparison
         if childSelfFlag:
             whereCondList = makeSelfComp(childSelfComp, childNode)
+            
             semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight, whereCondList, outerWhereCondList)
-            retReducePhase = ReducePhase(prepareView, None, None, None, semiView, childNode.id, direction, type, '', [], [], reduceRel)
         else: # could use alias
             semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight, [], outerWhereCondList)
-            retReducePhase = ReducePhase(prepareView, None, None, None, semiView, childNode.id, direction, type, '', [], [], reduceRel)
+        
+        retReducePhase = ReducePhase(prepareView, None, None, None, semiView, childNode.id, direction, type, '', [], [], reduceRel)
         return retReducePhase
 
 
@@ -586,6 +602,10 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         joinCond = ' and '.join(joinCondList)
             
         fromTable = previousView.viewName
+        
+        # CHECK: Optimize for enumerate selction cols
+        if not JT.isFull:
+            selectAttrAlias = [alias for alias in selectAttrAlias if 'mf' in alias or alias in allJoinKeySet or alias in outVars or alias in compKeySet]
         
         if origiSelfCompFlag:
             semiEnumerate = SemiEnumerate(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, joinCond, corReducePhase.semiView.whereCondList)
@@ -650,7 +670,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     selectAttrAlias = set(previousView.selectAttrAlias) | set(selectTarget.selectAttrAlias) # alias union + mf value
     selectAttrAlias = [alias for alias in selectAttrAlias if 'mf' not in alias and (alias in allJoinKeySet or alias in outVars or alias in compKeySet)]             # remove all old mf first
     
-    # last enum, no need to select mf attributes
+    # CHECK: optimize -> last enum, no need to select mf attributes
     if not lastEnum:
         if 'mf' in leftMf and 'mf' in rightMf:
             mfAdd = ([leftMf] if leftMf != '' and 'mf' in leftMf else []) + ([rightMf] if rightMf != '' and 'mf' in rightMf else [])
@@ -805,7 +825,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     selfComp = getSelfComp(rel)
     # no differ number of comparison cases
     if len(incidentComp) == 0:  # semijoin only
-        retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin)
+        retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, lastRel=True)
     else:
         if len(incidentComp) > 1:
             incidentComp.sort(key=lambda comp: (len(comp.originPath), comp.predType), reverse=True)
@@ -823,7 +843,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                     helperRightFrom = onlyComp.right
 
                 onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo] # update
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom])
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom], lastRel=True)
             elif rel.dst.id == onlyComp.getEndNodeId: # root <- dst
                 pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
                 # original short comparison
@@ -835,7 +855,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                 helperRightTo = 'mfR' + str(randint(0, maxsize))
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom] # update
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo])
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo], lastRel=True)
             else:
                 raise RuntimeError("Last comparison error! ")
         else:

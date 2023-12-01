@@ -16,13 +16,20 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q11/'
-DDL_NAME = 'rst.ddl'
+BASE_PATH = 'query/q13/'
+DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
+REL_NAME = 'relations'
 JT_PATH = ''
 OUT_PATH = 'outputVariables.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
+
+
+''' Formatt
+RelationName;id;source/inalias(bag);cols;tableDisplayName;[AggList(tableagg)|internalRelations(bag)|supportingRelation(aux)|group+func(agg)]
+Only AuxiliaryRelation source is [Bag(Graph,Graph)|Graph|...]
+'''
 
 def get_tree():
     cmdline = f'java -jar {GET_TREE} -d {BASE_PATH}{DDL_NAME} -o {BASE_PATH} {BASE_PATH}{QUERY_NAME}'
@@ -86,137 +93,8 @@ def parse_outVar():
         get_tree()
         return parse_outVar()
 
-def parseLine(line: str) -> list[str]:
-        name = line.split(';', 1)[0]
-        if name not in AddiRelationNames:
-            line = line.split(';')
-        elif name == 'BagRelation':
-            line = line.split(';', 6)
-        else: line = line.split(';', 5)
-        return line
-
-def parseRelation(line: list[str], JT: JoinTree, table2vars: dict[str, str]) -> int: 
-    ''' line represents each node string
-    1. test whether already exists(return node if true)
-    2. parse each node
-    3. return each node id
-    '''
-    id = int(line[1].split('=')[1])
-    if JT.findNode(id): return id
-    relationName = line[0]
-    
-    if relationName != 'BagRelation' :
-        source = line[2].split('=')[1]
-        cols = line[3].split('=')[1].replace('(', '').replace(')', '').split(',')
-        cols = [col[:col.index(':')] for col in cols]
-        vars = table2vars.get(source, None) # AuxRelation can't get the corresponding
-        alias = line[4].split('=')[1]
-        if relationName == 'TableScanRelation':
-            # codegen: select vars[0] as cols[0], vars[1] as col[1] from alias
-            tsNode = TableTreeNode(id, source, cols, [cols, vars], alias)
-            JT.addNode(tsNode)
         
-        elif relationName == 'AggregatedRelation':
-            group = int(line[5][line[5].index('(')+1 : line[5].index(')')])
-            func = line[6].split('=')[1]
-            # TODO: support one group by attribute only, (attribute, COUNT(*))
-            aggVars = [vars[group], func+'(*)']
-            aNode = AggTreeNode(id, source, cols, [cols, aggVars], alias, group, func)
-            JT.addNode(aNode)
         
-        elif relationName == 'TableAggRelation':
-            
-            def matchColVar(lineVarlist: list[str], vars: list[str]) -> list[list[str], list[str]]: # deal normal mix with agg variables
-                ret = [[], []]
-                i = 0
-                for index, each in enumerate(lineVarlist):
-                    if 'LongDataType' not in each:
-                        ret[0].append(each[:each.index(':')])
-                        ret[1].append(vars[i])
-                        i += 1
-                return ret     
-                        
-            # 1. process internal agg node first 2. process out TableAgg node
-            # codegen: generate internal agg first, later 2 tables join
-            varTuple = line[3].split('=')[1].replace('(', '').replace(')', '').split(',')
-            matched = matchColVar(varTuple, vars)
-            aggTuple = []          # get agg variable
-            for var in varTuple:
-                if 'LongDataType' in var:
-                    aggTuple.append(var)
-            agglist = line[5].split('AggList=')[1].split('List(')[1]
-            agglist = agglist.split(', ')
-            last = agglist[-1][:-1]
-            agglist.pop()
-            agglist.append(last) 
-            # agglist contain a list of aggId   
-            agglist = [parseRelation(parseLine(agg), JT, table2vars) for agg in agglist]
-            # col2vars: one part from original source; the other for internal agg relation
-            for aggId in agglist:
-                aggCols, aggVars = JT.getCol2vars(aggId)
-                aggAlias = JT.getNodeAlias(aggId)
-                for var in aggTuple:     # aggVars
-                    varName = var.split(':')[0]
-                    if varName in aggCols:
-                        matched[0].append(varName)
-                        matched[1].append(aggAlias + '.' + aggVars[aggCols.index(varName)])
-                
-            taNode = TableAggTreeNode(id, source, cols, matched, alias, agglist)
-            JT.addNode(taNode)
-        
-        elif relationName == 'AuxiliaryRelation':
-            supportRelation = line[5].split('supportingRelation=')[1]
-            supportId = parseRelation(parseLine(supportRelation), JT, table2vars)
-            # AuxRelation Source [T]
-            supCols, supVars = JT.getCol2vars(supportId)
-            supAlias = JT.getNodeAlias(supportId)
-            auxCols, auxVars = [], []
-            for index, col in enumerate(supCols):
-                if col in cols:
-                    auxCols.append(col)
-                    auxVars.append(supVars[index])
-                    
-            # replace source name [T] to Txxx
-            if '[' in source and ']' in source:
-                source = source.replace('[', '').replace(']', str(randint(0, 100)))
-            
-            # extra process for its alias
-            alias = alias.replace('[', '').replace(']', '') + 'Aux' + str(randint(0, 100))
-            auxNode = AuxTreeNode(id, source, auxCols, [auxCols, auxVars], alias, supportId)
-            JT.addNode(auxNode)
-    
-    else: #BagRelation
-        inAlias = line[2].split('=')[1].split(',')
-        inId = line[3].split('=')[1].split(',')
-        inId = [int(id) for id in inId]
-        cols = line[4].split('=')[1].replace('(', '').replace(')', '').split(',')
-        cols = [col[:col.index(':')] for col in cols]
-        alias = line[5].split('=')[1]
-        internalRelations = line[6].split('internalRelations=')[1].split('List(')[1].split(', ')
-        last = internalRelations[-1][:-1]
-        internalRelations.pop()
-        internalRelations.append(last)
-        insideId = [parseRelation(parseLine(internal), JT, table2vars) for internal in internalRelations]
-        # remember all variables in the bag
-        allBagVars = set()
-        allBagVarMap = dict()
-        source = []
-        for eachId in insideId:
-            eachCols, eachVars = JT.getCol2vars(eachId)
-            eachAlias = JT.getNodeAlias(eachId)
-            for index, eachCol in enumerate(eachCols):
-                if eachCol not in allBagVars: 
-                    allBagVars.add(eachCol)
-                    allBagVarMap[eachCol] =  eachAlias + '.' + eachVars[index]
-
-        vars = [allBagVarMap[col] for col in cols]
-        source = ', '.join(source)
-        bagNode = BagTreeNode(id, alias, cols, [cols, vars], alias, insideId, inAlias)
-        JT.addNode(bagNode)
-        
-    return id
-        
-            
 def parseComparison(line: list[str]):
     id = int(line[0].split('=')[1])
     op = line[1].split('=')[1]
@@ -226,11 +104,11 @@ def parseComparison(line: list[str]):
     return id, op, left, right, path
         
     
-def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
+def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, jtPath: str):
     f = open(jtPath)
     line = f.readline().rstrip()
     flag = 0
-    JT = JoinTree(isFull)
+    JT = JoinTree(allNodes, isFull)
     CompareMap: dict[int, Comparison] = dict()
     
     while line:
@@ -244,26 +122,21 @@ def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
             continue
         
         if flag == 1: # root
-            line = parseLine(line)
-            nodeId = parseRelation(line, JT, table2vars)
-            JT.setRootById(nodeId)
+            line = int(line)
+            JT.setRootById(line)
             
         elif flag == 2:
             rel1, rel2 = line.split('->')
-            rel1 = parseLine(rel1)
-            rel2 = parseLine(rel2)
-            node1Id = parseRelation(rel1, JT, table2vars)
-            node2Id = parseRelation(rel2, JT, table2vars)
-            edge = Edge(JT.getNode(node1Id), JT.getNode(node2Id))
+            rel1, rel2 = int(rel1), int(rel2)
+            edge = Edge(JT.getNode(rel1), JT.getNode(rel2))
             JT.addEdge(edge)
-            
+        
         elif flag == 3:
-            line = parseLine(line)
-            node = parseRelation(line, JT, table2vars)
-            JT.addSubset(node)
-            
+            line = int(line)
+            JT.addSubset(line)
+        
         elif flag == 4:
-            line = parseLine(line)[1:]
+            line = line.split(';')[1:]
             id, op, left, right, path = parseComparison(line)
             Compare = Comparison()
             try:
@@ -283,16 +156,135 @@ def parse_one_jt(isFull: bool, table2vars: dict[str, str], jtPath: str):
         
     return JT, CompareMap
 
+
+def parse_rel(id: str) -> dict[int, TreeNode]:
+    f = open(BASE_PATH + REL_NAME + id + '.txt')
+    line = f.readline().rstrip()
+    allNodes = dict()   # Used for all nodes: id -> TreeNode
+    seenId = set()      # Used for mark already processed Id
+    
+    while line:
+        line = line.split(';')
+        name, id, source = line[0], int(line[1].split('=')[1]), line[2].split('=')[1]
+        if id in seenId:
+            line = f.readline().rstrip()
+            continue
+        else:
+            seenId.add(id)
+        cols = line[3].split('=')[1].replace('(', '').replace(')', '').split(',')
+        cols = [col[:col.index(':')] for col in cols]
+        alias = line[4].split('=')[1]
+        if name == 'BagRelation':
+            inAlias = source.split(',')
+            inId = line[-1].split('=')[1].split(',')
+            inId = [int(id) for id in inId]
+            bagNode = BagTreeNode(id, source, cols, [], alias, inId, inAlias)
+            allNodes[id] = bagNode
+        
+        elif name == 'AuxiliaryRelation':
+            supportId = int(line[-1].split('=')[1])
+            auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
+            allNodes[id] = auxNode
+            
+        elif name == 'TableScanRelation':
+            tsNode = TableTreeNode(id, source, cols, [], alias)
+            allNodes[id] = tsNode
+            
+        elif name == 'TableAggRelation':
+            agglist = line[-1].split('=')[1].split(',')
+            agglist = [int(agg) for agg in agglist]
+            taNode = TableAggTreeNode(id, source, cols, [], alias, agglist)
+            allNodes[id] = taNode
+        
+        elif name == 'AggregatedRelation':
+            group = int(line[-2][line[-2].index('(')+1 : line[-2].index(')')])
+            func = line[-1].split('=')[1]
+            aNode = AggTreeNode(id, source, cols, [], alias, group, func)
+            allNodes[id] = aNode
+            
+        else:
+            raise NotImplementedError("Error relation name! ")
+        
+        line = f.readline().rstrip()
+    
+    return allNodes
+        
+
+def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> dict[int, TreeNode]:
+    sortedNodes = sorted(allNodes.items())
+    ret = {k: v for k, v in sortedNodes}
+    for id, treeNode in ret.items():
+        # k: id, v: TreeNode
+        vars = table2vars.get(treeNode.source, None) # Aux/bag can't get the corresponding
+        if treeNode.relationType == RelationType.TableScanRelation:
+            treeNode.setcol2vars([treeNode.cols, vars])
+            
+        elif treeNode.relationType == RelationType.AggregatedRelation:
+            aggVars = [vars[treeNode.group], treeNode.func.name+'(*)']
+            treeNode.setcol2vars([treeNode.cols, aggVars])
+        
+        elif treeNode.relationType == RelationType.TableAggRelation:    # tablescan+agg: source must in table2vars
+            aggIds = treeNode.aggRelation
+            aggAllVars = set()
+            for id in aggIds:
+                # NOTE: Only one aggregation function
+                aggAllVars.add(allNodes[id].cols[-1])
+            
+            i = 0
+            col2vars = [[], []]
+            # 1. push original (not from aggList) first
+            for col in treeNode.cols:
+                if col not in aggAllVars:
+                    col2vars[0].append(col)
+                    col2vars[1].append(vars[i])
+                    i += 1
+            # 2. push agg values (alias tackle in aggNode)
+            for var in aggAllVars:
+                col2vars[0].append(var)
+                col2vars[1].append('')
+                
+            treeNode.setcol2vars(col2vars)   
+            
+        elif treeNode.relationType == RelationType.BagRelation:
+            allBagVars = set()
+            allBagVarMap = dict()
+            for eachId in treeNode.insideId:
+                eachCols, eachVars = allNodes[eachId].col2vars
+                eachAlias = allNodes[eachId].alias
+                for index, eachCol in enumerate(eachCols):
+                    if eachCol not in allBagVars: 
+                        allBagVars.add(eachCol)
+                        allBagVarMap[eachCol] =  eachAlias + '.' + eachVars[index]
+
+            vars = [allBagVarMap[col] for col in treeNode.cols]
+            treeNode.setcol2vars([treeNode.cols, vars])
+            
+        elif treeNode.relationType == RelationType.AuxiliaryRelation:
+            supCols, supVars = allNodes[treeNode.supRelationId].col2vars
+            auxCols, auxVars = [], []
+            for index, col in enumerate(supCols):
+                if col in treeNode.cols:
+                    auxCols.append(col)
+                    auxVars.append(supVars[index])
+            treeNode.setcol2vars([auxCols, auxVars])
+            
+    return ret
+
+
 '''Use JoinTree with minimum depth'''
 def parse_jt(isFull: bool, table2vars: dict[str, str]):
     g = os.walk(BASE_PATH)
     optJT: JoinTree = None
     optCOMP: dict[int, Comparison] = None
     allRes = []
+    
     for path,dir_list,file_list in g:
         for file_name in file_list:
             if 'JoinTree' in file_name:
-                jt, comp = parse_one_jt(isFull, table2vars, BASE_PATH + file_name)
+                id = file_name.split('JoinTree')[1].split('.')[0]
+                allNodes = parse_rel(id)
+                allNodes = parse_col2var(allNodes, table2vars)
+                jt, comp = parse_one_jt(allNodes, isFull, BASE_PATH + file_name)
                 '''
                 leafRelation = [rel.dst.id for rel in list(jt.edge.values()) if rel.dst.isLeaf]
                 if jt.root.id in leafRelation:
