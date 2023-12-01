@@ -22,8 +22,8 @@ class Edge:
         return "Relation: " + self.src.getNodeAlias + str('->') + self.dst.getNodeAlias
         
 class JoinTree:
-    def __init__(self, isFull: bool) -> None:
-        self.node: dict[int, TreeNode] = dict() # id -> TreeNode
+    def __init__(self, node: dict[int, TreeNode], isFull: bool) -> None:
+        self.node: dict[int, TreeNode] = node # id -> TreeNode
         self.edge: dict[int, Edge] = dict()     # id -> (TreeNode1, TreeNode2)
         self.root: TreeNode = None
         self.isFull: bool = isFull
@@ -69,6 +69,7 @@ class JoinTree:
         
     def addSubset(self, nodeId: int):
         self.subset.append(self.node[nodeId])
+
     
     def addEdge(self, edge: Edge):
         edge.src.children.append(edge.dst)
