@@ -255,9 +255,9 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> 
                 eachCols, eachVars = allNodes[eachId].col2vars
                 eachAlias = allNodes[eachId].alias
                 for index, eachCol in enumerate(eachCols):
-                    if eachCol not in allBagVars: 
+                    if eachCol not in allBagVars:
                         allBagVars.add(eachCol)
-                        allBagVarMap[eachCol] =  eachAlias + '.' + eachVars[index]
+                        allBagVarMap[eachCol] =  eachAlias + '.' + (eachVars[index] if allNodes[eachId].relationType == RelationType.TableScanRelation else eachCol)
 
             vars = [allBagVarMap[col] for col in treeNode.cols]
             treeNode.setcol2vars([treeNode.cols, vars])
