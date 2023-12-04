@@ -76,6 +76,8 @@ class EnumeratePhase:
         self.corresNodeId = corresNodeId       # corresponds to nodeId in JoinTree
         self.enumerateDirection = enumerateDirection
         self.phaseType = phaseType
+        
+        self._enumeratePhaseId = 0
 
     @property
     def _addEnumeratePhaseId(self):

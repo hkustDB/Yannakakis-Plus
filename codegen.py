@@ -47,6 +47,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         
         if reduce.semiView is not None:
             outFile.write('# +. SemiJoin\n')
+            # TODO: Add change for auxNode creation
             line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + ', '.join(reduce.semiView.inRight) + ' from ' + reduce.semiView.joinTable
             line += ' where ' if len(reduce.semiView.whereCondList) != 0 else ''
             line += ' and '.join(reduce.semiView.whereCondList) + ')' 
@@ -79,6 +80,15 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             whereSentence = reduce.joinView.joinCond + (' and ' if reduce.joinView.joinCond != '' and len(reduce.joinView.whereCondList) else '') + ' and '.join(reduce.joinView.whereCondList)
             line += joinSentence + ((' where ' + whereSentence) if whereSentence != '' else '') + END
             dropView.append(reduce.joinView.viewName)
+            outFile.write(line)
+        
+        if reduce.bagAuxView:
+            outFile.write('# 5. bagAuxView\n')
+            line = BEGIN + reduce.bagAuxView.viewName + ' as select ' + transSelectData(reduce.bagAuxView.selectAttrs, reduce.bagAuxView.selectAttrAlias) + ' from ' + reduce.bagAuxView.joinTableList[0]
+            for i in range(1, len(reduce.bagAuxView.joinTableList)):
+                line += ' join ' + reduce.bagAuxView.joinTableList[i] + ' using(' + ','.join(reduce.bagAuxView.joinKey[i-1]) + ')'
+            line += END
+            dropView.append(reduce.bagAuxView.viewName)
             outFile.write(line)
     
     # 2. enumerateList rewrite

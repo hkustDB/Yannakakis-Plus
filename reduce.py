@@ -87,7 +87,7 @@ class Join2tables(Action):
         ret += self.joinCond + ' where ' + self.whereCond
         return ret
 
-# TODO: Add semijoin action
+# TODO: Add semijoin action/aux selection
 '''where: childnode selfComp; outerWhere: parent node selfComp'''
 class SemiJoin(Action):
     def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, inLeft: list[str], inRight: list[str], whereCondList: list[str] = [], outerWhereCondList: list[str] = []) -> None:
@@ -99,18 +99,28 @@ class SemiJoin(Action):
         self.outerWhereCondList = outerWhereCondList
         self.reduceType = ReduceType.CreateSemiJoinView
         self.semiFlag = 1
+        
+
+# only for bag with internal aux, other bag case 
+# from A join B using(v1) join C using(v2) ...
+class CreateBagAuxView(CreateBagView):
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTableList: list[str], joinKey: list[str], whereCondList: list[str]) -> None:
+        super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable, joinTableList, whereCondList)
+        self.joinKey = joinKey
+        self.reduceType = ReduceType.CreateBagAuxView
 
 class ReducePhase:
     '''
     prepareView: child + parent(used for join)
     '''
     _reducePhaseId = 0
-    def __init__(self, prepareView: list[Action], orderView: CreateOrderView, minView: SelectMinAttr, joinView: Join2tables, semiView: SemiJoin, corresNodeId: int, reduceDirection: Direction, phaseType: PhaseType, reduceOp: str, remainPathComp: list[Comparison], incidentComp: list[Comparison], reduceRel) -> None:
+    def __init__(self, prepareView: list[Action], orderView: CreateOrderView, minView: SelectMinAttr, joinView: Join2tables, semiView: SemiJoin, bagAuxView: CreateBagAuxView, corresNodeId: int, reduceDirection: Direction, phaseType: PhaseType, reduceOp: str, remainPathComp: list[Comparison], incidentComp: list[Comparison], reduceRel) -> None:
         self.prepareView = prepareView
         self.orderView = orderView
         self.minView = minView
         self.joinView = joinView
         self.semiView = semiView
+        self.bagAuxView = bagAuxView
         self.reducePhaseId = ReducePhase._reducePhaseId
         self._addReducePhaseId
         self.corresNodeId: int = corresNodeId       # corresponds to nodeId in JoinTree
@@ -120,6 +130,8 @@ class ReducePhase:
         self.remainPathComp = remainPathComp                  # keep path, get begin/end node
         self.incidentComp = incidentComp                      # attach incident comparison, helperAttr
         self.reduceRel = reduceRel                            # attach reduction edge
+        
+        self._reducePhaseId = 0
         
     @property
     def _addReducePhaseId(self):

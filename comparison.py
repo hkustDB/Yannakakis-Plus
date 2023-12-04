@@ -71,7 +71,7 @@ class Comparison:
         self.path = newPath
         self.originPath = copy.deepcopy(newPath)
         self.predType = predType.Long if len(newPath) != 1 else predType.Short
-        self.predType = predType.Self if self.predType == predType.Short and newPath[0][0] == newPath[0][1] else predType.Short
+        self.predType = predType.Self if self.predType == predType.Short and newPath[0][0] == newPath[0][1] else self.predType
         self.beginNodeId = self.originBeginNodeId = newPath[0][0]
         self.endNodeId = self.originEndNodeId = newPath[len(newPath)-1][1]
         self.helperAttr = [[''] * 2] * len(self.path)

@@ -16,7 +16,7 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q13/'
+BASE_PATH = 'query/q14/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -86,7 +86,7 @@ def parse_outVar():
                 name = line.split(':')[0]
                 outputVariables.append(name)
             elif flag == 2:
-                isFull = True if line == 'full' else False
+                isFull = True if line == 'true' else False
             line = f.readline()
         return list(set(outputVariables)), isFull
     except:
@@ -104,11 +104,11 @@ def parseComparison(line: list[str]):
     return id, op, left, right, path
         
     
-def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, jtPath: str):
+def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jtPath: str):
     f = open(jtPath)
     line = f.readline().rstrip()
     flag = 0
-    JT = JoinTree(allNodes, isFull)
+    JT = JoinTree(allNodes, isFull, supId)
     CompareMap: dict[int, Comparison] = dict()
     
     while line:
@@ -157,11 +157,13 @@ def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, jtPath: str):
     return JT, CompareMap
 
 
-def parse_rel(id: str) -> dict[int, TreeNode]:
+def parse_rel(id: str):
     f = open(BASE_PATH + REL_NAME + id + '.txt')
     line = f.readline().rstrip()
     allNodes = dict()   # Used for all nodes: id -> TreeNode
     seenId = set()      # Used for mark already processed Id
+    
+    supId = set()
     
     while line:
         line = line.split(';')
@@ -184,6 +186,7 @@ def parse_rel(id: str) -> dict[int, TreeNode]:
         elif name == 'AuxiliaryRelation':
             supportId = int(line[-1].split('=')[1])
             auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
+            supId.add(supportId)
             allNodes[id] = auxNode
             
         elif name == 'TableScanRelation':
@@ -207,7 +210,7 @@ def parse_rel(id: str) -> dict[int, TreeNode]:
         
         line = f.readline().rstrip()
     
-    return allNodes
+    return allNodes, supId
         
 
 def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> dict[int, TreeNode]:
@@ -282,9 +285,9 @@ def parse_jt(isFull: bool, table2vars: dict[str, str]):
         for file_name in file_list:
             if 'JoinTree' in file_name:
                 id = file_name.split('JoinTree')[1].split('.')[0]
-                allNodes = parse_rel(id)
+                allNodes, supId = parse_rel(id)
                 allNodes = parse_col2var(allNodes, table2vars)
-                jt, comp = parse_one_jt(allNodes, isFull, BASE_PATH + file_name)
+                jt, comp = parse_one_jt(allNodes, isFull, supId, BASE_PATH + file_name)
                 '''
                 leafRelation = [rel.dst.id for rel in list(jt.edge.values()) if rel.dst.isLeaf]
                 if jt.root.id in leafRelation:
