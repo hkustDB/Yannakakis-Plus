@@ -575,14 +575,9 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 # use original
                 originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)]
                 cond = parentNode.alias + '.' + originalName + '=' + minView.viewName + '.' + eachKey
+                joinCondList.append(cond)
             else:
                 alterJoinKey.append(eachKey)
-            # else:
-                # cond = eachKey
-            # else:  previous join view already cast to alias
-                # cond = parentNode.JoinResView.viewName + '.' + eachKey + '=' + minView.viewName + '.' + eachKey
-            
-            joinCondList.append(cond)
         
         joinCond = ' and '.join(joinCondList)
         
@@ -599,8 +594,8 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         addiSelfComp = []
         if parentFlag and len(parentSelfComp):
             addiSelfComp = makeSelfComp(parentSelfComp, parentNode)
-            
-        if len(comp.path) == 1:   # Root of the comparison, need add mf_left < mf_right
+        # Root of the comparison, need add mf_left < mf_right
+        if len(comp.path) == 1:   
             addiSelfComp.append(''.join(whereCond))
         
         # CHECK: Add optimize for selecting attrs
