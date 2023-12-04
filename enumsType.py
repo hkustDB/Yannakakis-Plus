@@ -63,6 +63,7 @@ class ReduceType(Enum):
     CreateAuxView = 4
     CreateTableAggView = 5
     CreateSemiJoinView = 6
+    CreateBagAuxView = 7
     
 class PhaseType(Enum):
     SemiJoin = 0

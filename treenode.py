@@ -66,6 +66,7 @@ class AuxTreeNode(TreeNode):
         super().__init__(id, source, cols, col2vars, alias)
         self.relationType = RelationType.AuxiliaryRelation
         self.supRelationId = supRelationId # supporting TreeNode Id
+
         
 class Func(Enum):
     COUNT = 0
@@ -97,7 +98,9 @@ class BagTreeNode(TreeNode):
         self.relationType = RelationType.BagRelation
         self.insideId = insideId
         self.inAlias = insideAlias
-
+        self.auxId = None
+        # self.auxFlag = [False * len(self.insideId)]      # mark if create aux view for axiliary view in the bag
+    
 
 class TableTreeNode(TreeNode):
     def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str):
