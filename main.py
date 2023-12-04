@@ -16,7 +16,7 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q14/'
+BASE_PATH = 'query/q13/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
