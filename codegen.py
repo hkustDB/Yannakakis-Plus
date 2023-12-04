@@ -138,11 +138,11 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         outFile.write(line)
     
     if len(enumerateList) == 0:
-        if reduce.bagAuxView.viewName:
+        if reduce.bagAuxView:
             fromTable = reduce.bagAuxView.viewName
-        elif reduce.semiView.viewName:
+        elif reduce.semiView:
             fromTable = reduce.semiView.viewName
-        elif reduce.joinView.viewName:
+        elif reduce.joinView:
             fromTable = reduce.joinView.viewName
         else:
             raise RuntimeError("Error viewName! ")

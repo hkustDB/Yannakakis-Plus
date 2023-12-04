@@ -66,7 +66,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
             inNode = JT.getNode(id)
             if inNode.relationType == RelationType.TableScanRelation: # still need source alias
                 joinTableList.append(inNode.source + ' as ' + inNode.alias) 
-            else :
+            else:
                 # FIXME: Should not be aux node
                 prepareView.extend(buildPrepareView(JT, inNode))
                 joinTableList.append(inNode.alias)
@@ -100,7 +100,8 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
                 whereCondList.append(opL.join(leftVar) + comp.op + opR.join(rightVar))
         
         if len(childNode.insideId) > 2:
-            whereCondList.extend(buildJoinRelation(JT.getNode(id), JT.getNode(childNode.insideId[0])))
+            if set(inNode.cols) & set(preNode.cols):
+                whereCondList.extend(buildJoinRelation(JT.getNode(id), JT.getNode(childNode.insideId[0])))
         
         prepareView.append(CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', joinTableList, whereCondList))
     
