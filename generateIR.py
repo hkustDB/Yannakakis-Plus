@@ -20,20 +20,36 @@ outVars = []
 
 def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
     whereCondList = []
-    joinKey = set(inNode.cols) & set(preNode.cols)
-    joinKey1 = [preNode.col2vars[1][preNode.col2vars[0].index(key)] for key in joinKey]
-    joinKey2 = [inNode.col2vars[1][inNode.col2vars[0].index(key)] for key in joinKey]
-    # not using alias for var any more
-    for i in range(len(joinKey1)):
-        whereCond = preNode.alias + '.' + joinKey1[i] + '=' + inNode.alias + '.' + joinKey2[i]
-        whereCondList.append(whereCond)
-        
+    joinKey = list(set(inNode.cols) & set(preNode.cols))
+    if preNode.relationType == RelationType.TableScanRelation and inNode.relationType == RelationType.TableScanRelation:
+        joinKey1 = [preNode.col2vars[1][preNode.col2vars[0].index(key)] for key in joinKey]
+        joinKey2 = [inNode.col2vars[1][inNode.col2vars[0].index(key)] for key in joinKey]
+        # not using alias for var any more
+        for i in range(len(joinKey1)):
+            whereCond = preNode.alias + '.' + joinKey1[i] + '=' + inNode.alias + '.' + joinKey2[i]
+            whereCondList.append(whereCond)
+    elif preNode.relationType == RelationType.TableScanRelation:
+        joinKey1 = [preNode.col2vars[1][preNode.col2vars[0].index(key)] for key in joinKey]
+        for i in range(len(joinKey1)):
+            whereCond = preNode.alias + '.' + joinKey1[i] + '=' + inNode.alias + '.' + joinKey[i]
+            whereCondList.append(whereCond)
+    elif inNode.relationType == RelationType.TableScanRelation:
+        joinKey2 = [inNode.col2vars[1][inNode.col2vars[0].index(key)] for key in joinKey]
+        # not using alias for var any more
+        for i in range(len(joinKey2)):
+            whereCond = preNode.alias + '.' + joinKey[i] + '=' + inNode.alias + '.' + joinKey2[i]
+            whereCondList.append(whereCond)
+    else:
+        for i in range(len(joinKey)):
+            whereCond = preNode.alias + '.' + joinKey[i] + '=' + inNode.alias + '.' + joinKey[i]
+            whereCondList.append(whereCond)
+
     return whereCondList
 
 # prepareView is ahead of joinView
-def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comparison], extraNode: TreeNode = None, direction: Direction = Direction.Left, extraSelfComp: list[Comparison] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']) -> CreateTableAggView:
-    if childNode.createViewAlready: return None # only means creave view about bag/tableagg/aux relation, not use for other join
-    prepareView = None
+def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comparison] = [], extraNode: TreeNode = None, direction: Direction = Direction.Left, extraSelfComp: list[Comparison] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']):
+    if childNode.createViewAlready: return [] # only means creave view about bag/tableagg/aux relation, not use for other join
+    prepareView = []
     joinTableList, whereCondList = [], []
     
     def splitLR(LR: str):
@@ -47,10 +63,12 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
             if inNode.relationType == RelationType.TableScanRelation: # still need source alias
                 joinTableList.append(inNode.source + ' as ' + inNode.alias) 
             else :
-                # FIXME: If any other node, not created?
+                # FIXME: Should not be aux node
+                prepareView.extend(buildPrepareView(JT, inNode))
                 joinTableList.append(inNode.alias)
             # NOTE: Assume internal nodes arrange by circle sequence
             if index > 0:
+                # TODO: FIX alias
                 preNode = JT.getNode(childNode.insideId[index-1])
                 subWhereCondList = buildJoinRelation(preNode, inNode)
                 whereCondList.extend(subWhereCondList)
@@ -80,7 +98,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
         if len(childNode.insideId) > 2:
             whereCondList.extend(buildJoinRelation(JT.getNode(id), JT.getNode(childNode.insideId[0])))
         
-        prepareView = CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', joinTableList, whereCondList)
+        prepareView.append(CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', joinTableList, whereCondList))
     
     # Here child means parent
     elif childNode.relationType == RelationType.AuxiliaryRelation:
@@ -102,16 +120,16 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
         # source name directly (abandon alias) or previous join result name
         if extraNode.JoinResView is not None:
             fromTable = extraNode.JoinResView.viewName 
-            prepareView = CreateAuxView(childNode.alias, [], selectAttributesAs, fromTable)
+            prepareView.append(CreateAuxView(childNode.alias, [], selectAttributesAs, fromTable))
         elif extraNode.relationType != RelationType.TableScanRelation:
             fromTable = extraNode.alias
-            prepareView = CreateAuxView(childNode.alias, [], selectAttributesAs, fromTable)
+            prepareView.append(CreateAuxView(childNode.alias, [], selectAttributesAs, fromTable))
         else:
             whereCondList = []
             if extraNode.isLeaf and len(extraSelfComp): # support relation (child) need self comparison
                 whereCondList = makeSelfComp(extraSelfComp, extraNode)
             fromTable = extraNode.source
-            prepareView = CreateAuxView(childNode.alias, selectAttributes, selectAttributesAs, fromTable, whereCondList)
+            prepareView.append(CreateAuxView(childNode.alias, selectAttributes, selectAttributesAs, fromTable, whereCondList))
         # childNode.createViewAlready = True
     
     elif childNode.relationType == RelationType.TableAggRelation: 
@@ -154,7 +172,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
                 
                 whereCondList.append(opL.join(leftVar) + comp.op + opR.join(rightVar))
 
-        prepareView = CreateTableAggView(childNode.alias, originalVars, childNode.cols, fromTable, joinTableList, whereCondList)
+        prepareView.append(CreateTableAggView(childNode.alias, originalVars, childNode.cols, fromTable, joinTableList, whereCondList))
     
     childNode.createViewAlready = True # only apply for tableAgg & bag relation
     return prepareView
@@ -218,7 +236,7 @@ def buildBagAuxReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Com
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
     if childNode.isLeaf:
         ret = buildPrepareView(JT, childNode, childSelfComp)
-        if ret is not None: prepareView.append(ret)
+        if ret != []: prepareView.extend(ret)
         
     # 3. bagAuxView
     ## (1) select attributes
@@ -323,25 +341,26 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         
     # 0. BAG ONLY: JV=None->no bagAuxView created->still aux node not processed in it
     if parentNode.relationType == RelationType.BagRelation and parentNode.JoinResView is None:
-       for id in parentNode.insideId:
+        auxFlag = False
+        for id in parentNode.insideId:
             inNode = JT.getNode(id)
             if inNode.relationType == RelationType.AuxiliaryRelation and childNode.id == inNode.supRelationId:
                 return buildBagAuxReducePhase(reduceRel, JT, incidentComp, selfComp, direction, inNode, helperLeft, helperRight)
-            elif inNode.relationType != RelationType.AuxiliaryRelation:
-                raise NotImplementedError("inNode type in not auxiliary! ")
+            # elif inNode.relationType != RelationType.AuxiliaryRelation:
+                # raise NotImplementedError("inNode type in not auxiliary! ")
 
     '''BEGIN: Normal case'''
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
     if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation:
         ret = buildPrepareView(JT, childNode, childSelfComp)
-        if ret is not None: prepareView.append(ret)
+        if ret != []: prepareView.extend(ret)
     # build aux for parent node is different
     if parentNode.relationType != RelationType.TableScanRelation:
         if parentNode.relationType == RelationType.AuxiliaryRelation:
             ret = buildPrepareView(JT, parentNode, parentSelfComp, extraNode=childNode, direction=direction, extraSelfComp=childSelfComp, helperLeft=helperLeft, helperRight=helperRight)
         else:
             ret = buildPrepareView(JT, parentNode, parentSelfComp)
-        if ret is not None: prepareView.append(ret)
+        if ret != []: prepareView.extend(ret)
 
     # (B) with comparison (1 / >= 2 should all be done, just select the first comparison, others should be done during enumeration)
     if direction != Direction.SemiJoin:
