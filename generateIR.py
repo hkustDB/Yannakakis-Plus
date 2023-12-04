@@ -21,6 +21,10 @@ outVars = []
 def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
     whereCondList = []
     joinKey = list(set(inNode.cols) & set(preNode.cols))
+    # natural join
+    if not len(joinKey):
+        return []
+        
     if preNode.relationType == RelationType.TableScanRelation and inNode.relationType == RelationType.TableScanRelation:
         joinKey1 = [preNode.col2vars[1][preNode.col2vars[0].index(key)] for key in joinKey]
         joinKey2 = [inNode.col2vars[1][inNode.col2vars[0].index(key)] for key in joinKey]
@@ -237,7 +241,7 @@ def buildBagAuxReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Com
     if childNode.isLeaf:
         ret = buildPrepareView(JT, childNode, childSelfComp)
         if ret != []: prepareView.extend(ret)
-        
+    
     # 3. bagAuxView
     ## (1) select attributes
     mfAttr = helperLeft if direction == Direction.Left else helperRight
@@ -245,7 +249,7 @@ def buildBagAuxReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Com
     # parent node must not have JoinView: aux -> sup only
     selectAttributes = []
     selectAttributesAs = (parentNode.cols + [mfAttr[1]]) if (mfAttr[1] != '' and mfAttr[1] not in parentNode.cols) else parentNode.cols
-            
+    
     if childFlag:
         for alias in selectAttributesAs:
             if 'mf' not in alias:
@@ -287,17 +291,22 @@ def buildBagAuxReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Com
         joinTableList = []
         for inId in bagNode.insideId:
             inNode = JT.getNode(inId)
+            if inNode.relationType != RelationType.AuxiliaryRelation and inNode.relationType != RelationType.TableScanRelation:
+                prepareView.extend(buildPrepareView(JT, inNode))
             joinKey = []
             # Add join table
-            joinTableList.append(inNode.alias)
-            inSelectAlias = inNode.JoinResView.selectAttrAlias
-            for alias in inSelectAlias:
-                if alias in selectAttributesAs:
-                    joinKey.append(alias)
-                else:
-                    selectAttributesAs.append(alias)
-            if len(joinKey):
-                joinKeyList.append(joinKey)
+            if inNode.relationType != RelationType.TableScanRelation:
+                joinTableList.append(inNode.alias)
+                inSelectAlias = inNode.JoinResView.selectAttrAlias
+                for alias in inSelectAlias:
+                    if alias in selectAttributesAs:
+                        joinKey.append(alias)
+                    else:
+                        selectAttributesAs.append(alias)
+                if len(joinKey):
+                    joinKeyList.append(joinKey)
+            else:
+                raise NotImplementedError("TableScan Relation in bagAuxNode! ")
             
         ## bagSelfComp
         bagSelfComp = [comp for comp in selfComp if bagNode.id == comp.path[0][0]]

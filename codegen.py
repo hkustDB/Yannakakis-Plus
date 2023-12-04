@@ -10,7 +10,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     if len(selectAttrs) == 0: return ', '.join(selectAttrAlias) + extraAdd
     if len(selectAttrs) != len(selectAttrAlias):
         raise RuntimeError("Two sides are not equal! ") 
-    
+
     selectData = []
     for index, alias in enumerate(selectAttrAlias):
         if selectAttrAlias[index] == '': continue
@@ -18,7 +18,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
             selectData.append(selectAttrs[index] + ' as ' + selectAttrAlias[index])
         else:
             selectData.append(selectAttrAlias[index])
-            
+    
     ret = ', '.join(selectData) + extraAdd
     return ret
 
@@ -34,7 +34,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             outFile.write('# 0. Prepare\n')
             for prepare in reduce.prepareView:
                 if prepare.reduceType == ReduceType.CreateBagView:
-                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
+                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + ', '.join(prepare.joinTableList) + ((' where ' + ' and '.join(prepare.whereCondList)) if len(prepare.whereCondList) else '') + END
                 elif prepare.reduceType == ReduceType.CreateAuxView:
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable
                     line += ' where ' if len(prepare.whereCondList) else ''
@@ -87,6 +87,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line = BEGIN + reduce.bagAuxView.viewName + ' as select ' + transSelectData(reduce.bagAuxView.selectAttrs, reduce.bagAuxView.selectAttrAlias) + ' from ' + reduce.bagAuxView.joinTableList[0]
             for i in range(1, len(reduce.bagAuxView.joinTableList)):
                 line += ' join ' + reduce.bagAuxView.joinTableList[i] + ' using(' + ','.join(reduce.bagAuxView.joinKey[i-1]) + ')'
+            line += (' where ' + ' and '.join(reduce.bagAuxView.whereCondList)) if len(reduce.bagAuxView.whereCondList) else ''
             line += END
             dropView.append(reduce.bagAuxView.viewName)
             outFile.write(line)
@@ -137,7 +138,15 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         outFile.write(line)
     
     if len(enumerateList) == 0:
-        fromTable = reduce.joinView.viewName if reduce.joinView else reduce.semiView.viewName
+        if reduce.bagAuxView.viewName:
+            fromTable = reduce.bagAuxView.viewName
+        elif reduce.semiView.viewName:
+            fromTable = reduce.semiView.viewName
+        elif reduce.joinView.viewName:
+            fromTable = reduce.joinView.viewName
+        else:
+            raise RuntimeError("Error viewName! ")
+                
         line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + END
     else:
         fromTable = enum.stageEnd.viewName if enum.stageEnd else enum.semiEnumerate.viewName
