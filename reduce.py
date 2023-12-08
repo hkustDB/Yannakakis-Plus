@@ -131,7 +131,7 @@ class ReducePhase:
         self.incidentComp = incidentComp                      # attach incident comparison, helperAttr
         self.reduceRel = reduceRel                            # attach reduction edge
         
-        self._reducePhaseId = 0
+        # self._reducePhaseId = 0
         
     @property
     def _addReducePhaseId(self):

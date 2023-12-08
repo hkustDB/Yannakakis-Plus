@@ -77,7 +77,7 @@ class EnumeratePhase:
         self.enumerateDirection = enumerateDirection
         self.phaseType = phaseType
         
-        self._enumeratePhaseId = 0
+        # self._enumeratePhaseId = 0
 
     @property
     def _addEnumeratePhaseId(self):
