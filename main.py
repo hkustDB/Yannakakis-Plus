@@ -9,6 +9,8 @@ from comparison import Comparison
 from jointree import Edge, JoinTree
 from generateIR import *
 from codegen import *
+from aggregation import *
+
 from random import randint
 import os
 import re
@@ -16,11 +18,12 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q13/'
-DDL_NAME = 'graph.ddl'
+BASE_PATH = 'query/q11/'
+DDL_NAME = 'rst.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 REL_NAME = 'relations'
+AGG_NAME = 'aggregations.txt'
 JT_PATH = ''
 OUT_PATH = 'outputVariables.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
@@ -93,8 +96,48 @@ def parse_outVar():
         get_tree()
         return parse_outVar()
 
+def parse_agg():
+    try:
+        f = open(BASE_PATH + AGG_NAME)
+        line = f.readline().rstrip()
+        flag = 0
+        outVars, aggFunc = [], []
+        while line:
+            if 'groupByVariables:' in line:
+                flag = 1
+                continue
+            if 'aggregations:' in line:
+                flag = 2
+                continue
         
+            if flag == 1:
+                outVars.append(line.split(':')[0])
+            elif flag == 2:
+                name, inVars, outName = line.split(';')
+            
+                def parsevar():
+                    if 'List()' in line:
+                        inVars = '*'
+                    else:
+                        pattern = re.compile('v[0-9]+')
+                        inVars = pattern.findall(inVars.left)
+                        # FIXME: Not implement other case
+                        if 'IntPlusIntExpression' in line:
+                            inVars = '+'.join(inVars)
+                        else:
+                            inVars = inVars[0]
+                    
+                outName = outName.split(':')[0]
+                agg = AggFunc(name, inVars, outName)
+                aggFunc.append(agg)
+            
+            line = f.readline().rstrip()
         
+        Agg = Aggregation(outVars, aggFunc)
+        return Agg
+    except:
+        return False
+
 def parseComparison(line: list[str]):
     id = int(line[0].split('=')[1])
     op = line[1].split('=')[1]
@@ -306,20 +349,27 @@ if __name__ == '__main__':
     path_ddl = ''
     table2vars = parse_ddl()
     outputVariables, isFull = parse_outVar()
+    Agg = parse_agg()
     optJT, optCOMP, allRes = parse_jt(isFull, table2vars)
     # sign for whether process all JT
     optFlag = False
     if optFlag:
-        reduceList, enumerateList = generateIR(optJT, optCOMP, outputVariables)
-        codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + OUT_NAME, isFull=isFull)
+        if not Agg:
+            reduceList, enumerateList = generateIR(optJT, optCOMP, outputVariables)
+            codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + OUT_NAME, isFull=isFull)
+        else:
+            raise NotImplementedError("Add Agg support")
     else:
         for jt, comp, name in allRes:
             pattern = re.compile(r'\d+')
             index = pattern.findall(name)[0]
             outName = OUT_NAME.split('.')[0] + index + '.' + OUT_NAME.split('.')[1]
             try:
-                reduceList, enumerateList = generateIR(jt, comp, outputVariables)
-                codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + outName, isFull=isFull)
+                if not Agg:
+                    reduceList, enumerateList = generateIR(jt, comp, outputVariables)
+                    codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + outName, isFull=isFull)
+                else:
+                    raise NotImplementedError("Add agg support")
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + name)

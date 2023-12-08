@@ -108,19 +108,29 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
     # Here child means parent
     elif childNode.relationType == RelationType.AuxiliaryRelation:
     # NOTE: aux support can not be source, so the source is correct name
-        # viewName = extraNode.source if extraNode.JoinResView is None else extraNode.JoinResView.viewName # leaf or join result
+        # FIXME: cols only in treenode, should consider JoinView
         mfAttr = helperLeft if direction == Direction.Left else helperRight
         if mfAttr[1] != '' and mfAttr[1] not in childNode.cols:
-            if extraNode.relationType != RelationType.TableScanRelation: # can use alias directly
-                selectAttributes = childNode.col2vars[1] + ['']
-                selectAttributesAs = childNode.cols + [mfAttr[1]]
-            else :
-                idx = extraNode.cols.index(mfAttr[1])
-                selectAttributes = childNode.col2vars[1] + [extraNode.col2vars[1][idx]]
-                selectAttributesAs = childNode.cols + [mfAttr[1]]
+            if 'mf' in mfAttr[1]:
+                # get alias already
+                if extraNode.JoinResView or extraNode.relationType != RelationType.TableScanRelation:
+                    selectAttributes = []
+                    selectAttributesAs = childNode.cols + [mfAttr[1]]
+                else:
+                    selectAttributes = childNode.col2vars[1] + ['']
+                    selectAttributesAs = childNode.cols + [mfAttr[1]]
+            else:
+                if extraNode.JoinResView or extraNode.relationType != RelationType.TableScanRelation:
+                    selectAttributes = []
+                    selectAttributesAs = childNode.cols + [mfAttr[1]]
+                else:
+                    idx = extraNode.cols.index(mfAttr[1])
+                    selectAttributes = childNode.col2vars[1] + [extraNode.col2vars[1][idx]]
+                    selectAttributesAs = childNode.cols + [mfAttr[1]]     
         else:
             selectAttributes = childNode.col2vars[1]
             selectAttributesAs = childNode.cols
+            
         
         # source name directly (abandon alias) or previous join result name
         if extraNode.JoinResView is not None:
@@ -348,7 +358,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     childFlag = childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation
     childSelfFlag = childNode.isLeaf and len(childSelfComp) and childNode.relationType == RelationType.TableScanRelation
     type = PhaseType.SemiJoin if direction == Direction.SemiJoin else PhaseType.CQC
-        
+    
     # 0. BAG ONLY: JV=None->no bagAuxView created->still aux node not processed in it
     if parentNode.relationType == RelationType.BagRelation and parentNode.JoinResView is None:
         auxFlag = False
@@ -356,8 +366,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             inNode = JT.getNode(id)
             if inNode.relationType == RelationType.AuxiliaryRelation and childNode.id == inNode.supRelationId:
                 return buildBagAuxReducePhase(reduceRel, JT, incidentComp, selfComp, direction, inNode, helperLeft, helperRight)
-            # elif inNode.relationType != RelationType.AuxiliaryRelation:
-                # raise NotImplementedError("inNode type in not auxiliary! ")
+            
 
     '''BEGIN: Normal case'''
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
@@ -376,38 +385,14 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     if direction != Direction.SemiJoin:
         comp = incidentComp[0]
         
-        # 2. Aux Node: Support Relation for auxiliary relation case, all aux relations will be create here; this is only for aux -> ndoe not used for bag(aux) -> 
+        # 2. Aux Node: Support Relation for auxiliary relation case, all aux relations will be create here; this is only for aux -> node not used for bag(aux) -> 
         if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
-            mfAttr = helperLeft if direction == Direction.Left else helperRight
-            if mfAttr[1] != '' and mfAttr[1] not in parentNode.cols:
-                if parentNode.relationType != RelationType.TableScanRelation: # can use alias directly
-                    selectAttributes = parentNode.col2vars[1] + ['']
-                    selectAttributesAs = parentNode.cols + [mfAttr[1]]
-                else :
-                    idx = parentNode.cols.index(mfAttr[1])
-                    selectAttributes = parentNode.col2vars[1] + [parentNode.col2vars[1][idx]]
-                    selectAttributesAs = parentNode.cols + [mfAttr[1]]
-            else:
-                selectAttributes = parentNode.col2vars[1]
-                selectAttributesAs = parentNode.cols
-                
-            selectAttributes = []
-            selectAttributesAs = (parentNode.cols + [mfAttr[1]]) if (mfAttr[1] != '' and mfAttr[1] not in parentNode.cols) else parentNode.cols
-            
-            if childFlag:
-                for alias in selectAttributesAs:
-                    if 'mf' not in alias:
-                        idx = childNode.cols.index(alias)
-                        oriName = childNode.col2vars[1][idx]
-                        selectAttributes.append(oriName)
-                    else:
-                        selectAttributes.append('')
-            
-            # TODO: Change to semi is more proper, change viewname
+            # must create auxiliary view in buildPrepareView
+            selectAttributes = prepareView[-1].selectAttrs
+            selectAttributesAs = prepareView[-1].selectAttrAlias
             joinView = Join2tables(prepareView[-1].viewName, selectAttributes, selectAttributesAs, '', '', [], '', '')     # pass comparison attributes
             remainPathComp = copy.deepcopy(incidentComp)
             return ReducePhase(prepareView, orderView, minView, joinView, semiView, bagAuxView, childNode.id, direction, type, comp.op, remainPathComp, incidentComp, reduceRel)
-        # END
         
     # 2. orderView
         viewName = 'orderView' + str(randint(0, maxsize))
