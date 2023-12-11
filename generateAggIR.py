@@ -56,11 +56,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             groupBy.append(childNode.col2vars[1][index])
         for agg in aggFuncList:
             if not len(agg.inVars):
-                if agg.funcName == AggFuncType.COUNT:
-                    selectAttr.append(agg.funcName.name + '(*)')
-                    selectAttrAlias.append(agg.alias)
-                else:
-                    raise RuntimeError("Only count(*) is considered! ")
+                raise RuntimeError("Should not happen! ")
             elif len(agg.inVars) == 1:
                 # can only be inVar name
                 aggVar = agg.inVars[0]
@@ -68,7 +64,10 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     selectAttrAlias.append(agg.alias)
                     index = childNode.cols.index(aggVar)
                     sourceName = childNode.col2vars[1][index]
-                    selectAttr.append(agg.funcName.name + '(' + sourceName + ')')
+                    if agg.funcName != AggFuncType.AVG:
+                        selectAttr.append(agg.funcName.name + '(' + sourceName + ')')
+                    else:
+                        selectAttr.append('sum(' + sourceName + ')')
             else:
                 raise NotImplementedError("Not implement multiple vars in aggregation function case! ")
             ## add passing aggregation function name
@@ -86,21 +85,17 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         if childNode.JoinResView:
             for var in childNode.JoinResView.selectAttrAlias:
                 if var in Agg.allAggVars:
-                    selectAttr.append(Agg.alias2AggFunc[var].funcName.name + '(' + var + ')')
+                    if Agg.alias2AggFunc[var].funcName != AggFuncType.AVG:
+                        selectAttr.append(Agg.alias2AggFunc[var].funcName.name + '(' + var + ')')
+                    else:
+                        selectAttr.append('sum(' + var + ')')
                     selectAttrAlias.append(var)
                     aggPass2Join.append(var)
         
         ## -3. newAgg
         for agg in aggFuncList:
             if not len(agg.inVars):
-                if agg.funcName == AggFuncType.COUNT:
-                    if childNode.JoinResView and 'annot' in childNode.JoinResView.selectAttrAlias:
-                        selectAttr.append(agg.funcName.name + '(*)' + ' * annot')   # count(*) only
-                    else:
-                        selectAttr.append(agg.funcName.name + '(*)')
-                    selectAttrAlias.append(agg.alias)
-                else:
-                    raise RuntimeError("Only count(*) is considered! ")
+                raise RuntimeError("Only count(*) is considered! ")
             elif len(agg.inVars) == 1:
                 # inVar or alias
                 if childNode.JoinResView:
@@ -114,10 +109,13 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     if childNode.JoinResView and 'annot' in findInVars:
                         if agg.funcName == AggFuncType.SUM:
                             selectAttr.append(agg.funcName.name + '(' + agg.inVars[0] + ' * annot' + ')')
+                        elif agg.funcName == AggFuncType.AVG:
+                            selectAttr.append('sum(' + agg.inVars[0] + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.COUNT:
-                            selectAttr.append(agg.funcName.name + '(' + agg.alias + ')' + ' * annot')
+                            selectAttr.append(agg.funcName.name + '(' + agg.inVars[0] + ')' + ' * annot')
                         else:
-                            raise NotImplementedError("Add support for not sum! ")
+                            # MIN/MAX
+                            selectAttr.append(agg.funcName.name + '(' + agg.inVars[0] + ')')
                     else:
                         selectAttr.append(agg.funcName.name + '(' + agg.inVars[0] + ')')
                     selectAttrAlias.append(agg.alias)
@@ -125,10 +123,13 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     if childNode.JoinResView and 'annot' in findInVars:
                         if agg.funcName == AggFuncType.SUM:
                             selectAttr.append(agg.funcName.name + '(' + agg.alias + ' * annot' + ')')
+                        elif agg.funcName == AggFuncType.AVG:
+                            selectAttr.append('sum(' + agg.alias + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.COUNT:
                             selectAttr.append(agg.funcName.name + '(' + agg.alias + ')' + ' * annot')
                         else:
-                            raise NotImplementedError("Add support for not sum! ")
+                            # MIN/MAX
+                            selectAttr.append(agg.funcName.name + '(' + agg.alias + ')')
                     else:
                         selectAttr.append(agg.funcName.name + '(' + agg.alias + ')')
                     selectAttrAlias.append(agg.alias)
@@ -358,15 +359,27 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         selectName = Agg.groupByVars.copy()
         for index, func in enumerate(Agg.aggFunc):
             if Agg.allAggDoneFlag[index]:
-                selectName.append(func.alias)
+                if func.funcName != AggFuncType.AVG:
+                    selectName.extend([func.alias for _ in range(outputVariables.count(func.alias))])
+                else:
+                    selectName.extend([func.alias + '/annot as ' + func.alias for _ in range(outputVariables.count(func.alias))])
             else:
                 # FIXME: Need to change for complex formular
-                selectName.append(func.formular + '*annot as ' + func.alias)
+                ## The form of count(*) 
+                if func.formular == '' and not len(func.inVars):
+                    selectName.extend(['annot as ' + func.alias for _ in range(outputVariables.count(func.alias))])
+                elif func.funcName != AggFuncType.AVG:
+                    selectName.extend([func.formular + '*annot as ' + func.alias for _ in range(outputVariables.count(func.alias))])
+                else:
+                    selectName.extend([func.formular + ' as ' + func.alias for _ in range(outputVariables.count(func.alias))])
     else:
         selectName = [var for var in outputVariables if var in Agg.groupByVars]
         for var in outputVariables:
             if var not in selectName:
-                selectName.append(var)
+                if Agg.alias2AggFunc[var].funcName != AggFuncType.AVG:
+                    selectName.append(var)
+                else:
+                    selectName.append(var + '/annot as ' + var)
     finalResult = 'select ' + ', '.join(selectName) + ' from '
     
     ## a. subset = 1 special case

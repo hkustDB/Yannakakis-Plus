@@ -92,7 +92,7 @@ def parse_outVar():
             elif flag == 2:
                 isFull = True if line == 'true' else False
             line = f.readline()
-        return list(set(outputVariables)), isFull
+        return outputVariables, isFull
     except:
         get_tree()
         return parse_outVar()
