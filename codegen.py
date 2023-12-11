@@ -1,5 +1,7 @@
 from enumerate import *
 from reduce import *
+from aggregation import *
+
 from enumsType import *
 
 BEGIN = 'create or replace view '
@@ -9,6 +11,8 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     extraAdd = (', row_number()' if row_numer else '') + (', max(rn) as mrn' if max_rn else '')
     if len(selectAttrs) == 0: return ', '.join(selectAttrAlias) + extraAdd
     if len(selectAttrs) != len(selectAttrAlias):
+        print("First: " + str(selectAttrs))
+        print("Second: " + str(selectAttrAlias))
         raise RuntimeError("Two sides are not equal! ") 
 
     selectData = []
@@ -22,11 +26,51 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     ret = ', '.join(selectData) + extraAdd
     return ret
 
-def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], outputVariables: list[str], outPath: str, isFull = True):
+def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outputVariables: list[str], outPath: str, aggGroupBy: list[str] = [], aggList: list[AggReducePhase] = [], isFull = True, isAgg = False):
     outFile = open(outPath, 'w+')
     dropView = []
+    # 0. aggReduceList
+    outFile.write('## AggReduce Phase: \n')
+    for agg in aggList:
+        outFile.write('\n# AggReduce' + str(agg.aggReducePhaseId) + '\n')
+        
+        if len(agg.prepareView) != 0:
+            outFile.write('# 0. Prepare\n')
+            for prepare in agg.prepareView:
+                if prepare.reduceType == ReduceType.CreateBagView:
+                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + ', '.join(prepare.joinTableList) + ((' where ' + ' and '.join(prepare.whereCondList)) if len(prepare.whereCondList) else '') + END
+                elif prepare.reduceType == ReduceType.CreateAuxView:
+                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable
+                    line += ' where ' if len(prepare.whereCondList) else ''
+                    line += ' and '.join(prepare.whereCondList) + END
+                else:   # TableAgg
+                    line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
+                
+                dropView.append(prepare.viewName)
+                outFile.write(line)
+                
+        outFile.write('# 1. aggView\n')
+        line = BEGIN + agg.aggView.viewName + ' as select ' + transSelectData(agg.aggView.selectAttrs, agg.aggView.selectAttrAlias) + ' from ' + agg.aggView.fromTable + ' group by ' + ','.join(agg.aggView.groupBy) + END
+        dropView.append(agg.aggView.viewName)
+        outFile.write(line)
+        outFile.write('# 2. aggJoin\n')
+        line = BEGIN + agg.aggJoin.viewName + ' as select ' + transSelectData(agg.aggJoin.selectAttrs, agg.aggJoin.selectAttrAlias) + ' from '
+        if agg.aggJoin.fromTable != '':
+            joinSentence = agg.aggJoin.fromTable
+            if agg.aggJoin._joinFlag == ' JOIN ':
+                joinSentence += ' join ' + agg.aggJoin.joinTable + ' using(' + ','.join(agg.aggJoin.alterJoinKey) + ')'
+            else:
+                joinSentence += ', ' + agg.aggJoin.joinTable
+            line += joinSentence
+            line += ' where ' if len(agg.aggJoin.whereCondList) else ''
+            line += ' and '.join(agg.aggJoin.whereCondList) + END
+        else:
+            line += agg.aggJoin.joinTable + END
+        dropView.append(agg.aggJoin.viewName)
+        outFile.write(line)
+    
     # 1. reduceList rewrite
-    outFile.write('## Reduce Phase: \n')
+    outFile.write('\n##Reduce Phase: \n')
     for reduce in reduceList:
         outFile.write('\n# Reduce' + str(reduce.reducePhaseId) + '\n')
         
@@ -136,22 +180,8 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         line += ' and '.join(enum.stageEnd.whereCondList) + END
         dropView.append(enum.stageEnd.viewName)
         outFile.write(line)
-    
-    if len(enumerateList) == 0:
-        if reduce.bagAuxView:
-            fromTable = reduce.bagAuxView.viewName
-        elif reduce.semiView:
-            fromTable = reduce.semiView.viewName
-        elif reduce.joinView:
-            fromTable = reduce.joinView.viewName
-        else:
-            raise RuntimeError("Error viewName! ")
-                
-        line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + END
-    else:
-        fromTable = enum.stageEnd.viewName if enum.stageEnd else enum.semiEnumerate.viewName
-        line = 'select count(' + ('distinct ' if not isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + END
-    outFile.write(line)
+        
+    outFile.write(finalResult)
     
     line = '\n# drop view ' + ', '.join(dropView) + END
     outFile.write(line)

@@ -1,6 +1,8 @@
 from enumsType import *
 from reduce import *
 from enumerate import *
+from aggregation import *
+from typing import Union
 
 class TreeNode:
     def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str):
@@ -16,7 +18,7 @@ class TreeNode:
         self.estimateSize = -1                      # estimate relation size
         self.relationType: RelationType = None
         self.createViewAlready: bool = False        # create view TableAgg, Aux, bag already
-        self.reducePhase: ReducePhase = None        # Attach reduce information to the node
+        self.reducePhase: Union[ReducePhase, AggReducePhase] = None        # Attach reduce information to the node
         self.enumeratePhase: EnumeratePhase = None  # Attach enumerate information to the node
         self.JoinResView: Join2tables = None        # record the name of previous join
     

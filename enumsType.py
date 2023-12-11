@@ -80,3 +80,11 @@ class Direction(Enum):
 class MfType(Enum):
     MIN = 0
     MAX = 1
+    
+class AggFuncType(Enum):
+    MIN = 0
+    MAX = 1
+    COUNT = 2
+    SUM = 3
+    AVG = 4
+    

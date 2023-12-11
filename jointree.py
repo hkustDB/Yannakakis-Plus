@@ -27,7 +27,8 @@ class JoinTree:
         self.edge: dict[int, Edge] = dict()     # id -> (TreeNode1, TreeNode2)
         self.root: TreeNode = None
         self.isFull: bool = isFull
-        self.subset: list[TreeNode] = []
+        self.subset: list[int] = []
+        # self.subsetId: list[int] = []
         self.supId = supId
         
     def __repr__(self) -> str:
@@ -69,7 +70,7 @@ class JoinTree:
         self.node[node.id] = node
         
     def addSubset(self, nodeId: int):
-        self.subset.append(self.node[nodeId])
+        self.subset.append(nodeId)
     
     def addEdge(self, edge: Edge):
         edge.src.children.append(edge.dst)

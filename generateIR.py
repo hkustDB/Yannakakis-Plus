@@ -366,8 +366,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             inNode = JT.getNode(id)
             if inNode.relationType == RelationType.AuxiliaryRelation and childNode.id == inNode.supRelationId:
                 return buildBagAuxReducePhase(reduceRel, JT, incidentComp, selfComp, direction, inNode, helperLeft, helperRight)
-            
-
+    
     '''BEGIN: Normal case'''
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
     if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation:
@@ -380,7 +379,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         else:
             ret = buildPrepareView(JT, parentNode, parentSelfComp)
         if ret != []: prepareView.extend(ret)
-
+    
     # (B) with comparison (1 / >= 2 should all be done, just select the first comparison, others should be done during enumeration)
     if direction != Direction.SemiJoin:
         comp = incidentComp[0]
@@ -405,10 +404,9 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         else:
             fromTable = childNode.alias
         
-        if noAliasFlag:
-            joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
-        else:
-            joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        # joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
+        ## NOTE: Use the original, avoid importing annot
+        joinKey = list(set(childNode.cols) & set(parentNode.cols))
         
         # maintain allJoinKey set
         allJoinKeySet.update(joinKey)
@@ -473,6 +471,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 idx = childNode.cols.index(partiKey[i])
                 partiKey[i] = childNode.col2vars[1][idx]
         
+        ## NOTE: orderView must have annot -> used for later enumerate join
         if noAliasFlag: # have JoinView, must not be leaf
             if extraAlias == '':
                 orderView = CreateOrderView(viewName, [], childNode.JoinResView.selectAttrAlias, fromTable, partiKey, orderKey, AESC)
@@ -691,14 +690,14 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
 
 
-def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree, lastEnum: bool = False) -> EnumeratePhase:
+def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree, lastEnum: bool = False, isAgg = False, allAggVars: list[str] = []) -> EnumeratePhase:
     createSample = selectMax = selectTarget = stageEnd = semiEnumerate = None
-        
+    origiNode = JT.getNode(corReducePhase.corresNodeId)
+    
     if (corReducePhase.reduceDirection == Direction.SemiJoin):
         '''
         Only semi need selfComp when enumerate, because cqc already use selfComp when build orderView
         '''
-        origiNode = JT.getNode(corReducePhase.corresNodeId)
         origiFlag = origiNode.JoinResView is None and origiNode.relationType == RelationType.TableScanRelation
         origiSelfCompFlag = origiNode.isLeaf and len(corReducePhase.semiView.whereCondList) and origiNode.relationType == RelationType.TableScanRelation
         
@@ -719,12 +718,43 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                     selectAttr.append(origiNode.col2vars[1][origiNode.cols.index(alias)])
                     
             joinKey = list(set(origiNode.cols) & set(previousView.selectAttrAlias))
-            
+        
         elif origiNode.JoinResView is not None:
             joinTable = origiNode.JoinResView.viewName
             selectAttrAlias = list(set(origiNode.JoinResView.selectAttrAlias) | set(previousView.selectAttrAlias))
             joinKey = list(set(origiNode.JoinResView.selectAttrAlias) & set(previousView.selectAttrAlias))
-            
+            ## Extra for agg: annot/aggregation function
+            if isAgg:
+                if 'annot' in joinKey:
+                    joinKey.remove('annot')
+                if origiNode.JoinResView:
+                    if 'annot' in previousView.selectAttrAlias and 'annot' in origiNode.JoinResView.selectAttrAlias:
+                        ### change annot 
+                        index = selectAttrAlias.index('annot')
+                        selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                        selectAttr[index] = previousView.viewName + '.annot * ' + origiNode.JoinResView.viewName + '.annot'
+                        selectAttrAlias[index] = 'annot'
+                        ### change aggregation function
+                        for index, val in enumerate(selectAttrAlias):
+                            if val in allAggVars and val in origiNode.JoinResView.selectAttrAlias:
+                                selectAttr[index] = val + '*' + previousView.viewName + '.annot'
+                                selectAttrAlias[index] = val
+                            elif val in allAggVars and val in previousView.selectAttrAlias:
+                                selectAttr[index] = val + '*' + origiNode.JoinResView.viewName + '.annot'
+                                selectAttrAlias[index] = val
+                    elif 'annot' in previousView.selectAttrAlias:
+                        for index, val in enumerate(selectAttrAlias):
+                            if val in allAggVars and val in origiNode.JoinResView.selectAttrAlias:
+                                selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                                selectAttr[index] = val + '*' + previousView.viewName + '.annot'
+                                selectAttrAlias[index] = val
+                            
+                    elif 'annot' in origiNode.JoinResView.selectAttrAlias:
+                        for index, val in enumerate(selectAttrAlias):
+                            if val in allAggVars and val in previousView.selectAttrAlias:
+                                selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                                selectAttr[index] = val + '*' + origiNode.JoinResView.viewName + '.annot'
+                                selectAttrAlias[index] = val
         else:
             joinTable = origiNode.alias
             selectAttrAlias = list(set(origiNode.cols) | set(previousView.selectAttrAlias))
@@ -733,7 +763,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         for eachKey in joinKey:
             cond = ''
             # not root, cast to alias already in the first one side
-            if origiFlag: 
+            if origiFlag:
                 # use original
                 originalName = origiNode.col2vars[1][origiNode.col2vars[0].index(eachKey)]
                 cond = origiNode.alias + '.' + originalName + '=' + previousView.viewName + '.' + eachKey
@@ -742,12 +772,18 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                 joinCondList.append(cond)
         
         joinCond = ' and '.join(joinCondList)
-            
+        
         fromTable = previousView.viewName
         
         # CHECK: Optimize for enumerate selction cols
         if not JT.isFull:
-            selectAttrAlias = [alias for alias in selectAttrAlias if 'mf' in alias or alias in allJoinKeySet or alias in outVars or alias in compKeySet]
+            for index, alias in enumerate(selectAttrAlias):
+                if 'mf' in alias or 'annot' in alias or alias in allJoinKeySet or alias in outVars or alias in compKeySet:
+                    continue
+                else:
+                    if len(selectAttr):
+                        selectAttr.pop(index)
+                    selectAttrAlias.remove(alias)
         
         if origiSelfCompFlag:
             semiEnumerate = SemiEnumerate(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, joinCond, corReducePhase.semiView.whereCondList)
@@ -806,8 +842,9 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     joinTable = selectMax.viewName
     joinKey = selectMax.selectAttrAlias
     selectTarget = SelectTargetSource(viewName, [], selectAttrAlias, fromTable, joinTable, joinKey)
-# 4. stageEnd 
+# 4. stageEnd
     viewName = 'end' + str(randint(0, maxsize))
+    selectAttr = []
     selectAttrAlias = set(previousView.selectAttrAlias) | set(selectTarget.selectAttrAlias) # alias union + mf value
     selectAttrAlias = [alias for alias in selectAttrAlias if 'mf' not in alias and (alias in allJoinKeySet or alias in outVars or alias in compKeySet)]             # remove all old mf first
     
@@ -827,17 +864,48 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     joinTable = selectTarget.viewName
     joinKey = selectMax.joinKey
     
+    ## Extra for agg: annot/aggregation function
+    if isAgg and origiNode.JoinResView:
+        if 'annot' in previousView.selectAttrAlias and 'annot' in selectTarget.selectAttrAlias:
+            ### change annot 
+            index = selectAttrAlias.index('annot')
+            selectAttr = ['' for _ in range(len(selectAttrAlias))]
+            selectAttr[index] = fromTable + '.annot * ' + joinTable + '.annot'
+            selectAttrAlias[index] = 'annot'
+            ### change aggregation function
+            for index, val in enumerate(selectAttrAlias):
+                if val in allAggVars and val in selectTarget.selectAttrAlias:
+                    selectAttr[index] = val + '*' + fromTable + '.annot'
+                    selectAttrAlias[index] = val
+                elif val in allAggVars and val in previousView.selectAttrAlias:
+                    selectAttr[index] = val + '*' + joinTable + '.annot'
+                    selectAttrAlias[index] = val
+        elif 'annot' in previousView.selectAttrAlias:
+            for index, val in enumerate(selectAttrAlias):
+                if val in allAggVars and val in selectTarget.selectAttrAlias:
+                    selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                    selectAttr[index] = val + '*' + fromTable + '.annot'
+                    selectAttrAlias[index] = val
+        
+        elif 'annot' in selectTarget.selectAttrAlias:
+            for index, val in enumerate(selectAttrAlias):
+                if val in allAggVars and val in previousView.selectAttrAlias:
+                    selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                    selectAttr[index] = val + '*' + joinTable + '.annot'
+                    selectAttrAlias[index] = val
+        
+    
     # deal with comparison
     whereCondList = []
     for comp in corReducePhase.incidentComp[1:]:
         whereCondList.append(comp.left + comp.op + comp.right)
     
-    stageEnd = StageEnd(viewName, [], selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, whereCondList)
+    stageEnd = StageEnd(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, whereCondList)
 
     retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
     return retEnum
 
-def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str]) -> [list[ReducePhase], list[EnumeratePhase]]:
+def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], isAgg = False, allAggVars: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     comparisons = list(COMP.values())   
@@ -913,7 +981,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 comp.deletePath(Direction.Left)
     
     
-    '''Step1: Reduce'''
+    '''Case1: Reduce'''
     while len(remainRelations) > 1:
         leafRelation = getLeafRelation(remainRelations)
         supportRelation = getSupportRelation(leafRelation)
@@ -928,7 +996,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         retReduce = None
         if len(incidentComp) == 0:  # semijoin only
             retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin)
-        else: # default, for short comaprison use cqc if only one incident comparison
+        else: # default, for short comparison use cqc if only one incident comparison
             if len(incidentComp) > 1:
                 incidentComp.sort(key=lambda comp: (len(comp.originPath), comp.predType), reverse=True)
             onlyComp = incidentComp[0]
@@ -1005,7 +1073,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         return False
         
 
-    # remianRelations == 1
+    '''Case2: remianRelations == 1'''
     rel = list(remainRelations)[0]
     supportRelationFlag = checkSupportRelation(rel)
     # print(rel)
@@ -1063,9 +1131,9 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     '''Step2: Enumerate'''
     # only root node
     if len(JT.subset) == 1:
-        return reduceList, []
+        return reduceList, [], ''
     
-    enumerateOrder = [enum for enum in reduceList if JT.getNode(enum.corresNodeId) in JT.subset] if not JT.isFull else reduceList.copy()
+    enumerateOrder = [enum for enum in reduceList if enum.corresNodeId in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
     for enum in enumerateOrder:
         beginPrevious = enumerateOrder[0].joinView if enumerateOrder[0].joinView else enumerateOrder[0].semiView
@@ -1076,11 +1144,29 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         
         # lastEnum = optimize flag
         if enum != enumerateOrder[-1]:
-            retEnum = buildEnumeratePhase(previousView, enum, JT)
+            retEnum = buildEnumeratePhase(previousView, enum, JT, isAgg=isAgg, allAggVars=allAggVars)
         else:
-            retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True)
+            retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True, isAgg=isAgg, allAggVars=allAggVars)
             
         enumerateList.append(retEnum)
         
-    return reduceList, enumerateList
+    if not isAgg:
+        if len(enumerateList) == 0:
+            if reduceList[-1].bagAuxView:
+                fromTable = reduceList[-1].bagAuxView.viewName
+            elif reduceList[-1].semiView:
+                fromTable = reduceList[-1].semiView.viewName
+            elif reduceList[-1].joinView:
+                fromTable = reduceList[-1].joinView.viewName
+            else:
+                raise RuntimeError("Error viewName! ")
+            
+            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + ';\n'
+        else:
+            fromTable = enumerateList[-1].stageEnd.viewName if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate.viewName
+            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + ';\n'
+        
+        return reduceList, enumerateList, finalResult
+    else:
+        return reduceList, enumerateList, ''
     
