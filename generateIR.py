@@ -407,6 +407,9 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         # joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
         ## NOTE: Use the original, avoid importing annot
         joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        if not len(joinKey):
+            # FIXME: Need cross join
+            raise NotImplementedError("Need support for cross join! ")
         
         # maintain allJoinKey set
         allJoinKeySet.update(joinKey)
@@ -1130,11 +1133,26 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     
     '''Step2: Enumerate'''
     # only root node
-    if len(JT.subset) == 1:
-        return reduceList, [], ''
+    finalResult = ''
     
     enumerateOrder = [enum for enum in reduceList if enum.corresNodeId in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
+    
+    if len(enumerateOrder) == 0:
+        if not isAgg:
+            if reduceList[-1].bagAuxView:
+                fromTable = reduceList[-1].bagAuxView.viewName
+            elif reduceList[-1].semiView:
+                fromTable = reduceList[-1].semiView.viewName
+            elif reduceList[-1].joinView:
+                fromTable = reduceList[-1].joinView.viewName
+            else:
+                raise RuntimeError("Error viewName! ")
+            
+            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + ';\n'
+        
+        return reduceList, [], finalResult
+    
     for enum in enumerateOrder:
         beginPrevious = enumerateOrder[0].joinView if enumerateOrder[0].joinView else enumerateOrder[0].semiView
         if enumerateList == []: 
@@ -1149,24 +1167,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
             retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True, isAgg=isAgg, allAggVars=allAggVars)
             
         enumerateList.append(retEnum)
-        
+    
     if not isAgg:
-        if len(enumerateList) == 0:
-            if reduceList[-1].bagAuxView:
-                fromTable = reduceList[-1].bagAuxView.viewName
-            elif reduceList[-1].semiView:
-                fromTable = reduceList[-1].semiView.viewName
-            elif reduceList[-1].joinView:
-                fromTable = reduceList[-1].joinView.viewName
-            else:
-                raise RuntimeError("Error viewName! ")
-            
-            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + ';\n'
-        else:
-            fromTable = enumerateList[-1].stageEnd.viewName if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate.viewName
-            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + ';\n'
-        
-        return reduceList, enumerateList, finalResult
-    else:
-        return reduceList, enumerateList, ''
+        fromTable = enumerateList[-1].stageEnd.viewName if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate.viewName
+        finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + ';\n'
+    
+    return reduceList, enumerateList, finalResult
     
