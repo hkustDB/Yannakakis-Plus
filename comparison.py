@@ -25,10 +25,7 @@ class Comparison:
         self.id = id
         self.op = self.parseOP(op)
         self.left = self.parseLR(left) # crude left
-        if self.op == ' LIKE ':
-            self.right = '\'' + self.parseLR(right) + '\''
-        else:
-            self.right = self.parseLR(right)
+        self.right = self.parseLR(right)
         
         path = [i.split('<->') for i in path]
         path = [[int(i[0]), int(i[1])] for i in path]
@@ -90,6 +87,11 @@ class Comparison:
             return '>'
         elif 'match' in OP:
             return ' LIKE '
+        elif 'stringEqualTo' in OP:
+            return '='
+        elif 'intEqualTo' in OP:
+            return '='
+            
         else:
             raise NotImplementedError("Not proper relation! ")
         
@@ -125,12 +127,28 @@ class Comparison:
                 oprands.extend(vars)
                 
             return '*'.join(oprands)
+        elif LR.count('DoublePlusDoubleExpression') == 1:
+            oprands = []
+            pattern = re.compile('[0-9]+.?[0-9]+')
+            vars = pattern.findall(LR)
+            oprands.extend(vars)
+            return '+'.join(oprands)
         
         elif LR.count('SingleVariableExpression') == 1:
-            return LR.split('(')[1][:-1].split(':')[0]  # "v1"
+            return LR.split('(')[1][:-1].split(':')[0]# "v1"
         
         elif LR.count('StringLiteralExpression') == 1:
-            return LR.split('(')[1][:-1]
+            return '\'' + LR.split('(')[1][:-1] + '\''  
+        
+        elif LR.count('IntLiteralExpression') == 1:
+            pattern = re.compile('[0-9]+')
+            vars = pattern.findall(LR)
+            return vars[0]
+        
+        elif LR.count('DoubleLiteralExpression') == 1:
+            pattern = re.compile('[0-9]+.?[0-9]+')
+            vars = pattern.findall(LR)
+            return vars[0]
         
         else:   # "v1 * v2 ..." Currently only support simple +/* with numbers, not applying combinations
             pattern = re.compile('v[0-9]+')

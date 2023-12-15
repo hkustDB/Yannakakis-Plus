@@ -6,30 +6,33 @@ from aggregation import *
 from reduce import *
 from enumerate import *
 from generateIR import *
+from codegen import transSelectData
 
 from random import choice, randint
 from functools import cmp_to_key
 from sys import maxsize
 
 
-def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = []) -> AggReducePhase:
+def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], childIsOriLeaf: bool = False) -> AggReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
     aggView = aggJoin = None
     
+    childSelfComp = [comp for comp in selfComp if childNode.id == comp.path[0][0]]
+    parentSelfComp = [comp for comp in selfComp if parentNode.id == comp.path[0][0]]
     childFlag = childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation
     
-    # TODO: Add non-free connex auxiliary bag relation
+    # FIXME: Add non-free connex auxiliary bag relation
     
     if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation:
-        ret = buildPrepareView(JT, childNode)
+        ret = buildPrepareView(JT, childNode, childSelfComp)
         if ret != []: prepareView.extend(ret)
     
     # Step1: create additional view: SPECIAL: not build auxiliary relation for aux, derive from aggView
     if parentNode.relationType != RelationType.TableScanRelation:
         if parentNode.relationType != RelationType.AuxiliaryRelation:
-            ret = buildPrepareView(JT, parentNode)
+            ret = buildPrepareView(JT, parentNode, parentSelfComp)
             if ret != []: prepareView.extend(ret)
         
     # Step2: aggView
@@ -160,8 +163,11 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     else:
         raise RuntimeError("Error Case! ")
         
-        
-    aggView = AggView(viewName, selectAttr, selectAttrAlias, fromTable, groupBy)
+    if childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation and childIsOriLeaf and len(childSelfComp):
+        transSelfCompList = makeSelfComp(childSelfComp, childNode)
+        aggView = AggView(viewName, selectAttr, selectAttrAlias, fromTable, groupBy, transSelfCompList)
+    else:
+        aggView = AggView(viewName, selectAttr, selectAttrAlias, fromTable, groupBy)
     
     # Step3: aggJoin
     ## a. name, fromTable
@@ -222,8 +228,13 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             joinCondList.append(cond)
         else:
             usingJoinKey.append(key)
+            
+    ## e. Add parent node selfComp
+    addiSelfComp = []
+    if parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation and len(parentSelfComp):
+        addiSelfComp = makeSelfComp(parentSelfComp, parentNode)
     
-    aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList)
+    aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp)
     aggReduce = AggReducePhase(prepareView, aggView, aggJoin)
     return aggReduce
 
@@ -339,7 +350,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         updateDirection = []
         aggReduce = None
         if len(incidentComp) == 0:
-            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs)
+            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, JT.getNode(rel.dst.id).isLeaf)
         else:
             raise NotImplementedError("Not implement case with comparisons! ")
         jointree.removeEdge(rel)
@@ -351,6 +362,57 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         aggReduceList.append(aggReduce)
     
     '''Step2,3: normal cqc reduce/enumerate'''
+    # Special case: one node only, not considering recursive build
+    if len(JT.edge) == 0:
+        selectName = []
+        prepareView = []
+        
+        def getChildSelfComp(childNode: TreeNode) -> list[Comparison]:
+            selfComp = [comp for comp in selfComparisons if len(comp.path) and childNode.id == comp.path[0][0]]
+            return selfComp
+            
+        for func in Agg.aggFunc:
+            if JT.root.relationType != RelationType.TableScanRelation:
+                selectName.append(func.funcName.name + '(' +func.formular + ')')
+            else:
+                pattern = re.compile('v[0-9]+')
+                inVars = pattern.findall(func.formular)
+                for var in inVars:
+                    index = JT.root.cols.index(var)
+                    oriname = JT.root.col2vars[1][index]
+                    func.formular = func.formular.replace(var, oriname, 1)
+                selectName.append(func.funcName.name + '(' +func.formular + ')')
+                
+        if JT.root.relationType != RelationType.TableScanRelation:
+            ret = buildPrepareView(JT, JT.root, getChildSelfComp(JT.root))
+            if ret != 0: prepareView.extend(ret)
+        
+        buildSent = ''
+        BEGIN = 'create or replace view '
+        for prepare in prepareView:
+            if prepare.reduceType == ReduceType.CreateBagView:
+                line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + ', '.join(prepare.joinTableList) + ((' where ' + ' and '.join(prepare.whereCondList)) if len(prepare.whereCondList) else '') + ';\n'
+            else:   # TableAgg
+                line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + ';\n'
+            
+            buildSent += line
+        if buildSent != '':
+            buildSent = '# 0. Prepare\n' + buildSent
+        finalResult = buildSent + 'select ' + ', '.join(selectName) + ' from '
+        ## fromTable, whereCond
+        if JT.root.relationType == RelationType.TableScanRelation:
+            finalResult += JT.root.source
+            selfComp = getChildSelfComp(JT.root)
+            selfCompSent = []
+            if len(selfComp):
+                selfCompSent = makeSelfComp(selfComp, JT.root)
+                finalResult += ' where ' + ' and '.join(selfCompSent)
+        else:
+            finalResult += JT.root.alias
+            
+        finalResult += ';\n'
+        return [], [], [], finalResult
+    
     ## Subset Internal aggregaiton alias casting form
     allAggDoneflag = True
     for flag in Agg.allAggDoneFlag:

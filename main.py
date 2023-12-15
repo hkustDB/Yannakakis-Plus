@@ -19,8 +19,8 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q14/'
-DDL_NAME = 'graph.ddl'
+BASE_PATH = 'query/th3/'
+DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 REL_NAME = 'relations'
@@ -55,7 +55,7 @@ def parse_ddl():
                 cols.clear()
                 line = f.readline()
                 continue
-            elif 'WITH' in line: 
+            elif ';' in line: 
                 flag = 2                # finish one table
                 table2vars[tableName] = cols.copy()
                 cols.clear()
@@ -123,13 +123,26 @@ def parse_agg():
                     if 'List()' in inVars:
                         inVars = []
                     else:
-                        pattern = re.compile('v[0-9]+')
-                        inVars = pattern.findall(inVars)
-                        if 'IntPlusIntExpression' in line:
-                            formular = '+'.join(inVars)
-                        else:
-                            # FIXME: Not implement other case
+                        if line.count('IntPlusIntExpression') == 1:
+                            if line.count('SingleVariableExpression') == 2:
+                                pattern = re.compile('v[0-9]+')
+                                inVars = pattern.findall(inVars)
+                                formular = '+'.join(inVars)
+                            else:
+                                raise NotImplementedError("Only deal with two variables case! ")
+                        elif line.count('DoubleTimesDoubleExpression') == 1:
+                            if line.count('SingleVariableExpression') == 2:
+                                pattern = re.compile('v[0-9]+')
+                                inVars = pattern.findall(inVars)
+                                formular = '*'.join(inVars)
+                            else:
+                                raise NotImplementedError("Only deal with two variables case! ")
+                        elif line.count('SingleVariableExpression') == 1:
+                            pattern = re.compile('v[0-9]+')
+                            inVars = pattern.findall(inVars)
                             formular = inVars[0]
+                        else:
+                            raise NotImplementedError("Not implement this kind of aggregation! ")
                     return inVars, formular
                 
                 inVars, formular = parseVar(inVars)
