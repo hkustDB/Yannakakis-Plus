@@ -30,7 +30,8 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     outFile = open(outPath, 'w+')
     dropView = []
     # 0. aggReduceList
-    outFile.write('## AggReduce Phase: \n')
+    if len(aggList):
+        outFile.write('## AggReduce Phase: \n')
     for agg in aggList:
         outFile.write('\n# AggReduce' + str(agg.aggReducePhaseId) + '\n')
         
@@ -50,7 +51,9 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                 outFile.write(line)
                 
         outFile.write('# 1. aggView\n')
-        line = BEGIN + agg.aggView.viewName + ' as select ' + transSelectData(agg.aggView.selectAttrs, agg.aggView.selectAttrAlias) + ' from ' + agg.aggView.fromTable + ' group by ' + ','.join(agg.aggView.groupBy) + END
+        line = BEGIN + agg.aggView.viewName + ' as select ' + transSelectData(agg.aggView.selectAttrs, agg.aggView.selectAttrAlias) + ' from ' + agg.aggView.fromTable
+        line += (' where ' + ' and '.join(agg.aggView.selfComp)) if len(agg.aggView.selfComp) else ''
+        line += ' group by ' + ','.join(agg.aggView.groupBy) + END
         dropView.append(agg.aggView.viewName)
         outFile.write(line)
         outFile.write('# 2. aggJoin\n')
@@ -70,7 +73,8 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         outFile.write(line)
     
     # 1. reduceList rewrite
-    outFile.write('\n##Reduce Phase: \n')
+    if len(reduceList):
+        outFile.write('\n##Reduce Phase: \n')
     for reduce in reduceList:
         outFile.write('\n# Reduce' + str(reduce.reducePhaseId) + '\n')
         
@@ -137,7 +141,8 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             outFile.write(line)
     
     # 2. enumerateList rewrite
-    outFile.write('\n## Enumerate Phase: \n')
+    if len(enumerateList):
+        outFile.write('\n## Enumerate Phase: \n')
     for enum in enumerateList:
         outFile.write('\n# Enumerate' + str(enum.enumeratePhaseId) + '\n')
         if enum.semiEnumerate is not None:
@@ -180,11 +185,13 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         line += ' and '.join(enum.stageEnd.whereCondList) + END
         dropView.append(enum.stageEnd.viewName)
         outFile.write(line)
-        
+    
+    outFile.write('Final result: \n')
     outFile.write(finalResult)
     
-    line = '\n# drop view ' + ', '.join(dropView) + END
-    outFile.write(line)
+    if len(dropView):
+        line = '\n# drop view ' + ', '.join(dropView) + END
+        outFile.write(line)
     
     outFile.close()
     

@@ -40,9 +40,10 @@ class Aggregation:
 # aggregation additional reduce view (outside subset)   
 ## aggFunc[AggFunc]; aggFunc[i].funcName + '(' + aggFunc[i].inVars +')'
 class AggView(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, groupBy: list[str]) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, groupBy: list[str], selfComp: list[str] = []) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.groupBy = groupBy
+        self.selfComp = selfComp
         # self.aggFunc = aggFunc
         
     def __repr__(self) -> str:

@@ -1,23 +1,9 @@
-select
-	s_acctbal,
-	s_name,
-	n_name,
-	p_partkey,
-	p_mfgr,
-	s_address,
-	s_phone,
-	s_comment
-from
-	part,
-	supplier,
-	partsupp,
-	nation,
-	region
-where
-	p_partkey = ps_partkey
-	and s_suppkey = ps_suppkey
-	and p_size = 48
-	and p_type like '%STEEL'
-	and s_nationkey = n_nationkey
-	and n_regionkey = r_regionkey
-	and r_name = 'EUROPE'
+SELECT s.acctbal, s.name as sname, n.name as nname, p.partkey, p.mfgr, s.address, s.phone, s.`comment`, ps.supplycost
+FROM part p, supplier s, partsupp ps, nation n, region r
+WHERE p.partkey = ps.partkey
+  AND s.suppkey = ps.suppkey
+  AND p.size = 15
+  AND (p.type LIKE '%BRASS')
+  AND s.nationkey = n.nationkey
+  AND n.regionkey = r.regionkey
+  AND r.name = 'EUROPE'

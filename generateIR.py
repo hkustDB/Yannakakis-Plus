@@ -369,15 +369,16 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     
     '''BEGIN: Normal case'''
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
-    if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation:
+    if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation and childNode.relationType != RelationType.AuxiliaryRelation:
         ret = buildPrepareView(JT, childNode, childSelfComp)
         if ret != []: prepareView.extend(ret)
+        
     # build aux for parent node is different
-    if parentNode.relationType != RelationType.TableScanRelation:
-        if parentNode.relationType == RelationType.AuxiliaryRelation:
-            ret = buildPrepareView(JT, parentNode, parentSelfComp, extraNode=childNode, direction=direction, extraSelfComp=childSelfComp, helperLeft=helperLeft, helperRight=helperRight)
-        else:
-            ret = buildPrepareView(JT, parentNode, parentSelfComp)
+    if parentNode.relationType != RelationType.TableScanRelation and parentNode.relationType != RelationType.AuxiliaryRelation:
+        ret = buildPrepareView(JT, parentNode, parentSelfComp)
+        if ret != []: prepareView.extend(ret)
+    elif parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
+        ret = buildPrepareView(JT, parentNode, parentSelfComp, extraNode=childNode, direction=direction, extraSelfComp=childSelfComp, helperLeft=helperLeft, helperRight=helperRight)
         if ret != []: prepareView.extend(ret)
     
     # (B) with comparison (1 / >= 2 should all be done, just select the first comparison, others should be done during enumeration)
