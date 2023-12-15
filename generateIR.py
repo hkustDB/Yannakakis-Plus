@@ -644,23 +644,11 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         for eachKey in joinKey:
             # Flag: need alias casting, add to condList
             # alias/JoinViewName.original else alias/JoinViewName.eachKey
-            originalNameP = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)]
-            originalNameC = childNode.col2vars[1][childNode.col2vars[0].index(eachKey)]
-            if parentFlag and childFlag:        
-                # both alias/JoinViewName.original
-                inLeft.append(originalNameP) 
-                inRight.append(originalNameC)
-            elif not parentFlag and childFlag:  
-                # parent alias/JoinViewName.eachKey; child alias/JoinViewName.original
-                inLeft.append(eachKey)
-                inRight.append(originalNameC)
-            elif parentFlag and not childFlag:  
-                # parent alias/JoinViewName.original; child alias/JoinViewName.eachKey
-                inLeft.append(originalNameP)
-                inRight.append(eachKey)
-            else :
-                inLeft.append(eachKey)
-                inRight.append(eachKey)
+            originalNameP = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)] if parentFlag else eachKey
+            originalNameC = childNode.col2vars[1][childNode.col2vars[0].index(eachKey)] if childNode else eachKey    
+            
+            inLeft.append(originalNameP) 
+            inRight.append(originalNameC)
                 
         # parent self-comparison
         outerWhereCondList = []
