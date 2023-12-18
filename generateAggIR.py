@@ -51,19 +51,20 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     ## c. select attributes: joinKey, previousAgg, newAgg
     selectAttr, selectAttrAlias  = [], []
     aggPass2Join, groupBy = [], []
-    if childFlag:
+    if childFlag: # xjoinview & tablescan
         for key in joinKey:
             selectAttrAlias.append(key)
             index = childNode.cols.index(key)
             selectAttr.append(childNode.col2vars[1][index])
             groupBy.append(childNode.col2vars[1][index])
         for agg in aggFuncList:
+            passAggAlias = True
             if not len(agg.inVars):
                 raise RuntimeError("Should not happen! ")
             elif len(agg.inVars) == 1:
                 # can only be inVar name
                 aggVar = agg.inVars[0]
-                if aggVar in childNode.cols and aggVar not in joinKey:
+                if aggVar in childNode.cols:
                     selectAttrAlias.append(agg.alias)
                     index = childNode.cols.index(aggVar)
                     sourceName = childNode.col2vars[1][index]
@@ -72,11 +73,39 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     else:
                         selectAttr.append('sum(' + sourceName + ')')
             else:
-                raise NotImplementedError("Not implement multiple vars in aggregation function case! ")
-            ## add passing aggregation function name
-            aggPass2Join.append(agg.alias)
-            ## mark this aggregaiton is done
-            Agg.allAggDoneFlag[Agg.allAggFuncId.index(agg.aggFuncId)] = True
+                allInOne = True
+                for invar in agg.inVars:
+                    if invar not in childNode.cols:
+                        allInOne = False
+                # complex formular in original same node
+                if allInOne:    # can do aggregatiom
+                    agg.doneFlag = True
+                    selectAttrAlias.append(agg.alias)
+                    for invar in agg.inVars:
+                        index = childNode.cols.index(invar)
+                        sourceName = childNode.col2vars[1][index]
+                        agg.formular = agg.formular.replace(invar, sourceName, 1)
+                    if agg.funcName != AggFuncType.AVG:
+                        selectAttr.append(agg.funcName.name + agg.formular )
+                    else:
+                        selectAttr.append('sum'+ agg.formular)
+                else:   # need to pass variables
+                    passAggAlias = False
+                    for invar in agg.inVars:
+                        # pass agg vars may have duplicates
+                        if invar in childNode.cols and invar not in selectAttrAlias:
+                            index = childNode.cols.index(invar)
+                            sourceName = childNode.col2vars[1][index]
+                            selectAttr.append(sourceName)
+                            selectAttrAlias.append(invar)
+                            aggPass2Join.append(invar)
+                    
+            if passAggAlias:
+                ## add passing aggregation function name
+                aggPass2Join.append(agg.alias)
+                ## mark this aggregaiton is done
+                agg.doneFlag = True
+                # Agg.allAggDoneFlag[Agg.allAggFuncId.index(agg.aggFuncId)] = True
     else:
         ## -1. joinKey
         for key in joinKey:
@@ -87,7 +116,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         ## -2. previousAgg
         if childNode.JoinResView:
             for var in childNode.JoinResView.selectAttrAlias:
-                if var in Agg.allAggVars:
+                if var in Agg.allAggAlias:
                     if Agg.alias2AggFunc[var].funcName != AggFuncType.AVG:
                         selectAttr.append(Agg.alias2AggFunc[var].funcName.name + '(' + var + ')')
                     else:
@@ -97,6 +126,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         
         ## -3. newAgg
         for agg in aggFuncList:
+            passAggAlias = True
             if not len(agg.inVars):
                 raise RuntimeError("Only count(*) is considered! ")
             elif len(agg.inVars) == 1:
@@ -139,12 +169,43 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                 else:
                     raise RuntimeError("Must be one name in inVars/aggFunciton alias! ")
             else:
-                raise NotImplementedError("Not implement multiple vars in aggregation function case! ")
+                if childNode.JoinResView:
+                    findInVars = childNode.JoinResView.selectAttrAlias
+                elif childNode.relationType != RelationType.TableScanRelation:
+                    findInVars = childNode.cols
+                allInOne = True
+                for invar in agg.inVars:
+                    if invar not in findInVars:
+                        allInOne = False
+                if allInOne:
+                    agg.doneFlag = True
+                    selectAttrAlias.append(agg.alias)
+                    if childNode.JoinResView and 'annot' in findInVars:
+                        if agg.funcName == AggFuncType.SUM:
+                            selectAttr.append(agg.funcName.name + agg.formular + ' * annot')
+                        elif agg.funcName == AggFuncType.AVG:
+                            selectAttr.append('sum' + agg.formular + ' * annot')
+                        elif agg.funcName == AggFuncType.COUNT:
+                            selectAttr.append(agg.funcName.name + agg.formular + ' * annot')
+                        else:
+                            # MIN/MAX
+                            selectAttr.append(agg.funcName.name + agg.formular)
+                    else:
+                        selectAttr.append(agg.funcName.name + agg.formular)
+                else:   # need to pass variables
+                    passAggAlias = False
+                    for invar in agg.inVars:
+                        # pass agg vars may have duplicates
+                        if invar in findInVars and invar not in selectAttrAlias:
+                            selectAttrAlias.append(invar)
+                            aggPass2Join.append(invar)
             
-            ## add passing aggregation function name
-            aggPass2Join.append(agg.alias)
-            ## mark this aggregaiton is done
-            Agg.allAggDoneFlag[Agg.allAggFuncId.index(agg.aggFuncId)] = True
+            if passAggAlias:
+                ## add passing aggregation function name
+                aggPass2Join.append(agg.alias)
+                ## mark this aggregaiton is done
+                agg.doneFlag = True
+                # Agg.allAggDoneFlag[Agg.allAggFuncId.index(agg.aggFuncId)] = True
     
     ## d. append annot
     if childFlag:
@@ -198,12 +259,20 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             selectAttrAlias[index] = 'annot'
             # original aggregation
             for index, val in enumerate(selectAttrAlias):
-                if val in Agg.allAggVars:
+                if val in Agg.allAggAlias:
                     selectAttr[index] = val + '*' + aggView.viewName + '.annot'
                     selectAttrAlias[index] = val
-            # new aggregation
-            selectAttr.extend([agg + ' * ' + parentNode.JoinResView.viewName + '.annot' for agg in aggPass2Join])
-            selectAttrAlias.extend([agg for agg in aggPass2Join])
+            # new aggregation & pass on aggregation variables
+            for agg in aggPass2Join:
+                if agg in Agg.allAggAlias:
+                    # aggregation function
+                    selectAttr.append(agg + ' * ' + parentNode.JoinResView.viewName + '.annot')
+                    selectAttrAlias.append(agg)
+                else:
+                    # just pass on alias for later aggregation
+                    selectAttr.append('')
+                    selectAttrAlias.append(agg)
+                    
         else:
             selectAttrAlias.append('annot')
     elif parentNode.relationType != RelationType.TableScanRelation:
@@ -256,14 +325,29 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     def getAggRelation(relation: Edge) -> list[AggFunc]:
         aggs = []
         joinKey = set(relation.dst.cols) & set(relation.src.cols)
-        satisKey = [col for col in relation.dst.cols if col not in joinKey]
-        for aggF in Agg.aggFunc:
-            # FIXME: Way to find intersection is not applied for complex form, may use sepAlias
-            if set(satisKey) & (set(aggF.inVars) | set(aggF.alias)):
+        childNode = jointree.getNode(relation.dst.id)
+        # In case some attributes is not in the original same node
+        if childNode.JoinResView:
+            satisKey = [col for col in childNode.JoinResView.selectAttrAlias if col not in joinKey]
+        else:
+            satisKey = [col for col in childNode.cols if col not in joinKey]
+            
+        for index, aggF in enumerate(Agg.aggFunc):
+            if aggF.doneFlag:
+                continue
+            if len(aggF.inVars) == 0 and aggF.alias in satisKey: # no input vars case
+                aggF.doneFlag = True
                 aggs.append(aggF)
+            elif len(aggF.inVars) == 1 and aggF.inVars[0] in satisKey:
+                aggF.doneFlag = True
+                aggs.append(aggF)
+            elif len(aggF.inVars) > 1:  # mark true during the process, cauase here is hard to determine 
+                for invar in aggF.inVars:
+                    if invar in satisKey: # aggregation related, need to more judgement to pass or aggregate
+                        aggs.append(aggF)
+                        continue
         
         aggs.sort(key=lambda agg: agg.funcName.value)
-        
         return aggs
     
     def getLeafRelation(relations: list[Edge]) -> list[list[Edge, list[AggFunc]]]:
@@ -373,7 +457,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             
         for func in Agg.aggFunc:
             if JT.root.relationType != RelationType.TableScanRelation:
-                selectName.append(func.funcName.name + '(' +func.formular + ')')
+                selectName.append(func.funcName.name + func.formular)
             else:
                 pattern = re.compile('v[0-9]+')
                 inVars = pattern.findall(func.formular)
@@ -381,7 +465,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                     index = JT.root.cols.index(var)
                     oriname = JT.root.col2vars[1][index]
                     func.formular = func.formular.replace(var, oriname, 1)
-                selectName.append(func.funcName.name + '(' +func.formular + ')')
+                selectName.append(func.funcName.name + func.formular)
                 
         if JT.root.relationType != RelationType.TableScanRelation:
             ret = buildPrepareView(JT, JT.root, getChildSelfComp(JT.root))
@@ -415,8 +499,8 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     
     ## Subset Internal aggregaiton alias casting form
     allAggDoneflag = True
-    for flag in Agg.allAggDoneFlag:
-        allAggDoneflag = allAggDoneflag and flag 
+    for aggF in Agg.aggFunc:
+        allAggDoneflag = allAggDoneflag and aggF.doneFlag 
     if not allAggDoneflag:
         selectName = Agg.groupByVars.copy()
         for index, func in enumerate(Agg.aggFunc):
@@ -450,7 +534,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         return aggReduceList, [], [], finalResult
     
     ## b. normal case
-    reduceList, enumerateList, _ = generateIR(jointree, COMP, outputVariables, isAgg=True, allAggVars=Agg.allAggVars)
+    reduceList, enumerateList, _ = generateIR(jointree, COMP, outputVariables, isAgg=True, allAggAlias=Agg.allAggAlias)
     
     # The left undone aggregation is done: 1. [subset > 1] -> final enumeration * annot 2. [subset = 1], done in root
     

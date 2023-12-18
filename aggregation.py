@@ -18,6 +18,7 @@ class AggFunc():
         # FIXME: Change for complex formular
         # self.sepAlias = []        # used for multiple variables in aggregation function
         self.aggFuncId = randint(0, maxsize)
+        self.doneFlag = False
 
 class Aggregation:
     def __init__(self, groupByVars: list[str], aggFunc: list[AggFunc]) -> None:
@@ -25,9 +26,10 @@ class Aggregation:
         self.aggFunc = aggFunc
         self.aggFuncCnt = len(aggFunc)
         self.alias2AggFunc = self.getAllAggVars()
-        self.allAggVars = list(self.alias2AggFunc.keys())
-        self.allAggFuncId = [func.aggFuncId for func in aggFunc]
-        self.allAggDoneFlag = [False for _ in range(len(aggFunc))]    # Marked done already, used for agg alias casting in subset (no need for actual group by)
+        # To be more precise, allAggAlias
+        self.allAggAlias = list(self.alias2AggFunc.keys())
+        # self.allAggFuncId = [func.aggFuncId for func in aggFunc]
+        # self.allAggDoneFlag = [False for _ in range(len(aggFunc))]    # Marked done already, used for agg alias casting in subset (no need for actual group by)
         
     def getAllAggVars(self) -> dict[str, AggFunc]:
         # FIXME: Change for complex formular

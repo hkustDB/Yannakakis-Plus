@@ -67,6 +67,20 @@ CREATE TABLE orders (
   `comment` varchar
 );
 
+CREATE TABLE orderswithyear (  
+  orderkey bigint,
+  custkey int,
+  orderstatus varchar,
+  totalprice decimal,
+  orderdate bigint,
+  o_year int,
+  orderpriority varchar,
+  clerk varchar,
+  shippriority int,
+  `comment` varchar
+);
+
+
 CREATE TABLE lineitem ( 
   orderkey bigint,
   partkey int,
@@ -79,6 +93,26 @@ CREATE TABLE lineitem (
   returnflag varchar,
   linestatus varchar,
   shipdate bigint,
+  commitdate bigint,
+  receiptdate bigint,
+  shipinstruct varchar,
+  shipmode varchar,
+  `comment` varchar
+);
+
+CREATE TABLE lineitemwithyear ( 
+  orderkey bigint,
+  partkey int,
+  suppkey int,
+  linenumber int,
+  quantity decimal,
+  extendedprice decimal,
+  discount decimal,
+  tax decimal,
+  returnflag varchar,
+  linestatus varchar,
+  shipdate bigint,
+  l_year int,
   commitdate bigint,
   receiptdate bigint,
   shipinstruct varchar,
