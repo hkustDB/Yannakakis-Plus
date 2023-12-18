@@ -682,7 +682,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
 
 
-def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree, lastEnum: bool = False, isAgg = False, allAggVars: list[str] = []) -> EnumeratePhase:
+def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree, lastEnum: bool = False, isAgg = False, allAggAlias: list[str] = []) -> EnumeratePhase:
     createSample = selectMax = selectTarget = stageEnd = semiEnumerate = None
     origiNode = JT.getNode(corReducePhase.corresNodeId)
     
@@ -728,22 +728,22 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                         selectAttrAlias[index] = 'annot'
                         ### change aggregation function
                         for index, val in enumerate(selectAttrAlias):
-                            if val in allAggVars and val in origiNode.JoinResView.selectAttrAlias:
+                            if val in allAggAlias and val in origiNode.JoinResView.selectAttrAlias:
                                 selectAttr[index] = val + '*' + previousView.viewName + '.annot'
                                 selectAttrAlias[index] = val
-                            elif val in allAggVars and val in previousView.selectAttrAlias:
+                            elif val in allAggAlias and val in previousView.selectAttrAlias:
                                 selectAttr[index] = val + '*' + origiNode.JoinResView.viewName + '.annot'
                                 selectAttrAlias[index] = val
                     elif 'annot' in previousView.selectAttrAlias:
                         for index, val in enumerate(selectAttrAlias):
-                            if val in allAggVars and val in origiNode.JoinResView.selectAttrAlias:
+                            if val in allAggAlias and val in origiNode.JoinResView.selectAttrAlias:
                                 selectAttr = ['' for _ in range(len(selectAttrAlias))]
                                 selectAttr[index] = val + '*' + previousView.viewName + '.annot'
                                 selectAttrAlias[index] = val
                             
                     elif 'annot' in origiNode.JoinResView.selectAttrAlias:
                         for index, val in enumerate(selectAttrAlias):
-                            if val in allAggVars and val in previousView.selectAttrAlias:
+                            if val in allAggAlias and val in previousView.selectAttrAlias:
                                 selectAttr = ['' for _ in range(len(selectAttrAlias))]
                                 selectAttr[index] = val + '*' + origiNode.JoinResView.viewName + '.annot'
                                 selectAttrAlias[index] = val
@@ -866,22 +866,22 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
             selectAttrAlias[index] = 'annot'
             ### change aggregation function
             for index, val in enumerate(selectAttrAlias):
-                if val in allAggVars and val in selectTarget.selectAttrAlias:
+                if val in allAggAlias and val in selectTarget.selectAttrAlias:
                     selectAttr[index] = val + '*' + fromTable + '.annot'
                     selectAttrAlias[index] = val
-                elif val in allAggVars and val in previousView.selectAttrAlias:
+                elif val in allAggAlias and val in previousView.selectAttrAlias:
                     selectAttr[index] = val + '*' + joinTable + '.annot'
                     selectAttrAlias[index] = val
         elif 'annot' in previousView.selectAttrAlias:
             for index, val in enumerate(selectAttrAlias):
-                if val in allAggVars and val in selectTarget.selectAttrAlias:
+                if val in allAggAlias and val in selectTarget.selectAttrAlias:
                     selectAttr = ['' for _ in range(len(selectAttrAlias))]
                     selectAttr[index] = val + '*' + fromTable + '.annot'
                     selectAttrAlias[index] = val
         
         elif 'annot' in selectTarget.selectAttrAlias:
             for index, val in enumerate(selectAttrAlias):
-                if val in allAggVars and val in previousView.selectAttrAlias:
+                if val in allAggAlias and val in previousView.selectAttrAlias:
                     selectAttr = ['' for _ in range(len(selectAttrAlias))]
                     selectAttr[index] = val + '*' + joinTable + '.annot'
                     selectAttrAlias[index] = val
@@ -897,7 +897,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
     return retEnum
 
-def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], isAgg = False, allAggVars: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
+def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], isAgg = False, allAggAlias: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     comparisons = list(COMP.values())   
@@ -1151,9 +1151,9 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         
         # lastEnum = optimize flag
         if enum != enumerateOrder[-1]:
-            retEnum = buildEnumeratePhase(previousView, enum, JT, isAgg=isAgg, allAggVars=allAggVars)
+            retEnum = buildEnumeratePhase(previousView, enum, JT, isAgg=isAgg, allAggAlias=allAggAlias)
         else:
-            retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True, isAgg=isAgg, allAggVars=allAggVars)
+            retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True, isAgg=isAgg, allAggAlias=allAggAlias)
             
         enumerateList.append(retEnum)
     

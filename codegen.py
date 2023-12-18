@@ -186,7 +186,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         dropView.append(enum.stageEnd.viewName)
         outFile.write(line)
     
-    outFile.write('Final result: \n')
+    outFile.write('# Final result: \n')
     outFile.write(finalResult)
     
     if len(dropView):

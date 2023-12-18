@@ -19,7 +19,7 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/agg1/'
+BASE_PATH = 'query/q1/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -123,26 +123,9 @@ def parse_agg():
                     if 'List()' in inVars:
                         inVars = []
                     else:
-                        if line.count('IntPlusIntExpression') == 1:
-                            if line.count('SingleVariableExpression') == 2:
-                                pattern = re.compile('v[0-9]+')
-                                inVars = pattern.findall(inVars)
-                                formular = '+'.join(inVars)
-                            else:
-                                raise NotImplementedError("Only deal with two variables case! ")
-                        elif line.count('DoubleTimesDoubleExpression') == 1:
-                            if line.count('SingleVariableExpression') == 2:
-                                pattern = re.compile('v[0-9]+')
-                                inVars = pattern.findall(inVars)
-                                formular = '*'.join(inVars)
-                            else:
-                                raise NotImplementedError("Only deal with two variables case! ")
-                        elif line.count('SingleVariableExpression') == 1:
-                            pattern = re.compile('v[0-9]+')
-                            inVars = pattern.findall(inVars)
-                            formular = inVars[0]
-                        else:
-                            raise NotImplementedError("Not implement this kind of aggregation! ")
+                        formular = inVars.replace('List(', '', 1)[:-1]
+                        pattern = re.compile('v[0-9]+')
+                        inVars = list(set(pattern.findall(inVars)))
                     return inVars, formular
                 
                 inVars, formular = parseVar(inVars)
@@ -275,7 +258,7 @@ def parse_rel(id: str):
         line = f.readline().rstrip()
     
     return allNodes, supId
-        
+
 
 def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> dict[int, TreeNode]:
     sortedNodes = sorted(allNodes.items())
