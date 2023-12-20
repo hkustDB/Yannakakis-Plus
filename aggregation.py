@@ -38,6 +38,10 @@ class Aggregation:
             if agg.alias not in ret:
                 ret[agg.alias] = agg
         return ret
+    
+    def initDoneFlag(self):
+        for agg in self.aggFunc:
+            agg.doneFlag = False
 
 # aggregation additional reduce view (outside subset)   
 ## aggFunc[AggFunc]; aggFunc[i].funcName + '(' + aggFunc[i].inVars +')'

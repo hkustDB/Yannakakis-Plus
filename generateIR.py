@@ -645,7 +645,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             # Flag: need alias casting, add to condList
             # alias/JoinViewName.original else alias/JoinViewName.eachKey
             originalNameP = parentNode.col2vars[1][parentNode.col2vars[0].index(eachKey)] if parentFlag else eachKey
-            originalNameC = childNode.col2vars[1][childNode.col2vars[0].index(eachKey)] if childNode else eachKey    
+            originalNameC = childNode.col2vars[1][childNode.col2vars[0].index(eachKey)] if childFlag else eachKey    
             
             inLeft.append(originalNameP) 
             inRight.append(originalNameC)
@@ -1159,7 +1159,9 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     
     if not isAgg:
         fromTable = enumerateList[-1].stageEnd.viewName if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate.viewName
-        finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + ';\n'
+        finalResult = 'select count(' + ('distinct ' if not JT.isFull else '')
+        finalResult += ', '.join(outputVariables) if not JT.isFull else '*'
+        finalResult += ') from ' + fromTable + ';\n'
     
     return reduceList, enumerateList, finalResult
     
