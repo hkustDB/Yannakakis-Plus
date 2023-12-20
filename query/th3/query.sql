@@ -1,6 +1,11 @@
-SELECT SUM(l.extendedprice*l.discount) AS revenue
-FROM   lineitem l
-WHERE  l.shipdate >= 757353600
-  AND  l.shipdate < 788889600
-  AND  (l.discount BETWEEN (0.05) AND (0.06 + 0.01)) 
-  AND  l.quantity < 24
+SELECT ORDERS.orderkey,
+       ORDERS.orderdate,
+       ORDERS.shippriority,
+       SUM(extendedprice * (1 - discount)) AS query3
+FROM   CUSTOMER, ORDERS, LINEITEM
+WHERE  CUSTOMER.mktsegment = 'BUILDING'
+  AND  ORDERS.custkey = CUSTOMER.custkey
+  AND  LINEITEM.orderkey = ORDERS.orderkey
+  AND  ORDERS.orderdate < 795196800 
+  AND  LINEITEM.shipdate > 795196800
+GROUP BY ORDERS.orderkey, ORDERS.orderdate, ORDERS.shippriority

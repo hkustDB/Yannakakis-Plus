@@ -12,6 +12,7 @@ class Comparison:
         self.left = None        # formular on the op left
         self.right = None       # formular on the op right
         self.path = None        # [[1, 2], [2, 4], [4, 3]]
+        self.cond = None
         self.predType = None    # Short/Long
         self.beginNodeId = None     # update for each delete path, -1 means no comparison edge undone anymore
         self.endNodeId = None       
@@ -20,12 +21,15 @@ class Comparison:
         self.originPath = None                            # no deleting path
         self.helperAttr: list[list[str]] = None           # path record of mf name
         
-    def setAttr(self, id: int, op: str, left: str, right: str, path: list[str]):
+    def setAttr(self, id: int, op: str, left: str, right: str, path: list[str], cond: str):
         # path = ['4<->1', '1<->2', '2<->3', '3<->5']
         self.id = id
         self.op = self.parseOP(op)
-        self.left = self.parseLR(left) # crude left
-        self.right = self.parseLR(right)
+        self.left = left # crude left
+        self.right = right
+        self.cond = cond
+        if self.op == ' IN ':
+            self.right = self.cond.split(' ')[2]
         
         path = [i.split('<->') for i in path]
         path = [[int(i[0]), int(i[1])] for i in path]
@@ -91,77 +95,13 @@ class Comparison:
             return '='
         elif 'intEqualTo' in OP:
             return '='
+        
+        elif 'stringInLiterals' in OP:
+            return ' IN '
             
         else:
             raise NotImplementedError("Not proper relation! ")
-        
-    def parseLR(self, LR: str):
-        if LR.count('IntPlusIntExpression') == 1:
-            oprands = []
-            if 'IntLiteralExpression' in LR:
-                pattern = re.compile('IntLiteralExpression\([0-9]+')
-                vars = pattern.findall(LR)
-                vars = [var.split('(')[1] for var in vars]
-                oprands.extend(vars)
-            
-            if 'SingleVariableExpression' in LR:
-                pattern = re.compile('SingleVariableExpression\(v[0-9]+')
-                vars = pattern.findall(LR)
-                vars = [var.split('(')[1] for var in vars]
-                oprands.extend(vars)
-                
-            return '+'.join(oprands)
-        
-        elif LR.count('DoubleTimesDoubleExpression') == 1:
-            oprands = []
-            if 'DoubleLiteralExpression' in LR:
-                pattern = re.compile('DoubleLiteralExpression\([0-9]+.?[0-9]+')
-                vars = pattern.findall(LR)
-                vars = [var.split('(')[1] for var in vars]
-                oprands.extend(vars)
-            
-            if 'SingleVariableExpression' in LR:
-                pattern = re.compile('SingleVariableExpression\(v[0-9]+')
-                vars = pattern.findall(LR)
-                vars = [var.split('(')[1] for var in vars]
-                oprands.extend(vars)
-                
-            return '*'.join(oprands)
-        elif LR.count('DoublePlusDoubleExpression') == 1:
-            oprands = []
-            pattern = re.compile('[0-9]+.?[0-9]+')
-            vars = pattern.findall(LR)
-            oprands.extend(vars)
-            return '+'.join(oprands)
-        
-        elif LR.count('SingleVariableExpression') == 1:
-            return LR.split('(')[1][:-1].split(':')[0]# "v1"
-        
-        elif LR.count('StringLiteralExpression') == 1:
-            return '\'' + LR.split('(')[1][:-1] + '\''  
-        
-        elif LR.count('IntLiteralExpression') == 1:
-            pattern = re.compile('[0-9]+')
-            vars = pattern.findall(LR)
-            return vars[0]
-        
-        elif LR.count('DoubleLiteralExpression') == 1:
-            pattern = re.compile('[0-9]+.?[0-9]+')
-            vars = pattern.findall(LR)
-            return vars[0]
-        
-        else:   # "v1 * v2 ..." Currently only support simple +/* with numbers, not applying combinations
-            pattern = re.compile('v[0-9]+')
-            vars = pattern.findall(LR)
-            pattern = re.compile('IntervalLiteralExpression\([0-9]+')
-            finds = pattern.findall(LR)
-            finds = [float(each.split('(')[1]) for each in finds]
-            vars += finds
-            
-            if 'Plus' in LR:
-                return '+'.join(vars)
-            elif 'Times' in LR:
-                return '*'.join(vars)     
+
             
     def __str__(self) -> str:
         return str(self.id) + '\n' + str(self.op) + '\n' + str(self.left) + '\n' + str(self.right) + '\n' + str(self.path)

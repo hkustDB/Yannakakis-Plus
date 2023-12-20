@@ -19,8 +19,8 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q1/'
-DDL_NAME = 'graph.ddl'
+BASE_PATH = 'query/th12/'
+DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 REL_NAME = 'relations'
@@ -116,14 +116,14 @@ def parse_agg():
             if flag == 1:
                 outVars.append(line.split(':')[0])
             elif flag == 2:
-                name, inVars, outName = line.split(';')
+                name, outName, inVars = line.split(';', 2)
                 
                 def parseVar(inVars: str):
                     formular = ''
-                    if 'List()' in inVars:
+                    if 'NULL' in inVars:
                         inVars = []
                     else:
-                        formular = inVars.replace('List(', '', 1)[:-1]
+                        formular = inVars.replace('AggList=|', '', 1)[:-2]
                         pattern = re.compile('v[0-9]+')
                         inVars = list(set(pattern.findall(inVars)))
                     return inVars, formular
@@ -148,7 +148,8 @@ def parseComparison(line: list[str]):
     left = line[2].split('=')[1]
     right = line[3].split('=')[1]
     path = line[4].split('=')[1].split(',')
-    return id, op, left, right, path
+    cond = line[5].split('=')[1][1:-1]
+    return id, op, left, right, path, cond
         
     
 def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jtPath: str):
@@ -184,10 +185,10 @@ def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jt
         
         elif flag == 4:
             line = line.split(';')[1:]
-            id, op, left, right, path = parseComparison(line)
+            id, op, left, right, path, cond = parseComparison(line)
             Compare = Comparison()
             try:
-                Compare.setAttr(id, op, left, right, path)
+                Compare.setAttr(id, op, left, right, path, cond)
             except:
                 traceback.print_exc()
                 print(jtPath)
@@ -375,6 +376,7 @@ if __name__ == '__main__':
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables)
                     codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, isFull=isFull)
                 else:
+                    Agg.initDoneFlag()
                     aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, Agg)
                     codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
             except Exception as e:

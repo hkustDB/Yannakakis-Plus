@@ -190,7 +190,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     outFile.write(finalResult)
     
     if len(dropView):
-        line = '\n# drop view ' + ', '.join(dropView) + END
+        line = '\n# drop view ' + ', '.join(reversed(dropView)) + END
         outFile.write(line)
     
     outFile.close()
