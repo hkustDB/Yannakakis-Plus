@@ -120,3 +120,13 @@ CREATE TABLE lineitemwithyear (
   `comment` varchar
 );
 
+CREATE TABLE revenue0 (
+  supplier_no int,
+  total_revenue decimal
+);
+
+CREATE TABLE q15_inner (
+  max_tr decimal
+);
+
+

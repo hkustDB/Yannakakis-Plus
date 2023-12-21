@@ -19,7 +19,7 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/th12/'
+BASE_PATH = 'query/th21/'
 DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -149,7 +149,8 @@ def parseComparison(line: list[str]):
     right = line[3].split('=')[1]
     path = line[4].split('=')[1].split(',')
     cond = line[5].split('=')[1][1:-1]
-    return id, op, left, right, path, cond
+    fullOp = line[6].split('=')[1]
+    return id, op, left, right, path, cond, fullOp
         
     
 def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jtPath: str):
@@ -185,10 +186,10 @@ def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jt
         
         elif flag == 4:
             line = line.split(';')[1:]
-            id, op, left, right, path, cond = parseComparison(line)
+            id, op, left, right, path, cond, fullOp = parseComparison(line)
             Compare = Comparison()
             try:
-                Compare.setAttr(id, op, left, right, path, cond)
+                Compare.setAttr(id, op, left, right, path, cond, fullOp)
             except:
                 traceback.print_exc()
                 print(jtPath)

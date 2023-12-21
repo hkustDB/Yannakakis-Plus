@@ -120,3 +120,7 @@ CREATE TABLE lineitemwithyear (
   `comment` varchar
 );
 
+CREATE TABLE q16_inner (
+  suppkey int
+);
+
