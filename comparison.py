@@ -21,15 +21,26 @@ class Comparison:
         self.originPath = None                            # no deleting path
         self.helperAttr: list[list[str]] = None           # path record of mf name
         
-    def setAttr(self, id: int, op: str, left: str, right: str, path: list[str], cond: str):
+    def setAttr(self, id: int, op: str, left: str, right: str, path: list[str], cond: str, fullOp: str):
         # path = ['4<->1', '1<->2', '2<->3', '3<->5']
         self.id = id
         self.op = self.parseOP(op)
         self.left = left # crude left
         self.right = right
         self.cond = cond
-        if self.op == ' IN ':
-            self.right = self.cond.split(' ')[2]
+        self.fullOp = fullOp
+            
+        if 'true' in fullOp:
+            if self.op == ' LIKE ' or self.op == ' IN ':
+                self.op = ' NOT' + self.op
+            elif self.op == '=':
+                self.op = '<>'
+        
+                
+        if self.op == ' IN ' or self.op == ' LIKE ':
+            self.right = self.cond.split(' ', 2)[2]
+        elif self.op == ' NOT IN ' or self.op == ' NOT LIKE ':
+            self.right = self.cond.split(' ', 3)[3]
         
         path = [i.split('<->') for i in path]
         path = [[int(i[0]), int(i[1])] for i in path]
@@ -95,10 +106,11 @@ class Comparison:
             return '='
         elif 'intEqualTo' in OP:
             return '='
-        
         elif 'stringInLiterals' in OP:
             return ' IN '
-            
+        elif 'intInLiterals' in OP:
+            return ' IN '
+        
         else:
             raise NotImplementedError("Not proper relation! ")
 

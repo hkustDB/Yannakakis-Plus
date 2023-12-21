@@ -6,4 +6,4 @@ WHERE p.partkey = l.partkey
   AND l.quantity >= 1 AND l.quantity <= 1 + 10 
   AND ( p.size BETWEEN 1 AND 5 )
   AND (l.shipmode IN ('AIR', 'AIR REG') )
-  AND l.shipinstruct = 'DELIVER IN PERSON';
+  AND l.shipinstruct = 'DELIVER IN PERSON'

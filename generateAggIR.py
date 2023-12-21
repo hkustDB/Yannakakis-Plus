@@ -68,10 +68,11 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     selectAttrAlias.append(agg.alias)
                     index = childNode.cols.index(aggVar)
                     sourceName = childNode.col2vars[1][index]
+                    agg.formular = agg.formular.replace(aggVar, sourceName)
                     if agg.funcName != AggFuncType.AVG:
-                        selectAttr.append(agg.funcName.name + '(' + sourceName + ')')
+                        selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
                     else:
-                        selectAttr.append('sum(' + sourceName + ')')
+                        selectAttr.append('sum(' + agg.formular + ')')
                     agg.doneFlag = True
             else:
                 allInOne = True
@@ -138,20 +139,22 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     findInVars = childNode.cols
                 else:
                     raise NotImplementedError("Must be JoinView/not TS case! ")
-            
+                
+                agg.formular = agg.formular.replace(agg.inVars[0], sourceName)
                 if agg.inVars[0] in findInVars:
                     if childNode.JoinResView and 'annot' in findInVars:
+                        agg.formular = agg.formular.replace(agg.alias, sourceName)
                         if agg.funcName == AggFuncType.SUM:
-                            selectAttr.append(agg.funcName.name + '(' + agg.inVars[0] + ' * annot' + ')')
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.AVG:
-                            selectAttr.append('sum(' + agg.inVars[0] + ' * annot' + ')')
+                            selectAttr.append('sum(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.COUNT:
-                            selectAttr.append(agg.funcName.name + '(' + agg.inVars[0] + ')' + ' * annot')
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ')' + ' * annot')
                         else:
                             # MIN/MAX
-                            selectAttr.append(agg.funcName.name + '(' + agg.inVars[0] + ')')
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
                     else:
-                        selectAttr.append(agg.funcName.name + '(' + agg.inVars[0] + ')')
+                        selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
                     selectAttrAlias.append(agg.alias)
                 elif agg.alias in findInVars:
                     if childNode.JoinResView and 'annot' in findInVars:

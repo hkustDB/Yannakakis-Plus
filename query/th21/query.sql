@@ -6,5 +6,6 @@ WHERE   s.suppkey = l1.suppkey
   AND   l1.receiptdate > l1.commitdate
 	AND   l2.orderkey = l1.orderkey
 	AND   l2.suppkey <> l1.suppkey
-	# AND   l1.orderkey not in (select orderkey from inner)
+  AND   s.nationkey = n.nationkey
+  AND   n.name = 'SAUDI ARABIA'
 GROUP BY s.name
