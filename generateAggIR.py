@@ -25,7 +25,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     
     # FIXME: Add non-free connex auxiliary bag relation
     
-    if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation:
+    if childIsOriLeaf and childNode.relationType != RelationType.TableScanRelation:
         ret = buildPrepareView(JT, childNode, childSelfComp)
         if ret != []: prepareView.extend(ret)
     
@@ -72,6 +72,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         selectAttr.append(agg.funcName.name + '(' + sourceName + ')')
                     else:
                         selectAttr.append('sum(' + sourceName + ')')
+                    agg.doneFlag = True
             else:
                 allInOne = True
                 for invar in agg.inVars:
@@ -86,7 +87,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         sourceName = childNode.col2vars[1][index]
                         agg.formular = agg.formular.replace(invar, sourceName, 1)
                     if agg.funcName != AggFuncType.AVG:
-                        selectAttr.append(agg.funcName.name + agg.formular )
+                        selectAttr.append(agg.funcName.name + agg.formular)
                     else:
                         selectAttr.append('sum'+ agg.formular)
                 else:   # need to pass variables
@@ -168,6 +169,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     selectAttrAlias.append(agg.alias)
                 else:
                     raise RuntimeError("Must be one name in inVars/aggFunciton alias! ")
+                agg.doneFlag = True
             else:
                 if childNode.JoinResView:
                     findInVars = childNode.JoinResView.selectAttrAlias
@@ -312,6 +314,9 @@ def buildAggCompReducePhase(reducerel: Edge, JT: JoinTree, aggFuncList: list[Agg
 
 
 def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], Agg: Aggregation) -> [list[AggReducePhase], list[ReducePhase], list[EnumeratePhase]]:
+    if len(JT.subset) == 0:
+        raise NotImplementedError("Not implement non-free connex query! ")
+    
     jointree = copy.deepcopy(JT)
     allRelations = jointree.getRelations().values()
     comparisons = list(COMP.values())
@@ -336,16 +341,16 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             if aggF.doneFlag:
                 continue
             if len(aggF.inVars) == 0 and aggF.alias in satisKey: # no input vars case
-                aggF.doneFlag = True
+                # aggF.doneFlag = True
                 aggs.append(aggF)
             elif len(aggF.inVars) == 1 and aggF.inVars[0] in satisKey:
-                aggF.doneFlag = True
+                # aggF.doneFlag = True
                 aggs.append(aggF)
             elif len(aggF.inVars) > 1:  # mark true during the process, cauase here is hard to determine 
                 for invar in aggF.inVars:
                     if invar in satisKey: # aggregation related, need to more judgement to pass or aggregate
                         aggs.append(aggF)
-                        continue
+                        break
         
         aggs.sort(key=lambda agg: agg.funcName.value)
         return aggs
@@ -504,14 +509,14 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     if not allAggDoneflag:
         selectName = Agg.groupByVars.copy()
         for index, func in enumerate(Agg.aggFunc):
-            if Agg.allAggDoneFlag[index]:
+            if func.doneFlag:
                 if func.funcName != AggFuncType.AVG:
                     selectName.extend([func.alias for _ in range(outputVariables.count(func.alias))])
                 else:
                     selectName.extend([func.alias + '/annot as ' + func.alias for _ in range(outputVariables.count(func.alias))])
             else:
                 # FIXME: Need to change for complex formular
-                ## The form of count(*) 
+                ## The form of count(*)
                 if func.formular == '' and not len(func.inVars):
                     selectName.extend(['annot as ' + func.alias for _ in range(outputVariables.count(func.alias))])
                 elif func.funcName != AggFuncType.AVG:
