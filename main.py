@@ -10,6 +10,7 @@ from jointree import Edge, JoinTree
 from aggregation import *
 from generateIR import *
 from generateAggIR import *
+from generateTopKIR import *
 from codegen import *
 
 from random import randint
@@ -141,6 +142,9 @@ def parse_agg():
         return False
     except:
         traceback.print_exc()
+        
+def parse_topk():
+    pass
 
 def parseComparison(line: list[str]):
     id = int(line[0].split('=')[1])
@@ -356,16 +360,28 @@ if __name__ == '__main__':
     table2vars = parse_ddl()
     outputVariables, isFull = parse_outVar()
     Agg = parse_agg()
+    TopK = parse_topk()
+    # NOTE: settings for base and k
+    base, k = 4, 1024
+    IRmode = IRType.Report if not Agg else IRType.Aggregation
+    IRmode = IRType.Level_K if TopK else IRmode
     optJT, optCOMP, allRes = parse_jt(isFull, table2vars)
     # sign for whether process all JT
     optFlag = False
     if optFlag:
-        if not Agg:
+        if IRmode == IRType.Report:
             reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables)
             codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + 'opt' +OUT_NAME, isFull=isFull)
-        else:
+        elif IRmode == IRType.Aggregation:
             aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, Agg)
             codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + 'opt' +OUT_NAME, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
+        # NOTE: No comparison for TopK yet
+        elif IRmode == IRType.Level_K:
+            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Level_K, base=base, k=k)
+            codeGenTokK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRType.Level_K)
+        elif IRmode == IRType.Product_K:
+            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Product_K, base=base, k=k)
+            codeGenTokK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRType.Product_K)  
         
     else:
         for jt, comp, name in allRes:
@@ -373,13 +389,21 @@ if __name__ == '__main__':
             index = pattern.findall(name)[0]
             outName = OUT_NAME.split('.')[0] + index + '.' + OUT_NAME.split('.')[1]
             try:
-                if not Agg:
+                if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables)
                     codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, isFull=isFull)
-                else:
+                elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
                     aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, Agg)
                     codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
+                # NOTE: No comparison for TopK yet
+                elif IRmode == IRType.Level_K:
+                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Level_K, base=base, k=k)
+                    codeGenTokK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRType.Level_K)
+                elif IRmode == IRType.Product_K:
+                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Product_K, base=base, k=k)
+                    codeGenTokK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRType.Product_K)
+
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + name)

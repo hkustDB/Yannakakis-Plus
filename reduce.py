@@ -76,7 +76,7 @@ class Join2tables(Action):
         self.joinTable = joinTable
         self.joinKey = joinKey                  # set intersection, remain original for enumerate usage
         self.alterJoinKey = alterJoinKey        # can be removed
-        self.joinCond = joinCond
+        self.joinCond = joinCond                # where a.joinkey = b.joinkey
         self.whereCondList = whereCondList
         self.reduceType = ReduceType.Join2tables
         self._joinFlag = ' JOIN ' if len(self.alterJoinKey) != 0 else ', '
@@ -123,7 +123,7 @@ class ReducePhase:
         self.bagAuxView = bagAuxView
         self.reducePhaseId = ReducePhase._reducePhaseId
         self._addReducePhaseId
-        self.corresNodeId: int = corresNodeId       # corresponds to nodeId in JoinTree
+        self.corresNodeId: int = corresNodeId                 # corresponds to nodeId in JoinTree
         self.reduceDirection: Direction = reduceDirection
         self.PhaseType = phaseType
         self.reduceOp = reduceOp
