@@ -88,3 +88,9 @@ class AggFuncType(Enum):
     SUM = 3
     AVG = 4
     
+class IRType(Enum):
+    Report = 0
+    Aggregation = 1
+    Level_K = 2
+    Product_K = 3
+    

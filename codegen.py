@@ -26,6 +26,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     ret = ', '.join(selectData) + extraAdd
     return ret
 
+# TODO: final output variables error? 
 def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outputVariables: list[str], outPath: str, aggGroupBy: list[str] = [], aggList: list[AggReducePhase] = [], isFull = True, isAgg = False):
     outFile = open(outPath, 'w+')
     dropView = []
@@ -195,3 +196,5 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     
     outFile.close()
     
+def codeGenTokK(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, IRmode: IRType):
+    pass
