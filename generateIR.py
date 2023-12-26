@@ -1026,7 +1026,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
             else:
                 raise RuntimeError("Should not happen! ")
         
-        # Update relation & comparisons
+        # Update relation & comparisons, only used for remove edges, info record in JT
         jointree.removeEdge(rel)
         remainRelations = jointree.getRelations().values()
         # selfComparisons = [comp for comp in selfComparisons if len(comp.path)]? not working

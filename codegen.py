@@ -1,7 +1,6 @@
 from enumerate import *
 from reduce import *
 from aggregation import *
-
 from enumsType import *
 
 BEGIN = 'create or replace view '
@@ -195,6 +194,3 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         outFile.write(line)
     
     outFile.close()
-    
-def codeGenTokK(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, IRmode: IRType):
-    pass

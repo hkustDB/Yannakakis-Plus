@@ -2,6 +2,9 @@ from enumsType import *
 from reduce import *
 from enumerate import *
 from aggregation import *
+from levelK import *
+from productK import *
+
 from typing import Union
 
 class TreeNode:
@@ -18,9 +21,9 @@ class TreeNode:
         self.estimateSize = -1                      # estimate relation size
         self.relationType: RelationType = None
         self.createViewAlready: bool = False        # create view TableAgg, Aux, bag already
-        self.reducePhase: Union[ReducePhase, AggReducePhase] = None        # Attach reduce information to the node
+        self.reducePhase: Union[ReducePhase, AggReducePhase, LevelKReducePhase, ProductKReducePhase] = None        # Attach reduce information to the node
         self.enumeratePhase: EnumeratePhase = None  # Attach enumerate information to the node
-        self.JoinResView: Join2tables = None        # record the name of previous join
+        self.JoinResView: Union[Join2tables, SemiJoin, CreateBagAuxView, WithView] = None        # record the name of previous join
     
     @property
     def getcol2vars(self): 

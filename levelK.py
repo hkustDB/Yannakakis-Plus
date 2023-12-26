@@ -1,8 +1,9 @@
 from action import Action
 
+
 # Reduce Part
 class WithView(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str = None, joinKey: list[str] = [], usingJoinKey: list[str] = [], whereCondList: list[str] = [], groupBy: list[str] = [], orderBy: list[str] = [], DESC: bool = True, limit: int = 1024) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str = None, joinKey: list[str] = [], usingJoinKey: list[str] = [], whereCondList: list[str] = [], groupBy: list[str] = [], orderBy: list[str] = [], DESC: bool = False, limit: int = 0) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.joinTable = joinTable
         self.joinKey = joinKey
@@ -12,10 +13,6 @@ class WithView(Action):
         self.orderBy = orderBy
         self.DESC = DESC
         self.limit = limit
-        
-class AfterWithView(WithView):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str = None, joinKey: list[str] = [], usingJoinKey: list[str] = [], whereCondList: list[str] = [], groupBy: list[str] = [], orderBy: list[str] = [], DESC: bool = True, limit: int = 1024) -> None:
-        super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, whereCondList, groupBy, orderBy, DESC, limit)
 
 # Enumerate Part
 ## View with row_number()
@@ -25,10 +22,12 @@ class RNView(Action):
         self.partitionBy = partitionBy
         self.orderBy = orderBy
         self.DESC = DESC
+        self.selectAttrs += 'row_number() over (partition by ' + self.partitionBy[0] + ' order by ' + self.orderBy[0] + (' ' + self.DESC if self.DESC else '') + ')'
+        self.selectAttrAlias += ['rnk']
 
 # Rank summary
 class EnumRankView:
-    def __init__(self, maxView: WithView, truncateView: WithView, finalView: RNView) -> None:
+    def __init__(self, maxView: WithView, truncateView: WithView, finalView: WithView) -> None:
         self.maxView = maxView
         self.truncateView = truncateView
         self.finalView = finalView
@@ -38,6 +37,7 @@ class EnumSelectRN(Action):
     def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, rnCond: list[str]) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.rnCond = rnCond
+
 ## union
 class EnumJoinUnion(WithView):
     def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str = None, unionTable: str = None, joinKey: list[str] = [], usingJoinKey: list[str] = [], whereCondList: list[str] = [], groupBy: list[str] = [], orderBy: list[str] = [], DESC: bool = True, limit: int = 1024) -> None:
@@ -53,10 +53,10 @@ class EnumLogLoopView:
         self.levelk_join = levelk_join
         
 
-
+# Summary of Reduce & Enum
 class LevelKReducePhase:
     _levelKReducePhaseId = 0
-    def __init__(self, withView: WithView, afterWithView: AfterWithView, reduceRel) -> None:
+    def __init__(self, withView: WithView, afterWithView: WithView, reduceRel) -> None:
         self.aggView = withView
         self.orderView = afterWithView
         self._levelKReducePhaseId = LevelKReducePhase._levelKReducePhaseId
@@ -66,13 +66,14 @@ class LevelKReducePhase:
     @property
     def _addLevelKReducePhaseId(self):
         LevelKReducePhase._levelKReducePhaseId += 1
-        
+
 
 class LevelKEnumPhase:
     _levelKEnumPhaseId = 0
-    def __init__(self, rankView: EnumRankView, logkLoop: list[EnumLogLoopView]) -> None:
+    def __init__(self, rankView: EnumRankView, logkLoop: list[EnumLogLoopView], finalView: Action) -> None:
         self.rankView = rankView
         self.logkLoop = logkLoop
+        self.finalView = finalView
         self._levelKEnumPhaseId = LevelKEnumPhase._levelKEnumPhaseId
     
     @property
