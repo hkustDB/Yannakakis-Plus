@@ -13,6 +13,7 @@ from generateAggIR import *
 from generateTopKIR import *
 from codegen import *
 
+
 from random import randint
 import os
 import re
@@ -378,10 +379,10 @@ if __name__ == '__main__':
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Level_K, base=base, k=k)
-            codeGenTokK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRType.Level_K)
+            codeGenTopKL(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME)
         elif IRmode == IRType.Product_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Product_K, base=base, k=k)
-            codeGenTokK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRType.Product_K)  
+            codeGenTopKP(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME)  
         
     else:
         for jt, comp, name in allRes:
@@ -399,10 +400,10 @@ if __name__ == '__main__':
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Level_K, base=base, k=k)
-                    codeGenTokK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRType.Level_K)
+                    codeGenTopKL(reduceList, enumerateList, finalResult, BASE_PATH + outName)
                 elif IRmode == IRType.Product_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Product_K, base=base, k=k)
-                    codeGenTokK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRType.Product_K)
+                    codeGenTopKP(reduceList, enumerateList, finalResult, BASE_PATH + outName)
 
             except Exception as e:
                 traceback.print_exc()
