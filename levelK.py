@@ -59,7 +59,7 @@ class LevelKReducePhase:
     def __init__(self, withView: WithView, afterWithView: WithView, reduceRel) -> None:
         self.aggView = withView
         self.orderView = afterWithView
-        self._levelKReducePhaseId = LevelKReducePhase._levelKReducePhaseId
+        self.levelKReducePhaseId = LevelKReducePhase._levelKReducePhaseId
         self._addLevelKReducePhaseId
         self.reduceRel = reduceRel
         
@@ -74,7 +74,7 @@ class LevelKEnumPhase:
         self.rankView = rankView
         self.logkLoop = logkLoop
         self.finalView = finalView
-        self._levelKEnumPhaseId = LevelKEnumPhase._levelKEnumPhaseId
+        self.levelKEnumPhaseId = LevelKEnumPhase._levelKEnumPhaseId
     
     @property
     def _addLevelKEnumPhaseId(self):

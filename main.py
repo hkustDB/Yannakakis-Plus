@@ -12,6 +12,7 @@ from generateIR import *
 from generateAggIR import *
 from generateTopKIR import *
 from codegen import *
+from codegenTopK import *
 
 
 from random import randint
