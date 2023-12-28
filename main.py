@@ -22,8 +22,8 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/th21/'
-DDL_NAME = 'tpch.ddl'
+BASE_PATH = 'query/topk1/'
+DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 REL_NAME = 'relations'
@@ -145,8 +145,9 @@ def parse_agg():
     except:
         traceback.print_exc()
         
-def parse_topk():
-    pass
+def parse_topk() -> list[int, int, list[str], bool, int]:
+    # NOTE: Add later parse here
+    return 0, 2, '', True, 1024
 
 def parseComparison(line: list[str]):
     id = int(line[0].split('=')[1])
@@ -157,7 +158,7 @@ def parseComparison(line: list[str]):
     cond = line[5].split('=')[1][1:-1]
     fullOp = line[6].split('=')[1]
     return id, op, left, right, path, cond, fullOp
-        
+    
     
 def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jtPath: str):
     f = open(jtPath)
@@ -362,11 +363,10 @@ if __name__ == '__main__':
     table2vars = parse_ddl()
     outputVariables, isFull = parse_outVar()
     Agg = parse_agg()
-    TopK = parse_topk()
-    # NOTE: settings for base and k
-    base, k = 4, 1024
+    TopK, base, orderBy, DESC, limit = parse_topk()
     IRmode = IRType.Report if not Agg else IRType.Aggregation
-    IRmode = IRType.Level_K if TopK else IRmode
+    IRmode = IRType.Level_K if TopK == 0 else IRmode
+    IRmode = IRType.Product_K if TopK == 1 else IRmode
     optJT, optCOMP, allRes = parse_jt(isFull, table2vars)
     # sign for whether process all JT
     optFlag = False
@@ -379,10 +379,10 @@ if __name__ == '__main__':
             codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + 'opt' +OUT_NAME, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
-            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Level_K, base=base, k=k)
+            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
             codeGenTopKL(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME)
         elif IRmode == IRType.Product_K:
-            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Product_K, base=base, k=k)
+            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
             codeGenTopKP(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME)  
         
     else:
@@ -400,10 +400,10 @@ if __name__ == '__main__':
                     codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
-                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Level_K, base=base, k=k)
+                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
                     codeGenTopKL(reduceList, enumerateList, finalResult, BASE_PATH + outName)
                 elif IRmode == IRType.Product_K:
-                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Product_K, base=base, k=k)
+                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
                     codeGenTopKP(reduceList, enumerateList, finalResult, BASE_PATH + outName)
 
             except Exception as e:
