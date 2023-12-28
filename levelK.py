@@ -22,12 +22,12 @@ class RNView(Action):
         self.partitionBy = partitionBy
         self.orderBy = orderBy
         self.DESC = DESC
-        self.selectAttrs += 'row_number() over (partition by ' + self.partitionBy[0] + ' order by ' + self.orderBy[0] + (' ' + self.DESC if self.DESC else '') + ')'
+        self.selectAttrs += [''] * len(selectAttrAlias) + ['row_number() over (partition by ' + self.partitionBy[0] + ' order by ' + self.orderBy[0] + (' ' + 'DESC' if self.DESC else '') + ')']
         self.selectAttrAlias += ['rnk']
 
 # Rank summary
 class EnumRankView:
-    def __init__(self, maxView: WithView, truncateView: WithView, finalView: WithView) -> None:
+    def __init__(self, maxView: WithView, truncateView: WithView, finalView: RNView) -> None:
         self.maxView = maxView
         self.truncateView = truncateView
         self.finalView = finalView
