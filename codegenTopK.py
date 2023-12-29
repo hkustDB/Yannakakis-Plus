@@ -111,11 +111,15 @@ def codeGenTopKL(reduceList: list[LevelKReducePhase], enumerateList: list[LevelK
         
     outFile.write(finalResult)
     if len(dropView):
-        line = '\n-- drop view ' + ', '.join(reversed(dropView)) + ';'
-        outFile.write(line)
+        outFile.write('\n-- ')
+        for table in reversed(dropView):
+            line = 'drop view ' + table + ';'
+            outFile.write(line)
     if len(dropTable):
-        line = '\n-- drop table ' + ', '.join(reversed(dropTable)) + ';'
-        outFile.write(line)
+        outFile.write('\n-- ')
+        for table in reversed(dropTable):
+            line = 'drop table ' + table + ';'
+            outFile.write(line)
     outFile.close()
 
 
@@ -158,6 +162,10 @@ def codeGenTopKP(reduceList: list[ProductKReducePhase], enumerateList: list[Prod
         outFile.write(line)
     
     outFile.write(finalResult)
-    line = '\n-- drop view ' + ', '.join(reversed(dropView)) + ';'
+    if len(dropView):
+        outFile.write('\n-- ')
+        for table in reversed(dropView):
+            line = 'drop view ' + table + ';'
+            outFile.write(line)
     outFile.write(line)
     outFile.close()

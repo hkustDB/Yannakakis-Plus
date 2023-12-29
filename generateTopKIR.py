@@ -199,7 +199,7 @@ def buildLevelKEnumPhase(previousView: Union[WithView, EnumLogLoopView], corRedu
         ## (a) levelk_left
             viewName = 'levelk_left_' + str(i)
             # select only attrs from one table cols
-            selectAlias = [attr for attr in logkLoop[-1].levelk_join.selectAttrAlias if attr not in rePhraseWords and attr in corReducePhase.reduceRel.src.cols]
+            selectAlias = [attr for attr in logkLoop[-1].levelk_join.selectAttrAlias if attr not in rePhraseWords and attr in previousView.selectAttrAlias]  # original attrs need to be passed
             selectAttr = [''] * len(selectAlias)
             selectAlias.append('rating')
             selectAttr.append('left_weight')
