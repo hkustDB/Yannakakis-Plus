@@ -94,3 +94,7 @@ class IRType(Enum):
     Level_K = 2
     Product_K = 3
     
+class GenType(Enum):
+    DuckDB = 0
+    Mysql = 1
+    

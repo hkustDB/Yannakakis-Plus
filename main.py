@@ -22,7 +22,7 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/topk1/'
+BASE_PATH = 'query/topk3/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -147,7 +147,7 @@ def parse_agg():
         
 def parse_topk() -> list[int, int, list[str], bool, int]:
     # NOTE: Add later parse here
-    return 0, 2, '', True, 1024
+    return 0, 32, '', True, 1024
 
 def parseComparison(line: list[str]):
     id = int(line[0].split('=')[1])
@@ -380,10 +380,10 @@ if __name__ == '__main__':
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
-            codeGenTopKL(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME)
+            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Level_K, genType=GenType.Mysql)
         elif IRmode == IRType.Product_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
-            codeGenTopKP(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME)  
+            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=GenType.Mysql)  
         
     else:
         for jt, comp, name in allRes:
@@ -401,10 +401,10 @@ if __name__ == '__main__':
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
-                    codeGenTopKL(reduceList, enumerateList, finalResult, BASE_PATH + outName)
+                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Level_K, genType=GenType.Mysql)
                 elif IRmode == IRType.Product_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
-                    codeGenTopKP(reduceList, enumerateList, finalResult, BASE_PATH + outName)
+                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Product_K, genType=GenType.Mysql)
 
             except Exception as e:
                 traceback.print_exc()
