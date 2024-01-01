@@ -15,12 +15,15 @@ def buildLevelKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = False,
     aggView = orderView = None
     
     # aggView
-    viewName = childNode.alias + '_max'
+    viewName = childNode.alias + '_max' + str(randint(0, 10000))
     joinKey = list(set(childNode.cols) & set(parentNode.cols))
     selectAttr, selectAlias = [], []
     
     def join2ori(transVar: str, isChild: bool = True):
-        origin = childNode.col2vars[1][childNode.cols.index(transVar)]
+        if isChild:
+            origin = childNode.col2vars[1][childNode.cols.index(transVar)]
+        else:
+            origin = parentNode.col2vars[1][parentNode.cols.index(transVar)]
         return origin
     
     if len(joinKey) == 1:
@@ -33,17 +36,25 @@ def buildLevelKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = False,
             selectAttr.append(join2ori(joinKey[0]))
             groupBy = [selectAttr[0]]
     else:
-        raise NotImplementedError("Not implement multiple joinkey! ")
+        for key in joinKey:
+            if childNode.JoinResView:
+                selectAlias.append(key)
+                selectAttr.append('')
+            else:
+                selectAlias.append(key)
+                selectAttr.append(join2ori(key))
+            groupBy = joinKey
+        
     if childNode.isLeaf:
         selectAttr.append('max(rating)')
     else:
         selectAttr.append('max(accweight)')
     selectAlias.append('max_accweight')
-    fromTable = childNode.source if childNode.isLeaf else childNode.alias
+    fromTable = childNode.JoinResView.viewName if childNode.JoinResView else childNode.source
     aggView = WithView(viewName, selectAttr, selectAlias, fromTable, groupBy=groupBy)
     
     # orderView
-    viewName = parentNode.alias
+    viewName = parentNode.alias + str(randint(0, 10000))
     selectAttr, selectAlias = [], []
     if parentNode.JoinResView:
         selectAlias = parentNode.cols.copy()
@@ -57,13 +68,25 @@ def buildLevelKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = False,
     
     selectAttr.append('rating + max_accweight')
     selectAlias.append('accweight')
-    fromTable = parentNode.source
     joinTable = aggView.viewName
-    whereCond = fromTable + '.' + join2ori(joinKey[0], isChild=False) + ' = ' + joinTable + '.' + aggView.selectAttrAlias[0]
-    if lastRel:
-        orderView = WithView(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey, whereCondList=[whereCond], orderBy=['accweight'], DESC=DESC, limit=limit)
+    usingJoinKey = []
+    whereCondList = []
+    if parentNode.JoinResView:
+        fromTable = parentNode.JoinResView.viewName
+        usingJoinKey = joinKey
     else:
-        orderView = WithView(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey, whereCondList=[whereCond])
+        fromTable = parentNode.source
+        if len(joinKey) == 1:
+            whereCond = fromTable + '.' + join2ori(joinKey[0], isChild=False) + ' = ' + joinTable + '.' + aggView.selectAttrAlias[0]
+            whereCondList.append(whereCond)
+        else:
+            for key in joinKey:
+                whereCond = fromTable + '.' + join2ori(key, isChild=False) + ' = ' + joinTable + '.' + aggView.selectAttrAlias[0]
+                whereCondList.append(whereCond)
+    if lastRel:
+        orderView = WithView(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey, usingJoinKey=usingJoinKey, whereCondList=whereCondList, orderBy=['accweight'], DESC=DESC, limit=limit)
+    else:
+        orderView = WithView(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey, usingJoinKey=usingJoinKey, whereCondList=whereCondList)
     retReduce = LevelKReducePhase(aggView, orderView, reduceRel)
     return retReduce
     
@@ -125,9 +148,15 @@ def buildProductKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = Fals
     if parentNode.JoinResView:
         usingJoinKey = joinKey
     else:
-        originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(joinKey[0])]
-        cond = parentNode.alias + '.' + originalName + '=' + aggMax.viewName + '.' + joinKey[0]
-        whereCondList.append(cond)
+        if len(joinKey) == 1:
+            originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(joinKey[0])]
+            cond = parentNode.alias + '.' + originalName + '=' + aggMax.viewName + '.' + joinKey[0]
+            whereCondList.append(cond)
+        else:
+            for key in joinKey:
+                originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(key)]
+                cond = parentNode.alias + '.' + originalName + '=' + aggMax.viewName + '.' + key
+                whereCondList.append(cond)
     
     if lastRel:
         joinRes = WithView(viewName, selectAttrs, selectAlias, fromTable, joinTable, joinKey, usingJoinKey, whereCondList, orderBy=[selectAlias[-1]], DESC=DESC, limit=limit)
@@ -146,21 +175,29 @@ def buildLevelKEnumPhase(previousView: Union[WithView, EnumLogLoopView], corRedu
     # 1. rankView
     maxView = truncateView = finalView = None
     ## (1) maxView
-    viewName = previousView.viewName + '_max'
+    viewName = previousView.viewName + '_max' + str(randint(0, 10000))
     fromTable = previousView.viewName
     joinKey = corReducePhase.orderView.joinKey
     usingJoinKey = []
     selectAttr, selectAlias = [], []
-    selectAttr.append('')
-    selectAlias.append(joinKey[0])
+    if len(joinKey) == 1:
+        selectAttr.append('')
+        selectAlias.append(joinKey[0])
+        groupBy = [joinKey[0]]
+    else:
+        for key in joinKey:
+            selectAttr.append('')
+            selectAlias.append(key)
+        groupBy = joinKey
+        
     selectAttr.append('max(rating)')
     selectAlias.append('max_weight')
-    groupBy = [joinKey[0]]
+    
     maxView = WithView(viewName, selectAttr, selectAlias, fromTable, groupBy=groupBy)
     ## (2) truncateView
     origiNode = JT.getNode(corReducePhase.reduceRel.dst.id)
     joinTable = origiNode.JoinResView.viewName if origiNode.JoinResView else origiNode.source
-    viewName = origiNode.alias + '_truncated'
+    viewName = origiNode.alias + '_truncated' + str(randint(0, 10000))
     if origiNode.JoinResView:
         selectAlias = origiNode.JoinResView.selectAttrAlias.copy()
         selectAttr = [''] * len(selectAlias)
@@ -178,12 +215,18 @@ def buildLevelKEnumPhase(previousView: Union[WithView, EnumLogLoopView], corRedu
     if origiNode.JoinResView:
         usingJoinKey = joinKey
     else:
-        whereCond = fromTable + '.' + joinKey[0] + '=' + joinTable + '.' + origiNode.col2vars[1][origiNode.cols.index(joinKey[0])]
-        whereCondList.append(whereCond)
+        if len(joinKey) == 1:
+            whereCond = fromTable + '.' + joinKey[0] + '=' + joinTable + '.' + origiNode.col2vars[1][origiNode.cols.index(joinKey[0])]
+            whereCondList.append(whereCond)
+        else:
+            for key in joinKey:
+                whereCond = fromTable + '.' + key + '=' + joinTable + '.' + origiNode.col2vars[1][origiNode.cols.index(key)]
+                whereCondList.append(whereCond)
+                
     orderBy = ['max_weight + accweight']
-    truncateView = WithView(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey=joinKey, usingJoinKey=usingJoinKey, orderBy=orderBy, DESC=DESC, limit=limit)
+    truncateView = WithView(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey=joinKey, usingJoinKey=usingJoinKey, whereCondList=whereCondList, orderBy=orderBy, DESC=DESC, limit=limit)
     ## (3) finalView
-    viewName = origiNode.alias + '_rnk'
+    viewName = origiNode.alias + '_rnk' + str(randint(0, 10000))
     fromTable = truncateView.viewName
     finalView = RNView(viewName, [], selectAlias.copy(), fromTable, partitionBy=joinKey, orderBy=['accweight'], DESC=DESC)
     ## (4) EnumRankView
@@ -197,26 +240,26 @@ def buildLevelKEnumPhase(previousView: Union[WithView, EnumLogLoopView], corRedu
         levelk_left = levelk_right = levelk_join = None
         if i != 0:
         ## (a) levelk_left
-            viewName = 'levelk_left_' + str(i)
+            viewName = 'levelk_left_' + str(i) + str(randint(0, 10000))
             # select only attrs from one table cols
             selectAlias = [attr for attr in logkLoop[-1].levelk_join.selectAttrAlias if attr not in rePhraseWords and attr in previousView.selectAttrAlias]  # original attrs need to be passed
             selectAttr = [''] * len(selectAlias)
             selectAlias.append('rating')
             selectAttr.append('left_weight')
-            rnCond = ['rnk=' + '*'.join([str(base)] * i)]
-            fromTable = 'levelk_join_' + str(i-1)
+            rnCond = ['rnk=' + str(eval('*'.join([str(base)] * i)))]
+            fromTable = logkLoop[-1].levelk_join.viewName
             levelk_left = EnumSelectRN(viewName, selectAttr, selectAlias, fromTable, rnCond)
         ## (b) levelk_right
-        viewName = 'levelk_right_' + str(i)
+        viewName = 'levelk_right_' + str(i) + str(randint(0, 10000))
         fromTable = rankView.finalView.viewName
         selectAlias = ['*']
         rnCond = []
         if i != 0:
-            rnCond.append('rnk>' + '*'.join([str(base)] * i))
-        rnCond.append('rnk<=' + '*'.join([str(base)] * (i+1)))
+            rnCond.append('rnk>' + str(eval('*'.join([str(base)] * i))))
+        rnCond.append('rnk<=' + str(eval('*'.join([str(base)] * (i+1)))))
         levelk_right = EnumSelectRN(viewName, [], selectAlias, fromTable, rnCond)
         ## (c) levelk_join
-        viewName = 'levelk_join_' + str(i)
+        viewName = 'levelk_join_' + str(i) + str(randint(0, 10000))
         joinTable = levelk_right.viewName
         selectAlias = list(set(previousView.selectAttrAlias) | set(rankView.finalView.selectAttrAlias))
         selectAlias = [attr for attr in selectAlias if attr not in rePhraseWords]
@@ -224,7 +267,7 @@ def buildLevelKEnumPhase(previousView: Union[WithView, EnumLogLoopView], corRedu
         selectAttr.append(levelk_right.viewName + '.rnk')
         selectAlias.append('rnk')
         if i != 0:
-            fromTable = 'levelk_left_' + str(i)
+            fromTable = levelk_left.viewName
         else:
             fromTable = previousView.viewName
         ### Extra tackle
@@ -236,7 +279,7 @@ def buildLevelKEnumPhase(previousView: Union[WithView, EnumLogLoopView], corRedu
         selectAlias.append('accweight')
         
         if i != 0:
-            levelk_join = EnumJoinUnion(viewName, selectAttr, selectAlias, fromTable, joinTable, unionTable='levelk_join_' + str(i-1), joinKey=joinKey, usingJoinKey=usingJoinKey, orderBy=['accweight'], DESC=DESC, limit=limit)
+            levelk_join = EnumJoinUnion(viewName, selectAttr, selectAlias, fromTable, joinTable, unionTable=logkLoop[-1].levelk_join.viewName, joinKey=joinKey, usingJoinKey=usingJoinKey, orderBy=['accweight'], DESC=DESC, limit=limit)
         else:
             levelk_join = EnumJoinUnion(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey=joinKey, usingJoinKey=usingJoinKey, orderBy=['accweight'], DESC=DESC, limit=limit)
         
@@ -244,7 +287,7 @@ def buildLevelKEnumPhase(previousView: Union[WithView, EnumLogLoopView], corRedu
         logkLoop.append(oneLoop)
     
     # logKFinal
-    viewName = origiNode.alias + '_acc'
+    viewName = origiNode.alias + '_acc' + str(randint(0, 10000))
     selectAlias = [attr for attr in logkLoop[-1].levelk_join.selectAttrAlias if attr not in rePhraseWords]
     selectAlias.append('rating')
     selectAttr = [''] * len(selectAlias)

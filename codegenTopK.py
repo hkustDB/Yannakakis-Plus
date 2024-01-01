@@ -1,11 +1,13 @@
 from codegen import transSelectData
 from levelK import *
 from productK import *
+from enumsType import *
 
 BEGIN = 'create or replace view '
 DROP = 'drop table if exists '
+END = ');\n'
 BEGIN_TABLE = 'create table '
-AS = ' as (\n'
+AS = ' as ('
 MID = '), \n'
 WITH = 'with '
 WITHEND = ')\n'
@@ -62,7 +64,7 @@ def genSelectRNView(inView: EnumSelectRN):
     return line
 
 
-def codeGenTopKL(reduceList: list[LevelKReducePhase], enumerateList: list[LevelKEnumPhase], finalResult: str, outPath: str):
+def codeGenTopKLD(reduceList: list[LevelKReducePhase], enumerateList: list[LevelKEnumPhase], finalResult: str, outPath: str):
     outFile = open(outPath, 'w+')
     dropView, dropTable = [], []
     
@@ -83,7 +85,7 @@ def codeGenTopKL(reduceList: list[LevelKReducePhase], enumerateList: list[LevelK
     for enum in enumerateList:
         outFile.write('\n-- Enumerate' + str(enum.levelKEnumPhaseId) + '\n')
         outFile.write('-- 0. rankView\n')
-        line = BEGIN_TABLE + enum.rankView.finalView.viewName + AS + WITH + enum.rankView.maxView.viewName + AS + genWithView(enum.rankView.maxView) + MID
+        line = BEGIN + enum.rankView.finalView.viewName + AS + WITH + enum.rankView.maxView.viewName + AS + genWithView(enum.rankView.maxView) + MID
         outFile.write(line)
         line = enum.rankView.truncateView.viewName + AS + genWithView(enum.rankView.truncateView) + WITHEND
         outFile.write(line)
@@ -121,9 +123,69 @@ def codeGenTopKL(reduceList: list[LevelKReducePhase], enumerateList: list[LevelK
             line = 'drop table ' + table + ';'
             outFile.write(line)
     outFile.close()
+    
+def codeGenTopKLM(reduceList: list[LevelKReducePhase], enumerateList: list[LevelKEnumPhase], finalResult: str, outPath: str):
+    outFile = open(outPath, 'w+')
+    dropView, dropTable = [], []
+    
+    # 1. reduceList rewrite
+    if len(reduceList):
+        outFile.write('\n# Reduce Phase: \n')
+    for reduce in reduceList:
+        outFile.write('\n## Reduce' + str(reduce.levelKReducePhaseId) + '\n')
+        line = BEGIN + reduce.aggView.viewName + AS + genWithView(reduce.aggView) + END
+        dropView.append(reduce.aggView.viewName)
+        outFile.write(line)
+        line = BEGIN + reduce.orderView.viewName + AS + genWithView(reduce.orderView) + END
+        dropView.append(reduce.orderView.viewName)
+        outFile.write(line)
+    
+    # 2. enumerateList rewrite
+    if len(enumerateList):
+        outFile.write('\n# Enumerate Phase: \n')
+    for enum in enumerateList:
+        outFile.write('\n## Enumerate' + str(enum.levelKEnumPhaseId) + '\n')
+        outFile.write('## 0. rankView\n')
+        line = BEGIN + enum.rankView.maxView.viewName + AS + genWithView(enum.rankView.maxView) + END
+        outFile.write(line)
+        dropView.append(enum.rankView.maxView.viewName)
+        line = BEGIN_TABLE + enum.rankView.truncateView.viewName + AS + genWithView(enum.rankView.truncateView) + END
+        outFile.write(line)
+        dropTable.append(enum.rankView.truncateView.viewName)
+        line = BEGIN + enum.rankView.finalView.viewName + AS + genRNView(enum.rankView.finalView) + END
+        outFile.write(line)
+        dropView.append(enum.rankView.finalView.viewName)
+        
+        outFile.write('## 1. logkLoop\n')
+        for index, loop in enumerate(enum.logkLoop):
+            if loop.levelk_left:
+                line = BEGIN + loop.levelk_left.viewName + AS + genSelectRNView(loop.levelk_left) + END
+                outFile.write(line)
+                dropView.append(loop.levelk_left.viewName)
+            
+            line = BEGIN + loop.levelk_right.viewName + AS + genSelectRNView(loop.levelk_right) + END
+            outFile.write(line)
+            dropView.append(loop.levelk_right.viewName)
+            line = BEGIN + loop.levelk_join.viewName + AS + genJoinUnionView(loop.levelk_join) + END
+            outFile.write(line)
+            dropView.append(loop.levelk_join.viewName)
+        line = BEGIN + enum.finalView.viewName + AS + 'select ' + transSelectData(enum.finalView.selectAttrs, enum.finalView.selectAttrAlias) + ' from ' + enum.finalView.fromTable + END
+        outFile.write(line)
+        dropView.append(enum.finalView.viewName)
+        
+    outFile.write(finalResult)
+    if len(dropView):
+        line = '\n# drop view ' + ', '.join(reversed(dropView)) + ';'
+        outFile.write(line)
+    if len(dropTable):
+        outFile.write('\n## ')
+        for table in reversed(dropTable):
+            line = 'drop table ' + table + ';'
+            outFile.write(line)
+    outFile.close()
 
 
-def codeGenTopKP(reduceList: list[ProductKReducePhase], enumerateList: list[ProductKEnumPhase], finalResult: str, outPath: str):
+def codeGenTopKPD(reduceList: list[ProductKReducePhase], enumerateList: list[ProductKEnumPhase], finalResult: str, outPath: str):
     outFile = open(outPath, 'w+')
     dropView = []
     
@@ -169,3 +231,17 @@ def codeGenTopKP(reduceList: list[ProductKReducePhase], enumerateList: list[Prod
             outFile.write(line)
     outFile.write(line)
     outFile.close()
+    
+def codeGenTopKPM(reduceList: list[ProductKReducePhase], enumerateList: list[ProductKEnumPhase], finalResult: str, outPath: str):
+    pass
+
+
+def codeGenTopK(reduceList, enumerateList, finalResult, outPath, IRmode: IRType = IRType.Level_K, genType: GenType = GenType.Mysql):
+    if IRmode == IRType.Level_K and genType == GenType.Mysql:
+        codeGenTopKLM(reduceList, enumerateList, finalResult, outPath)
+    elif IRmode == IRType.Product_K and genType == GenType.Mysql:
+        codeGenTopKPM(reduceList, enumerateList, finalResult, outPath)
+    elif IRmode == IRType.Level_K and genType == GenType.DuckDB:
+        codeGenTopKLD(reduceList, enumerateList, finalResult, outPath)
+    elif IRmode == IRType.Product_K and genType == GenType.DuckDB:
+        codeGenTopKPD(reduceList, enumerateList, finalResult, outPath)
