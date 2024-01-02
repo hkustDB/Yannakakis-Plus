@@ -97,6 +97,14 @@ def buildProductKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = Fals
     
     leafExtra = aggMax = joinRes = None
     
+    def countZ(alias: list[str]):
+        maxNum = 0
+        for a in alias:
+            if 'Z' in a:
+                num = a.count('Z')
+                maxNum = max(num, maxNum)
+        return maxNum
+    
     # 1. leafExtra
     if childNode.isLeaf:
         viewName = childNode.alias + str(randint(0, 1000))
@@ -112,28 +120,31 @@ def buildProductKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = Fals
     viewName = childNode.alias + 'Agg' + str(randint(0, 1000))
     joinKey = list(set(childNode.cols) & set(parentNode.cols))
     if childNode.JoinResView:
-        aggValue = childNode.JoinResView.selectAttrAlias[-1]
+        aggValue = countZ(childNode.JoinResView.selectAttrAlias)
         fromTable = childNode.JoinResView.viewName
     else:
-        aggValue = leafExtra.selectAttrAlias[-1]
+        aggValue = countZ(leafExtra.selectAttrAlias)
         fromTable = leafExtra.viewName
     selectAlias = joinKey.copy()
     selectAttrs = [''] * len(selectAlias)
-    selectAttrs.append('max(' + aggValue + ')')
+    selectAttrs.append('max(' + 'Z'*aggValue + ')')
     selectAlias.append('ZZ')
     aggMax = Action(viewName, selectAttrs, selectAlias, fromTable)
     # 3. joinRes
-    viewName = 'join' + str(randint(0, 1000))
+    viewName = parentNode.alias + 'join' + str(randint(0, 1000))
     selectAttrs, selectAlias = [], []
     if parentNode.JoinResView:
         # more than 1 child
         selectAlias = parentNode.JoinResView.selectAttrAlias.copy()
-        rightMost = selectAlias[-1]
-        selectAlias.pop()
+        fromTable = parentNode.JoinResView.viewName
+        rightMost = countZ(selectAlias) * 'Z'
         selectAttrs = [''] * len(selectAlias)
+        for index, alias in enumerate(selectAlias):
+            if 'Z' in alias:
+                selectAttrs[index] = fromTable + '.' + alias
+                
         selectAlias.append(rightMost + 'Z')
         selectAttrs.append(parentNode.JoinResView.viewName + '.' + rightMost + '+' + aggMax.viewName + '.' + aggMax.selectAttrAlias[-1])
-        fromTable = parentNode.JoinResView.viewName
     else:
         selectAttrs = parentNode.col2vars[1].copy()
         selectAlias = parentNode.cols.copy()
@@ -141,7 +152,7 @@ def buildProductKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = Fals
         selectAlias[index] = 'Z'
         selectAttrs.append(parentNode.source + '.' + selectAttrs[-1] + '+' + aggMax.viewName + '.' + aggMax.selectAttrAlias[-1])
         selectAlias.append('ZZ')
-        fromTable = parentNode.source + ' as ' + parentNode.alias
+        fromTable = parentNode.source
     
     joinTable = aggMax.viewName
     usingJoinKey, whereCondList = [], []
@@ -150,12 +161,12 @@ def buildProductKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = Fals
     else:
         if len(joinKey) == 1:
             originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(joinKey[0])]
-            cond = parentNode.alias + '.' + originalName + '=' + aggMax.viewName + '.' + joinKey[0]
+            cond = parentNode.source + '.' + originalName + '=' + aggMax.viewName + '.' + joinKey[0]
             whereCondList.append(cond)
         else:
             for key in joinKey:
                 originalName = parentNode.col2vars[1][parentNode.col2vars[0].index(key)]
-                cond = parentNode.alias + '.' + originalName + '=' + aggMax.viewName + '.' + key
+                cond = parentNode.source + '.' + originalName + '=' + aggMax.viewName + '.' + key
                 whereCondList.append(cond)
     
     if lastRel:
@@ -163,7 +174,7 @@ def buildProductKReducePhase(reduceRel: Edge, JT: JoinTree, lastRel: bool = Fals
     else:
         joinRes = WithView(viewName, selectAttrs, selectAlias, fromTable, joinTable, joinKey, usingJoinKey, whereCondList)
     
-    retReduce = ProductKReducePhase(leafExtra, aggMax, joinRes, groupBy=joinKey)
+    retReduce = ProductKReducePhase(leafExtra, aggMax, joinRes, groupBy=joinKey, reduceRel=reduceRel)
     return retReduce
         
 
@@ -298,53 +309,82 @@ def buildLevelKEnumPhase(previousView: Union[WithView, EnumLogLoopView], corRedu
     return retEnum
             
 
-def buildProductKEnumPhase(previousView: WithView, corReducePhase: LevelKReducePhase, JT: JoinTree, DESC: bool = True, limit: int = 1024) -> ProductKEnumPhase:
+def buildProductKEnumPhase(previousView: WithView, corReducePhase: LevelKReducePhase, JT: JoinTree, lastRel: bool = False, DESC: bool = True, limit: int = 1024) -> ProductKEnumPhase:
     aggMax = pruneJoin = joinRes = None
     parentNode = JT.getNode(corReducePhase.reduceRel.src.id)
     childNode = JT.getNode(corReducePhase.reduceRel.dst.id)
+    
+    def countZ(alias: list[str]):
+        maxNum = 0
+        for a in alias:
+            if 'Z' in a:
+                num = a.count('Z')
+                maxNum = max(num, maxNum)
+        return maxNum
+    
+    def calDoneChild():
+        undone = 0
+        for child in parentNode.children:
+            if not child.enumDone:
+                undone += 1
+        return undone
     
     # 1. aggMax
     viewName = parentNode.alias + str(randint(0, 1000))
     joinKey = list(set(parentNode.cols) & set(childNode.cols))
     selectAttr, selectAlias = [], []
-    if previousView.selectAttrAlias[-1] == 'Z':  # line case
-        selectAttr = [''] * len(joinKey)
-        selectAlias.extend(joinKey)
-        selectAttr.append('max(Z)')
-        selectAlias.append('Z')
-    else:   # star/tree case
-        selectAttr = [''] * len(joinKey)
-        selectAlias.extend(joinKey)
-        selectAttr.append('max(' + previousView.selectAttrAlias[-2] + ')')
-        selectAlias.append('Z')
-        
+    selectAttr = [''] * len(joinKey)
+    selectAlias.extend(joinKey)
+    selectAlias.append('Z')
+    
+    unDoneChild = calDoneChild()
+    selectAttr.append('max(' + 'Z' * unDoneChild + ')')
+    
     fromTable = previousView.viewName
     aggMax = Action(viewName, selectAttr, selectAlias, fromTable)
     
     # 2. pruneJoin
-    selectAlias = childNode.JoinResView.selectAttrAlias
-    usingJoinKey = joinKey
+    viewName = childNode.alias + '_prune' + str(randint(0, 1000))
     fromTable = childNode.JoinResView.viewName
     joinTable = aggMax.viewName
-    orderBy = [joinTable + '.Z' + '+' + fromTable + '.' + selectAlias[-1]]
-    pruneJoin = WithView(viewName, [], selectAlias, fromTable, joinTable, joinKey, usingJoinKey, orderBy=orderBy, DESC=DESC, limit=limit)
+    selectAlias = childNode.JoinResView.selectAttrAlias
+    selectAttr = [''] * len(selectAlias)
+    index = selectAlias.index('Z')
+    selectAttr[index] = fromTable + '.Z'
+    usingJoinKey = joinKey
+    orderBy = [joinTable + '.Z' + '+' + fromTable + '.' + 'Z' * countZ(selectAlias)]
+    pruneJoin = WithView(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey, usingJoinKey, orderBy=orderBy, DESC=DESC, limit=limit)
     
     # 3. joinRes
+    viewName = childNode.alias + '_join' + str(randint(0, 1000))
     fromTable = previousView.viewName
     joinTable = pruneJoin.viewName
-    selectAlias = list(set(parentNode.cols) | set(childNode.cols))
+    selectAlias = [alias for alias in previousView.selectAttrAlias if 'v' in alias]
+    selectAlias += childNode.JoinResView.selectAttrAlias
+    selectAlias = list(set(selectAlias))
     selectAttr = [''] * len(selectAlias)
     leftZ = fromTable + '.Z + '
     rightZ = joinTable + '.'
-    for each in pruneJoin.selectAttrAlias:
-        if 'Z' in each:
-            selectAttr.append(leftZ + rightZ + each)
-            selectAlias.append(each)
-    firstOrder = previousView.selectAttrAlias[-2] if previousView.selectAttrAlias[-1] != 'Z' else 'Z'
-    orderBy = [fromTable + '.' + firstOrder + '+' + joinTable + '.' + pruneJoin.selectAttrAlias[-1]]
+    countMaxZ = countZ(pruneJoin.selectAttrAlias)
+    for i in range(len(selectAlias)-1, -1, -1):
+        each = selectAlias[i]
+        if 'Z' in each and each.count('Z') != countMaxZ:
+            selectAttr[i] = leftZ + rightZ + each
+            selectAlias[i] = each
+        elif each.count('Z') == countMaxZ:
+            selectAlias.remove(each)
+            selectAttr.pop(i)
+            
+    firstOrder = 'Z' * aggMax.selectAttrs[-1].count('Z')
+    countMaxZ = countZ(pruneJoin.selectAttrAlias)
+    if lastRel:
+        orderBy = ['Z']
+    else:
+        orderBy = [fromTable + '.' + firstOrder + '+' + joinTable + '.' + 'Z' * countMaxZ]
     joinRes = WithView(viewName, selectAttr, selectAlias, fromTable, joinTable, joinKey, usingJoinKey, orderBy=orderBy, DESC=DESC, limit=limit)
-    
     retEnum = ProductKEnumPhase(aggMax, pruneJoin, joinRes, groupBy=joinKey)
+    
+    childNode.enumDone = True
     return retEnum
     
 
@@ -376,23 +416,29 @@ def generateTopKIR(JT: JoinTree, outputVariables: list[str], IRmode: IRType = IR
         if len(remainRelations) != 1:
             if IRmode == IRType.Level_K:
                 retReduce = buildLevelKReducePhase(rel, JT, DESC=DESC, limit=limit)
+                JT.getNode(rel.src.id).JoinResView = retReduce.orderView
             else:
                 retReduce = buildProductKReducePhase(rel, JT, DESC=DESC, limit=limit)
+                # NOTE: pass leaf view for later enumeration
+                childNode = JT.getNode(rel.dst.id)
+                if childNode.isLeaf:
+                    childNode.JoinResView = retReduce.leafExtra
+                JT.getNode(rel.src.id).JoinResView = retReduce.joinRes
         else:
             if IRmode == IRType.Level_K:
                 retReduce = buildLevelKReducePhase(rel, JT, lastRel=True, DESC=DESC, limit=limit)
+                JT.getNode(rel.src.id).JoinResView = retReduce.orderView
             else:
                 retReduce = buildProductKReducePhase(rel, JT, lastRel=True, DESC=DESC, limit=limit)
                 # NOTE: pass leaf view for later enumeration
                 childNode = JT.getNode(rel.dst.id)
                 if childNode.isLeaf:
                     childNode.JoinResView = retReduce.leafExtra
+                JT.getNode(rel.src.id).JoinResView = retReduce.joinRes
         
         reduceList.append(retReduce)
         jointree.removeEdge(rel)
         remainRelations = jointree.getRelations().values()
-        # NOTE: No complex node type support
-        JT.getNode(rel.src.id).JoinResView = retReduce.orderView
         
         
     '''Step2: Enumerate'''
@@ -410,23 +456,26 @@ def generateTopKIR(JT: JoinTree, outputVariables: list[str], IRmode: IRType = IR
             
         fromTable = enumerateList[-1].finalView.viewName
         output = [out for out in outputVariables if out in enumerateList[-1].finalView.selectAttrAlias]
+        output.append('rating')
     
     elif IRmode == IRType.Product_K:
-        for enum in enumerateOrder:
+        for index, enum in enumerate(enumerateOrder):
             beginPrevious = enumerateOrder[0].joinRes
             if enumerateList == []:
                 previousView = beginPrevious
             else:
                 previousView = enumerateList[-1].joinRes
-            retEnum = buildProductKEnumPhase(previousView, enum, JT, DESC=DESC, limit=limit)
+            lastRel = True if (index == len(enumerateOrder) - 1) else False
+            retEnum = buildProductKEnumPhase(previousView, enum, JT, lastRel=lastRel, DESC=DESC, limit=limit)
             enumerateList.append(retEnum)
             
         fromTable = enumerateList[-1].joinRes.viewName
         output = [out for out in outputVariables if out in enumerateList[-1].joinRes.selectAttrAlias]
+        output.append('Z')
     
     # TODO: Check
-    output.append('rating')
     finalResult = 'select sum(' + '+'.join(output) + ') from ' + fromTable + ';\n'
+    
     return reduceList, enumerateList, finalResult
     
             
