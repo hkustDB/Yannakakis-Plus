@@ -22,7 +22,7 @@ import traceback
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/topk3/'
+BASE_PATH = 'query/topk5/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -147,7 +147,7 @@ def parse_agg():
         
 def parse_topk() -> list[int, int, list[str], bool, int]:
     # NOTE: Add later parse here
-    return 0, 32, '', True, 1024
+    return 1, 32, '', True, 1024
 
 def parseComparison(line: list[str]):
     id = int(line[0].split('=')[1])

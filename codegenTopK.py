@@ -233,7 +233,53 @@ def codeGenTopKPD(reduceList: list[ProductKReducePhase], enumerateList: list[Pro
     outFile.close()
     
 def codeGenTopKPM(reduceList: list[ProductKReducePhase], enumerateList: list[ProductKEnumPhase], finalResult: str, outPath: str):
-    pass
+    outFile = open(outPath, 'w+')
+    dropView = []
+    
+    # 1. reduceList rewrite
+    if len(reduceList):
+        outFile.write('\n## Reduce Phase: \n')
+    for reduce in reduceList:
+        outFile.write('\n## Reduce' + str(reduce.productKReducePhaseId) + '\n')
+        if reduce.leafExtra:
+            outFile.write('## 0. leafExtra\n')
+            line = BEGIN + reduce.leafExtra.viewName + AS + genActionView(reduce.leafExtra) + END
+            outFile.write(line)
+            dropView.append(reduce.leafExtra.viewName)
+        outFile.write('## 1. aggMax\n')
+        line = BEGIN + reduce.aggMax.viewName + AS + genActionView(reduce.aggMax) + ' group by ' + ','.join(reduce.groupBy) + END
+        outFile.write(line)
+        dropView.append(reduce.aggMax.viewName)
+        outFile.write('## 2. joinRes\n')
+        line = BEGIN + reduce.joinRes.viewName + AS + genWithView(reduce.joinRes) + END
+        outFile.write(line)
+        dropView.append(reduce.joinRes.viewName)
+    
+    # 2. enumerateList rewrite
+    if len(enumerateList):
+        outFile.write('\n## Enumerate Phase: \n')
+    for index, enum in enumerate(enumerateList):
+        outFile.write('\n## Enumerate' + str(enum.productKEnumPhaseId) + '\n')
+        outFile.write('## 0. aggMax\n')
+        line = BEGIN + enum.aggMax.viewName + AS + genActionView(enum.aggMax) + ' group by ' + ','.join(enum.groupBy) + END
+        outFile.write(line)
+        dropView.append(enum.aggMax.viewName)
+        outFile.write('## 1. pruneJoin\n')
+        line = BEGIN + enum.pruneJoin.viewName + AS + genWithView(enum.pruneJoin) + END
+        outFile.write(line)
+        dropView.append(enum.pruneJoin.viewName)
+        outFile.write('## 2. joinRes\n')
+        line = BEGIN + enum.joinRes.viewName + AS + genWithView(enum.joinRes) + END
+        outFile.write(line)
+        dropView.append(enum.joinRes.viewName)
+    
+    outFile.write(finalResult)
+    if len(dropView):
+        outFile.write('\n## ')
+        line = 'drop view ' + ', '.join(dropView) + ';\n'
+        outFile.write(line)
+
+    outFile.close()
 
 
 def codeGenTopK(reduceList, enumerateList, finalResult, outPath, IRmode: IRType = IRType.Level_K, genType: GenType = GenType.Mysql):
