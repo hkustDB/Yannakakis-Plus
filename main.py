@@ -18,6 +18,7 @@ from random import randint
 import os
 import re
 import traceback
+import time
 
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
@@ -373,6 +374,7 @@ def parse_jt(isFull: bool, table2vars: dict[str, str]):
 
 
 if __name__ == '__main__':
+    start = time.time()
     path_ddl = ''
     table2vars = parse_ddl()
     outputVariables, isFull = parse_outVar()
@@ -423,3 +425,5 @@ if __name__ == '__main__':
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + name)
+    end = time.time()
+    print('Running Time: ',end - start)

@@ -933,6 +933,11 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
     return retEnum
 
+def columnPrune(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase]) -> [list[ReducePhase], list[EnumeratePhase]]:
+    keepVars = set()
+    # TODO:
+    
+
 def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], isAgg = False, allAggAlias: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
@@ -1162,6 +1167,8 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     
     enumerateOrder = [enum for enum in reduceList if enum.corresNodeId in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
+    
+    
     
     if len(enumerateOrder) == 0:
         if not isAgg:
