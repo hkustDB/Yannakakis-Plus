@@ -1,0 +1,38 @@
+
+##Reduce Phase: 
+
+# Reduce0
+# 0. Prepare
+create or replace view g4 as select Graph.src as v7, Graph.dst as v2, v16 from Graph, (SELECT dst, COUNT(*) AS v16 FROM Graph GROUP BY dst) AS c3 where Graph.src = c3.dst;
+# 2. minView
+create or replace view minView4410481306040923016 as select v2, min(v16) as mfL4078315239006323227 from g4 group by v2;
+# 3. joinView
+create or replace view joinView4879994769730520398 as select src as v2, dst as v4, mfL4078315239006323227 from Graph AS g2, minView4410481306040923016 where g2.src=minView4410481306040923016.v2;
+
+# Reduce1
+# 0. Prepare
+create or replace view g1 as select Graph.src as v1, Graph.dst as v2, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+# 2. minView
+create or replace view minView8461503868718758011 as select v2, min(v12) as mfL5610631817058729088 from g1 group by v2;
+# 3. joinView
+create or replace view joinView8653719936836409566 as select v2, v4, mfL4078315239006323227, mfL5610631817058729088 from joinView4879994769730520398 join minView8461503868718758011 using(v2);
+
+# Reduce2
+# 0. Prepare
+create or replace view g5 as select Graph.src as v4, Graph.dst as v10, v18 from Graph, (SELECT dst, COUNT(*) AS v18 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c4.dst;
+# 2. minView
+create or replace view minView3793884233270034481 as select v4, max(v18) as mfR1421534292369029610 from g5 group by v4;
+# 3. joinView
+create or replace view joinView8130826236255181433 as select v2, v4, mfL4078315239006323227, mfL5610631817058729088, mfR1421534292369029610 from joinView8653719936836409566 join minView3793884233270034481 using(v4) where mfL4078315239006323227<mfR1421534292369029610;
+
+# Reduce3
+# 0. Prepare
+create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v14 from Graph, (SELECT src, COUNT(*) AS v14 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+# 2. minView
+create or replace view minView734813495652949826 as select v4, max(v14) as mfR6339411133237945293 from g3 group by v4;
+# 3. joinView
+create or replace view joinView2984160107535471285 as select v2, v4 from joinView8130826236255181433 join minView734813495652949826 using(v4) where mfL5610631817058729088<mfR6339411133237945293;
+# Final result: 
+select count(distinct v2, v4) from joinView2984160107535471285;
+
+# drop view joinView2984160107535471285, minView734813495652949826, g3, joinView8130826236255181433, minView3793884233270034481, g5, joinView8653719936836409566, minView8461503868718758011, g1, joinView4879994769730520398, minView4410481306040923016, g4;

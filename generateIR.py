@@ -854,12 +854,13 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         leftMf = oriMfFrom
     elif corReducePhase.reduceDirection == Direction.Right and rightMf == oriMfTo:
         rightMf = oriMfFrom
-    else:
-        raise RuntimeError("No such case! ")
     
     # used as stageEnd whereCond as well
-    if leftMf == '' or rightMf == '':
-        raise RuntimeError("No such case! ")
+    if leftMf == '':
+        leftMf = corReducePhase.incidentComp[0].left
+    if rightMf == '':
+        rightMf = corReducePhase.incidentComp[0].right
+    
     whereCond = leftMf + corReducePhase.reduceOp + rightMf
     selectMax = SelectMaxRn(viewName, [], selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, groupCond)
 # 3. selectTarget
@@ -883,15 +884,9 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     
     # CHECK: optimize -> last enum, no need to select mf attributes
     if not lastEnum:
-        if 'mf' in leftMf and 'mf' in rightMf:
-            mfAdd = ([leftMf] if leftMf != '' and 'mf' in leftMf else []) + ([rightMf] if rightMf != '' and 'mf' in rightMf else [])
-            # NOTE: Which side mf to delete is about the next reduciable relation's direction: left -> keep mfR; right -> keep mfL
-            selectAttrAlias += mfAdd
-        
-        elif 'mf' in leftMf: # not append leftMf
-            selectAttrAlias += [rightMf] if rightMf != '' and 'mf' in rightMf else []
-        elif 'mf' in rightMf: # not append rightMf
-            selectAttrAlias += [leftMf] if leftMf != '' and 'mf' in leftMf else []
+        mfAdd = ([leftMf] if leftMf != '' and 'mf' in leftMf else []) + ([rightMf] if rightMf != '' and 'mf' in rightMf else [])
+        # NOTE: Which side mf to delete is about the next reduciable relation's direction: left -> keep mfR; right -> keep mfL
+        selectAttrAlias += mfAdd
         
     fromTable = previousView.viewName
     joinTable = selectTarget.viewName
