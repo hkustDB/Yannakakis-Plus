@@ -14,20 +14,21 @@ from generateTopKIR import *
 from codegen import *
 from codegenTopK import *
 
-
 from random import randint
 import os
 import re
 import traceback
 
+
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/topk5/'
+BASE_PATH = 'query/q10/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 REL_NAME = 'relations'
 AGG_NAME = 'aggregations.txt'
+TOPK_NAME = 'topK.txt'
 JT_PATH = ''
 OUT_PATH = 'outputVariables.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
@@ -145,9 +146,22 @@ def parse_agg():
     except:
         traceback.print_exc()
         
-def parse_topk() -> list[int, int, list[str], bool, int]:
-    # NOTE: Add later parse here
-    return 1, 32, '', True, 1024
+def parse_topk() -> list[int, int, list[str], bool, int, GenType]:
+    try:
+        f = open(BASE_PATH + TOPK_NAME)
+        line = f.readline().rstrip()
+        # 0: levelk, 1: productk
+        TopK = 0
+        base = 32
+        orderBy = ''    # use rating as default
+        DESC, limit = line.split(',')[1:]
+        DESC = True if DESC == 'true' else False
+        limit = int(limit[:-1])
+        genType = GenType.DuckDB
+        return TopK, base, orderBy, DESC, limit, genType
+    except IOError:
+        return -1, -1, [], False, -1, GenType.Mysql
+    
 
 def parseComparison(line: list[str]):
     id = int(line[0].split('=')[1])
@@ -363,7 +377,7 @@ if __name__ == '__main__':
     table2vars = parse_ddl()
     outputVariables, isFull = parse_outVar()
     Agg = parse_agg()
-    TopK, base, orderBy, DESC, limit = parse_topk()
+    TopK, base, orderBy, DESC, limit, genType = parse_topk()
     IRmode = IRType.Report if not Agg else IRType.Aggregation
     IRmode = IRType.Level_K if TopK == 0 else IRmode
     IRmode = IRType.Product_K if TopK == 1 else IRmode
@@ -380,10 +394,10 @@ if __name__ == '__main__':
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
-            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Level_K, genType=GenType.Mysql)
+            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Level_K, genType=genType)
         elif IRmode == IRType.Product_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
-            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=GenType.Mysql)  
+            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=genType)  
         
     else:
         for jt, comp, name in allRes:
@@ -401,10 +415,10 @@ if __name__ == '__main__':
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
-                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Level_K, genType=GenType.Mysql)
+                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Level_K, genType=genType)
                 elif IRmode == IRType.Product_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
-                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Product_K, genType=GenType.Mysql)
+                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Product_K, genType=genType)
 
             except Exception as e:
                 traceback.print_exc()

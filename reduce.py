@@ -57,9 +57,12 @@ class CreateOrderView(Action):
         return res
 
 class SelectMinAttr(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, whereCond = "rn = 1") -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, attrFrom: str, attrTo: str, whereCond: str = "rn = 1", groupBy: list[str] = []) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.whereCond = whereCond
+        self.groupBy = groupBy
+        self.attrFrom = attrFrom
+        self.attrTo = attrTo
         self.reduceType = ReduceType.SelectMinAttr
         
     def __repr__(self) -> str:
