@@ -395,121 +395,160 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             return ReducePhase(prepareView, orderView, minView, joinView, semiView, bagAuxView, childNode.id, direction, type, comp.op, remainPathComp, incidentComp, reduceRel)
         
     # 2. orderView
-        viewName = 'orderView' + str(randint(0, maxsize))
-        noAliasFlag = False
-        if childNode.JoinResView is not None:
-            fromTable = childNode.JoinResView.viewName
-            noAliasFlag = True
-        elif childNode.relationType == RelationType.TableScanRelation:
-            fromTable = childNode.source + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
-        else:
-            fromTable = childNode.alias
+        # optimize for non-full with no ordering case
+        if JT.isFull or (not JT.isFull and childNode.id in JT.subset):
+            viewName = 'orderView' + str(randint(0, maxsize))
+            noAliasFlag = False
+            if childNode.JoinResView is not None:
+                fromTable = childNode.JoinResView.viewName
+                noAliasFlag = True
+            elif childNode.relationType == RelationType.TableScanRelation:
+                fromTable = childNode.source + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
+            else:
+                fromTable = childNode.alias
         
-        # joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
-        ## NOTE: Use the original, avoid importing annot
-        joinKey = list(set(childNode.cols) & set(parentNode.cols))
-        if not len(joinKey):
-            # FIXME: Need cross join
-            raise NotImplementedError("Need support for cross join! ")
+            # joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
+            ## NOTE: Use the original, avoid importing annot
+            joinKey = list(set(childNode.cols) & set(parentNode.cols))
+            if not len(joinKey):
+                # FIXME: Need cross join
+                raise NotImplementedError("Need support for cross join! ")
         
-        # maintain allJoinKey set
-        allJoinKeySet.update(joinKey)
+            # maintain allJoinKey set
+            allJoinKeySet.update(joinKey)
         
-        partiKey = joinKey.copy()
-        orderKey = [] # leave for primary key space in orderKey
-        AESC = True
-        if direction == Direction.Left:
-            orderKey.append(helperLeft[0])
-            AESC = True if '<' in comp.op else False 
-        elif direction == Direction.Right:
-            orderKey.append(helperRight[0])
-            AESC = True if '>' in comp.op else False
+            partiKey = joinKey.copy()
+            orderKey = [] # leave for primary key space in orderKey
+            AESC = True
+            if direction == Direction.Left:
+                orderKey.append(helperLeft[0])
+                AESC = True if '<' in comp.op else False 
+            elif direction == Direction.Right:
+                orderKey.append(helperRight[0])
+                AESC = True if '>' in comp.op else False
 
-        # need append new col, only root relation happens
-        extraAlias, extraAttr = '', ''
-        transVarList = []
-        if noAliasFlag: # v1 * v2 * v3
-            if orderKey[-1] not in childNode.JoinResView.selectAttrAlias and 'mf' not in orderKey[-1]:
-                extraAttr = orderKey[-1]
-        # handle complex function like v1 * v2 * v3...
-        elif orderKey[-1] not in childNode.cols and 'mf' not in orderKey[-1]:
-            if childNode.relationType != RelationType.TableScanRelation: # can use alias directly
-                extraAttr = orderKey[-1]
-            else: # Can only be TableScan
-                op = ''
-                if '*' in orderKey[-1]:
-                    varAlias = orderKey[-1].split('*')
-                    op = '*'
-                elif '+' in orderKey[-1]:
-                    varAlias = orderKey[-1].split('+')
-                    op = '+'
-                else:
-                    raise NotImplementedError("Not implement other op! ") 
+            # need append new col, only root relation happens
+            extraAlias, extraAttr = '', ''
+            transVarList = []
+            if noAliasFlag: # v1 * v2 * v3
+                if orderKey[-1] not in childNode.JoinResView.selectAttrAlias and 'mf' not in orderKey[-1]:
+                    extraAttr = orderKey[-1]
+            # handle complex function like v1 * v2 * v3...
+            elif orderKey[-1] not in childNode.cols and 'mf' not in orderKey[-1]:
+                if childNode.relationType != RelationType.TableScanRelation: # can use alias directly
+                    extraAttr = orderKey[-1]
+                else: # Can only be TableScan
+                    op = ''
+                    if '*' in orderKey[-1]:
+                        varAlias = orderKey[-1].split('*')
+                        op = '*'
+                    elif '+' in orderKey[-1]:
+                        varAlias = orderKey[-1].split('+')
+                        op = '+'
+                    else:
+                        raise NotImplementedError("Not implement other op! ") 
                 
-                for var in varAlias:
-                    try:    
-                        idx = childNode.cols.index(var)
-                        transVar = childNode.alias + '.' + childNode.col2vars[1][idx]
-                    except:
-                        # not in the list, should be  the constant
-                        transVar = var
+                    for var in varAlias:
+                        try:    
+                            idx = childNode.cols.index(var)
+                            transVar = childNode.alias + '.' + childNode.col2vars[1][idx]
+                        except:
+                            # not in the list, should be  the constant
+                            transVar = var
                         
-                    transVarList.append(transVar)
+                        transVarList.append(transVar)
                 
-                extraAttr = op.join(transVarList)
-            extraAlias = 'ori' + ('Left' if (direction == Direction.Left) else 'Right')
-            helperLeft[0] = extraAlias if 'Left' in extraAlias else helperLeft[0]
-            helperRight[0] = extraAlias if 'Right' in extraAlias else helperRight[0]
+                    extraAttr = op.join(transVarList)
+                extraAlias = 'ori' + ('Left' if (direction == Direction.Left) else 'Right')
+                helperLeft[0] = extraAlias if 'Left' in extraAlias else helperLeft[0]
+                helperRight[0] = extraAlias if 'Right' in extraAlias else helperRight[0]
         
-        # process orderKey alias in TableScan case, need alias casting
-        if not noAliasFlag and 'mf' not in orderKey[-1] and childNode.relationType == RelationType.TableScanRelation:
-            if orderKey[-1] in childNode.cols:
-                idx = childNode.cols.index(orderKey[-1])
-                orderKey[-1] = childNode.col2vars[1][idx]
-            else:
-                orderKey[-1] = extraAttr
-        
-        # process partitionByKey alias in TableScan case, need alias casting
-        if not noAliasFlag and childNode.relationType == RelationType.TableScanRelation:
-            for i in range(len(partiKey)): # multi joinKey
-                idx = childNode.cols.index(partiKey[i])
-                partiKey[i] = childNode.col2vars[1][idx]
-        
-        ## NOTE: orderView must have annot -> used for later enumerate join
-        if noAliasFlag: # have JoinView, must not be leaf
-            if extraAlias == '':
-                orderView = CreateOrderView(viewName, [], childNode.JoinResView.selectAttrAlias, fromTable, partiKey, orderKey, AESC)
-            else:
-                orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.JoinResView.selectAttrAlias))] + [extraAttr], childNode.JoinResView.selectAttrAlias + [extraAlias], fromTable, partiKey, orderKey, AESC)
-        elif childNode.relationType == RelationType.TableScanRelation: 
-            # # Add child node selfComp
-            if  extraAlias == '':
-                if childNode.isLeaf and len(childSelfComp):
-                    transSelfCompList = makeSelfComp(childSelfComp, childNode)
-                    
-                    orderView = CreateOrderView(viewName, childNode.col2vars[1], childNode.cols, fromTable, partiKey, orderKey, AESC, transSelfCompList)
+            # process orderKey alias in TableScan case, need alias casting
+            if not noAliasFlag and 'mf' not in orderKey[-1] and childNode.relationType == RelationType.TableScanRelation:
+                if orderKey[-1] in childNode.cols:
+                    idx = childNode.cols.index(orderKey[-1])
+                    orderKey[-1] = childNode.col2vars[1][idx]
                 else:
-                    orderView = CreateOrderView(viewName, childNode.col2vars[1], childNode.cols, fromTable, partiKey, orderKey, AESC)
-            else:
-                if childNode.isLeaf and len(childSelfComp):
-                    transSelfCompList = makeSelfComp(childSelfComp, childNode)
-                    
-                    orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC, transSelfCompList)
+                    orderKey[-1] = extraAttr
+        
+            # process partitionByKey alias in TableScan case, need alias casting
+            if not noAliasFlag and childNode.relationType == RelationType.TableScanRelation:
+                for i in range(len(partiKey)): # multi joinKey
+                    idx = childNode.cols.index(partiKey[i])
+                    partiKey[i] = childNode.col2vars[1][idx]
+        
+            ## NOTE: orderView must have annot -> used for later enumerate join
+            if noAliasFlag: # have JoinView, must not be leaf
+                if extraAlias == '':
+                    orderView = CreateOrderView(viewName, [], childNode.JoinResView.selectAttrAlias, fromTable, partiKey, orderKey, AESC)
                 else:
-                    orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC)
-        else:
-            if extraAlias == '':
-                orderView = CreateOrderView(viewName, [], childNode.cols, fromTable, partiKey, orderKey, AESC)
+                    orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.JoinResView.selectAttrAlias))] + [extraAttr], childNode.JoinResView.selectAttrAlias + [extraAlias], fromTable, partiKey, orderKey, AESC)
+            elif childNode.relationType == RelationType.TableScanRelation: 
+                # # Add child node selfComp
+                if  extraAlias == '':
+                    if childNode.isLeaf and len(childSelfComp):
+                        transSelfCompList = makeSelfComp(childSelfComp, childNode)
+                    
+                        orderView = CreateOrderView(viewName, childNode.col2vars[1], childNode.cols, fromTable, partiKey, orderKey, AESC, transSelfCompList)
+                    else:
+                        orderView = CreateOrderView(viewName, childNode.col2vars[1], childNode.cols, fromTable, partiKey, orderKey, AESC)
+                else:
+                    if childNode.isLeaf and len(childSelfComp):
+                        transSelfCompList = makeSelfComp(childSelfComp, childNode)
+                    
+                        orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC, transSelfCompList)
+                    else:
+                        orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC)
             else:
-                orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.cols))] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC)
+                if extraAlias == '':
+                    orderView = CreateOrderView(viewName, [], childNode.cols, fromTable, partiKey, orderKey, AESC)
+                else:
+                    orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.cols))] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC)
     
     # 3. minView
         viewName = 'minView' + str(randint(0, maxsize))
         mfAttr = helperLeft if direction == Direction.Left else helperRight
-        mfWords = mfAttr[0] + ' as ' + mfAttr[1]
-        selectAttrAlias = joinKey + [mfWords]
-        fromTable = orderView.viewName
-        minView = SelectMinAttr(viewName, [], selectAttrAlias, fromTable)
+        joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        selectAttr, selectAttrAlias = [], []
+        if JT.isFull or (not JT.isFull and childNode.id in JT.subset):
+            mfWords = mfAttr[0] + ' as ' + mfAttr[1]
+            selectAttrAlias = joinKey + [mfWords]
+        else:
+            if direction == Direction.Left:
+                if '<' in comp.op: aggAttr = 'min('
+                else: aggAttr = 'max('
+            else:
+                if '<' in comp.op: aggAttr = 'max('
+                else: aggAttr = 'min('
+            if not childNode.JoinResView and childNode.relationType == RelationType.TableScanRelation:
+                for key in joinKey:
+                    index = childNode.cols.index(key)
+                    oriName = childNode.col2vars[1][index]
+                    selectAttr.append(oriName)
+                    selectAttrAlias.append(key)
+                if 'v' in mfAttr[0]:
+                    index = childNode.cols.index(mfAttr[0])
+                    oriName = childNode.col2vars[1][index]
+                    mfWords = aggAttr + oriName + ') as ' + mfAttr[1]
+                else:
+                    mfWords = aggAttr + mfAttr[0] + ') as ' + mfAttr[1] 
+                selectAttr.append('')
+                selectAttrAlias.append(mfWords)       
+            else:
+                mfWords = aggAttr + mfAttr[0] + ') as ' + mfAttr[1]
+                selectAttrAlias = joinKey + [mfWords]
+
+        if JT.isFull or (not JT.isFull and childNode.id in JT.subset):
+            fromTable = orderView.viewName
+            minView = SelectMinAttr(viewName, [], selectAttrAlias, fromTable, attrFrom=mfAttr[0], attrTo=mfAttr[1])
+        else:
+            if childNode.JoinResView is not None:
+                fromTable = childNode.JoinResView.viewName
+            elif childNode.relationType == RelationType.TableScanRelation:
+                fromTable = childNode.source + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
+            else:
+                fromTable = childNode.alias
+            minView = SelectMinAttr(viewName, selectAttr, selectAttrAlias, fromTable, attrFrom=mfAttr[0], attrTo=mfAttr[1], whereCond='', groupBy=selectAttrAlias[:-1])
     
     # 4. joinView
         viewName = 'joinView' + str(randint(0, maxsize))
@@ -584,7 +623,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         if parentFlag and len(parentSelfComp):
             addiSelfComp = makeSelfComp(parentSelfComp, parentNode)
         # Root of the comparison, need add mf_left < mf_right
-        if len(comp.path) == 1:   
+        if len(comp.path) == 1:
             addiSelfComp.append(''.join(whereCond))
         
         # CHECK: Add optimize for selecting attrs
@@ -800,25 +839,27 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     
     # TODO: Here only find the first comparison
     corComp = corReducePhase.remainPathComp[0]
-    l, r = corComp.getBeginNodeId, corComp.getEndNodeId
-    totalLen = len(corComp.originPath)
+    rel = corReducePhase.reduceRel
     leftMf, rightMf = '', ''
-    lFlag, rFlag= 1, 1          # sign for still set up MF value
-    for i in range(totalLen):
-        if lFlag == 1 and (corComp.originPath[i][0] == l or corComp.originPath[i][1] == l):
-            lFlag = 0
-            inIdx = 0 if corComp.originPath[i][0] == l else 1
-            leftMf = corReducePhase.incidentComp[0].helperAttr[i][inIdx] if not 'mfR' in corReducePhase.incidentComp[0].helperAttr[i][inIdx] else corReducePhase.incidentComp[0].left
-            
-        if rFlag == 1 and (corComp.originPath[totalLen-i-1][0] == r or corComp.originPath[totalLen-i-1][1] == r):
-            rFlag = 0
-            inIdx = 0 if corComp.originPath[totalLen-i-1][0] == r else 1
-            rightMf = corReducePhase.incidentComp[0].helperAttr[totalLen-i-1][inIdx] if not 'mfL' in corReducePhase.incidentComp[0].helperAttr[totalLen-i-1][inIdx] else corReducePhase.incidentComp[0].right
-            
-        if not lFlag and not rFlag:
-            break
+    oriMfFrom, oriMfTo = corReducePhase.minView.attrFrom, corReducePhase.minView.attrTo
+    
+    # previous mf
+    for alias in previousView.selectAttrAlias:
+        if 'mfL' in alias:
+            leftMf = alias
+        elif 'mfR' in alias:
+            rightMf = alias
+    
+    if corReducePhase.reduceDirection == Direction.Left and leftMf == oriMfTo:
+        leftMf = oriMfFrom
+    elif corReducePhase.reduceDirection == Direction.Right and rightMf == oriMfTo:
+        rightMf = oriMfFrom
+    else:
+        raise RuntimeError("No such case! ")
     
     # used as stageEnd whereCond as well
+    if leftMf == '' or rightMf == '':
+        raise RuntimeError("No such case! ")
     whereCond = leftMf + corReducePhase.reduceOp + rightMf
     selectMax = SelectMaxRn(viewName, [], selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, groupCond)
 # 3. selectTarget
@@ -1143,7 +1184,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         return reduceList, [], finalResult
     
     for enum in enumerateOrder:
-        beginPrevious = enumerateOrder[0].joinView if enumerateOrder[0].joinView else enumerateOrder[0].semiView
+        beginPrevious = reduceList[-1].joinView if reduceList[-1].joinView else reduceList[-1].semiView
         if enumerateList == []: 
             previousView = beginPrevious 
         else:

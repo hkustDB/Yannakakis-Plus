@@ -107,15 +107,20 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                 
         # CQC part, if orderView is None, pass do nothing (for aux support relation output case)
         if reduce.orderView is not None:    
-            
             outFile.write('# 1. orderView\n')
             line = BEGIN + reduce.orderView.viewName + ' as select ' + transSelectData(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, row_numer=True) + ' over (partition by ' + ', '.join(reduce.orderView.joinKey) + ' order by ' + ', '.join(reduce.orderView.orderKey) + (' DESC' if not reduce.orderView.AESC else '') + ') as rn ' + 'from ' + reduce.orderView.fromTable
             line += ' where ' if len(reduce.orderView.selfComp) != 0 else ''
             line += ' and '.join(reduce.orderView.selfComp) + END
             dropView.append(reduce.orderView.viewName)
             outFile.write(line)
+        
+        # Add optiomization for non-full (delete orderView)
+        if reduce.minView is not None:
             outFile.write('# 2. minView\n')
-            line = BEGIN + reduce.minView.viewName + ' as select ' + transSelectData(reduce.minView.selectAttrs, reduce.minView.selectAttrAlias) + ' from ' + reduce.minView.fromTable + ' where ' + reduce.minView.whereCond + END
+            line = BEGIN + reduce.minView.viewName + ' as select ' + transSelectData(reduce.minView.selectAttrs, reduce.minView.selectAttrAlias) + ' from ' + reduce.minView.fromTable
+            line += ' where ' + reduce.minView.whereCond if reduce.minView.whereCond != '' else ''
+            line += ' group by ' + ', '.join(reduce.minView.groupBy) if len(reduce.minView.groupBy) else ''
+            line += END
             dropView.append(reduce.minView.viewName)
             outFile.write(line)
             outFile.write('# 3. joinView\n')
