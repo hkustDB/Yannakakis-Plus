@@ -1,0 +1,34 @@
+
+##Reduce Phase: 
+
+# Reduce0
+# 0. Prepare
+create or replace view bag36 as select l.partkey as v1, s.suppkey as v10, s.name as v11, s.address as v12, s.nationkey as v13, s.phone as v14, s.acctbal as v15, s.`comment` as v16, l.orderkey as v17, l.linenumber as v20, l.quantity as v21, l.extendedprice as v22, l.discount as v23, l.tax as v24, l.returnflag as v25, l.linestatus as v26, l.shipdate as v27, l.commitdate as v28, l.receiptdate as v29, l.shipinstruct as v30, l.shipmode as v31, l.`comment` as v32 from supplier as s, lineitem as l where s.suppkey=l.suppkey;
+# +. SemiJoin
+create or replace view semiJoinView6007421771234928505 as select v1, v10, v11, v12, v13, v14, v15, v16, v17, v20, v21, v22, v23, v24, v25, v26, v27, v28, v29, v30, v31, v32 from bag36 where (v1) in (select partkey from part AS p where type=type);
+
+# Reduce1
+# 0. Prepare
+create or replace view bag35 as select n2.nationkey as v13, o.orderkey as v17, o.custkey as v34, o.orderstatus as v35, o.totalprice as v36, o.orderdate as v37, o.o_year as v38, o.orderpriority as v39, o.clerk as v40, o.shippriority as v41, o.`comment` as v42, n2.name as v56, n2.regionkey as v57, n2.`comment` as v58 from orderswithyear as o, nation as n2 where o.orderkey>=788889600 and o.orderkey<=851961600;
+# +. SemiJoin
+create or replace view semiJoinView4020936465078505358 as select v13, v17, v34, v35, v36, v37, v38, v39, v40, v41, v42, v56, v57, v58 from bag35 where (v17, v13) in (select v17, v13 from semiJoinView6007421771234928505);
+
+# Reduce2
+# 0. Prepare
+create or replace view bag37 as select c.custkey as v34, c.name as v44, c.address as v45, c.nationkey as v46, c.phone as v47, c.acctbal as v48, c.mktsegment as v49, c.`comment` as v50, n1.name as v52, n1.regionkey as v53, n1.`comment` as v54 from customer as c, nation as n1 where c.nationkey=n1.nationkey;
+# +. SemiJoin
+create or replace view semiJoinView6335025814066317850 as select v34, v44, v45, v46, v47, v48, v49, v50, v52, v53, v54 from bag37 where (v53) in (select regionkey from region AS r where name=name);
+
+# Reduce3
+# +. SemiJoin
+create or replace view semiJoinView1258311828591985435 as select v13, v17, v34, v35, v36, v37, v38, v39, v40, v41, v42, v56, v57, v58 from semiJoinView4020936465078505358 where (v34) in (select v34 from semiJoinView6335025814066317850);
+
+# Reduce4
+# 0. Prepare
+create or replace view bag35Aux51 as select v38, v56 from semiJoinView1258311828591985435;
+# +. SemiJoin
+create or replace view semiJoinView2890742518288896198 as select v38, v56 from bag35Aux51 where (v38, v56) in (select v38, v56 from semiJoinView1258311828591985435);
+# Final result: 
+select count(distinct v56, v38, v62) from semiJoinView2890742518288896198;
+
+# drop view semiJoinView2890742518288896198, bag35Aux51, semiJoinView1258311828591985435, semiJoinView6335025814066317850, bag37, semiJoinView4020936465078505358, bag35, semiJoinView6007421771234928505, bag36;

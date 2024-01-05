@@ -313,12 +313,15 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     return aggReduce
 
 def buildAggCompReducePhase(reducerel: Edge, JT: JoinTree, aggFuncList: list[AggFunc] = [], incidentComp: list[Comparison] = [], selfComp: list[Comparison] = [], direction: Direction = Direction.SemiJoin, helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', ''], lastRel: bool = False) -> AggReducePhase:
-    pass    
+    pass
 
 
-def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], Agg: Aggregation) -> [list[AggReducePhase], list[ReducePhase], list[EnumeratePhase]]:
+def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], computations: dict[str, str], Agg: Aggregation) -> [list[AggReducePhase], list[ReducePhase], list[EnumeratePhase]]:
     if len(JT.subset) == 0:
-        raise NotImplementedError("Not implement non-free connex query! ")
+        if len(outputVariables) != 1:
+            raise NotImplementedError("Not implement non-free connex query! ")
+        else:
+            JT.addSubset(JT.root.id)
     
     jointree = copy.deepcopy(JT)
     allRelations = jointree.getRelations().values()
@@ -462,7 +465,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         def getChildSelfComp(childNode: TreeNode) -> list[Comparison]:
             selfComp = [comp for comp in selfComparisons if len(comp.path) and childNode.id == comp.path[0][0]]
             return selfComp
-            
+        
         for func in Agg.aggFunc:
             if JT.root.relationType != RelationType.TableScanRelation:
                 selectName.append(func.funcName.name + func.formular)
@@ -505,44 +508,62 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         finalResult += ';\n'
         return [], [], [], finalResult
     
-    ## Subset Internal aggregaiton alias casting form
-    allAggDoneflag = True
-    for aggF in Agg.aggFunc:
-        allAggDoneflag = allAggDoneflag and aggF.doneFlag 
-    if not allAggDoneflag:
-        selectName = Agg.groupByVars.copy()
-        for index, func in enumerate(Agg.aggFunc):
+    ## 1. pass the final view alias whether in outpuvars; 
+    # 2. pass output not in current select, scan computation
+    compKeys = list(computations.keys())
+    selectName = Agg.groupByVars.copy()
+    unDoneOut = [out for out in outputVariables if out not in selectName]
+    
+    for out in unDoneOut:
+        if out in Agg.allAggAlias:
+            func = Agg.alias2AggFunc[out]
             if func.doneFlag:
                 if func.funcName != AggFuncType.AVG:
-                    selectName.extend([func.alias for _ in range(outputVariables.count(func.alias))])
+                    selectName.extend([out for _ in range(outputVariables.count(out))])
                 else:
-                    selectName.extend([func.alias + '/annot as ' + func.alias for _ in range(outputVariables.count(func.alias))])
+                    selectName.extend([out + '/annot as ' + out for _ in range(outputVariables.count(out))])
             else:
-                # FIXME: Need to change for complex formular
-                ## The form of count(*)
                 if func.formular == '' and not len(func.inVars):
-                    selectName.extend(['annot as ' + func.alias for _ in range(outputVariables.count(func.alias))])
+                    selectName.extend(['annot as ' + out for _ in range(outputVariables.count(out))])
                 elif func.funcName != AggFuncType.AVG:
-                    selectName.extend([func.formular + '*annot as ' + func.alias for _ in range(outputVariables.count(func.alias))])
+                    selectName.extend([func.funcName.name + '(' + func.originForm + '*annot) as ' + out for _ in range(outputVariables.count(out))])
                 else:
-                    selectName.extend([func.formular + ' as ' + func.alias for _ in range(outputVariables.count(func.alias))])
-    else:
-        selectName = [var for var in outputVariables if var in Agg.groupByVars]
-        for var in outputVariables:
-            if var not in selectName:
-                if Agg.alias2AggFunc[var].funcName != AggFuncType.AVG:
-                    selectName.append(var)
-                else:
-                    selectName.append(var + '/annot as ' + var)
+                    selectName.extend([func.funcName.name + '(' +func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
+        
+        elif out in compKeys:
+            newForm = computations[out][0]
+            # replace formular with aggregation alias
+            for var in computations[out][1]:
+                if var in Agg.allAggAlias:
+                    func = Agg.alias2AggFunc[var]
+                    if func.doneFlag:
+                        if func.funcName != AggFuncType.AVG:
+                            newForm = newForm.replace(var, func.alias)
+                        else:
+                            newForm = newForm.replace(var, func.alias + '/annot')
+                    else:
+                        if func.formular == '' and not len(func.inVars):
+                            newForm = newForm.replace(var, 'annot')
+                        elif func.funcName != AggFuncType.AVG:
+                            newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + '*annot)')
+                        else:
+                            newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')        
+                        
+            selectName.append(newForm + ' as ' + out)
+        else:
+            raise NotImplementedError("Other output variables exists! ")
+    
     finalResult = 'select ' + ', '.join(selectName) + ' from '
     
     ## a. subset = 1 special case
     if len(jointree.subset) == 1:
-        finalResult += aggReduceList[-1].aggJoin.viewName + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
+        finalResult += aggReduceList[-1].aggJoin.viewName
+        if not len(Agg.groupByVars):
+            finalResult += ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
         return aggReduceList, [], [], finalResult
     
     ## b. normal case
-    reduceList, enumerateList, _ = generateIR(jointree, COMP, outputVariables, isAgg=True, allAggAlias=Agg.allAggAlias)
+    reduceList, enumerateList, _ = generateIR(jointree, COMP, outputVariables, computations, isAgg=True, allAggAlias=Agg.allAggAlias)
     
     # The left undone aggregation is done: 1. [subset > 1] -> final enumeration * annot 2. [subset = 1], done in root
     
@@ -551,6 +572,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     elif not len(reduceList):
         fromTable = aggReduceList[-1].aggJoin.viewName
     # oreder by & limit used for checking answer
-    finalResult += fromTable + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
-        
+    if not len(Agg.groupByVars):
+        finalResult += fromTable + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
+    
     return aggReduceList, reduceList, enumerateList, finalResult

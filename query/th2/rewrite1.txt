@@ -1,0 +1,34 @@
+
+##Reduce Phase: 
+
+# Reduce16
+# 0. Prepare
+create or replace view pAux11 as select partkey as v1, mfgr as v3 from part where size=size and type LIKE '%BRASS';
+# +. SemiJoin
+create or replace view semiJoinView5532886588827071133 as select v1, v3 from pAux11 where (v1, v3) in (select partkey, mfgr from part AS p where size=size and type LIKE '%BRASS');
+
+# Reduce17
+# 0. Prepare
+create or replace view bag20 as select ps.partkey as v1, s.suppkey as v10, s.name as v11, s.address as v12, s.nationkey as v13, s.phone as v14, s.acctbal as v15, s.`comment` as v16, ps.availqty as v19, ps.supplycost as v20, ps.`comment` as v21, n.name as v23, n.regionkey as v24, n.`comment` as v25 from supplier as s, partsupp as ps, nation as n where s.suppkey=ps.suppkey;
+# +. SemiJoin
+create or replace view semiJoinView4825908498310249332 as select v1, v10, v11, v12, v13, v14, v15, v16, v19, v20, v21, v23, v24, v25 from bag20 where (v24) in (select regionkey from region AS r where name=name);
+
+# Reduce18
+# 0. Prepare
+create or replace view bag20Aux78 as select v1, v11, v12, v14, v15, v16, v20, v23 from semiJoinView4825908498310249332;
+# +. SemiJoin
+create or replace view semiJoinView3570863595465648572 as select v1, v11, v12, v14, v15, v16, v20, v23 from bag20Aux78 where (v14, v20, v15, v11, v23, v12, v1, v16) in (select v14, v20, v15, v11, v23, v12, v1, v16 from semiJoinView4825908498310249332);
+
+# Reduce19
+# +. SemiJoin
+create or replace view semiJoinView6021183561414890023 as select v1, v11, v12, v14, v15, v16, v20, v23 from semiJoinView3570863595465648572 where (v1) in (select v1 from semiJoinView5532886588827071133);
+
+## Enumerate Phase: 
+
+# Enumerate4
+# +. SemiEnumerate
+create or replace view semiEnum4970497768458713930 as select v14, v20, v15, v11, v23, v3, v12, v1, v16 from semiJoinView6021183561414890023 join semiJoinView5532886588827071133 using(v1);
+# Final result: 
+select count(distinct v15, v11, v23, v1, v3, v12, v14, v16, v20) from semiEnum4970497768458713930;
+
+# drop view semiEnum4970497768458713930, semiJoinView6021183561414890023, semiJoinView3570863595465648572, bag20Aux78, semiJoinView4825908498310249332, bag20, semiJoinView5532886588827071133, pAux11;

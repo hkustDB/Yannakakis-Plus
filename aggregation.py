@@ -14,7 +14,8 @@ class AggFunc():
         self.funcName = AggFuncType[funcName]    # aggregation type: SUM, COUNT, AVG, MIN/MAX
         self.inVars = inVars        # input var alias -> [v1, v2]
         self.alias = alias          # use as alias, sum(source_name) as alias -> sum(alias) as alias
-        self.formular = formular    # v1 * v2 / v1
+        self.formular = formular    # change to its alias
+        self.originForm = formular  # v1 * v2 / v1
         # FIXME: Change for complex formular
         # self.sepAlias = []        # used for multiple variables in aggregation function
         self.aggFuncId = randint(0, maxsize)
