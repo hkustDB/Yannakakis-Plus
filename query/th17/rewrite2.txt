@@ -1,0 +1,11 @@
+## AggReduce Phase: 
+
+# AggReduce0
+# 1. aggView
+create or replace view aggView8796458609870137408 as select partkey as v17, SUM(extendedprice) as v26, count(*) as annot from lineitem as l group by partkey;
+# 2. aggJoin
+create or replace view aggJoin5179778974462299300 as select partkey as v17, name as v18, mfgr as v19, brand as v20, type as v21, size as v22, container as v23, retailprice as v24, `comment` as v25, v26, annot from part as p, aggView8796458609870137408 where p.partkey=aggView8796458609870137408.v17 and brand=brand and container=container;
+# Final result: 
+select (v26 / 7.0d)) as v27 from aggJoin5179778974462299300 order by  limit 10 ;
+
+# drop view aggJoin5179778974462299300, aggView8796458609870137408;

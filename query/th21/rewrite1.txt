@@ -1,0 +1,35 @@
+## AggReduce Phase: 
+
+# AggReduce10
+# 1. aggView
+create or replace view aggView199802560170705516 as select orderkey as v40, count(*) as annot from lineitem as l2 group by orderkey;
+# 2. aggJoin
+create or replace view aggJoin8575496387114617419 as select orderkey as v40, custkey as v41, orderstatus as v42, totalprice as v43, orderdate as v44, orderpriority as v45, clerk as v46, shippriority as v47, `comment` as v48, annot from orders as o, aggView199802560170705516 where o.orderkey=aggView199802560170705516.v40 and orderstatus=orderstatus;
+
+# AggReduce11
+# 1. aggView
+create or replace view aggView4757642541055405112 as select nationkey as v4, count(*) as annot from nation as n where name=name group by nationkey;
+# 2. aggJoin
+create or replace view aggJoin6390478544606528096 as select suppkey as v1, name as v2, address as v3, nationkey as v4, phone as v5, acctbal as v6, `comment` as v7, annot from supplier as s, aggView4757642541055405112 where s.nationkey=aggView4757642541055405112.v4;
+
+# AggReduce12
+# 1. aggView
+create or replace view aggView429337426248564394 as select v40, sum(annot) as annot from aggJoin8575496387114617419 group by v40;
+# 2. aggJoin
+create or replace view aggJoin8736310971664682228 as select orderkey as v40, partkey as v9, suppkey as v1, linenumber as v11, quantity as v12, extendedprice as v13, discount as v14, tax as v15, returnflag as v16, linestatus as v17, shipdate as v18, commitdate as v19, receiptdate as v20, shipinstruct as v21, shipmode as v22, `comment` as v23, annot from lineitem as l1, aggView429337426248564394 where l1.orderkey=aggView429337426248564394.v40 and receiptdate>commitdate;
+
+# AggReduce13
+# 1. aggView
+create or replace view aggView8439174587128560861 as select v1, sum(annot) as annot from aggJoin8736310971664682228 group by v1;
+# 2. aggJoin
+create or replace view aggJoin6974718907873768770 as select v1, v2, v3, v4, v5, v6, v7, aggJoin6390478544606528096.annot * aggView8439174587128560861.annot as annot from aggJoin6390478544606528096 join aggView8439174587128560861 using(v1);
+
+# AggReduce14
+# 1. aggView
+create or replace view aggView513568542401416267 as select v2, sum(annot) as annot from aggJoin6974718907873768770 group by v2;
+# 2. aggJoin
+create or replace view aggJoin1626544572920437183 as select v2, annot from aggView513568542401416267;
+# Final result: 
+select v2, annot as v53 from aggJoin1626544572920437183 order by v2 limit 10 ;
+
+# drop view aggJoin1626544572920437183, aggView513568542401416267, aggJoin6974718907873768770, aggView8439174587128560861, aggJoin8736310971664682228, aggView429337426248564394, aggJoin6390478544606528096, aggView4757642541055405112, aggJoin8575496387114617419, aggView199802560170705516;

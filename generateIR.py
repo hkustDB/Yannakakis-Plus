@@ -933,12 +933,13 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
     return retEnum
 
+
 def columnPrune(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase]) -> [list[ReducePhase], list[EnumeratePhase]]:
     keepVars = set()
-    # TODO:
+    
     
 
-def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], isAgg = False, allAggAlias: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
+def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], computations: dict[str, str], isAgg = False, allAggAlias: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     comparisons = list(COMP.values())   
@@ -1168,20 +1169,35 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     enumerateOrder = [enum for enum in reduceList if enum.corresNodeId in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
     
-    
+    # TODO: Add optimize call function here
+    compKeys = list(computations.keys())
     
     if len(enumerateOrder) == 0:
         if not isAgg:
+            selectName = []
             if reduceList[-1].bagAuxView:
                 fromTable = reduceList[-1].bagAuxView.viewName
+                totalName = reduceList[-1].bagAuxView.selectAttrAlias
             elif reduceList[-1].semiView:
                 fromTable = reduceList[-1].semiView.viewName
+                totalName = reduceList[-1].semiView.selectAttrAlias
             elif reduceList[-1].joinView:
                 fromTable = reduceList[-1].joinView.viewName
+                totalName = reduceList[-1].joinView.selectAttrAlias
             else:
                 raise RuntimeError("Error viewName! ")
             
-            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(outputVariables) +') from ' + fromTable + ';\n'
+            for alias in totalName:
+                if alias in outputVariables:
+                    selectName.append(alias)
+            unDoneOut = [out for out in outputVariables if out not in selectName]
+            for undone in unDoneOut:
+                if undone in compKeys:
+                    selectName.append(computations[undone][0] + ' as ' + undone)
+                else:
+                    raise RuntimeError("Undone still not in output! ")
+                
+            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +') from ' + fromTable + ';\n'
         
         return reduceList, [], finalResult
     
@@ -1201,9 +1217,27 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         enumerateList.append(retEnum)
     
     if not isAgg:
-        fromTable = enumerateList[-1].stageEnd.viewName if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate.viewName
         finalResult = 'select count(' + ('distinct ' if not JT.isFull else '')
-        finalResult += ', '.join(outputVariables) if not JT.isFull else '*'
+        selectName = []
+        if enumerateList[-1].stageEnd:
+            fromTable = enumerateList[-1].stageEnd.viewName
+            totalName = enumerateList[-1].stageEnd.selectAttrAlias
+        else:
+            fromTable = enumerateList[-1].semiEnumerate.viewName
+            totalName = enumerateList[-1].semiEnumerate.selectAttrAlias
+            
+        for alias in totalName:
+            if alias in outputVariables:
+                selectName.append(alias)
+                
+        unDoneOut = [out for out in outputVariables if out not in selectName]
+        for undone in unDoneOut:
+            if undone in compKeys:
+                selectName.append(computations[undone][0] + ' as ' + undone)
+            else:
+                raise RuntimeError("Undone still not in output! ")
+            
+        finalResult += ', '.join(selectName) if not JT.isFull else '*'
         finalResult += ') from ' + fromTable + ';\n'
     
     return reduceList, enumerateList, finalResult

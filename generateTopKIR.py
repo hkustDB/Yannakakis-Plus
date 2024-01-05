@@ -388,7 +388,7 @@ def buildProductKEnumPhase(previousView: WithView, corReducePhase: LevelKReduceP
     return retEnum
     
 
-def generateTopKIR(JT: JoinTree, outputVariables: list[str], IRmode: IRType = IRType.Level_K, base: int = 2, DESC: bool = True, limit: int = 1024) -> [list[ReducePhase], list[EnumeratePhase], str]:
+def generateTopKIR(JT: JoinTree, outputVariables: list[str], computations: dict[str, str], IRmode: IRType = IRType.Level_K, base: int = 2, DESC: bool = True, limit: int = 1024) -> [list[ReducePhase], list[EnumeratePhase], str]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     

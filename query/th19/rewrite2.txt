@@ -1,0 +1,11 @@
+## AggReduce Phase: 
+
+# AggReduce0
+# 1. aggView
+create or replace view aggView251979753393531671 as select partkey as v17, SUM(extendedprice * (1 - discount)) as v27, count(*) as annot from lineitem as l where shipinstruct=shipinstruct and quantity<=(1 + 10) and quantity>=1 and shipmode IN ('AIR','AIR REG') group by partkey;
+# 2. aggJoin
+create or replace view aggJoin1247507027408654004 as select partkey as v17, name as v18, mfgr as v19, brand as v20, type as v21, size as v22, container as v23, retailprice as v24, `comment` as v25, v27, annot from part as p, aggView251979753393531671 where p.partkey=aggView251979753393531671.v17 and size>=1 and brand=brand and container IN ('SM CASE','SM BOX','SM PACK','SM PKG') and size<=5;
+# Final result: 
+select v27 from aggJoin1247507027408654004 order by  limit 10 ;
+
+# drop view aggJoin1247507027408654004, aggView251979753393531671;

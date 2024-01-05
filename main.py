@@ -23,8 +23,8 @@ import time
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q11/'
-DDL_NAME = 'rst.ddl'
+BASE_PATH = 'query/th17/'
+DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 REL_NAME = 'relations'
@@ -32,6 +32,7 @@ AGG_NAME = 'aggregations.txt'
 TOPK_NAME = 'topK.txt'
 JT_PATH = ''
 OUT_PATH = 'outputVariables.txt'
+PARSE_TIME = -1
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
 
@@ -42,7 +43,14 @@ Only AuxiliaryRelation source is [Bag(Graph,Graph)|Graph|...]
 
 def get_tree():
     cmdline = f'java -jar {GET_TREE} -d {BASE_PATH}{DDL_NAME} -o {BASE_PATH} {BASE_PATH}{QUERY_NAME}'
-    out = os.popen(cmdline, mode='r').readlines()
+    out = os.popen(cmdline, mode='r')
+    outData = out.read()
+    out.close()
+    print('Parse time extra time(ms): ' + outData + '\n')
+    pattern = re.compile(r'\d+')
+    ptime = pattern.findall(outData)[0]
+    global PARSE_TIME
+    PARSE_TIME = int(ptime) * 1.0 / 1000
 
 def parse_ddl():
     try:
@@ -83,21 +91,29 @@ def parse_outVar():
         f = open(BASE_PATH + OUT_PATH)
         line = f.readline()
         flag = 0
+        computations = dict()
         outputVariables = []
         isFull = True
         while line:
-            if 'outputVariables:' in line  or 'isFull:' in line: 
-                if 'outputVariables:' in line: flag = 1
+            if 'computations:' in line or 'outputVariables:' in line  or 'isFull:' in line: 
+                if 'computations:' in line: flag = 0
+                elif 'outputVariables:' in line: flag = 1
                 else: flag = 2
                 line = f.readline()
                 continue
-            if flag == 1:
+            if flag == 0:
+                line = line[1:-1]
+                name, formular = line.split(':')[0], line.split(':')[1].split(',')[1]
+                pattern = re.compile('v[0-9]+')
+                allVars = list(set(pattern.findall(formular)))
+                computations[name] = [formular, allVars]
+            elif flag == 1:
                 name = line.split(':')[0]
                 outputVariables.append(name)
-            elif flag == 2:
+            else:
                 isFull = True if line == 'true' else False
             line = f.readline()
-        return outputVariables, isFull
+        return computations, outputVariables, isFull
     except:
         get_tree()
         return parse_outVar()
@@ -186,7 +202,7 @@ def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jt
         if 'jt.root:' in line  or 'edge:' in line  or 'relation in subset:' in line  or 'comparison hypergraph edge:' in line: 
             if 'jt.root:' in line: flag = 1    
             elif 'comparison hypergraph edge:' in line: flag = 4 
-            elif 'edge:' in line: flag = 2      
+            elif 'edge:' in line: flag = 2
             elif 'relation in subset:' in line and not isFull: flag = 3 
             else : flag = 5 # do nothing
             line = f.readline().rstrip()
@@ -377,8 +393,10 @@ if __name__ == '__main__':
     start = time.time()
     path_ddl = ''
     table2vars = parse_ddl()
-    outputVariables, isFull = parse_outVar()
+    #NOTE: agg type can get computation for aggregations; save comp for other use later
+    computations, outputVariables, isFull = parse_outVar()
     Agg = parse_agg()
+    isFull = False if Agg else isFull
     TopK, base, orderBy, DESC, limit, genType = parse_topk()
     IRmode = IRType.Report if not Agg else IRType.Aggregation
     IRmode = IRType.Level_K if TopK == 0 else IRmode
@@ -388,17 +406,17 @@ if __name__ == '__main__':
     optFlag = False
     if optFlag:
         if IRmode == IRType.Report:
-            reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables)
+            reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computations)
             codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + 'opt' +OUT_NAME, isFull=isFull)
         elif IRmode == IRType.Aggregation:
-            aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, Agg)
+            aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computations, Agg)
             codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + 'opt' +OUT_NAME, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
-            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
+            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computations, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
             codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Level_K, genType=genType)
         elif IRmode == IRType.Product_K:
-            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
+            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computations, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
             codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=genType)  
         
     else:
@@ -408,22 +426,24 @@ if __name__ == '__main__':
             outName = OUT_NAME.split('.')[0] + index + '.' + OUT_NAME.split('.')[1]
             try:
                 if IRmode == IRType.Report:
-                    reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables)
+                    reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computations)
                     codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, isFull=isFull)
                 elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
-                    aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, Agg)
+                    aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computations, Agg)
                     codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
-                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
+                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computations, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
                     codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Level_K, genType=genType)
                 elif IRmode == IRType.Product_K:
-                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
+                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computations, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
                     codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Product_K, genType=genType)
 
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + name)
     end = time.time()
-    print('Running Time: ',end - start)
+    if PARSE_TIME != -1:
+        end -= PARSE_TIME
+    print('Running Time(s): ',end - start)
