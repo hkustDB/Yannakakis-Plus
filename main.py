@@ -23,7 +23,7 @@ import time
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/th17/'
+BASE_PATH = 'query/th10/'
 DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -186,7 +186,7 @@ def parseComparison(line: list[str]):
     left = line[2].split('=')[1]
     right = line[3].split('=')[1]
     path = line[4].split('=')[1].split(',')
-    cond = line[5].split('=')[1][1:-1]
+    cond = line[5].split('=', 1)[1][1:-1]
     fullOp = line[6].split('=')[1]
     return id, op, left, right, path, cond, fullOp
     

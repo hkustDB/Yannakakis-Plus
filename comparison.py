@@ -28,6 +28,8 @@ class Comparison:
         self.left = left # crude left
         self.right = right
         self.cond = cond
+        if left == right:
+            self.right = self.cond.split(' = ')[1]
         self.fullOp = fullOp
             
         if 'true' in fullOp:
