@@ -65,10 +65,10 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             else:
                 joinSentence += ', ' + agg.aggJoin.joinTable
             line += joinSentence
-            line += ' where ' if len(agg.aggJoin.whereCondList) else ''
-            line += ' and '.join(agg.aggJoin.whereCondList) + END
         else:
-            line += agg.aggJoin.joinTable + END
+            line += agg.aggJoin.joinTable
+        line += ' where ' if len(agg.aggJoin.whereCondList) else ''
+        line += ' and '.join(agg.aggJoin.whereCondList) + END
         dropView.append(agg.aggJoin.viewName)
         outFile.write(line)
     

@@ -13,7 +13,7 @@ from functools import cmp_to_key
 from sys import maxsize
 
 
-def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], childIsOriLeaf: bool = False) -> AggReducePhase:
+def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], childIsOriLeaf: bool = False, nonFreeConnex: bool = False) -> AggReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
@@ -30,11 +30,10 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         if ret != []: prepareView.extend(ret)
     
     # Step1: create additional view: SPECIAL: not build auxiliary relation for aux, derive from aggView
-    if parentNode.relationType != RelationType.TableScanRelation:
-        if parentNode.relationType != RelationType.AuxiliaryRelation:
-            ret = buildPrepareView(JT, parentNode, parentSelfComp)
-            if ret != []: prepareView.extend(ret)
-        
+    if parentNode.relationType != RelationType.TableScanRelation and parentNode.relationType != RelationType.AuxiliaryRelation:
+        ret = buildPrepareView(JT, parentNode, parentSelfComp)
+        if ret != []: prepareView.extend(ret)
+    
     # Step2: aggView
     ## a. name, fromTable
     viewName = 'aggView' + str(randint(0, maxsize))
@@ -228,7 +227,41 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         selectAttrAlias.append('annot')
     else:
         raise RuntimeError("Error Case! ")
-        
+    
+    # Extra process for nonfree connex case
+    # 1. add extra output var to groupby & select attrs
+    # 2. add the lacking extra attrs to aggPass2Join array for later aggJoin using
+    if nonFreeConnex:
+        for out in Agg.groupByVars:
+            if out in groupBy and out in selectAttrAlias: continue
+            if childNode.JoinResView:
+                if out in childNode.JoinResView.selectAttrAlias:
+                    groupBy.append(out)
+                    if out not in selectAttrAlias:
+                        selectAttr.append('')
+                        selectAttrAlias.append(out)
+                        aggPass2Join.append(out)
+            
+            elif childNode.relationType != RelationType.TableScanRelation:
+                if out in childNode.cols:
+                    groupBy.append(out)
+                    if out not in selectAttrAlias:
+                        selectAttr.append('')
+                        selectAttrAlias.append(out)
+                        aggPass2Join.append(out)
+            
+            else:   # tableScan
+                if out in childNode.cols:
+                    index = childNode.cols.index(out)
+                    oriVal = childNode.col2vars[1][index]
+                    if oriVal in groupBy and oriVal in selectAttrAlias: continue
+                    if oriVal not in groupBy:
+                        groupBy.append(oriVal)
+                    if out not in selectAttrAlias:
+                        selectAttr.append(oriVal)
+                        selectAttrAlias.append(out)
+                        aggPass2Join.append(out)
+    
     if childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation and childIsOriLeaf and len(childSelfComp):
         transSelfCompList = makeSelfComp(childSelfComp, childNode)
         aggView = AggView(viewName, selectAttr, selectAttrAlias, fromTable, groupBy, transSelfCompList)
@@ -305,8 +338,12 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             
     ## e. Add parent node selfComp
     addiSelfComp = []
-    if parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation and len(parentSelfComp):
-        addiSelfComp = makeSelfComp(parentSelfComp, parentNode)
+    if parentNode.JoinResView is None and (parentNode.relationType == RelationType.TableScanRelation or parentNode.relationType == RelationType.AuxiliaryRelation) and len(parentSelfComp):
+        if parentNode.relationType == RelationType.TableScanRelation:
+            addiSelfComp = makeSelfComp(parentSelfComp, parentNode)
+        else:
+            for comp in parentSelfComp:
+                addiSelfComp.append(comp.left + comp.op + comp.right)
     
     aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp)
     aggReduce = AggReducePhase(prepareView, aggView, aggJoin)
@@ -317,14 +354,14 @@ def buildAggCompReducePhase(reducerel: Edge, JT: JoinTree, aggFuncList: list[Agg
 
 
 def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], computations: dict[str, str], Agg: Aggregation) -> [list[AggReducePhase], list[ReducePhase], list[EnumeratePhase]]:
-    if len(JT.subset) == 0:
-        if len(outputVariables) != 1:
-            raise NotImplementedError("Not implement non-free connex query! ")
-        else:
-            JT.addSubset(JT.root.id)
-    
+    nonFreeConnex = False
+    if len(JT.subset) == 0 and len(outputVariables) == 1:
+        JT.addSubset(JT.root.id)
+    elif len(JT.subset) == 0 and len(outputVariables) != 1:
+        nonFreeConnex = True
+        
     jointree = copy.deepcopy(JT)
-    allRelations = jointree.getRelations().values()
+    allRelations = list(jointree.getRelations().values())
     comparisons = list(COMP.values())
     selfComparisons = [comp for comp in comparisons if comp.getPredType == predType.Self]
     
@@ -342,7 +379,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             satisKey = [col for col in childNode.JoinResView.selectAttrAlias if col not in joinKey]
         else:
             satisKey = [col for col in childNode.cols if col not in joinKey]
-            
+        
         for index, aggF in enumerate(Agg.aggFunc):
             if aggF.doneFlag:
                 continue
@@ -418,7 +455,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         else:
             for comp in compList:
                 comp.deletePath(Direction.Left)
-
+    
     def aggCmp(rel1: list[Edge, list[AggFunc]], rel2: list[Edge, list[AggFunc]]):
         if len(rel1[1]) and len(rel2[1]):
             if rel1[1][0].funcName == AggFuncType.MIN or rel1[1][0].funcName == AggFuncType.MAX:
@@ -429,8 +466,12 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         else: return -1
     
     '''Step1: aggReduce'''
-    subsetRel = [rel for rel in allRelations if rel.dst.id in JT.subset and rel.src.id in JT.subset]
-    outSetRel = [rel for rel in allRelations if rel not in subsetRel] 
+    if not nonFreeConnex:
+        subsetRel = [rel for rel in allRelations if rel.dst.id in JT.subset and rel.src.id in JT.subset]
+        outSetRel = [rel for rel in allRelations if rel not in subsetRel] 
+    else:
+        outSetRel = allRelations
+        
     while len(outSetRel) > 0:
         leafRelation = getLeafRelation(outSetRel)
         leafRelation.sort(key=cmp_to_key(aggCmp))
@@ -445,7 +486,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         updateDirection = []
         aggReduce = None
         if len(incidentComp) == 0:
-            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, JT.getNode(rel.dst.id).isLeaf)
+            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, JT.getNode(rel.dst.id).isLeaf, nonFreeConnex=nonFreeConnex)
         else:
             raise NotImplementedError("Not implement case with comparisons! ")
         jointree.removeEdge(rel)
@@ -504,11 +545,12 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                 finalResult += ' where ' + ' and '.join(selfCompSent)
         else:
             finalResult += JT.root.alias
-            
+        
         finalResult += ';\n'
         return [], [], [], finalResult
     
-    ## 1. pass the final view alias whether in outpuvars; 
+    # Final select attrs
+    # 1. pass the final view alias whether in outpuvars; 
     # 2. pass output not in current select, scan computation
     compKeys = list(computations.keys())
     selectName = Agg.groupByVars.copy()
@@ -560,6 +602,16 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         finalResult += aggReduceList[-1].aggJoin.viewName
         if not len(Agg.groupByVars):
             finalResult += ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
+        else:
+            finalResult += ';\n'
+        return aggReduceList, [], [], finalResult
+    elif len(jointree.subset) == 0: # non free connex
+        finalResult += aggReduceList[-1].aggJoin.viewName
+        for alias in Agg.allAggAlias:
+            func = Agg.alias2AggFunc[alias]
+            # NOTE: remove as alias for some aggregation aggregate at root
+            finalResult = finalResult.replace(alias, func.funcName.name + '(' + alias + ')')
+        finalResult += ' group by ' + ', '.join(Agg.groupByVars) + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
         return aggReduceList, [], [], finalResult
     
     ## b. normal case
@@ -574,5 +626,6 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     # oreder by & limit used for checking answer
     if not len(Agg.groupByVars):
         finalResult += fromTable + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
-    
+    else:
+        finalResult += ';\n'
     return aggReduceList, reduceList, enumerateList, finalResult
