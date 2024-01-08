@@ -7,6 +7,7 @@ from reduce import *
 from enumerate import *
 from generateIR import *
 from codegen import transSelectData
+from columnPrune import columnPrune
 
 from random import choice, randint
 from functools import cmp_to_key
@@ -346,7 +347,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                 addiSelfComp.append(comp.left + comp.op + comp.right)
     
     aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp)
-    aggReduce = AggReducePhase(prepareView, aggView, aggJoin)
+    aggReduce = AggReducePhase(prepareView, aggView, aggJoin, reduceRel.dst.id)
     return aggReduce
 
 def buildAggCompReducePhase(reducerel: Edge, JT: JoinTree, aggFuncList: list[AggFunc] = [], incidentComp: list[Comparison] = [], selfComp: list[Comparison] = [], direction: Direction = Direction.SemiJoin, helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', ''], lastRel: bool = False) -> AggReducePhase:
@@ -604,6 +605,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             finalResult += ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
         else:
             finalResult += ';\n'
+        aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], set(outputVariables), Agg, list(COMP.values()))
         return aggReduceList, [], [], finalResult
     elif len(jointree.subset) == 0: # non free connex
         finalResult += aggReduceList[-1].aggJoin.viewName
@@ -612,6 +614,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             # NOTE: remove as alias for some aggregation aggregate at root
             finalResult = finalResult.replace(alias, func.funcName.name + '(' + alias + ')')
         finalResult += ' group by ' + ', '.join(Agg.groupByVars) + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
+        aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], set(outputVariables), Agg, list(COMP.values()))
         return aggReduceList, [], [], finalResult
     
     ## b. normal case
@@ -628,4 +631,5 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         finalResult += fromTable + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
     else:
         finalResult += ';\n'
+    aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], set(outputVariables), Agg, list(COMP.values()))
     return aggReduceList, reduceList, enumerateList, finalResult

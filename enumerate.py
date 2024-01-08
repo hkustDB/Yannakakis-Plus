@@ -65,7 +65,7 @@ class SemiEnumerate(Action):
 
 class EnumeratePhase:
     _enumeratePhaseId = 0
-    def __init__(self, createSample: CreateSample, selectMax: SelectMaxRn, selectTarget: SelectTargetSource, stageEnd: StageEnd, semiEnumerate: SemiEnumerate, corresNodeId: int, enumerateDirection: Direction, phaseType: PhaseType) -> None:
+    def __init__(self, createSample: CreateSample, selectMax: SelectMaxRn, selectTarget: SelectTargetSource, stageEnd: StageEnd, semiEnumerate: SemiEnumerate, corresNodeId: int, enumerateDirection: Direction, phaseType: PhaseType, enumRel) -> None:
         self.createSample = createSample
         self.selectMax = selectMax
         self.selectTarget = selectTarget
@@ -76,6 +76,7 @@ class EnumeratePhase:
         self.corresNodeId = corresNodeId       # corresponds to nodeId in JoinTree
         self.enumerateDirection = enumerateDirection
         self.phaseType = phaseType
+        self.enumRel = enumRel
         
         # self._enumeratePhaseId = 0
 
