@@ -73,10 +73,11 @@ class AggJoin(Join2tables):
 
 class AggReducePhase:
     _aggReducePhaseId = 0
-    def __init__(self, prepareView: list[Action], aggView: AggView, aggJoin: AggJoin) -> None:
+    def __init__(self, prepareView: list[Action], aggView: AggView, aggJoin: AggJoin, corresId: int) -> None:
         self.prepareView = prepareView
         self.aggView = aggView
         self.aggJoin = aggJoin
+        self.corresId = corresId
         self.aggReducePhaseId = AggReducePhase._aggReducePhaseId
         self._addAggReducePhaseId
         

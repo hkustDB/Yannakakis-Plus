@@ -22,6 +22,7 @@ class TreeNode:
         self.relationType: RelationType = None
         self.createViewAlready: bool = False        # create view TableAgg, Aux, bag already
         self.reducePhase: Union[ReducePhase, AggReducePhase, LevelKReducePhase, ProductKReducePhase] = None        # Attach reduce information to the node
+        self.enumeratePhase: EnumeratePhase = None                                                                 # Attach enumerate phase tp the node -> for optimizatioon
         self.JoinResView: Union[Join2tables, SemiJoin, CreateBagAuxView, WithView] = None        # record the name of previous join
         # topk
         self.enumDone: bool = False                 # mark for whether done in enumerate phase

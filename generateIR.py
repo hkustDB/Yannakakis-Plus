@@ -6,6 +6,7 @@ from enumsType import *
 from random import choice, randint
 from sys import maxsize
 from typing import Union
+from columnPrune import columnPrune
 
 import re
 import copy
@@ -372,7 +373,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation and childNode.relationType != RelationType.AuxiliaryRelation:
         ret = buildPrepareView(JT, childNode, childSelfComp)
         if ret != []: prepareView.extend(ret)
-        
+    
     # build aux for parent node is different
     if parentNode.relationType != RelationType.TableScanRelation and parentNode.relationType != RelationType.AuxiliaryRelation:
         ret = buildPrepareView(JT, parentNode, parentSelfComp)
@@ -820,7 +821,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
             semiEnumerate = SemiEnumerate(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, joinCond, corReducePhase.semiView.whereCondList)
         else:
             semiEnumerate = SemiEnumerate(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, joinCond)
-        retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
+        retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType, corReducePhase.reduceRel)
         return retEnum
     
     
@@ -930,13 +931,9 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     
     stageEnd = StageEnd(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, whereCondList)
 
-    retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType)
+    retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType, corReducePhase.reduceRel)
     return retEnum
 
-
-def columnPrune(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase]) -> [list[ReducePhase], list[EnumeratePhase]]:
-    keepVars = set()
-    
     
 
 def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], computations: dict[str, str], isAgg = False, allAggAlias: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
@@ -1169,9 +1166,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     enumerateOrder = [enum for enum in reduceList if enum.corresNodeId in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
     
-    # TODO: Add optimize call function here
     compKeys = list(computations.keys())
-    
     if len(enumerateOrder) == 0:
         if not isAgg:
             selectName = []
@@ -1199,6 +1194,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 
             finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +') from ' + fromTable + ';\n'
         
+        _, reduceList, _ = columnPrune(JT, _, reduceList, [], set(outputVariables), None, list(COMP.values()))
         return reduceList, [], finalResult
     
     for enum in enumerateOrder:
@@ -1213,7 +1209,8 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
             retEnum = buildEnumeratePhase(previousView, enum, JT, isAgg=isAgg, allAggAlias=allAggAlias)
         else:
             retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True, isAgg=isAgg, allAggAlias=allAggAlias)
-            
+        
+        JT.getNode(enum.reduceRel.dst.id).enumeratePhase = retEnum  
         enumerateList.append(retEnum)
     
     if not isAgg:
@@ -1240,5 +1237,6 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         finalResult += ', '.join(selectName) if not JT.isFull else '*'
         finalResult += ') from ' + fromTable + ';\n'
     
+    _, reduceList, enumerateList = columnPrune(JT, _, reduceList, enumerateList, set(outputVariables), None, list(COMP.values()))
     return reduceList, enumerateList, finalResult
     
