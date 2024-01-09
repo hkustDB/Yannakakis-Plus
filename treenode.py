@@ -26,6 +26,7 @@ class TreeNode:
         self.JoinResView: Union[Join2tables, SemiJoin, CreateBagAuxView, WithView] = None        # record the name of previous join
         # topk
         self.enumDone: bool = False                 # mark for whether done in enumerate phase
+        self.optDone: bool = False                  # mark for optimize
     
     @property
     def getcol2vars(self): 

@@ -85,7 +85,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
                     if len(updateVars) == 0:
                         return
                     if var in updateVars and var in node.cols: 
-                        vars[index2] = node.alias + '.' + node.col2vars[1][index1]
+                        vars[index2] = node.alias + '.' + node.col2vars[1][node.cols.index(var)]
                         updateVars.remove(var)
 
         # Add self comparison
@@ -1192,7 +1192,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 else:
                     raise RuntimeError("Undone still not in output! ")
                 
-            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +') from ' + fromTable + ';\n'
+            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + '+'.join(selectName) +') from ' + fromTable + ';\n'
         
         _, reduceList, _ = columnPrune(JT, _, reduceList, [], set(outputVariables), None, list(COMP.values()))
         return reduceList, [], finalResult
@@ -1234,7 +1234,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
             else:
                 raise RuntimeError("Undone still not in output! ")
             
-        finalResult += ', '.join(selectName) if not JT.isFull else '*'
+        finalResult += '+'.join(selectName) if not JT.isFull else '*'
         finalResult += ') from ' + fromTable + ';\n'
     
     _, reduceList, enumerateList = columnPrune(JT, _, reduceList, enumerateList, set(outputVariables), None, list(COMP.values()))

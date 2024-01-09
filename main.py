@@ -23,7 +23,7 @@ import time
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/th4/'
+BASE_PATH = 'query/th21/'
 DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -178,7 +178,7 @@ def parse_topk() -> list[int, int, list[str], bool, int, GenType]:
         return TopK, base, orderBy, DESC, limit, genType
     except IOError:
         return -1, -1, [], False, -1, GenType.Mysql
-    
+
 
 def parseComparison(line: list[str]):
     id = int(line[0].split('=')[1])
@@ -211,7 +211,7 @@ def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jt
         if flag == 1: # root
             line = int(line)
             JT.setRootById(line)
-            
+        
         elif flag == 2:
             rel1, rel2 = line.split('->')
             rel1, rel2 = int(rel1), int(rel2)

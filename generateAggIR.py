@@ -535,7 +535,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             buildSent += line
         if buildSent != '':
             buildSent = '# 0. Prepare\n' + buildSent
-        finalResult = buildSent + 'select ' + ', '.join(selectName) + ' from '
+        finalResult = buildSent + 'select ' + '+'.join(selectName) + ' from '
         ## fromTable, whereCond
         if JT.root.relationType == RelationType.TableScanRelation:
             finalResult += JT.root.source
@@ -588,15 +588,15 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                         if func.formular == '' and not len(func.inVars):
                             newForm = newForm.replace(var, 'annot')
                         elif func.funcName != AggFuncType.AVG:
-                            newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + '*annot)')
+                            newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + '*annot)')
                         else:
-                            newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')        
+                            newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')        
                         
             selectName.append(newForm + ' as ' + out)
         else:
             raise NotImplementedError("Other output variables exists! ")
     
-    finalResult = 'select ' + ', '.join(selectName) + ' from '
+    finalResult = 'select ' + '+'.join(selectName) + ' from '
     
     ## a. subset = 1 special case
     if len(jointree.subset) == 1:
