@@ -1192,7 +1192,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 else:
                     raise RuntimeError("Undone still not in output! ")
                 
-            finalResult = 'select count(' + ('distinct ' if not JT.isFull else '') + '+'.join(selectName) +') from ' + fromTable + ';\n'
+            finalResult = 'select sum(' + ('distinct ' if not JT.isFull else '') + '+'.join(selectName) +') from ' + fromTable + ';\n'
         
         _, reduceList, _ = columnPrune(JT, _, reduceList, [], set(outputVariables), None, list(COMP.values()))
         return reduceList, [], finalResult
@@ -1214,7 +1214,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         enumerateList.append(retEnum)
     
     if not isAgg:
-        finalResult = 'select count(' + ('distinct ' if not JT.isFull else '')
+        finalResult = 'select sum(' + ('distinct ' if not JT.isFull else '')
         selectName = []
         if enumerateList[-1].stageEnd:
             fromTable = enumerateList[-1].stageEnd.viewName
@@ -1226,7 +1226,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         for alias in totalName:
             if alias in outputVariables:
                 selectName.append(alias)
-                
+        
         unDoneOut = [out for out in outputVariables if out not in selectName]
         for undone in unDoneOut:
             if undone in compKeys:
@@ -1234,7 +1234,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
             else:
                 raise RuntimeError("Undone still not in output! ")
             
-        finalResult += '+'.join(selectName) if not JT.isFull else '*'
+        finalResult += '+'.join(selectName) if not JT.isFull else '+'.join(outputVariables)
         finalResult += ') from ' + fromTable + ';\n'
     
     _, reduceList, enumerateList = columnPrune(JT, _, reduceList, enumerateList, set(outputVariables), None, list(COMP.values()))

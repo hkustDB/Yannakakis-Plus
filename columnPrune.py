@@ -35,7 +35,7 @@ def removeAttrAlias(selectAttrs: list[str], selectAlias: list[str], containKeys:
 # isAll True -> internal variables | alias; False -> alias only
 def getAggSet(Agg: Aggregation, isAll: bool = True):
     if not Agg:
-        return []
+        return set()
     aggKeepSet = set()
     if isAll:
         for func in Agg.aggFunc:
@@ -67,6 +67,8 @@ def getCompSet(COMP: list[Comparison]):
 agregation: undone: keep internal variables; done keep alias
 '''
 def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], outputVariables: set[str], Agg: Aggregation = None, COMP: list[Comparison] = []):
+    if JT.isFull == False or len(JT.subset) <= 1:
+        return aggReduceList, reduceList, enumerateList
     # FIXME: No intermediate variable in agg, all trans happens at one node
     aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
@@ -97,7 +99,10 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
         if index == 0:
             corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables)
         else:
-            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyChild[enum.corresNodeId])
+            if enum.corresNodeId in joinKeyChild:
+                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyChild[enum.corresNodeId])
+            else:
+                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables)
         
     # step2: prune reduce (bottom up)
     if Agg:
