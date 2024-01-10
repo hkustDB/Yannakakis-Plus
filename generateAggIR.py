@@ -490,7 +490,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, JT.getNode(rel.dst.id).isLeaf, nonFreeConnex=nonFreeConnex)
         elif len(incidentComp) == 1:
             # TODO: Add 1 comparison
-            pass
+            
         else:
             raise NotImplementedError("Not implement case with more than one comparison! ")
         jointree.removeEdge(rel)
