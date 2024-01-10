@@ -12,6 +12,10 @@ All graph data can be downloaded from SNAP (https://snap.stanford.edu).
 
 
 ## Experiments
+### Requirements
+- Java JDK or JRE(Java Runtime Environment). This program use one `jar` file to parse the query and generate the related information.
+- Python 3.9.6
+
 ### Previous settings
  1. Change `BASE_PATH` value in `main.py`, which correspond to the target query.
  2. Change `DDL_NAME` value in `main.py`, which correspond to the query's ddl file.

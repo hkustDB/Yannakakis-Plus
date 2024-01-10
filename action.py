@@ -9,7 +9,7 @@ class Action:
     '''
     _viewId = 0
     _sampleRate = 100
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str):
         self.viewName = viewName
         self.selectAttrs = selectAttrs
         self.selectAttrAlias = selectAttrAlias
