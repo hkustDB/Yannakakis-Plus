@@ -1,0 +1,5 @@
+TableScanRelation;id=5;source=Graph;cols=(v1:IntDataType,v2:IntDataType,v3:IntDataType);tableDisplayName=R
+TableScanRelation;id=6;source=Graph;cols=(v2:IntDataType,v5:IntDataType,v6:IntDataType);tableDisplayName=S
+TableScanRelation;id=7;source=Graph;cols=(v5:IntDataType,v8:IntDataType,v9:IntDataType);tableDisplayName=T
+TableScanRelation;id=5;source=Graph;cols=(v1:IntDataType,v2:IntDataType,v3:IntDataType);tableDisplayName=R
+TableScanRelation;id=6;source=Graph;cols=(v2:IntDataType,v5:IntDataType,v6:IntDataType);tableDisplayName=S
