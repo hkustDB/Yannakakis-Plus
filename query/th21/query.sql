@@ -1,10 +1,10 @@
-SELECT  s.name, COUNT(*) AS numwait
-FROM    supplier s, lineitem l1, lineitem l2, orders o, nation n
-WHERE   s.suppkey = l1.suppkey
-  AND   o.orderkey = l1.orderkey
-  AND   o.orderstatus = 'F'
-  AND   l1.receiptdate > l1.commitdate
-	AND   l2.orderkey = l1.orderkey
-  AND   s.nationkey = n.nationkey
-  AND   n.name = 'SAUDI ARABIA'
-GROUP BY s.name
+SELECT  s.s_name, COUNT(*) AS numwait
+FROM    supplier, lineitem l1, lineitem l2, orders, nation
+WHERE   s_suppkey = l1_suppkey
+  AND   o_orderkey = l1_orderkey
+  AND   o_orderstatus = 'F'
+  AND   l1_receiptdate > l1_commitdate
+	AND   l2_orderkey = l1_orderkey
+  AND   s_nationkey = n_nationkey
+  AND   n_name = 'PERU'
+GROUP BY s_name

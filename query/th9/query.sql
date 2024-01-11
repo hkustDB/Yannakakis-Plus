@@ -1,11 +1,11 @@
-SELECT n.name AS nation, o_year,
-       sum((l.extendedprice * (1 - l.discount)) - (ps.supplycost * l.quantity)) AS amount
-FROM part p, supplier s, lineitem l, partsupp ps, orderswithyear o, nation n
-WHERE  s.suppkey = l.suppkey
-  AND  ps.suppkey = l.suppkey 
-  AND  ps.partkey = l.partkey
-  AND  p.partkey = l.partkey
-  AND  o.orderkey = l.orderkey
-  AND  s.nationkey = n.nationkey
-  AND  (p.name LIKE '%green%')
-GROUP BY n.name, o_year
+SELECT n.n_name, o_year,
+       sum((l_extendedprice * (1 - l_discount)) - (ps_supplycost * l_quantity)) AS amount
+FROM part, supplier, lineitem, partsupp, orderswithyear, nation
+WHERE  s_suppkey = l_suppkey
+   AND ps_suppkey = l_suppkey
+   AND ps_partkey = l_partkey
+   AND p_partkey = l_partkey
+   AND o_orderkey = l_orderkey
+   AND s_nationkey = n_nationkey
+   AND p_name LIKE '%green%'
+GROUP BY n.n_name, o_year

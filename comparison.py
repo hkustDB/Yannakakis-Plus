@@ -20,7 +20,7 @@ class Comparison:
         self.originEndNodeId = None                       # no changing end
         self.originPath = None                            # no deleting path
         self.helperAttr: list[list[str]] = None           # path record of mf name
-        
+    
     def setAttr(self, id: int, op: str, left: str, right: str, path: list[str], cond: str, fullOp: str):
         # path = ['4<->1', '1<->2', '2<->3', '3<->5']
         self.id = id
@@ -35,16 +35,15 @@ class Comparison:
                 self.right = self.cond.split(' IN ')[1]
             elif '<>' in self.cond:
                 self.right = self.cond.split(' <> ')[1]
-                
+        
         self.fullOp = fullOp
-            
+        
         if 'true' in fullOp:
             if self.op == ' LIKE ' or self.op == ' IN ':
                 self.op = ' NOT' + self.op
             elif self.op == '=':
                 self.op = '<>'
         
-                
         if self.op == ' IN ' or self.op == ' LIKE ':
             self.right = self.cond.split(' ', 2)[2]
         elif self.op == ' NOT IN ' or self.op == ' NOT LIKE ':

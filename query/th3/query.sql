@@ -1,11 +1,13 @@
-SELECT ORDERS.orderkey,
-       ORDERS.orderdate,
-       ORDERS.shippriority,
-       SUM(extendedprice * (1 - discount)) AS query3
-FROM   CUSTOMER, ORDERS, LINEITEM
-WHERE  CUSTOMER.mktsegment = 'BUILDING'
-  AND  ORDERS.custkey = CUSTOMER.custkey
-  AND  LINEITEM.orderkey = ORDERS.orderkey
-  AND  ORDERS.orderdate < 795196800 
-  AND  LINEITEM.shipdate > 795196800
-GROUP BY ORDERS.orderkey, ORDERS.orderdate, ORDERS.shippriority
+SELECT l_orderkey,
+       SUM(l_extendedprice * (1 - l_discount)) AS revenue,
+       o_orderdate,
+       o_shippriority
+FROM customer,
+     orders,
+     lineitem
+WHERE c_mktsegment = 'BUILDING'
+  AND c_custkey = o_custkey
+  AND l_orderkey = o_orderkey
+  AND o_orderdate < DATE '1995-03-15'
+  AND l_shipdate > DATE '1995-03-15'
+GROUP BY l_orderkey, o_orderdate, o_shippriority

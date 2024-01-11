@@ -14,7 +14,7 @@ from functools import cmp_to_key
 from sys import maxsize
 
 
-def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], childIsOriLeaf: bool = False, nonFreeConnex: bool = False) -> AggReducePhase:
+def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], childIsOriLeaf: bool = False, nonFreeConnex: bool = False, incidentComp: list[Comparison] = []) -> AggReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
@@ -149,7 +149,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         elif agg.funcName == AggFuncType.AVG:
                             selectAttr.append('sum(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.COUNT:
-                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ')' + ' * annot')
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular+ ' * annot' + ')' )
                         else:
                             # MIN/MAX
                             selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
@@ -163,7 +163,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         elif agg.funcName == AggFuncType.AVG:
                             selectAttr.append('sum(' + agg.alias + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.COUNT:
-                            selectAttr.append(agg.funcName.name + '(' + agg.alias + ')' + ' * annot')
+                            selectAttr.append(agg.funcName.name + '(' + agg.alias+ ' * annot' + ')' )
                         else:
                             # MIN/MAX
                             selectAttr.append(agg.funcName.name + '(' + agg.alias + ')')
@@ -187,11 +187,11 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     selectAttrAlias.append(agg.alias)
                     if childNode.JoinResView and 'annot' in findInVars:
                         if agg.funcName == AggFuncType.SUM:
-                            selectAttr.append(agg.funcName.name + agg.formular + ' * annot')
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.AVG:
-                            selectAttr.append('sum' + agg.formular + ' * annot')
+                            selectAttr.append('sum' + '(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.COUNT:
-                            selectAttr.append(agg.funcName.name + agg.formular + ' * annot')
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
                         else:
                             # MIN/MAX
                             selectAttr.append(agg.funcName.name + agg.formular)
@@ -489,8 +489,9 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         if len(incidentComp) == 0:
             aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, JT.getNode(rel.dst.id).isLeaf, nonFreeConnex=nonFreeConnex)
         elif len(incidentComp) == 1:
-            # TODO: Add 1 comparison
+            corIndex = comparisons.index(incidentComp[0])
             
+            pass
         else:
             raise NotImplementedError("Not implement case with more than one comparison! ")
         jointree.removeEdge(rel)

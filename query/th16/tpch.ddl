@@ -1,126 +1,92 @@
-CREATE TABLE part (
-  partkey int,
-  name varchar,
-  mfgr varchar,
-  brand varchar,
-  type varchar,
-  size int ,
-  container varchar,
-  retailprice varchar,
-  `comment` varchar
+CREATE TABLE nation
+(
+    n_nationkey INTEGER,
+    n_name      VARCHAR,
+    n_regionkey INTEGER,
+    n_comment   VARCHAR
 );
 
-CREATE TABLE supplier (
-  suppkey int,
-  name varchar,
-  address varchar,
-  nationkey int,
-  phone varchar,
-  acctbal varchar,
-  `comment` varchar
+CREATE TABLE region
+(
+    r_regionkey INTEGER,
+    r_name      VARCHAR,
+    r_comment   VARCHAR
 );
 
-
-CREATE TABLE partsupp (
-  partkey int,
-  suppkey int,
-  availqty int,
-  supplycost varchar,
-  `comment` varchar
+CREATE TABLE part
+(
+    p_partkey     INTEGER,
+    p_name        VARCHAR,
+    p_mfgr        VARCHAR,
+    p_brand       VARCHAR,
+    p_type        VARCHAR,
+    p_size        INTEGER,
+    p_container   VARCHAR,
+    p_retailprice DECIMAL,
+    p_comment     VARCHAR
 );
 
-
-CREATE TABLE nation ( 
-  nationkey int,
-  name varchar,
-  regionkey int,
-  `comment` varchar
+CREATE TABLE supplier
+(
+    s_suppkey   INTEGER,
+    s_name      VARCHAR,
+    s_address   VARCHAR,
+    s_nationkey INTEGER,
+    s_phone     VARCHAR,
+    s_acctbal   DECIMAL,
+    s_comment   VARCHAR
 );
 
-
-CREATE TABLE region (
-  regionkey int,
-  name varchar,
-  `comment` varchar
+CREATE TABLE partsupp
+(
+    ps_partkey    INTEGER,
+    ps_suppkey    INTEGER,
+    ps_availqty   INTEGER,
+    ps_supplycost DECIMAL,
+    ps_comment    VARCHAR
 );
 
-CREATE TABLE customer (  
-  custkey int,
-  name varchar,
-  address varchar,
-  nationkey int,
-  phone varchar,
-  acctbal decimal,
-  mktsegment varchar,
-  `comment` varchar
+CREATE TABLE customer
+(
+    c_custkey    INTEGER,
+    c_name       VARCHAR,
+    c_address    VARCHAR,
+    c_nationkey  INTEGER,
+    c_phone      VARCHAR,
+    c_acctbal    DECIMAL,
+    c_mktsegment VARCHAR,
+    c_comment    VARCHAR
 );
 
-CREATE TABLE orders (  
-  orderkey bigint,
-  custkey int,
-  orderstatus varchar,
-  totalprice decimal,
-  orderdate bigint,
-  orderpriority varchar,
-  clerk varchar,
-  shippriority int,
-  `comment` varchar
+CREATE TABLE orders
+(
+    o_orderkey      INTEGER,
+    o_custkey       INTEGER,
+    o_orderstatus   VARCHAR,
+    o_totalprice    DECIMAL,
+    o_orderdate     DATE,
+    o_orderpriority VARCHAR,
+    o_clerk         VARCHAR,
+    o_shippriority  INTEGER,
+    o_comment       VARCHAR
 );
 
-CREATE TABLE orderswithyear (  
-  orderkey bigint,
-  custkey int,
-  orderstatus varchar,
-  totalprice decimal,
-  orderdate bigint,
-  o_year int,
-  orderpriority varchar,
-  clerk varchar,
-  shippriority int,
-  `comment` varchar
+CREATE TABLE lineitem
+(
+    l_orderkey      INTEGER,
+    l_partkey       INTEGER,
+    l_suppkey       INTEGER,
+    l_linenumber    INTEGER,
+    l_quantity      DECIMAL,
+    l_extendedprice DECIMAL,
+    l_discount      DECIMAL,
+    l_tax           DECIMAL,
+    l_returnflag    VARCHAR,
+    l_linestatus    VARCHAR,
+    l_shipdate      DATE,
+    l_commitdate    DATE,
+    l_receiptdate   DATE,
+    l_shipinstruct  VARCHAR,
+    l_shipmode      VARCHAR,
+    l_comment       VARCHAR
 );
-
-
-CREATE TABLE lineitem ( 
-  orderkey bigint,
-  partkey int,
-  suppkey int,
-  linenumber int,
-  quantity decimal,
-  extendedprice decimal,
-  discount decimal,
-  tax decimal,
-  returnflag varchar,
-  linestatus varchar,
-  shipdate bigint,
-  commitdate bigint,
-  receiptdate bigint,
-  shipinstruct varchar,
-  shipmode varchar,
-  `comment` varchar
-);
-
-CREATE TABLE lineitemwithyear ( 
-  orderkey bigint,
-  partkey int,
-  suppkey int,
-  linenumber int,
-  quantity decimal,
-  extendedprice decimal,
-  discount decimal,
-  tax decimal,
-  returnflag varchar,
-  linestatus varchar,
-  shipdate bigint,
-  l_year int,
-  commitdate bigint,
-  receiptdate bigint,
-  shipinstruct varchar,
-  shipmode varchar,
-  `comment` varchar
-);
-
-CREATE TABLE q16_inner (
-  suppkey int
-);
-
