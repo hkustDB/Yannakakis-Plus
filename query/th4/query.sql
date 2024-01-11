@@ -1,6 +1,6 @@
-SELECT o.orderpriority, COUNT(*) AS order_count
-FROM   orders o, lineitem l
-WHERE  o.orderdate >= 741456000 AND  o.orderdate <  749404800
-	AND  l.orderkey = o.orderkey
-	AND  l.commitdate < l.receiptdate
-GROUP BY o.orderpriority
+SELECT o_orderpriority, COUNT(*) AS order_count
+FROM orders, view1
+WHERE o_orderdate >= DATE '1993-07-01'
+  AND o_orderdate < DATE '1993-10-01'
+  AND v1_orderkey_distinct = o_orderkey
+GROUP BY o_orderpriority

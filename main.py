@@ -23,8 +23,8 @@ import time
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/q1/'
-DDL_NAME = 'graph.ddl'
+BASE_PATH = 'query/q9/'
+DDL_NAME = 'trade.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 REL_NAME = 'relations'

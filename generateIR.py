@@ -196,6 +196,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
 
 # (A) Common Function for Reduce & Enumerate
 def splitLR(LR: str):
+    LR = LR.replace('(', '').replace(')', '').replace(' ', '')
     if '*' in LR: return LR.split('*'), '*'
     elif '+' in LR: return LR.split('+'), '+'
     else: return [LR], ''
@@ -441,10 +442,10 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 else: # Can only be TableScan
                     op = ''
                     if '*' in orderKey[-1]:
-                        varAlias = orderKey[-1].split('*')
+                        varAlias = orderKey[-1].replace('(', '').replace(')', '').replace(' ', '').split('*')
                         op = '*'
                     elif '+' in orderKey[-1]:
-                        varAlias = orderKey[-1].split('+')
+                        varAlias = orderKey[-1].replace('(', '').replace(')', '').replace(' ', '').split('+')
                         op = '+'
                     else:
                         raise NotImplementedError("Not implement other op! ") 

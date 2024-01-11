@@ -1,10 +1,9 @@
-SELECT  c.custkey, c.name, c.acctbal, n.name, c.address, c.phone, c.`comment`,
-        SUM(l.extendedprice * (1 - l.discount)) AS revenue
-FROM    customer c, orders o, lineitem l, nation n
-WHERE   c.custkey = o.custkey
-  AND   l.orderkey = o.orderkey
-  AND   o.orderdate >= 749404800 
-  AND   o.orderdate < 757353600 
-  AND   l.returnflag = 'R'
-  AND   c.nationkey = n.nationkey
-GROUP BY c.custkey, c.name, c.acctbal, c.phone, n.name, c.address, c.`comment`
+SELECT c_custkey, c_name, SUM(l_extendedprice * (1 - l_discount)) AS revenue, c_acctbal, n_name, c_address, c_phone, c_comment
+FROM customer, orders, lineitem, nation
+WHERE c_custkey = o_custkey
+  AND l_orderkey = o_orderkey
+  AND o_orderdate >= DATE '1993-10-01'
+  AND o_orderdate < DATE '1994-01-01'
+  AND l_returnflag = 'R'
+  AND c_nationkey = n_nationkey
+GROUP BY c_custkey, c_name, c_acctbal, c_phone, n_name, c_address, c_comment

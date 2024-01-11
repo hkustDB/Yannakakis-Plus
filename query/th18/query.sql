@@ -1,5 +1,6 @@
-SELECT c.name, c.custkey, o.orderkey, o.orderdate, o.totalprice, 
-       sum(l.quantity) AS query18
-FROM customer c, orders o, lineitem l
-WHERE c.custkey = o.custkey AND o.orderkey = l.orderkey
-GROUP BY c.name, c.custkey, o.orderkey, o.orderdate, o.totalprice
+SELECT c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice, SUM(l_quantity)
+FROM customer, orders, lineitem, view1
+WHERE o_orderkey = v1_orderkey
+  AND c_custkey = o_custkey
+  AND o_orderkey = l_orderkey
+GROUP BY c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice
