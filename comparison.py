@@ -160,6 +160,22 @@ class Comparison:
         self.beginNodeId = self.path[0][0] if len(self.path) != 0 else -1
         self.endNodeId = self.path[len(self.path)-1][1] if len(self.path) != 0 else -1
         
+    # NOTE: Only support for aggregation purpose
+    def fullDeletePath(self, direction: Direction):
+        if len(self.path) < 1:
+            raise RuntimeError("Can't update path! ")
+        if direction == Direction.Left:
+            self.path.pop(0)
+            self.originPath.pop(0)
+        else:
+            self.path.pop(-1)
+            self.originPath.pop(-1)
+        self.predType = predType.Short if len(self.path) == 1 else predType.Long
+        self.beginNodeId = self.path[0][0] if len(self.path) != 0 else -1
+        self.endNodeId = self.path[len(self.path)-1][1] if len(self.path) != 0 else -1
+        self.originBeginNodeId = self.originPath[0][0] if len(self.originPath) != 0 else -1
+        self.originEndNodeId = self.originPath[len(self.originPath)-1][1] if len(self.originPath) != 0 else -1
+        
     def reversePath(self):
         self.path = [[i[1], i[0]] for i in self.path]
         self.path.reverse()

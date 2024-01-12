@@ -101,7 +101,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                             selectAttr.append(sourceName)
                             selectAttrAlias.append(invar)
                             aggPass2Join.append(invar)
-                    
+            
             if passAggAlias:
                 ## add passing aggregation function name
                 aggPass2Join.append(agg.alias)
@@ -350,9 +350,6 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     aggReduce = AggReducePhase(prepareView, aggView, aggJoin, reduceRel.dst.id)
     return aggReduce
 
-def buildAggCompReducePhase(reducerel: Edge, JT: JoinTree, aggFuncList: list[AggFunc] = [], incidentComp: list[Comparison] = [], selfComp: list[Comparison] = [], direction: Direction = Direction.SemiJoin, helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', ''], lastRel: bool = False) -> AggReducePhase:
-    pass
-
 
 def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], computations: dict[str, str], Agg: Aggregation) -> [list[AggReducePhase], list[ReducePhase], list[EnumeratePhase]]:
     nonFreeConnex = False
@@ -472,7 +469,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         outSetRel = [rel for rel in allRelations if rel not in subsetRel] 
     else:
         outSetRel = allRelations
-        
+    
     while len(outSetRel) > 0:
         leafRelation = getLeafRelation(outSetRel)
         leafRelation.sort(key=cmp_to_key(aggCmp))
@@ -490,8 +487,8 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, JT.getNode(rel.dst.id).isLeaf, nonFreeConnex=nonFreeConnex)
         elif len(incidentComp) == 1:
             corIndex = comparisons.index(incidentComp[0])
-            
-            pass
+        
+        
         else:
             raise NotImplementedError("Not implement case with more than one comparison! ")
         jointree.removeEdge(rel)
