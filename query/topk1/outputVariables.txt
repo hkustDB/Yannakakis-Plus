@@ -1,3 +1,5 @@
+computations:
+(v7:IntDataType,(v3 + v6))
 outputVariables:
 v1:IntDataType
 v2:IntDataType

@@ -247,7 +247,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             fromTable = parentNode.alias
     else:
         fromTable = ''
-        
+    
     ## b. joinTable
     joinTable = aggView.viewName
     
