@@ -979,7 +979,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                     supportRelation.append(rel)
                     break
                 childNode = childNode.parent
-                
+        
         return supportRelation
         
     '''Get incident comparisons'''
