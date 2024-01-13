@@ -1,12 +1,11 @@
+computations:
+(v13:IntDataType,(((v3 + v6) + v9) + v12))
 outputVariables:
 v5:IntDataType
 v2:IntDataType
 v1:IntDataType
 v8:IntDataType
 v11:IntDataType
-v3:IntDataType
-v6:IntDataType
-v9:IntDataType
-v12:IntDataType
+v13:IntDataType
 isFull:
 true
