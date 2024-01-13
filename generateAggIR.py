@@ -1,6 +1,7 @@
 from jointree import *
 from comparison import *
 from enumsType import *
+from treenode import *
 
 from aggregation import *
 from reduce import *
@@ -14,7 +15,7 @@ from functools import cmp_to_key
 from sys import maxsize
 
 
-def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], childIsOriLeaf: bool = False, nonFreeConnex: bool = False, incidentComp: list[Comparison] = []) -> AggReducePhase:
+def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], childIsOriLeaf: bool = False, nonFreeConnex: bool = False, incidentComp: list[Comparison] = [], updateDirection: list[Direction] = []) -> AggReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
@@ -58,6 +59,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             selectAttr.append(childNode.col2vars[1][index])
             groupBy.append(childNode.col2vars[1][index])
         for agg in aggFuncList:
+            if agg.doneFlag: continue
             passAggAlias = True
             if not len(agg.inVars):
                 raise RuntimeError("Should not happen! ")
@@ -126,8 +128,9 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     selectAttrAlias.append(var)
                     aggPass2Join.append(var)
         
-        ## -3. newAgg
+        ## -3. newAgg -> only new aggAlias need `* annot`
         for agg in aggFuncList:
+            if agg.doneFlag: continue
             passAggAlias = True
             if not len(agg.inVars):
                 raise RuntimeError("Only count(*) is considered! ")
@@ -139,11 +142,13 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     findInVars = childNode.cols
                 else:
                     raise NotImplementedError("Must be JoinView/not TS case! ")
-                
-                agg.formular = agg.formular.replace(agg.inVars[0], sourceName)
+                if not childNode.JoinResView:  # not tablescan -> like tableAgg
+                    index = childNode.cols.index(agg.inVars[0])
+                    sourceName = childNode.col2vars[1][index]
+                    agg.formular = agg.formular.replace(agg.inVars[0], sourceName)
                 if agg.inVars[0] in findInVars:
                     if childNode.JoinResView and 'annot' in findInVars:
-                        agg.formular = agg.formular.replace(agg.alias, sourceName)
+                        # FIXME: why replace
                         if agg.funcName == AggFuncType.SUM:
                             selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.AVG:
@@ -155,20 +160,6 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                             selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
                     else:
                         selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
-                    selectAttrAlias.append(agg.alias)
-                elif agg.alias in findInVars:
-                    if childNode.JoinResView and 'annot' in findInVars:
-                        if agg.funcName == AggFuncType.SUM:
-                            selectAttr.append(agg.funcName.name + '(' + agg.alias + ' * annot' + ')')
-                        elif agg.funcName == AggFuncType.AVG:
-                            selectAttr.append('sum(' + agg.alias + ' * annot' + ')')
-                        elif agg.funcName == AggFuncType.COUNT:
-                            selectAttr.append(agg.funcName.name + '(' + agg.alias+ ' * annot' + ')' )
-                        else:
-                            # MIN/MAX
-                            selectAttr.append(agg.funcName.name + '(' + agg.alias + ')')
-                    else:
-                        selectAttr.append(agg.funcName.name + '(' + agg.alias + ')')
                     selectAttrAlias.append(agg.alias)
                 else:
                     raise RuntimeError("Must be one name in inVars/aggFunciton alias! ")
@@ -237,7 +228,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             if out in groupBy and out in selectAttrAlias: continue
             if childNode.JoinResView:
                 if out in childNode.JoinResView.selectAttrAlias:
-                    groupBy.append(out)
+                    if out not in groupBy: groupBy.append(out)
                     if out not in selectAttrAlias:
                         selectAttr.append('')
                         selectAttrAlias.append(out)
@@ -262,6 +253,39 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         selectAttr.append(oriVal)
                         selectAttrAlias.append(out)
                         aggPass2Join.append(out)
+    
+    # Extra process for comparison case
+    if len(incidentComp):
+        if len(incidentComp) == 1:
+            if updateDirection[0] == Direction.Left:
+                compVar = incidentComp[0].left
+            else:
+                compVar = incidentComp[0].right
+            if childNode.JoinResView and compVar in childNode.JoinResView.selectAttrAlias:
+                if compVar not in groupBy: groupBy.append(compVar)
+                if compVar not in selectAttrAlias:
+                    selectAttr.append('')
+                    selectAttrAlias.append(compVar)
+                    aggPass2Join.append(compVar)
+            elif childNode.relationType != RelationType.TableScanRelation:
+                if compVar in childNode.cols:
+                    groupBy.append(compVar)
+                    if compVar not in selectAttrAlias:
+                        selectAttr.append('')
+                        selectAttrAlias.append(compVar)
+                        aggPass2Join.append(compVar)
+            else:
+                if compVar in childNode.cols:
+                    index = childNode.cols.index(compVar)
+                    oriVal = childNode.col2vars[1][index]
+                    if oriVal not in groupBy:
+                        groupBy.append(oriVal)
+                    if oriVal not in selectAttrAlias:
+                        selectAttr.append(oriVal)
+                        selectAttrAlias.append(compVar)
+                        aggPass2Join.append(compVar)
+        else:
+            raise NotImplementedError("More than one aggregation incident comparison is not implemented! ")
     
     if childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation and childIsOriLeaf and len(childSelfComp):
         transSelfCompList = makeSelfComp(childSelfComp, childNode)
@@ -345,6 +369,14 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         else:
             for comp in parentSelfComp:
                 addiSelfComp.append(comp.left + comp.op + comp.right)
+    ## f. Add incident comparison
+    def dfslCommonAns(root: TreeNode, p: TreeNode, q: TreeNode):
+        childFlag: list[bool] = [False] * len(root.children)
+        for index, child in enumerate(root.children):
+            childFlag[index] = dfslCommonAns(child)
+        
+    inciComp = []
+    
     
     aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp)
     aggReduce = AggReducePhase(prepareView, aggView, aggJoin, reduceRel.dst.id)
@@ -444,9 +476,9 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         else:
             for index, update in enumerate(updateDirection):
                 if update == Direction.Left:
-                    compList[index].deletePath(Direction.Left) # compList reference to comparisons
+                    compList[index].fullDeletePath(Direction.Left) # compList reference to comparisons
                 elif update == Direction.Right:
-                    compList[index].deletePath(Direction.Right)
+                    compList[index].fullDeletePath(Direction.Right)
     
     def updateSelfComparison(compList: list[Comparison]):
         if len(compList) == 0: return
@@ -486,21 +518,31 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         if len(incidentComp) == 0:
             aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, JT.getNode(rel.dst.id).isLeaf, nonFreeConnex=nonFreeConnex)
         elif len(incidentComp) == 1:
-            corIndex = comparisons.index(incidentComp[0])
-        
-        
+            onlyComp = incidentComp[0]
+            corIndex = comparisons.index(onlyComp)
+            if rel.dst.id == onlyComp.getBeginNodeId:
+                updateDirection.append(Direction.Left)
+            elif rel.dst.id == onlyComp.getEndNodeId:
+                updateDirection.append(Direction.Right)
+            else:
+                raise RuntimeError("Should not happen! ")
+            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, JT.getNode(rel.dst.id).isLeaf, nonFreeConnex=nonFreeConnex, incidentComp=incidentComp, updateDirection=updateDirection)
+            updateComprison(incidentComp, updateDirection)
+            comparisons[corIndex] = incidentComp[0]
         else:
             raise NotImplementedError("Not implement case with more than one comparison! ")
         jointree.removeEdge(rel)
         outSetRel.remove(rel)
         # TODO: updateComparison
+        updateSelfComparison(selfComp)
+        # attach to node
         jointree.getNode(rel.dst.id).reducePhase = aggReduce
         jointree.getNode(rel.src.id).JoinResView = aggReduce.aggJoin
         # append
         aggReduceList.append(aggReduce)
     
     '''Step2,3: normal cqc reduce/enumerate'''
-    # Special case: one node only, not considering recursive build
+    # Special case: one node only, not considering recursive build -> no join, ont use for testing
     if len(JT.edge) == 0:
         selectName = []
         prepareView = []
@@ -597,15 +639,11 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         else:
             raise NotImplementedError("Other output variables exists! ")
     
-    finalResult = 'select ' + '+'.join(selectName) + ' from '
+    finalResult = 'select ' + 'sum(' + '+'.join(selectName) + ') from '
     
     ## a. subset = 1 special case
     if len(jointree.subset) == 1:
-        finalResult += aggReduceList[-1].aggJoin.viewName
-        if not len(Agg.groupByVars):
-            finalResult += ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
-        else:
-            finalResult += ';\n'
+        finalResult += aggReduceList[-1].aggJoin.viewName + ';\n'
         aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], set(outputVariables), Agg, list(COMP.values()))
         return aggReduceList, [], [], finalResult
     elif len(jointree.subset) == 0: # non free connex
@@ -614,11 +652,12 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             func = Agg.alias2AggFunc[alias]
             # NOTE: remove as alias for some aggregation aggregate at root
             finalResult = finalResult.replace(alias, func.funcName.name + '(' + alias + ')')
-        finalResult += ' group by ' + ', '.join(Agg.groupByVars) + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
+        finalResult += ' group by ' + ', '.join(Agg.groupByVars) + ';\n'
         aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], set(outputVariables), Agg, list(COMP.values()))
         return aggReduceList, [], [], finalResult
     
     ## b. normal case
+    COMP = dict(zip(COMP.keys(), comparisons))
     reduceList, enumerateList, _ = generateIR(jointree, COMP, outputVariables, computations, isAgg=True, allAggAlias=Agg.allAggAlias)
     
     # The left undone aggregation is done: 1. [subset > 1] -> final enumeration * annot 2. [subset = 1], done in root
@@ -629,7 +668,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         fromTable = aggReduceList[-1].aggJoin.viewName
     # oreder by & limit used for checking answer
     if not len(Agg.groupByVars):
-        finalResult += fromTable + ' order by ' + ', '.join(Agg.groupByVars) + ' limit 10 ' + ';\n'
+        finalResult += fromTable + ';\n'
     else:
         finalResult += ';\n'
     aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], set(outputVariables), Agg, list(COMP.values()))
