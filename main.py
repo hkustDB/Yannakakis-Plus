@@ -23,7 +23,7 @@ import time
 
 GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
 
-BASE_PATH = 'query/th9/'
+BASE_PATH = 'query/th8/'
 DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -43,12 +43,12 @@ Only AuxiliaryRelation source is [Bag(Graph,Graph)|Graph|...]
 
 def get_tree():
     cmdline = f'java -jar {GET_TREE} -d {BASE_PATH}{DDL_NAME} -o {BASE_PATH} {BASE_PATH}{QUERY_NAME}'
-    out = os.popen(cmdline, mode='r')
-    outData = out.read()
-    out.close()
-    print('Parse time extra time(ms): ' + outData + '\n')
+    out = os.popen(cmdline, mode='r').read()
     pattern = re.compile(r'\d+')
-    ptime = pattern.findall(outData)[0]
+    time1, time2 = pattern.findall(out)
+    ptime = int(time1) + int(time2)
+    print('Preload time(ms): ' + time1 + '\n')
+    print('Parse time(ms): ' + time2 + '\n')
     global PARSE_TIME
     PARSE_TIME = int(ptime) * 1.0 / 1000
 
@@ -446,4 +446,4 @@ if __name__ == '__main__':
     end = time.time()
     if PARSE_TIME != -1:
         end -= PARSE_TIME
-    print('Running Time(s): ',end - start)
+    print('Rewrite time(s): ',end - start)

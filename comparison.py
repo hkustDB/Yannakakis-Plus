@@ -175,6 +175,7 @@ class Comparison:
         self.endNodeId = self.path[len(self.path)-1][1] if len(self.path) != 0 else -1
         self.originBeginNodeId = self.originPath[0][0] if len(self.originPath) != 0 else -1
         self.originEndNodeId = self.originPath[len(self.originPath)-1][1] if len(self.originPath) != 0 else -1
+        self.helperAttr = [[''] * 2] * len(self.path)
         
     def reversePath(self):
         self.path = [[i[1], i[0]] for i in self.path]

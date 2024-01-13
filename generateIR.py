@@ -408,7 +408,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 fromTable = childNode.source + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
             else:
                 fromTable = childNode.alias
-        
+            
             # joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
             ## NOTE: Use the original, avoid importing annot
             joinKey = list(set(childNode.cols) & set(parentNode.cols))
