@@ -1,4 +1,5 @@
 from enumsType import *
+from treenode import *
 import copy
 import re
 
@@ -20,6 +21,7 @@ class Comparison:
         self.originEndNodeId = None                       # no changing end
         self.originPath = None                            # no deleting path
         self.helperAttr: list[list[str]] = None           # path record of mf name
+        self.LCA: int = None
     
     def setAttr(self, id: int, op: str, left: str, right: str, path: list[str], cond: str, fullOp: str):
         # path = ['4<->1', '1<->2', '2<->3', '3<->5']

@@ -205,17 +205,17 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     
     ## d. append annot
     if childFlag:
-        selectAttr.append('count(*)')
+        selectAttr.append('COUNT(*)')
         selectAttrAlias.append('annot')
     elif childNode.JoinResView:
         if not 'annot' in childNode.JoinResView.selectAttrAlias:
-            selectAttr.append('count(*)')
+            selectAttr.append('COUNT(*)')
             selectAttrAlias.append('annot')
         else:
-            selectAttr.append('sum(annot)')
+            selectAttr.append('SUM(annot)')
             selectAttrAlias.append('annot')
     elif childNode.relationType != RelationType.TableScanRelation:
-        selectAttr.append('count(*)')
+        selectAttr.append('COUNT(*)')
         selectAttrAlias.append('annot')
     else:
         raise RuntimeError("Error Case! ")
@@ -369,16 +369,34 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         else:
             for comp in parentSelfComp:
                 addiSelfComp.append(comp.left + comp.op + comp.right)
-    ## f. Add incident comparison
-    def dfslCommonAns(root: TreeNode, p: TreeNode, q: TreeNode):
-        childFlag: list[bool] = [False] * len(root.children)
-        for index, child in enumerate(root.children):
-            childFlag[index] = dfslCommonAns(child)
-        
-    inciComp = []
     
+    ## f. Add incident comparison && only len(subset) == 1
+    if len(incidentComp) > 1:
+        raise NotImplementedError("Aggregation has more than 2 incident comparisons! ")
     
-    aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp)
+    def addComp(node: TreeNode):
+        if not node.JoinResView and node.relationType == RelationType.TableScanRelation:
+            if childNode.id == incidentComp[0].getBeginNodeId: # parse right
+                rightVar, opR = splitLR(incidentComp[0].right)
+                for i in range(len(rightVar)):
+                    if not 'v' in rightVar[i]: continue
+                    index = node.cols.index(rightVar[i])
+                    rightVar[i] = node.col2vars[1][index]
+                return incidentComp[0].left + incidentComp[0].op + opR.join(rightVar)
+            else: # parse left
+                leftVar, opL = splitLR(incidentComp[0].right)
+                for i in range(len(leftVar)):
+                    if not 'v' in leftVar[i]: continue
+                    index = node.cols.index(leftVar[i])
+                    leftVar[i] = node.col2vars[1][index]
+                return opL.join(leftVar) + incidentComp[0].op + incidentComp[0].right
+        else:
+            return incidentComp[0].cond
+    condComp = []
+    if (childNode.id == incidentComp[0].getBeginNodeId and parentNode.id == incidentComp[0].getEndNodeId) or (childNode.id == incidentComp[0].getEndNodeId and parentNode.id == incidentComp[0].getBeginNodeId):
+        condComp.append(addComp(parentNode))
+    
+    aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp + condComp)
     aggReduce = AggReducePhase(prepareView, aggView, aggJoin, reduceRel.dst.id)
     return aggReduce
 
@@ -643,8 +661,22 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     
     ## a. subset = 1 special case
     if len(jointree.subset) == 1:
-        finalResult += aggReduceList[-1].aggJoin.viewName + ';\n'
         aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], set(outputVariables), Agg, list(COMP.values()))
+        # FIXME: with comparison, still need group by
+        for index, name in enumerate(selectName):
+            if 'as' in name and not 'SUM' in name and not 'COUNT' in name and not 'AVG':
+                origin, asName = name.split(' as ')
+                selectName[index] = 'SUM(' + origin + ') as '+ asName
+            elif 'as' in name:
+                continue
+            elif name in Agg.allAggAlias:
+                func = Agg.alias2AggFunc[name]
+                selectName[index] = func.funcName.name + '(' + name + ')'
+        finalResult = 'select ' + 'SUM(' + '+'.join(selectName) + ') from '
+            
+        finalResult += aggReduceList[-1].aggJoin.viewName
+        finalResult += ' group by ' + ', '.join(Agg.groupByVars)
+        finalResult += ';\n'
         return aggReduceList, [], [], finalResult
     elif len(jointree.subset) == 0: # non free connex
         finalResult += aggReduceList[-1].aggJoin.viewName
@@ -661,15 +693,11 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     reduceList, enumerateList, _ = generateIR(jointree, COMP, outputVariables, computations, isAgg=True, allAggAlias=Agg.allAggAlias)
     
     # The left undone aggregation is done: 1. [subset > 1] -> final enumeration * annot 2. [subset = 1], done in root
-    
     if len(reduceList):
         fromTable = enumerateList[-1].stageEnd.viewName if enumerateList[-1].stageEnd else enumerateList[-1].semiEnumerate.viewName
     elif not len(reduceList):
         fromTable = aggReduceList[-1].aggJoin.viewName
     # oreder by & limit used for checking answer
-    if not len(Agg.groupByVars):
-        finalResult += fromTable + ';\n'
-    else:
-        finalResult += ';\n'
+    finalResult += fromTable + ' group by ' + ', '.join(Agg.groupByVars) + ';\n'
     aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], set(outputVariables), Agg, list(COMP.values()))
     return aggReduceList, reduceList, enumerateList, finalResult
