@@ -29,16 +29,15 @@ class Comparison:
         self.op = self.parseOP(op)
         self.left = left # crude left
         self.right = right
-        self.cond = cond
+        self.cond = cond[1:-1] if cond[0] == '(' and cond[-1] == ')' else cond
+        self.fullOp = fullOp
         if left == right:
             if '=' in self.cond:
-                self.right = self.cond.split(' = ')[1]
+                self.right = self.cond.split('=')[1]
             elif 'IN' in self.cond:
-                self.right = self.cond.split(' IN ')[1]
+                self.right = self.cond.split('IN')[1]
             elif '<>' in self.cond:
-                self.right = self.cond.split(' <> ')[1]
-        
-        self.fullOp = fullOp
+                self.right = self.cond.split('<>')[1]
         
         if 'true' in fullOp:
             if self.op == ' LIKE ' or self.op == ' IN ':
@@ -51,8 +50,7 @@ class Comparison:
         elif self.op == ' NOT IN ' or self.op == ' NOT LIKE ':
             self.right = self.cond.split(' ', 3)[3]
         
-        path = [i.split('<->') for i in path]
-        path = [[int(i[0]), int(i[1])] for i in path]
+        path = [[int(i['src']), int(i['dst'])] for i in path]
         
         allNodes = set()
         

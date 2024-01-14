@@ -1,9 +1,16 @@
 """
 Usage:
-  main.py <query>
-  aggRelation use special ;, others use :
-  jointreeEdge each edge use special |
+  main.py <query> [options]
+  
+Options:
+  -h --help     Show help.
+  <query>       Set execute query path, like topk1/
+  -b, --base base   Set level-k log base [default: 32]
+  -m, --mode mode   Set topK algorithm mode. 0: level-k, 1: product-k [default: 0]
+  -g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
 """
+
+from docopt import docopt
 from treenode import *
 from comparison import Comparison
 from jointree import Edge, JoinTree
@@ -13,26 +20,20 @@ from generateAggIR import *
 from generateTopKIR import *
 from codegen import *
 from codegenTopK import *
+from topk import *
+
 
 from random import randint
 import os
 import re
-import traceback
 import time
+import traceback
+import requests
 
-
-GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
-
-BASE_PATH = 'query/agg2/'
+BASE_PATH = 'query/q1/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
-REL_NAME = 'relations'
-AGG_NAME = 'aggregations.txt'
-TOPK_NAME = 'topK.txt'
-JT_PATH = ''
-OUT_PATH = 'outputVariables.txt'
-PARSE_TIME = -1
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
 
@@ -40,267 +41,163 @@ AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']
 RelationName;id;source/inalias(bag);cols;tableDisplayName;[AggList(tableagg)|internalRelations(bag)|supportingRelation(aux)|group+func(agg)]
 Only AuxiliaryRelation source is [Bag(Graph,Graph)|Graph|...]
 '''
+def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
+    name, id, line = node.split(';', 2)
+    if id in allNodes:
+        return
+    if name == 'AggregatedRelation':
+        source, cols, alias, group, func = line.split(';')
+        id = int(id.split('=')[1])
+        source = source.split('=')[1]
+        pattern = re.compile('v[0-9]+')
+        cols = pattern.findall(cols)
+        alias = alias.split('=')[1]
+        group = int(group.split('=')[1][1:-1])
+        func = func.split('=')[1]
+        aNode = AggTreeNode(id, source, cols, [], alias, group, func)
+        allNodes[id] = aNode
+    elif name == 'AuxiliaryRelation':
+        source, cols, alias, supportId = line.split(';', 3)
+        supportId, supportRel = int(supportId.split('\n')[0]), supportId.split('\n')[1]
+        if supportId not in allNodes and supportRel != '':
+            parseRelRecur(supportRel, allNodes, supId)
+        auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
+        supId.add(supportId)
+        allNodes[id] = auxNode
+    elif name == 'TableScanRelation':
+        source, cols, alias = line.split(';')
+        tsNode = TableTreeNode(id, source, cols, [], alias)
+        allNodes[id] = tsNode
+    elif name == 'TableAggRelation':
+        source, cols, alias, aggList = line.split(';', 3)
+        aggList, aggs = aggList.split('\n', 1)
+        aggList = aggList.split(',')
+        aggList = [int(agg) for agg in aggList]
+        aggs = aggs.split('\n')
+        for index, each_agg in enumerate(aggs):
+            if each_agg != '' and aggList[index] not in allNodes: parseRel(each_agg)
+        taNode = TableAggTreeNode(id, source, cols, [], alias, aggList)
+        allNodes[id] = taNode
 
-def get_tree():
-    cmdline = f'java -jar {GET_TREE} -d {BASE_PATH}{DDL_NAME} -o {BASE_PATH} {BASE_PATH}{QUERY_NAME}'
-    out = os.popen(cmdline, mode='r').read()
-    pattern = re.compile(r'\d+')
-    time1, time2 = pattern.findall(out)
-    ptime = int(time1) + int(time2)
-    print('Preload time(ms): ' + time1 + '\n')
-    print('Parse time(ms): ' + time2 + '\n')
-    global PARSE_TIME
-    PARSE_TIME = int(ptime) * 1.0 / 1000
 
-def parse_ddl():
-    try:
-        f = open(BASE_PATH + DDL_NAME)
-        table2vars = dict()
-        line = f.readline()
-        flag = 0
-        tableName = ''
-        cols = []
-        while line:
-            if 'TABLE' in line:         # begin attributes
-                flag = 1
-                line = line.split(' ')
-                tableName = line[line.index('TABLE') + 1]
-                cols.clear()
-                line = f.readline()
-                continue
-            elif ';' in line: 
-                flag = 2                # finish one table
-                table2vars[tableName] = cols.copy()
-                cols.clear()
-                line = f.readline()
-                continue
-    
-            if flag == 1:
-                line = line.lstrip().rstrip().split(' ')[0]
-                cols.append(line)
-              
-            line = f.readline()
-    
-        # TODO: Add PK-FK description
-        return table2vars
-    except FileNotFoundError:
-        raise FileNotFoundError("DDL file not exist! ")
-
-def parse_outVar():
-    try :
-        f = open(BASE_PATH + OUT_PATH)
-        line = f.readline()
-        flag = 0
-        computations = dict()
-        outputVariables = []
-        isFull = True
-        while line:
-            if 'computations:' in line or 'outputVariables:' in line  or 'isFull:' in line: 
-                if 'computations:' in line: flag = 0
-                elif 'outputVariables:' in line: flag = 1
-                else: flag = 2
-                line = f.readline()
-                continue
-            if flag == 0:
-                line = line[1:-1]
-                name, formular = line.split(':')[0], line.split(':')[1].split(',')[1]
-                pattern = re.compile('v[0-9]+')
-                allVars = list(set(pattern.findall(formular)))
-                computations[name] = [formular, allVars]
-            elif flag == 1:
-                name = line.split(':')[0]
-                outputVariables.append(name)
-            else:
-                isFull = True if line == 'true' else False
-            line = f.readline()
-        return computations, outputVariables, isFull
-    except:
-        get_tree()
-        return parse_outVar()
-
-def parse_agg():
-    try:
-        f = open(BASE_PATH + AGG_NAME)
-        line = f.readline().rstrip()
-        flag = 0
-        outVars, aggFunc = [], []
-        while line:
-            if 'groupByVariables:' in line:
-                flag = 1
-                line = f.readline().rstrip()
-                continue
-            elif 'aggregations:' in line:
-                flag = 2
-                line = f.readline().rstrip()
-                continue
-        
-            if flag == 1:
-                outVars.append(line.split(':')[0])
-            elif flag == 2:
-                name, outName, inVars = line.split(';', 2)
+def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int]):
+    id, name, cols, alias = node['id'], node['type'], node['columns'], node['alias']
+    if name == 'BagRelation':
+        inAlias = node['internal']
+        inId, internal = node['internalRelations'].split('\n', 1)
+        inId = inId.split(',')
+        inId = [int(each) for each in inId]
+        internal = internal.split('\n')
+        for inter in internal:
+            if inter != '': parseRelRecur(inter, allNodes, supId)
+        bagNode = BagTreeNode(id, source, cols, [], alias, inId, inAlias)
+        allNodes[id] = bagNode
                 
-                def parseVar(inVars: str):
-                    formular = ''
-                    if 'NULL' in inVars:
-                        inVars = []
-                    else:
-                        formular = inVars.replace('AggList=|', '', 1)[:-2]
-                        pattern = re.compile('v[0-9]+')
-                        inVars = list(set(pattern.findall(inVars)))
-                    return inVars, formular
-                
-                inVars, formular = parseVar(inVars)
-                outName = outName.split(':')[0]
-                agg = AggFunc(name, inVars, outName, formular)
-                aggFunc.append(agg)
+    elif name == 'AuxiliaryRelation':
+        source = node['source']
+        supportId = node['support']
+        auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
+        supId.add(supportId)
+        allNodes[id] = auxNode
             
-            line = f.readline().rstrip()
-        
-        Agg = Aggregation(outVars, aggFunc)
-        return Agg
-    except FileNotFoundError as e:
-        return False
-    except:
-        traceback.print_exc()
-        
-def parse_topk() -> list[int, int, list[str], bool, int, GenType]:
-    try:
-        f = open(BASE_PATH + TOPK_NAME)
-        line = f.readline().rstrip()
-        # 0: levelk, 1: productk
-        TopK = 0
-        base = 32
-        orderBy = ''    # use rating as default
-        DESC, limit = line.split(',')[1:]
-        DESC = True if DESC == 'true' else False
-        limit = int(limit[:-1])
-        genType = GenType.DuckDB
-        return TopK, base, orderBy, DESC, limit, genType
-    except IOError:
-        return -1, -1, [], False, -1, GenType.Mysql
+    elif name == 'TableScanRelation':
+        source = node['source']
+        tsNode = TableTreeNode(id, source, cols, [], alias)
+        allNodes[id] = tsNode
+            
+    elif name == 'TableAggRelation':
+        source = node['source']
+        aggList, aggs = node['aggList'].split('\n', 1)
+        aggList = aggList.split(',')
+        aggList = [int(agg) for agg in aggList]
+        aggs = aggs.split('\n')
+        for each_agg in aggs:
+            if each_agg != '': parseRelRecur(each_agg, allNodes, supId)
+        taNode = TableAggTreeNode(id, source, cols, [], alias, aggList)
+        allNodes[id] = taNode
+            
+    else:
+        raise NotImplementedError("Error Realtion type! ")
+    return 
 
 
-def parseComparison(line: list[str]):
-    id = int(line[0].split('=')[1])
-    op = line[1].split('=')[1]
-    left = line[2].split('=')[1]
-    right = line[3].split('=')[1]
-    path = line[4].split('=')[1].split(',')
-    cond = line[5].split('=', 1)[1][1:-1]
-    fullOp = line[6].split('=')[1]
-    return id, op, left, right, path, cond, fullOp
-    
-    
-def parse_one_jt(allNodes: dict[id, TreeNode], isFull: bool, supId: set[int], jtPath: str):
-    f = open(jtPath)
-    line = f.readline().rstrip()
-    flag = 0
-    JT = JoinTree(allNodes, isFull, supId)
-    CompareMap: dict[int, Comparison] = dict()
-    
-    while line:
-        if 'jt.root:' in line  or 'edge:' in line  or 'relation in subset:' in line  or 'comparison hypergraph edge:' in line: 
-            if 'jt.root:' in line: flag = 1    
-            elif 'comparison hypergraph edge:' in line: flag = 4 
-            elif 'edge:' in line: flag = 2
-            elif 'relation in subset:' in line and not isFull: flag = 3 
-            else : flag = 5 # do nothing
-            line = f.readline().rstrip()
-            continue
+def connect():
+    headers = {'Content-Type': 'application/json'}
+    body = dict()
+    ddl_file = open(BASE_PATH + DDL_NAME)
+    body['ddl'] = ddl_file.read()
+    ddl_file.close()
+    query_file = open(BASE_PATH + QUERY_NAME)
+    body['query'] = query_file.read()
+    query_file.close()
+    response = requests.post(url="http://localhost:8848/api/v1/parse", headers=headers, json=body).json()['data']
+    # 1. 
+    table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
+    # 2. parse jointree
+    joinTrees = response['joinTrees']
+    isFreeConnex = response['freeConnex']
+    isFull = response['full']
+    optJT: JoinTree = None
+    optCOMP: dict[int, Comparison] = None
+    allRes, aggFunc = [], []
+    for index, jt in enumerate(joinTrees):
+        allNodes = dict()
+        supId = set()
+        nodes, edges, root, subset, comparisons = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons']
+        # a. parse relations
+        for node in nodes:
+            parseRel(node, allNodes, supId)
+        # b. parse edge
+        allNodes = parse_col2var(allNodes, table2vars)
+        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset)
+        JT.setRootById(root)
+        CompareMap: dict[int, Comparison] = dict()
         
-        if flag == 1: # root
-            line = int(line)
-            JT.setRootById(line)
-        
-        elif flag == 2:
-            rel1, rel2 = line.split('->')
-            rel1, rel2 = int(rel1), int(rel2)
-            edge = Edge(JT.getNode(rel1), JT.getNode(rel2))
+        for edge_data in edges:
+            edge = Edge(JT.getNode(edge_data['src']), JT.getNode(edge_data['dst']))
             JT.addEdge(edge)
-        
-        elif flag == 3:
-            line = int(line)
-            JT.addSubset(line)
-        
-        elif flag == 4:
-            line = line.split(';')[1:]
-            id, op, left, right, path, cond, fullOp = parseComparison(line)
+        # c. parse comparison
+        for compId, comp in enumerate(comparisons):
+            opName, path, left, right, cond, op = comp['opName'], comp['path'], comp['left'], comp['right'], comp['cond'], comp['op']
             Compare = Comparison()
-            try:
-                Compare.setAttr(id, op, left, right, path, cond, fullOp)
-            except:
-                traceback.print_exc()
-                print(jtPath)
-            leftAlias = JT.node[Compare.beginNodeId].cols
-            # NOTE: fix left attrs not in beginNode, only happen in 2 table join
-            pattern = re.compile('v[0-9]+')
-            extractLeft = pattern.findall(Compare.left)
-            if len(extractLeft) and extractLeft[0] not in leftAlias:
-                Compare.reversePath()
+            Compare.setAttr(compId, opName, left, right, path, cond, op)
             CompareMap[Compare.id] = Compare
-            
-        line = f.readline().rstrip()
-        
-    return JT, CompareMap
+        # d. final
+        if optJT is not None and JT.root.depth < optJT.root.depth:
+            optJT, optCOMP = JT, CompareMap
+        elif optJT is None:
+            optJT, optCOMP = JT, CompareMap
+        allRes.append([JT, CompareMap, index])  
+    # 3. parse outputVariables
+    outputVariables = response['outputVariables']
+    groupBy = response['groupByVariables']
+    # 4. aggregation
+    aggregations = response['aggregations']
+    Agg = None
+    for aggregation in aggregations:
+        func, result, formular = aggregation['func'], aggregation['result'], aggregation['args']
+        pattern = re.compile('v[0-9]+')
+        inVars = list(set(pattern.findall(formular)))
+        agg = AggFunc(func, inVars, result, formular)
+        aggFunc.append(agg)
+    if len(aggFunc):
+        Agg = Aggregation(groupBy, aggFunc)
+    # 5. topk
+    topK_data = response['topK']
+    topK = None
+    if topK_data:
+        topK = TopK(topK_data['orderByVariable'], topK_data['desc'], topK_data['limit'], mode=0, base=32, genType=GenType.DuckDB)
+    # 6. computations
+    computations = response['computations']
+    tempComp = []
+    for com in computations:
+        comp = Comp(com['result'], com['expr'])
+        tempComp.append(comp)
+    computationList = CompList(tempComp)
+    return optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList
 
 
-def parse_rel(id: str):
-    f = open(BASE_PATH + REL_NAME + id + '.txt')
-    line = f.readline().rstrip()
-    allNodes = dict()   # Used for all nodes: id -> TreeNode
-    seenId = set()      # Used for mark already processed Id
-    
-    supId = set()
-    
-    while line:
-        line = line.split(';')
-        name, id, source = line[0], int(line[1].split('=')[1]), line[2].split('=')[1]
-        if id in seenId:
-            line = f.readline().rstrip()
-            continue
-        else:
-            seenId.add(id)
-        cols = line[3].split('=')[1].replace('(', '').replace(')', '').split(',')
-        cols = [col[:col.index(':')] for col in cols]
-        alias = line[4].split('=')[1]
-        if name == 'BagRelation':
-            inAlias = source.split(',')
-            inId = line[-1].split('=')[1].split(',')
-            inId = [int(id) for id in inId]
-            bagNode = BagTreeNode(id, source, cols, [], alias, inId, inAlias)
-            allNodes[id] = bagNode
-        
-        elif name == 'AuxiliaryRelation':
-            supportId = int(line[-1].split('=')[1])
-            auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
-            supId.add(supportId)
-            allNodes[id] = auxNode
-            
-        elif name == 'TableScanRelation':
-            tsNode = TableTreeNode(id, source, cols, [], alias)
-            allNodes[id] = tsNode
-            
-        elif name == 'TableAggRelation':
-            agglist = line[-1].split('=')[1].split(',')
-            agglist = [int(agg) for agg in agglist]
-            taNode = TableAggTreeNode(id, source, cols, [], alias, agglist)
-            allNodes[id] = taNode
-        
-        elif name == 'AggregatedRelation':
-            group = int(line[-2][line[-2].index('(')+1 : line[-2].index(')')])
-            func = line[-1].split('=')[1]
-            aNode = AggTreeNode(id, source, cols, [], alias, group, func)
-            allNodes[id] = aNode
-            
-        else:
-            raise NotImplementedError("Error relation name! ")
-        
-        line = f.readline().rstrip()
-    
-    return allNodes, supId
-
-
-def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> dict[int, TreeNode]:
+def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]]) -> dict[int, TreeNode]:
     sortedNodes = sorted(allNodes.items())
     ret = {k: v for k, v in sortedNodes}
     for id, treeNode in ret.items():
@@ -319,7 +216,7 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> 
             for id in aggIds:
                 # NOTE: Only one aggregation function
                 aggAllVars.add(allNodes[id].cols[-1])
-            
+
             i = 0
             col2vars = [[], []]
             # 1. push original (not from aggList) first
@@ -361,89 +258,51 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> 
     return ret
 
 
-'''Use JoinTree with minimum depth'''
-def parse_jt(isFull: bool, table2vars: dict[str, str]):
-    g = os.walk(BASE_PATH)
-    optJT: JoinTree = None
-    optCOMP: dict[int, Comparison] = None
-    allRes = []
-    
-    for path,dir_list,file_list in g:
-        for file_name in file_list:
-            if 'JoinTree' in file_name:
-                id = file_name.split('JoinTree')[1].split('.')[0]
-                allNodes, supId = parse_rel(id)
-                allNodes = parse_col2var(allNodes, table2vars)
-                jt, comp = parse_one_jt(allNodes, isFull, supId, BASE_PATH + file_name)
-                '''
-                leafRelation = [rel.dst.id for rel in list(jt.edge.values()) if rel.dst.isLeaf]
-                if jt.root.id in leafRelation:
-                    continue    # not statidfied jointree, specific for one edge jointree
-                '''
-                if optJT is not None and jt.root.depth < optJT.root.depth:
-                    optJT, optCOMP = jt, comp
-                elif optJT is None:
-                    optJT, optCOMP = jt, comp
-                allRes.append([jt, comp, file_name])       
-
-    return optJT, optCOMP, allRes
-
-
 if __name__ == '__main__':
     start = time.time()
-    path_ddl = ''
-    table2vars = parse_ddl()
-    #NOTE: agg type can get computation for aggregations; save comp for other use later
-    computations, outputVariables, isFull = parse_outVar()
-    Agg = parse_agg()
-    isFull = False if Agg else isFull
-    TopK, base, orderBy, DESC, limit, genType = parse_topk()
+    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList = connect()
     IRmode = IRType.Report if not Agg else IRType.Aggregation
-    IRmode = IRType.Level_K if TopK == 0 else IRmode
-    IRmode = IRType.Product_K if TopK == 1 else IRmode
-    optJT, optCOMP, allRes = parse_jt(isFull, table2vars)
+    IRmode = IRType.Level_K if topK and topK.mode == 0 else IRmode
+    IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
     # sign for whether process all JT
     optFlag = False
     if optFlag:
         if IRmode == IRType.Report:
-            reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computations)
-            codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + 'opt' +OUT_NAME, isFull=isFull)
+            reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
+            codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + 'opt' +OUT_NAME, isFull=optJT.isFull)
         elif IRmode == IRType.Aggregation:
-            aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computations, Agg)
-            codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + 'opt' +OUT_NAME, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
+            aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
+            codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + 'opt' +OUT_NAME, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=optJT.isFull, isAgg=True)
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
-            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computations, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
-            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Level_K, genType=genType)
+            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
+            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Level_K, genType=topK.genType)
         elif IRmode == IRType.Product_K:
-            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computations, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
-            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=genType)  
+            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Product_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
+            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=topK.genType)  
         
     else:
-        for jt, comp, name in allRes:
-            pattern = re.compile(r'\d+')
-            index = pattern.findall(name)[0]
-            outName = OUT_NAME.split('.')[0] + index + '.' + OUT_NAME.split('.')[1]
+        for jt, comp, index in allRes:
+            outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
             try:
                 if IRmode == IRType.Report:
-                    reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computations)
-                    codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, isFull=isFull)
+                    reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
+                    codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, isFull=jt.isFull)
                 elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
-                    aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computations, Agg)
-                    codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=isFull, isAgg=True)
+                    aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
+                    codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=jt.isFull, isAgg=True)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
-                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computations, IRmode=IRType.Level_K, base=base, DESC=DESC, limit=limit)
-                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Level_K, genType=genType)
+                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
+                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Level_K, genType=topK.genType)
                 elif IRmode == IRType.Product_K:
-                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computations, IRmode=IRType.Product_K, base=base, DESC=DESC, limit=limit)
-                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Product_K, genType=genType)
+                    reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Product_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
+                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Product_K, genType=topK.genType)
 
             except Exception as e:
                 traceback.print_exc()
-                print("Error JT: " + name)
+                print("Error JT: " + str(index))
+                # print(jt)
     end = time.time()
-    if PARSE_TIME != -1:
-        end -= PARSE_TIME
-    print('Rewrite time(s): ',end - start)
+    print('Rewrite time(s): ' + str(end-start) + '\n')

@@ -66,13 +66,15 @@ def getCompSet(COMP: list[Comparison]):
 '''
 agregation: undone: keep internal variables; done keep alias
 '''
-def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], outputVariables: set[str], Agg: Aggregation = None, COMP: list[Comparison] = []):
+def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outputVariables: set[str], Agg: Aggregation = None, COMP: list[Comparison] = []):
     # FIXME: No intermediate variable in agg, all trans happens at one node
     aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
     
-    joinKeyChild: dict[int, set[str]] = dict()      # NodeId -> joinKeys with child  -> enumerate
     joinKeyParent: dict[int, set[str]] = dict()     # NodeId -> joinKeys with parent -> reduce
+    joinKeyEnum: dict[int, set[str]] = dict()
+    addUpJoinKey: set[str] = set()
+    allJoinKeys: set() = set()
 
     # step0: top down -> joinkey
     queue: list[TreeNode] = []
@@ -83,35 +85,53 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             queue.insert(0, child)
         if node.isRoot: 
             continue
-        if node.parent.id in joinKeyChild:
-            joinKeyChild[node.parent.id].update(set(node.cols) & set(node.parent.cols))
-        else:
-            joinKeyChild[node.parent.id] = set(node.cols) & set(node.parent.cols)
+            
         joinKeyParent[node.id] = set(node.cols) & set(node.parent.cols)
+        allJoinKeys |= set(node.cols) & set(node.parent.cols)
     
-    requireVariables: set[str] = outputVariables | aggKeepSet
+    # step1: prune reduce list
+    if Agg:
+        orderRequireInit = outputVariables | compKeepSet | aggKeepSet
+    else:
+        orderRequireInit = outputVariables | compKeepSet 
+
+    for reduce in reduceList:
+        if reduce.PhaseType == PhaseType.CQC:
+            corNode = JT.getNode(reduce.corresNodeId)
+            if reduce.orderView:
+                reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias = removeAttrAlias(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, orderRequireInit | allJoinKeys)
+            
+            if corNode.parent.id in JT.subset:
+                if len(addUpJoinKey):
+                    if corNode.id in joinKeyEnum:
+                        joinKeyEnum[corNode.id].update(addUpJoinKey)
+                    else:
+                        joinKeyEnum[corNode.id] = addUpJoinKey.copy()
+                addUpJoinKey |= (set(corNode.cols) & set(corNode.parent.cols))
+                if corNode.parent.id in joinKeyEnum:
+                    joinKeyEnum[corNode.parent.id].update(addUpJoinKey)
+                else:
+                    joinKeyEnum[corNode.parent.id] = addUpJoinKey.copy()
+            
+            reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias = removeAttrAlias(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias, orderRequireInit | allJoinKeys)
+                
+        else:
+            raise NotImplementedError("Not implement optimization for semi case! ")
     
-    ## step1: bottom up -> prune enumerate
+    requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet
+    ## step2: prune enumerate
     for index, enum in enumerate(reversed(enumerateList)):
         corEnum = enum.semiEnumerate if enum.semiEnumerate else enum.stageEnd
         if index == 0:
-            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables)
+            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, outputVariables | aggKeepSet)
         else:
-            if enum.corresNodeId in joinKeyChild:
-                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyChild[enum.corresNodeId])
+            if JT.getNode(enum.corresNodeId).parent.id in joinKeyEnum:
+                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[JT.getNode(enum.corresNodeId).parent.id])
             else:
                 corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables)
-        
-    # step2: prune reduce (bottom up)
+    # step3: prune aggReduce (bottom up)
     if Agg:
-        if len(JT.subset):  # free connex
-            requireVariables = outputVariables | compKeepSet
-        else:               # non free connex
-            requireVariables = outputVariables | compKeepSet | set(Agg.groupByVars)
-    else: # full & non-full
         requireVariables = outputVariables | compKeepSet
-    
-    if Agg:
         for index, aggReduce in enumerate(aggReduceList):
             corNode = JT.getNode(aggReduce.corresId)
             jkp = set()
@@ -122,7 +142,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 corNode.optDone = True
                 for child in corNode.parent.children:
                     if not child.optDone:
-                        jkp = jkp | (set(child.cols ) & set(corNode.parent.cols))
+                        jkp = jkp | (set(child.cols) & set(corNode.parent.cols))
             
             # TODO: Remove comparison attributes, only support 1 comparison for aggregation
             if len(aggReduce.aggJoin.whereCondList):
@@ -136,26 +156,8 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 if alias in aggReduce.aggJoin.selectAttrAlias:
                     curRequireSet.difference(Agg.alias2AggFunc[alias].inVars)   
                 
-            aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, removeAnnot=(len(JT.subset) == 1 and index == len(aggReduceList)-1))
+            aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, removeAnnot=(len(JT.subset) == 1 and index == len(aggReduceList)-1 and (not 'annot' in finalResult)))
 
-    if Agg:
-        orderRequireInit = outputVariables | compKeepSet | aggKeepSet
-    else:
-        orderRequireInit = outputVariables | compKeepSet 
-
-    for reduce in reduceList:
-        if reduce.PhaseType == PhaseType.CQC:
-            corNode = JT.getNode(reduce.corresNodeId)
-            if reduce.orderView:
-                orderRequire = orderRequireInit | (set(corNode.cols) & set(corNode.parent.cols))
-                reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias = removeAttrAlias(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, orderRequire)
-            
-            if not corNode.parent.isRoot:
-                reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias = removeAttrAlias(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias, requireVariables | joinKeyParent[corNode.parent.id])
-            else:
-                # later will be enumerate, need child joinkey
-                reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias = removeAttrAlias(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias, requireVariables | joinKeyChild[corNode.parent.id])
-        # TODO: Add for semi case
     return aggReduceList, reduceList, enumerateList
         
         
