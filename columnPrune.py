@@ -67,8 +67,6 @@ def getCompSet(COMP: list[Comparison]):
 agregation: undone: keep internal variables; done keep alias
 '''
 def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], outputVariables: set[str], Agg: Aggregation = None, COMP: list[Comparison] = []):
-    if JT.isFull == False or len(JT.subset) <= 1:
-        return aggReduceList, reduceList, enumerateList
     # FIXME: No intermediate variable in agg, all trans happens at one node
     aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
@@ -126,13 +124,19 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                     if not child.optDone:
                         jkp = jkp | (set(child.cols ) & set(corNode.parent.cols))
             
+            # TODO: Remove comparison attributes, only support 1 comparison for aggregation
+            if len(aggReduce.aggJoin.whereCondList):
+                lastCond = aggReduce.aggJoin.whereCondList[-1]
+                if '<' in lastCond or '<=' in lastCond or '>' in lastCond or '>=' in lastCond:
+                    requireVariables = outputVariables
+                
             curRequireSet = requireVariables | jkp | aggKeepSet
             allAggAlias = Agg.allAggAlias
             for alias in allAggAlias:
                 if alias in aggReduce.aggJoin.selectAttrAlias:
                     curRequireSet.difference(Agg.alias2AggFunc[alias].inVars)   
                 
-            aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, removeAnnot=(not len(JT.subset) and index == len(aggReduceList)-1))
+            aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, removeAnnot=(len(JT.subset) == 1 and index == len(aggReduceList)-1))
 
     if Agg:
         orderRequireInit = outputVariables | compKeepSet | aggKeepSet
