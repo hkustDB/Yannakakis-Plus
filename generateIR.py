@@ -7,6 +7,7 @@ from random import choice, randint
 from sys import maxsize
 from typing import Union
 from columnPrune import columnPrune
+from topk import *
 
 import re
 import copy
@@ -937,7 +938,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
 
     
 
-def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], computations: dict[str, str], isAgg = False, allAggAlias: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
+def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], computations: CompList, isAgg = False, allAggAlias: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     comparisons = list(COMP.values())   
@@ -1167,7 +1168,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     enumerateOrder = [enum for enum in reduceList if enum.corresNodeId in JT.subset] if not JT.isFull else reduceList.copy()
     enumerateOrder.reverse()
     
-    compKeys = list(computations.keys())
+    compKeys = list(computations.allAlias)
     if len(enumerateOrder) == 0:
         if not isAgg:
             selectName = []
@@ -1189,13 +1190,13 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
             unDoneOut = [out for out in outputVariables if out not in selectName]
             for undone in unDoneOut:
                 if undone in compKeys:
-                    selectName.append(computations[undone][0] + ' as ' + undone)
+                    selectName.append(computations.alias2Comp[undone] + ' as ' + undone)
                 else:
                     raise RuntimeError("Undone still not in output! ")
                 
             finalResult = 'select sum(' + ('distinct ' if not JT.isFull else '') + '+'.join(selectName) +') from ' + fromTable + ';\n'
         
-        _, reduceList, _ = columnPrune(JT, _, reduceList, [], set(outputVariables), None, list(COMP.values()))
+        _, reduceList, _ = columnPrune(JT, _, reduceList, [], finalResult, set(outputVariables), None, list(COMP.values()))
         return reduceList, [], finalResult
     
     for enum in enumerateOrder:
@@ -1231,13 +1232,13 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         unDoneOut = [out for out in outputVariables if out not in selectName]
         for undone in unDoneOut:
             if undone in compKeys:
-                selectName.append(computations[undone][0] + ' as ' + undone)
+                selectName.append(computations.alias2Comp[undone] + ' as ' + undone)
             else:
                 raise RuntimeError("Undone still not in output! ")
             
         finalResult += '+'.join(selectName) if not JT.isFull else '+'.join(outputVariables)
         finalResult += ') from ' + fromTable + ';\n'
     
-    _, reduceList, enumerateList = columnPrune(JT, _, reduceList, enumerateList, set(outputVariables), None, list(COMP.values()))
+    _, reduceList, enumerateList = columnPrune(JT, _, reduceList, enumerateList, finalResult, set(outputVariables), None, list(COMP.values()))
     return reduceList, enumerateList, finalResult
     

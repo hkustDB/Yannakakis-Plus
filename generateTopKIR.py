@@ -2,6 +2,7 @@ from jointree import *
 from enumsType import *
 from levelK import *
 from productK import *
+from topk import *
 
 from sys import maxsize
 from random import choice, randint
@@ -388,7 +389,7 @@ def buildProductKEnumPhase(previousView: WithView, corReducePhase: LevelKReduceP
     return retEnum
     
 
-def generateTopKIR(JT: JoinTree, outputVariables: list[str], computations: dict[str, str], IRmode: IRType = IRType.Level_K, base: int = 2, DESC: bool = True, limit: int = 1024) -> [list[ReducePhase], list[EnumeratePhase], str]:
+def generateTopKIR(JT: JoinTree, outputVariables: list[str], computations: CompList, IRmode: IRType = IRType.Level_K, base: int = 2, DESC: bool = True, limit: int = 1024) -> [list[ReducePhase], list[EnumeratePhase], str]:
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     
