@@ -1,5 +1,14 @@
-select R.src as node1, R.dst as node2, S.dst as node3, T.dst as node4, R.rating+S.rating+T.rating as total_rating
-from graph R, graph S, graph T
-where R.src = S.src and R.src = T.src
-order by total_rating desc
-limit 1024
+SELECT R.src                                     AS node1,
+       S.src                                     AS node2,
+       T.src                                     AS node3,
+       U.src                                     AS node4,
+       U.dst                                     AS node5,
+       R.rating + S.rating + T.rating + U.rating AS total_rating
+FROM graph R,
+     graph S,
+     graph T,
+     graph U
+WHERE R.dst = S.src
+  AND S.dst = T.src
+  AND T.dst = U.src
+ORDER BY total_rating DESC limit 7

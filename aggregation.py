@@ -10,7 +10,7 @@ from sys import maxsize
 
 # informaiton about aggregation
 class AggFunc():
-    def __init__(self, funcName: str, inVars: list[str], alias: str, formular: str, srcNodeId: list[int] = []) -> None:
+    def __init__(self, funcName: str, inVars: list[str], alias: str, formular: str) -> None:
         self.funcName = AggFuncType[funcName]    # aggregation type: SUM, COUNT, AVG, MIN/MAX
         self.inVars = inVars        # input var alias -> [v1, v2]
         self.alias = alias          # use as alias, sum(source_name) as alias -> sum(alias) as alias

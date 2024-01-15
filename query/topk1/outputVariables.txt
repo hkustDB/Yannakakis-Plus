@@ -1,9 +1,0 @@
-computations:
-(v7:IntDataType,(v3 + v6))
-outputVariables:
-v1:IntDataType
-v2:IntDataType
-v5:IntDataType
-v7:IntDataType
-isFull:
-true

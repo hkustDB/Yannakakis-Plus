@@ -22,12 +22,13 @@ class Edge:
         return "Relation: " + self.src.getNodeAlias + str('->') + self.dst.getNodeAlias
         
 class JoinTree:
-    def __init__(self, node: dict[int, TreeNode], isFull: bool, supId: set[int]) -> None:
+    def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int]) -> None:
         self.node: dict[int, TreeNode] = node   # id -> TreeNode
         self.edge: dict[int, Edge] = dict()     # id -> (TreeNode1, TreeNode2)
         self.root: TreeNode = None
         self.isFull: bool = isFull
-        self.subset: list[int] = []
+        self.isFreeConnex: bool = isFreeConnex
+        self.subset: list[int] = subset
         # self.subsetId: list[int] = []
         self.supId = supId
         

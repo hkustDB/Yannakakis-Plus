@@ -1,0 +1,23 @@
+
+-- Reduce Phase: 
+
+-- Reduce0
+create or replace view 6405 as (with _max8983 as (select dst as v2, max(rating) as max_accweight from Graph group by dst)
+select src as v2, dst as v5, rating as rating, rating + max_accweight as accweight from Graph, _max8983 where Graph.src = _max8983.v2 order by accweight DESC limit 128);
+
+-- Enumerate0
+-- 0. rankView
+create table _rnk2371 as (with 6405_max108 as (select v2, max(rating) as max_weight from 6405 group by v2), 
+_truncated5407 as (select src as v1, dst as v2, rating, rating as accweight from 6405_max108, Graph where 6405_max108.v2=Graph.dst order by max_weight + accweight DESC limit 128)
+select v1, v2, rating, accweight, row_number() over (partition by v2 order by accweight DESC) as rnk from _truncated5407);
+-- 1. logkLoop
+create or replace view _acc5572 as (with levelk_right_08898 as (select * from _rnk2371 where rnk<=32), 
+levelk_join_07253 as (select v1, v2, v5, levelk_right_08898.rnk as rnk, 6405.rating as left_weight, 6405.rating+levelk_right_08898.rating as rating, 6405.rating+levelk_right_08898.accweight as accweight from 6405 join levelk_right_08898 using(v2) order by accweight DESC limit 128), 
+levelk_left_17499 as (select v2, v5, left_weight as rating from levelk_join_07253 where rnk=32), 
+levelk_right_11539 as (select * from _rnk2371 where rnk>32 and rnk<=1024), 
+levelk_join_12843 as (select v1, v2, v5, levelk_right_11539.rnk as rnk, levelk_left_17499.rating as left_weight, levelk_left_17499.rating+levelk_right_11539.rating as rating, levelk_left_17499.rating+levelk_right_11539.accweight as accweight from levelk_left_17499 join levelk_right_11539 using(v2) union all select * from levelk_join_07253 order by accweight DESC limit 128)
+select v1, v2, v5, rating from levelk_join_12843);
+select sum(v1+v2+v5+rating) from _acc5572;
+
+-- drop view _acc5572;drop view 6405;
+-- drop table _rnk2371;

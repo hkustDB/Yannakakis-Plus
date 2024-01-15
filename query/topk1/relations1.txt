@@ -1,3 +1,0 @@
-TableScanRelation;id=5;source=Graph;cols=(v1:IntDataType,v2:IntDataType,v3:IntDataType);tableDisplayName=R
-TableScanRelation;id=5;source=Graph;cols=(v1:IntDataType,v2:IntDataType,v3:IntDataType);tableDisplayName=R
-TableScanRelation;id=6;source=Graph;cols=(v2:IntDataType,v5:IntDataType,v6:IntDataType);tableDisplayName=S
