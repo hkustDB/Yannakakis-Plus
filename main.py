@@ -23,18 +23,10 @@ import time
 import traceback
 import requests
 
-GET_TREE = 'sparksql-plus-cli-jar-with-dependencies.jar'
-
 BASE_PATH = 'query/topk1/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
-REL_NAME = 'relations'
-AGG_NAME = 'aggregations.txt'
-TOPK_NAME = 'topK.txt'
-JT_PATH = ''
-OUT_PATH = 'outputVariables.txt'
-PARSE_TIME = -1
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
 
@@ -58,7 +50,7 @@ def connect():
         'query': "SELECT R.src+R.dst as c FROM graph R,graph S,graph T,graph U WHERE R.dst = S.src AND S.dst = T.src AND T.dst = U.src AND S.src < T.dst order by R.rating DESC limit 10"
     }
     '''
-    response = requests.post(url="http://localhost:8848/api/v1/parse", headers=headers, json=body).json()['data']
+    response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&desc=false&limit=1", headers=headers, json=body).json()['data']
     # print(response)
     # 1. 
     table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
@@ -78,8 +70,7 @@ def connect():
         # a. parse relations
         for node in nodes:
             id, name, source, cols = node['id'], node['type'], node['source'], node['columns']
-            # FIXME: Add alias
-            alias = ''# node['alias']
+            alias = node['alias']
             if name == 'BagRelation':
                 # FIXME: 
                 internal = node['internal']
@@ -162,17 +153,6 @@ def connect():
         tempComp.append(comp)
     computationList = CompList(tempComp)
     return optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList
-
-def get_tree():
-    cmdline = f'java -jar {GET_TREE} -d {BASE_PATH}{DDL_NAME} -o {BASE_PATH} {BASE_PATH}{QUERY_NAME}'
-    out = os.popen(cmdline, mode='r').read()
-    pattern = re.compile(r'\d+')
-    time1, time2 = pattern.findall(out)
-    ptime = int(time1) + int(time2)
-    print('Preload time(ms): ' + time1 + '\n')
-    print('Parse time(ms): ' + time2 + '\n')
-    global PARSE_TIME
-    PARSE_TIME = int(ptime) * 1.0 / 1000
 
 
 def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> dict[int, TreeNode]:
@@ -282,6 +262,4 @@ if __name__ == '__main__':
                 traceback.print_exc()
                 print("Error JT: " + index)
     end = time.time()
-    if PARSE_TIME != -1:
-        end -= PARSE_TIME
     print('Rewrite time(s): ' + str(end-start) + '\n')

@@ -23,6 +23,11 @@ All graph data can be downloaded from SNAP (https://snap.stanford.edu).
  4. Change `base` value in `main.py` to the base of logarithms, the default value is `32`. This one is needed for level-k algorithm. 
 
 ### Command
-- Use command `python3 main.py` to generate the rewrite queries displayed as `rewrite*.txt`
+```
+$ cd SQLRewriter/
+$ java -jar sparksql-plus-web-jar-with-dependencies.jar
+$ python3 main.py
+```
+- The current generated result is shown as `rewrite0.txt`
 - The previous generated results are stored in `levelkM/*`, `productkM/*` for Mysql; `levelkD/*`, `productkD/*` for DuckDB. 
 

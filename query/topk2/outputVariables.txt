@@ -1,8 +1,0 @@
-outputVariables:
-v1:IntDataType
-v2:IntDataType
-v5:IntDataType
-v8:IntDataType
-v10:IntDataType
-isFull:
-true
