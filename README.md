@@ -26,7 +26,9 @@ All graph data can be downloaded from SNAP (https://snap.stanford.edu).
 ```
 $ cd SQLRewriter/
 $ java -jar sparksql-plus-web-jar-with-dependencies.jar
-$ python3 main.py
+$ python3 main.py topk1/ -b 32 -m 0 -g D
+    or use default value
+$ python3 main.py topk1/
 ```
 - The current generated result is shown as `rewrite0.txt`
 - The previous generated results are stored in `levelkM/*`, `productkM/*` for Mysql; `levelkD/*`, `productkD/*` for DuckDB. 

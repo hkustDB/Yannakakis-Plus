@@ -1,9 +1,16 @@
 """
 Usage:
-  main.py <query>
-  aggRelation use special ;, others use :
-  jointreeEdge each edge use special |
+  main.py <query> [options]
+  
+Options:
+  -h --help     Show help.
+  <query>       Set execute query path, like topk1/
+  -b, --base base   Set level-k log base [default: 32]
+  -m, --mode mode   Set topK algorithm mode. 0: level-k, 1: product-k [default: 0]
+  -g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
 """
+
+from docopt import docopt
 from treenode import *
 from comparison import Comparison
 from jointree import Edge, JoinTree
@@ -15,7 +22,6 @@ from codegen import *
 from codegenTopK import *
 from topk import *
 
-
 from random import randint
 import os
 import re
@@ -23,10 +29,11 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/topk1/'
+BASE_PATH = 'query/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
+
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
 
@@ -35,7 +42,7 @@ RelationName;id;source/inalias(bag);cols;tableDisplayName;[AggList(tableagg)|int
 Only AuxiliaryRelation source is [Bag(Graph,Graph)|Graph|...]
 '''
 
-def connect():
+def connect(base: int, mode: int, type: GenType):
     headers = {'Content-Type': 'application/json'}
     body = dict()
     ddl_file = open(BASE_PATH + DDL_NAME)
@@ -144,7 +151,7 @@ def connect():
     topK_data = response['topK']
     topK = None
     if topK_data:
-        topK = TopK(topK_data['orderByVariable'], topK_data['desc'], topK_data['limit'], mode=0, base=32, genType=GenType.DuckDB)
+        topK = TopK(topK_data['orderByVariable'], topK_data['desc'], topK_data['limit'], mode=mode, base=base, genType=type)
     # 6. computations
     computations = response['computations']
     tempComp = []
@@ -217,8 +224,14 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, str]) -> 
 
 
 if __name__ == '__main__':
+    arguments = docopt(__doc__)
+    BASE_PATH += arguments['<query>']
+    base = int(arguments['--base'])
+    mode=int(arguments['--mode']) 
+    # print(arguments)
+    type=GenType.Mysql if arguments['--genType'] == 'M' else GenType.DuckDB
     start = time.time()
-    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList = connect()
+    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
     IRmode = IRType.Level_K if topK.mode == 0 else IRmode
     IRmode = IRType.Product_K if topK.mode == 1 else IRmode

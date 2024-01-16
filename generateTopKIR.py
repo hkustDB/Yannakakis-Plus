@@ -473,8 +473,7 @@ def generateTopKIR(JT: JoinTree, outputVariables: list[str], IRmode: IRType = IR
         output = [out for out in outputVariables if out in enumerateList[-1].joinRes.selectAttrAlias]
         output.append('Z')
     
-    # TODO: Check
-    finalResult = 'select sum(' + '+'.join(output) + ') from ' + fromTable + ';\n'
+    finalResult = 'COPY (select ' + ','.join(output) + ' from ' + fromTable + ') TO \'/dev/null\' (DELIMITER \',\');'
     
     return reduceList, enumerateList, finalResult
     
