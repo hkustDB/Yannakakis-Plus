@@ -23,13 +23,27 @@ All graph data can be downloaded from SNAP (https://snap.stanford.edu).
  4. Change `base` value in `main.py` to the base of logarithms, the default value is `32`. This one is needed for level-k algorithm. 
 
 ### Command
+- Execute commands
 ```
 $ cd SQLRewriter/
 $ java -jar sparksql-plus-web-jar-with-dependencies.jar
 $ python3 main.py topk1/ -b 32 -m 0 -g D
-    or use default value
+    or
 $ python3 main.py topk1/
 ```
+- Option details
+```
+Usage:
+  main.py <query> [options]
+  
+Options:
+  -h --help     Show help.
+  <query>       Set execute query path, like topk1/
+  -b, --base base   Set level-k log base [default: 32]
+  -m, --mode mode   Set topK algorithm mode. 0: level-k, 1: product-k [default: 0]
+  -g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
+```
+
 - The current generated result is shown as `rewrite0.txt`
 - The previous generated results are stored in `levelkM/*`, `productkM/*` for Mysql; `levelkD/*`, `productkD/*` for DuckDB. 
 
