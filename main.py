@@ -30,7 +30,7 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/q1/'
+BASE_PATH = 'query/q2/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -41,15 +41,30 @@ AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']
 RelationName;id;source/inalias(bag);cols;tableDisplayName;[AggList(tableagg)|internalRelations(bag)|supportingRelation(aux)|group+func(agg)]
 Only AuxiliaryRelation source is [Bag(Graph,Graph)|Graph|...]
 '''
+
+def removeEqual(line: str, range: int = 0):
+    if range:
+        attrs = line.split(';', range)
+        ret = []
+        for attr in attrs:
+            if attr != attrs[-1]:
+                ret.append(attr.split('=')[1])
+            else:
+                ret.append(attr)
+        return ret
+    else:
+        attrs = line.split(';')
+        attrs = [attr.split('=')[1] for attr in attrs]
+        return attrs
+
 def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
     name, id, line = node.split(';', 2)
+    id = int(id.split('=')[1])
+    pattern = re.compile('v[0-9]+')
     if id in allNodes:
         return
     if name == 'AggregatedRelation':
-        source, cols, alias, group, func = line.split(';')
-        id = int(id.split('=')[1])
-        source = source.split('=')[1]
-        pattern = re.compile('v[0-9]+')
+        source, cols, alias, group, func = removeEqual(line)
         cols = pattern.findall(cols)
         alias = alias.split('=')[1]
         group = int(group.split('=')[1][1:-1])
@@ -57,7 +72,9 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
         aNode = AggTreeNode(id, source, cols, [], alias, group, func)
         allNodes[id] = aNode
     elif name == 'AuxiliaryRelation':
-        source, cols, alias, supportId = line.split(';', 3)
+        source, cols, alias, supportId = removeEqual(line, 3)
+        alias = alias.split('=')[1]
+        cols = pattern.findall(cols)
         supportId, supportRel = int(supportId.split('\n')[0]), supportId.split('\n')[1]
         if supportId not in allNodes and supportRel != '':
             parseRelRecur(supportRel, allNodes, supId)
@@ -65,11 +82,13 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
         supId.add(supportId)
         allNodes[id] = auxNode
     elif name == 'TableScanRelation':
-        source, cols, alias = line.split(';')
+        source, cols, alias = removeEqual(line)
+        cols = pattern.findall(cols)
         tsNode = TableTreeNode(id, source, cols, [], alias)
         allNodes[id] = tsNode
     elif name == 'TableAggRelation':
-        source, cols, alias, aggList = line.split(';', 3)
+        source, cols, alias, aggList = removeEqual(line, 3)
+        cols = pattern.findall(cols)
         aggList, aggs = aggList.split('\n', 1)
         aggList = aggList.split(',')
         aggList = [int(agg) for agg in aggList]
@@ -78,6 +97,17 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
             if each_agg != '' and aggList[index] not in allNodes: parseRel(each_agg)
         taNode = TableAggTreeNode(id, source, cols, [], alias, aggList)
         allNodes[id] = taNode
+    elif name == 'BagRelation':
+        inAlias, cols, alias, internalRelations = removeEqual(line, 3)
+        cols = pattern.findall(cols)
+        inId, internalRelations = internalRelations.split('\n', 1)
+        inId = [int(id) for id in inId.split(',')]
+        for internal in internalRelations.split('\n'):
+            if internal != '': parseRelRecur(internal)
+        bagNode = BagTreeNode(id, inAlias, cols, [], alias, inId, inAlias)
+        allNodes[id] = bagNode
+    else:
+        raise NotImplementedError("Not implemented relation type! ")
 
 
 def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int]):
@@ -90,7 +120,7 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         internal = internal.split('\n')
         for inter in internal:
             if inter != '': parseRelRecur(inter, allNodes, supId)
-        bagNode = BagTreeNode(id, source, cols, [], alias, inId, inAlias)
+        bagNode = BagTreeNode(id, str(inAlias), cols, [], alias, inId, inAlias)
         allNodes[id] = bagNode
                 
     elif name == 'AuxiliaryRelation':
@@ -161,6 +191,12 @@ def connect():
             opName, path, left, right, cond, op = comp['opName'], comp['path'], comp['left'], comp['right'], comp['cond'], comp['op']
             Compare = Comparison()
             Compare.setAttr(compId, opName, left, right, path, cond, op)
+            leftAlias = JT.node[Compare.beginNodeId].cols
+            # NOTE: Change comparison direction
+            pattern = re.compile('v[0-9]+')
+            extractLeft = pattern.findall(Compare.left)
+            if len(extractLeft) and extractLeft[0] not in leftAlias:
+                Compare.reversePath()
             CompareMap[Compare.id] = Compare
         # d. final
         if optJT is not None and JT.root.depth < optJT.root.depth:
