@@ -52,8 +52,17 @@ def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
 
     return whereCondList
 
+
+def makeExtract(extracts: list[Comp]):
+    attr, alias = [], []
+    for extract in extracts:
+        alias.append(extract.result)
+        attr.append(extract.expr)
+    return attr, alias
+    
+
 # prepareView is ahead of joinView
-def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comparison] = [], extraNode: TreeNode = None, direction: Direction = Direction.Left, extraSelfComp: list[Comparison] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']):
+def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comparison] = [], childExtract: list[Comp] = [], extraNode: TreeNode = None, direction: Direction = Direction.Left, extraSelfComp: list[Comparison] = [], extraExtract: list[Comp] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']):
     if childNode.createViewAlready: return [] # only means creave view about bag/tableagg/aux relation, not use for other join
     prepareView = []
     joinTableList, whereCondList = [], []
@@ -104,8 +113,12 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
         if len(childNode.insideId) > 2:
             if set(inNode.cols) & set(preNode.cols):
                 whereCondList.extend(buildJoinRelation(JT.getNode(id), JT.getNode(childNode.insideId[0])))
-        
-        prepareView.append(CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', joinTableList, whereCondList))
+        if not len(childExtract):
+            prepareView.append(CreateBagView(childNode.alias, childNode.col2vars[1], childNode.cols, '', joinTableList, whereCondList))
+        else:
+            # NOTE: Add extract support
+            extractAttr, extractAlias = makeExtract(childExtract)
+            prepareView.append(CreateBagView(childNode.alias, childNode.col2vars[1] + extractAttr, childNode.cols + extractAlias, '', joinTableList, whereCondList))
     
     # Here child means parent
     elif childNode.relationType == RelationType.AuxiliaryRelation:
@@ -132,21 +145,26 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
         else:
             selectAttributes = childNode.col2vars[1]
             selectAttributesAs = childNode.cols
-            
+
         
-        # source name directly (abandon alias) or previous join result name
         if extraNode.JoinResView is not None:
             fromTable = extraNode.JoinResView.viewName 
-            prepareView.append(CreateAuxView(childNode.alias, [], selectAttributesAs, fromTable))
+            prepareView.append(CreateAuxView(childNode.alias, [''] * len(selectAttributesAs) + extractAttr, selectAttributesAs + extractAlias, fromTable))
         elif extraNode.relationType != RelationType.TableScanRelation:
             fromTable = extraNode.alias
-            prepareView.append(CreateAuxView(childNode.alias, [], selectAttributesAs, fromTable))
-        else:
+            prepareView.append(CreateAuxView(childNode.alias, [''] * len(selectAttributesAs) + extractAttr, selectAttributesAs + extractAlias, fromTable))
+        else:# tablescan
             whereCondList = []
             if extraNode.isLeaf and len(extraSelfComp): # support relation (child) need self comparison
                 whereCondList = makeSelfComp(extraSelfComp, extraNode)
             fromTable = extraNode.source
-            prepareView.append(CreateAuxView(childNode.alias, selectAttributes, selectAttributesAs, fromTable, whereCondList))
+            if len(selectAttributes) != len(selectAttributesAs):
+                selectAttributes = [''] * len(selectAttributesAs)
+            # NOTE: Add extract support
+            extractAttr, extractAlias = [], []
+            if len(extraExtract):
+                extractAttr, extractAlias = makeExtract(extraExtract)
+            prepareView.append(CreateAuxView(childNode.alias, selectAttributes + extractAttr, selectAttributesAs + extractAlias, fromTable, whereCondList))
         # childNode.createViewAlready = True
     
     elif childNode.relationType == RelationType.TableAggRelation: 
@@ -188,8 +206,13 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
                     rightVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i]
                 
                 whereCondList.append(opL.join(leftVar) + comp.op + opR.join(rightVar))
+                
+        # NOTE: Add extract support
+        extractAttr, extractAlias = [], []
+        if len(childExtract):
+            extractAttr, extractAlias = makeExtract(childExtract)
 
-        prepareView.append(CreateTableAggView(childNode.alias, originalVars, childNode.cols, fromTable, joinTableList, whereCondList))
+        prepareView.append(CreateTableAggView(childNode.alias, originalVars + extractAttr, childNode.cols + extractAlias, fromTable, joinTableList, whereCondList))
     
     childNode.createViewAlready = True # only apply for tableAgg & bag relation
     return prepareView
@@ -349,7 +372,7 @@ def buildBagAuxReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Com
 helperAttrLeft/Right: helper attribute name change[from, to]
 incidentComp: [first] long, [second...] short
 '''
-def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Comparison], selfComp: list[Comparison], direction: Direction, helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', ''], lastRel: bool = False) -> ReducePhase:
+def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Comparison], selfComp: list[Comparison], direction: Direction, compExtract: list[Comp] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', ''], lastRel: bool = False) -> ReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
@@ -360,6 +383,8 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     parentFlag = parentNode.JoinResView is None and parentNode.relationType == RelationType.TableScanRelation
     childFlag = childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation
     childSelfFlag = childNode.isLeaf and len(childSelfComp) and childNode.relationType == RelationType.TableScanRelation
+    childExtract = [comp for comp in compExtract if comp.isChild]
+    parentExtract = [comp for comp in compExtract if not comp.isChild]
     type = PhaseType.SemiJoin if direction == Direction.SemiJoin else PhaseType.CQC
     
     # 0. BAG ONLY: JV=None->no bagAuxView created->still aux node not processed in it
@@ -373,15 +398,15 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     '''BEGIN: Normal case'''
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
     if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation and childNode.relationType != RelationType.AuxiliaryRelation:
-        ret = buildPrepareView(JT, childNode, childSelfComp)
+        ret = buildPrepareView(JT, childNode, childSelfComp, childExtract=childExtract)
         if ret != []: prepareView.extend(ret)
     
     # build aux for parent node is different
     if parentNode.relationType != RelationType.TableScanRelation and parentNode.relationType != RelationType.AuxiliaryRelation:
-        ret = buildPrepareView(JT, parentNode, parentSelfComp)
+        ret = buildPrepareView(JT, parentNode, parentSelfComp, childExtract=parentExtract)
         if ret != []: prepareView.extend(ret)
     elif parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
-        ret = buildPrepareView(JT, parentNode, parentSelfComp, extraNode=childNode, direction=direction, extraSelfComp=childSelfComp, helperLeft=helperLeft, helperRight=helperRight)
+        ret = buildPrepareView(JT, parentNode, parentSelfComp, extraNode=childNode, direction=direction, extraSelfComp=childSelfComp, extraExtract=childExtract, helperLeft=helperLeft, helperRight=helperRight)
         if ret != []: prepareView.extend(ret)
     
     # (B) with comparison (1 / >= 2 should all be done, just select the first comparison, others should be done during enumeration)
@@ -473,35 +498,48 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                     orderKey[-1] = childNode.col2vars[1][idx]
                 else:
                     orderKey[-1] = extraAttr
-        
+
+            extractAttr, extractAlias = [], []
             # process partitionByKey alias in TableScan case, need alias casting
             if not noAliasFlag and childNode.relationType == RelationType.TableScanRelation:
                 for i in range(len(partiKey)): # multi joinKey
                     idx = childNode.cols.index(partiKey[i])
                     partiKey[i] = childNode.col2vars[1][idx]
-        
+                # NOTE: add extract support
+                for comp in childExtract:
+                    if comp.result in outVars:
+                        pattern = re.compile('v[0-9]+')
+                        inVars = pattern.findall(comp.expr)
+                        for var in inVars:
+                            originVar = childNode.col2vars[1][childNode.cols.index(var)]
+                            comp.expr.replace(var, originVar)
+                        extractAttr.append(comp.expr)
+                        extractAlias.append(comp.result)
+                    else:
+                        raise NotImplementedError("Only support EXTRACT function in groupBy & appear in output attrs! ")
+            
             ## NOTE: orderView must have annot -> used for later enumerate join
             if noAliasFlag: # have JoinView, must not be leaf
                 if extraAlias == '':
                     orderView = CreateOrderView(viewName, [], childNode.JoinResView.selectAttrAlias, fromTable, partiKey, orderKey, AESC)
                 else:
-                    orderView = CreateOrderView(viewName, ['' for i in range(len(childNode.JoinResView.selectAttrAlias))] + [extraAttr], childNode.JoinResView.selectAttrAlias + [extraAlias], fromTable, partiKey, orderKey, AESC)
+                    orderView = CreateOrderView(viewName, [''] * len(childNode.JoinResView.selectAttrAlias) + [extraAttr], childNode.JoinResView.selectAttrAlias + [extraAlias], fromTable, partiKey, orderKey, AESC)
             elif childNode.relationType == RelationType.TableScanRelation: 
-                # # Add child node selfComp
+                # Add child node selfComp
                 if  extraAlias == '':
                     if childNode.isLeaf and len(childSelfComp):
                         transSelfCompList = makeSelfComp(childSelfComp, childNode)
-                    
-                        orderView = CreateOrderView(viewName, childNode.col2vars[1], childNode.cols, fromTable, partiKey, orderKey, AESC, transSelfCompList)
+
+                        orderView = CreateOrderView(viewName, childNode.col2vars[1] + extractAttr, childNode.cols + extractAlias, fromTable, partiKey, orderKey, AESC, transSelfCompList)
                     else:
-                        orderView = CreateOrderView(viewName, childNode.col2vars[1], childNode.cols, fromTable, partiKey, orderKey, AESC)
+                        orderView = CreateOrderView(viewName, childNode.col2vars[1] + extractAttr, childNode.cols + extractAlias, fromTable, partiKey, orderKey, AESC)
                 else:
                     if childNode.isLeaf and len(childSelfComp):
                         transSelfCompList = makeSelfComp(childSelfComp, childNode)
                     
-                        orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC, transSelfCompList)
+                        orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr] + extractAttr, childNode.cols + [extraAlias] + extractAlias, fromTable, partiKey, orderKey, AESC, transSelfCompList)
                     else:
-                        orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr], childNode.cols + [extraAlias], fromTable, partiKey, orderKey, AESC)
+                        orderView = CreateOrderView(viewName, childNode.col2vars[1] + [extraAttr] + extractAttr, childNode.cols + [extraAlias] + extractAlias, fromTable, partiKey, orderKey, AESC)
             else:
                 if extraAlias == '':
                     orderView = CreateOrderView(viewName, [], childNode.cols, fromTable, partiKey, orderKey, AESC)
@@ -557,6 +595,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         viewName = 'joinView' + str(randint(0, maxsize))
         joinCond = ''
         selectAttributes, selectAttributesAs = [], []
+        extractAttr, extractAlias = [], []
         if parentNode.JoinResView is not None: # already has alias 
             selectAttributesAs = parentNode.JoinResView.selectAttrAlias + [mfAttr[1]]
         elif parentNode.relationType != RelationType.TableScanRelation: # create view node already
@@ -564,6 +603,16 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         else:
             selectAttributes = parentNode.col2vars[1] + ['']
             selectAttributesAs = parentNode.cols + [mfAttr[1]]
+            # NOTE: add extract support
+            for comp in parentExtract:
+                if comp.result in outVars:
+                    pattern = re.compile('v[0-9]+')
+                    inVars = pattern.findall(comp.expr)
+                    for var in inVars:
+                        originVar = parentNode.col2vars[1][parentNode.cols.index(var)]
+                        comp.expr.replace(var, originVar)
+                    extractAttr.append(comp.expr)
+                    extractAlias.append(comp.result)
         
         def joinSplit(splitVars: list[str], op: str):
             return op.join(splitVars)
@@ -641,11 +690,15 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 for index, alias in enumerate(selectAttributesAs):
                     if alias in outVars:
                         optSelectAttributesAs.append(alias)
-                
-                joinView = Join2tables(viewName, optSelectAttributes, optSelectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
+                if len(optSelectAttributes):
+                    joinView = Join2tables(viewName, optSelectAttributes + extractAttr, optSelectAttributesAs + extractAlias, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
+                else:
+                    joinView = Join2tables(viewName, [''] * len(optSelectAttributesAs) + extractAttr, optSelectAttributesAs + extractAlias, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
         else:
-            joinView = Join2tables(viewName, selectAttributes, selectAttributesAs, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
-            
+            if len(selectAttributes):
+                joinView = Join2tables(viewName, selectAttributes + extractAttr, selectAttributesAs + extractAlias, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
+            else:
+                joinView = Join2tables(viewName, [''] * len(selectAttributesAs) + extractAttr, selectAttributesAs + extractAlias, fromTable, minView.viewName, joinKey, alterJoinKey, joinCond, addiSelfComp)
         
         # End
         remainPathComp = copy.deepcopy(incidentComp)
@@ -656,11 +709,12 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
     
     # (D) Semijoin
-    else:
+    else:   
+        # NOTE: For semijoin, we only need to support EXTRACT in enumerate phase for tablescan-rel
         viewName = 'semiJoinView' + str(randint(0, maxsize))
         selectAttributes, selectAttributesAs = [], []
         fromTable = ''
-        if parentNode.JoinResView is not None: # already has alias 
+        if parentNode.JoinResView is not None: # already has alias
             selectAttributesAs = parentNode.JoinResView.selectAttrAlias
             fromTable = parentNode.JoinResView.viewName
         elif parentNode.relationType != RelationType.TableScanRelation: # create view node already
@@ -670,6 +724,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             selectAttributes = parentNode.col2vars[1]
             selectAttributesAs = parentNode.cols
             fromTable = parentNode.source + ' AS ' + parentNode.alias
+            
         
         joinTable = ''
         if childNode.JoinResView is not None: # already has alias 
@@ -724,7 +779,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
 
 
-def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree, lastEnum: bool = False, isAgg = False, allAggAlias: list[str] = []) -> EnumeratePhase:
+def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree, lastEnum: bool = False, isAgg = False, allAggAlias: list[str] = [], compExtract: list[Comp] = []) -> EnumeratePhase:
     createSample = selectMax = selectTarget = stageEnd = semiEnumerate = None
     origiNode = JT.getNode(corReducePhase.corresNodeId)
     
@@ -734,7 +789,8 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         '''
         origiFlag = origiNode.JoinResView is None and origiNode.relationType == RelationType.TableScanRelation
         origiSelfCompFlag = origiNode.isLeaf and len(corReducePhase.semiView.whereCondList) and origiNode.relationType == RelationType.TableScanRelation
-        
+        childNode: TreeNode = corReducePhase.reduceRel.dst
+
         viewName = 'semiEnum' + str(randint(0, maxsize))
         selectAttr, selectAttrAlias = [], []
         joinKey, joinCondList = [], []
@@ -750,20 +806,33 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                     selectAttr.append('')
                 else:
                     selectAttr.append(origiNode.col2vars[1][origiNode.cols.index(alias)])
-                    
+            
+            # NOTE: add extra support for extract, only for child node is leaf & tablescan
+            for comp in compExtract:
+                if comp.result in outVars:
+                    pattern = re.compile('v[0-9]+')
+                    inVars = pattern.findall(comp.expr)
+                    for var in inVars:
+                        originVar = childNode.col2vars[1][childNode.cols.index(var)]
+                        comp.expr.replace(var, originVar)
+                    selectAttr.append(comp.expr)
+                    selectAttrAlias.append(comp.result)
+                else:
+                    raise NotImplementedError("Only support EXTRACT function in groupBy & appear in output attrs! ")
+            
             joinKey = list(set(origiNode.cols) & set(previousView.selectAttrAlias))
         
         elif origiNode.JoinResView is not None:
             joinTable = origiNode.JoinResView.viewName
             selectAttrAlias = list(set(origiNode.JoinResView.selectAttrAlias) | set(previousView.selectAttrAlias))
-            joinKey = list(set(origiNode.JoinResView.selectAttrAlias) & set(previousView.selectAttrAlias))
+            joinKey = list((set(origiNode.JoinResView.selectAttrAlias) & set(previousView.selectAttrAlias)).difference(set({'annot'})))
             ## Extra for agg: annot/aggregation function
             if isAgg:
                 if 'annot' in joinKey:
                     joinKey.remove('annot')
                 if origiNode.JoinResView:
                     if 'annot' in previousView.selectAttrAlias and 'annot' in origiNode.JoinResView.selectAttrAlias:
-                        ### change annot 
+                        ### change annot
                         index = selectAttrAlias.index('annot')
                         selectAttr = ['' for _ in range(len(selectAttrAlias))]
                         selectAttr[index] = previousView.viewName + '.annot * ' + origiNode.JoinResView.viewName + '.annot'
@@ -808,16 +877,6 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         joinCond = ' and '.join(joinCondList)
         
         fromTable = previousView.viewName
-        
-        # CHECK: Optimize for enumerate selction cols
-        if not JT.isFull:
-            for index, alias in enumerate(selectAttrAlias):
-                if 'mf' in alias or 'annot' in alias or alias in allJoinKeySet or alias in outVars or alias in compKeySet:
-                    continue
-                else:
-                    if len(selectAttr):
-                        selectAttr.pop(index)
-                    selectAttrAlias.remove(alias)
         
         if origiSelfCompFlag:
             semiEnumerate = SemiEnumerate(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, joinCond, corReducePhase.semiView.whereCondList)
@@ -936,7 +995,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType, corReducePhase.reduceRel)
     return retEnum
 
-    
+
 
 def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[str], computations: CompList, isAgg = False, allAggAlias: list[str] = []) -> [list[ReducePhase], list[EnumeratePhase]]:
     jointree = copy.deepcopy(JT)
@@ -997,6 +1056,17 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         selfComp = [comp for comp in selfComparisons if len(comp.path) and (relation.dst.id == comp.path[0][0] or relation.src.id == comp.path[0][0])]
         return selfComp
     
+    def getCompExtract(relation: Edge) -> list[Comp]:
+        parentCols = set(relation.src.cols)
+        childCols = set(relation.dst.cols)
+        ret: list[Comp] = []
+        for alias, vars in computations.alias2Var.items():
+            if vars in parentCols or vars in childCols:
+                if computations.alias2Comp[alias].isExtract:
+                    computations.alias2Comp[alias].isChild = vars in childCols
+                    ret.append(computations.alias2Comp[alias])
+        return ret
+    
     def updateComprison(compList: list[Comparison], updateDirection: list[Direction]):
         '''Update comparisons'''
         if len(compList) == 0: return
@@ -1025,10 +1095,11 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         # print(rel)
         incidentComp = getCompRelation(rel) # long/short
         selfComp = getSelfComp(rel)
+        compExtract = getCompExtract(rel)
         updateDirection = []
         retReduce = None
         if len(incidentComp) == 0:  # semijoin only
-            retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin)
+            retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, compExtract=compExtract)
         else: # default, for short comparison use cqc if only one incident comparison
             if len(incidentComp) > 1:
                 incidentComp.sort(key=lambda comp: (len(comp.originPath), comp.predType), reverse=True)
@@ -1047,7 +1118,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 else:
                     helperRightFrom = ''
                 onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo]
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom])
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, compExtract=compExtract, helperLeft=[helperLeftFrom, helperLeftTo], helperRight=[helperRightFrom, helperRightFrom])
                 updateDirection.append(Direction.Left)
             elif rel.dst.id == onlyComp.getEndNodeId:
                 pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
@@ -1062,7 +1133,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom]
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo])
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, compExtract=compExtract, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo])
                 updateDirection.append(Direction.Right)
             else:
                 raise RuntimeError("Should not happen! ")
@@ -1114,7 +1185,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     selfComp = getSelfComp(rel)
     # no differ number of comparison cases
     if len(incidentComp) == 0:  # semijoin only
-        retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, lastRel=True)
+        retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, compExtract=compExtract, lastRel=True)
     else:
         if len(incidentComp) > 1:
             incidentComp.sort(key=lambda comp: (len(comp.originPath), comp.predType), reverse=True)
@@ -1132,7 +1203,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                     helperRightFrom = onlyComp.right
 
                 onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo] # update
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, [helperLeftFrom, helperLeftTo], [helperRightFrom, helperRightFrom], lastRel=True)
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, compExtract=compExtract, helperLeft=[helperLeftFrom, helperLeftTo], helperRight=[helperRightFrom, helperRightFrom], lastRel=True)
             elif rel.dst.id == onlyComp.getEndNodeId: # root <- dst
                 pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
                 # original short comparison
@@ -1144,7 +1215,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom] # update
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, [helperLeftFrom, helperLeftFrom], [helperRightFrom, helperRightTo], lastRel=True)
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo], lastRel=True)
             else:
                 raise RuntimeError("Last comparison error! ")
         else:
@@ -1199,6 +1270,16 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         _, reduceList, _ = columnPrune(JT, _, reduceList, [], finalResult, set(outputVariables), None, list(COMP.values()))
         return reduceList, [], finalResult
     
+    def getCompChildExtract(relation: Edge) -> list[Comp]:
+        childCols = set(relation.dst.cols)
+        ret: list[Comp] = []
+        for alias, vars in computations.alias2Var.items():
+            if vars in childCols:
+                if computations.alias2Comp[alias].isExtract:
+                    computations.alias2Comp[alias].isChild = vars in childCols
+                    ret.append(computations.alias2Comp[alias])
+        return ret
+    
     for enum in enumerateOrder:
         beginPrevious = reduceList[-1].joinView if reduceList[-1].joinView else reduceList[-1].semiView
         if enumerateList == []: 
@@ -1208,9 +1289,9 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         
         # lastEnum = optimize flag
         if enum != enumerateOrder[-1]:
-            retEnum = buildEnumeratePhase(previousView, enum, JT, isAgg=isAgg, allAggAlias=allAggAlias)
+            retEnum = buildEnumeratePhase(previousView, enum, JT, isAgg=isAgg, allAggAlias=allAggAlias, compExtract=getCompChildExtract(enum.reduceRel))
         else:
-            retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True, isAgg=isAgg, allAggAlias=allAggAlias)
+            retEnum = buildEnumeratePhase(previousView, enum, JT, lastEnum=True, isAgg=isAgg, allAggAlias=allAggAlias, compExtract=getCompChildExtract(enum.reduceRel))
         
         JT.getNode(enum.reduceRel.dst.id).enumeratePhase = retEnum  
         enumerateList.append(retEnum)

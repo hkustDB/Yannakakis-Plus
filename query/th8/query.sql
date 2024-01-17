@@ -1,6 +1,5 @@
 SELECT o_year,
-       sum(case when n2.name = 'BRAZIL' then l.extendedprice * (1-l.discount) else 0 end) as mkt_share1,
-			 sum(volume) as mkt_share2
+       sum(case when n2.name = 'BRAZIL' then l.extendedprice * (1-l.discount) else 0 end) / sum(volume) as mkt_share,
 FROM   part p, supplier s, lineitem l, orderswithyear o, customer c, nation n1,
        nation n2, region r
 WHERE  p.partkey = l.partkey

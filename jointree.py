@@ -16,10 +16,10 @@ class Edge:
     def getId(self): return self.id
     
     def __str__(self) -> str:
-        return self.src.getNodeAlias + str('->') + self.dst.getNodeAlias
+        return str(self.src.id) + str('->') + str(self.dst.id)
     
     def __repr__(self) -> str:
-        return self.src.getNodeAlias + str('->') + self.dst.getNodeAlias
+        return str(self.src.id) + str('->') + str(self.dst.id)
         
 class JoinTree:
     def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int]) -> None:
@@ -33,10 +33,10 @@ class JoinTree:
         self.supId = supId
         
     def __repr__(self) -> str:
-        return str(self.node) + '\n' + str(self.edge) + '\n' + str(self.root) + '\n' + str(self.isFull) + '\n' + str(self.isFreeConnex) + '\n' + str(self.subset)
+        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset)
         
     def __str__(self) -> str:
-        return str(self.node) + '\n' + str(self.edge) + '\n' + str(self.root) + '\n' + str(self.isFull) + '\n' + str(self.isFreeConnex) + '\n' + str(self.subset)
+        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset)
     
     @property
     def getRoot(self): return self.root
