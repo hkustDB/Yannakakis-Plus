@@ -709,7 +709,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
     
     # (D) Semijoin
-    else:   
+    else:
         # NOTE: For semijoin, we only need to support EXTRACT in enumerate phase for tablescan-rel
         viewName = 'semiJoinView' + str(randint(0, maxsize))
         selectAttributes, selectAttributesAs = [], []
@@ -723,6 +723,18 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         else:
             selectAttributes = parentNode.col2vars[1]
             selectAttributesAs = parentNode.cols
+            for comp in parentExtract:
+                if comp.result in outVars:
+                    pattern = re.compile('v[0-9]+')
+                    inVars = pattern.findall(comp.expr)
+                    for var in inVars:
+                        originVar = parentNode.col2vars[1][parentNode.cols.index(var)]
+                        comp.expr.replace(var, originVar)
+                    selectAttributes.append(comp.expr)
+                    selectAttributesAs.append(comp.result)
+                else:
+                    raise NotImplementedError("Only support EXTRACT function in groupBy & appear in output attrs! ")
+
             fromTable = parentNode.source + ' AS ' + parentNode.alias
             
         
@@ -1061,9 +1073,9 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         childCols = set(relation.dst.cols)
         ret: list[Comp] = []
         for alias, vars in computations.alias2Var.items():
-            if vars in parentCols or vars in childCols:
+            if vars.issubset(parentCols) or vars.issubset(childCols):
                 if computations.alias2Comp[alias].isExtract:
-                    computations.alias2Comp[alias].isChild = vars in childCols
+                    computations.alias2Comp[alias].isChild = vars.issubset(childCols)
                     ret.append(computations.alias2Comp[alias])
         return ret
     
@@ -1183,6 +1195,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     # print(rel)
     incidentComp = getCompRelation(rel)
     selfComp = getSelfComp(rel)
+    compExtract = getCompExtract(rel)
     # no differ number of comparison cases
     if len(incidentComp) == 0:  # semijoin only
         retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, compExtract=compExtract, lastRel=True)
@@ -1215,7 +1228,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom] # update
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo], lastRel=True)
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, compExtract=compExtract, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo], lastRel=True)
             else:
                 raise RuntimeError("Last comparison error! ")
         else:

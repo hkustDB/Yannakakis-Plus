@@ -1,7 +1,7 @@
 """
 Usage:
   main.py <query> [options]
-  
+
 Options:
   -h --help     Show help.
   <query>       Set execute query path, like topk1/
