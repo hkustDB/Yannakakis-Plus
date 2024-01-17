@@ -30,7 +30,7 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/q2/'
+BASE_PATH = 'query/q8/'
 DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -66,14 +66,11 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
     if name == 'AggregatedRelation':
         source, cols, alias, group, func = removeEqual(line)
         cols = pattern.findall(cols)
-        alias = alias.split('=')[1]
-        group = int(group.split('=')[1][1:-1])
-        func = func.split('=')[1]
+        group = int(group[1:-1])
         aNode = AggTreeNode(id, source, cols, [], alias, group, func)
         allNodes[id] = aNode
     elif name == 'AuxiliaryRelation':
         source, cols, alias, supportId = removeEqual(line, 3)
-        alias = alias.split('=')[1]
         cols = pattern.findall(cols)
         supportId, supportRel = int(supportId.split('\n')[0]), supportId.split('\n')[1]
         if supportId not in allNodes and supportRel != '':
