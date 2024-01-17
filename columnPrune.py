@@ -16,7 +16,7 @@ keep: joinkey | output variables | comparison | aggregation | bag internal joink
 # delete extra column
 def removeAttrAlias(selectAttrs: list[str], selectAlias: list[str], containKeys: set[str], removeAnnot: bool = False):
     if not removeAnnot:
-        IG_SET = set({'annot'})
+        IG_SET = set({'annot', 'oriLeft', 'oriRight'})
     else:
         IG_SET = set()
     
