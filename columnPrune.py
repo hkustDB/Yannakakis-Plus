@@ -115,8 +115,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             
             reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias = removeAttrAlias(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias, orderRequireInit | allJoinKeys)
                 
-        else:
-            raise NotImplementedError("Not implement optimization for semi case! ")
+        # semi case has no optimization
     
     requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet
     ## step2: prune enumerate
