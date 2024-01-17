@@ -30,8 +30,8 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/q8/'
-DDL_NAME = 'graph.ddl'
+BASE_PATH = 'query/th7/'
+DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
@@ -208,7 +208,7 @@ def connect():
     aggregations = response['aggregations']
     Agg = None
     for aggregation in aggregations:
-        func, result, formular = aggregation['func'], aggregation['result'], aggregation['args']
+        func, result, formular = aggregation['func'], aggregation['result'], aggregation['args'][0]
         pattern = re.compile('v[0-9]+')
         inVars = list(set(pattern.findall(formular)))
         agg = AggFunc(func, inVars, result, formular)
@@ -287,7 +287,7 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
                     auxCols.append(col)
                     auxVars.append(supVars[index])
             treeNode.setcol2vars([auxCols, auxVars])
-            
+        
     return ret
 
 
@@ -313,11 +313,13 @@ if __name__ == '__main__':
         elif IRmode == IRType.Product_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Product_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
             codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=topK.genType)  
-        
     else:
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
             try:
+                jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
+                jtout.write(str(jt))
+                jtout.close()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
                     codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, isFull=jt.isFull)
@@ -336,6 +338,5 @@ if __name__ == '__main__':
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + str(index))
-                # print(jt)
     end = time.time()
     print('Rewrite time(s): ' + str(end-start) + '\n')
