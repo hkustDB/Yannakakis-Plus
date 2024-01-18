@@ -26,7 +26,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     return ret
 
 # TODO: final output variables error? 
-def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outputVariables: list[str], outPath: str, aggGroupBy: list[str] = [], aggList: list[AggReducePhase] = [], isFull = True, isAgg = False):
+def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, aggList: list[AggReducePhase] = [], isFreeConnex: bool = True, Agg: Aggregation = None):
     outFile = open(outPath, 'w+')
     dropView = []
     # 0. aggReduceList
@@ -145,6 +145,12 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             dropView.append(reduce.bagAuxView.viewName)
             outFile.write(line)
     
+    def addGroupBy(action):
+        if not Agg:
+            return ''
+        xannot = [alias for alias in action.selectAttrAlias if alias != 'annot' and alias not in Agg.allAggAlias]
+        return ' group by ' + ','.join(xannot) if not isFreeConnex else ''
+    
     # 2. enumerateList rewrite
     if len(enumerateList):
         outFile.write('\n## Enumerate Phase: \n')
@@ -164,7 +170,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             elif len(enum.semiEnumerate.whereCondList):
                 line += ' where ' + ' and '.join(enum.semiEnumerate.whereCondList)
             
-            line += END
+            line += addGroupBy(enum.semiEnumerate) + END
             outFile.write(line)
             dropView.append(enum.semiEnumerate.viewName)
             continue
@@ -187,7 +193,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         outFile.write('# 4. stageEnd\n')
         line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ' join ' + enum.stageEnd.joinTable + ' using(' + ', '.join(enum.stageEnd.joinKey) + ')' + ' where ' + enum.stageEnd.whereCond 
         line += ' and ' if len(enum.stageEnd.whereCondList) else ''
-        line += ' and '.join(enum.stageEnd.whereCondList) + END
+        line += ' and '.join(enum.stageEnd.whereCondList) + addGroupBy(enum.stageEnd) + END
         dropView.append(enum.stageEnd.viewName)
         outFile.write(line)
     
@@ -195,7 +201,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     outFile.write(finalResult)
     
     if len(dropView):
-        line = '\n# drop view ' + ', '.join(reversed(dropView)) + END
+        line = '\n# drop view ' + ', '.join(dropView) + END
         outFile.write(line)
     
     outFile.close()
