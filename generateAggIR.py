@@ -104,7 +104,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     for invar in agg.inVars:
                         index = childNode.cols.index(invar)
                         sourceName = childNode.col2vars[1][index]
-                        agg.formular = agg.formular.replace(invar, sourceName, 1)
+                        agg.formular = agg.formular.replace(invar, sourceName)
                     if agg.funcName != AggFuncType.AVG:
                         selectAttr.append(agg.funcName.name + agg.formular)
                     else:
@@ -408,7 +408,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     reduceList: list[ReducePhase] = []
     enumerateList: list[EnumeratePhase] = []
     
-    '''Get incident aggregation (x joinkey related)'''
+    # FIXME: match with generateIR
     def getAggRelation(relation: Edge) -> list[AggFunc]:
         aggs = []
         joinKey = set(relation.dst.cols) & set(relation.src.cols)
@@ -621,19 +621,10 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     for out in unDoneOut:
         if out in Agg.allAggAlias:
             func = Agg.alias2AggFunc[out]
-            if func.doneFlag:
-                if func.funcName != AggFuncType.AVG:
-                    selectName.extend([func.funcName.name + '(' + out + ') as ' + out for _ in range(outputVariables.count(out))])
-                else:
-                    selectName.extend([func.funcName.name + '(' + out + '/annot) as ' + out for _ in range(outputVariables.count(out))])
+            if func.funcName != AggFuncType.AVG:
+                selectName.extend([out for _ in range(outputVariables.count(out))])
             else:
-                if func.formular == '' and not len(func.inVars):
-                    selectName.extend(['SUM(annot) as ' + out for _ in range(outputVariables.count(out))])
-                elif func.funcName != AggFuncType.AVG:
-                    selectName.extend([func.funcName.name + '(' + func.originForm + '*annot) as ' + out for _ in range(outputVariables.count(out))])
-                else:
-                    selectName.extend([func.funcName.name + '(' +func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
-        
+                selectName.extend([out + '/annot as ' + out for _ in range(outputVariables.count(out))])
         elif out in compKeys:
             newForm = computations.alias2Comp[out]
             pattern = re.compile('v[0-9]+')
@@ -641,19 +632,11 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             for var in inVars:
                 if var in Agg.allAggAlias:
                     func = Agg.alias2AggFunc[var]
-                    if func.doneFlag:
-                        if func.funcName != AggFuncType.AVG:
-                            newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')
-                        else:
-                            newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + '/annot)')
+                    if func.funcName != AggFuncType.AVG:
+                        newForm = newForm.replace(var, func.alias )
                     else:
-                        if func.formular == '' and not len(func.inVars):
-                            newForm = newForm.replace(var, 'annot')
-                        elif func.funcName != AggFuncType.AVG:
-                            newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + '*annot)')
-                        else:
-                            newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')        
-                        
+                        newForm = newForm.replace(var, func.alias + '/annot')
+            
             selectName.append(newForm + ' as ' + out)
         else:
             raise NotImplementedError("Other output variables exists! ")
@@ -663,12 +646,12 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     ## a. subset = 1 special case
     if len(jointree.subset) == 1:
         aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], finalResult, set(outputVariables), Agg, list(COMP.values()))
-        finalResult += aggReduceList[-1].aggJoin.viewName + ' group by ' + ','.join(Agg.groupByVars) + ';\n'
+        finalResult += aggReduceList[-1].aggJoin.viewName + ';\n'
         return aggReduceList, [], [], finalResult
     
     ## b. normal case
     COMP = dict(zip(COMP.keys(), comparisons))
-    reduceList, enumerateList, _ = generateIR(jointree, COMP, outputVariables, computations, isAgg=True, allAggAlias=Agg.allAggAlias)
+    reduceList, enumerateList, _ = generateIR(jointree, COMP, outputVariables, computations, isAgg=True, Agg=Agg)
     
     # The left undone aggregation is done: 1. [subset > 1] -> final enumeration * annot 2. [subset = 1], done in root
     if len(reduceList):
@@ -676,6 +659,6 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     elif not len(reduceList):
         fromTable = aggReduceList[-1].aggJoin.viewName
     # oreder by & limit used for checking answer
-    finalResult += fromTable + ' group by ' + ','.join(Agg.groupByVars) + ';\n'
+    finalResult += fromTable + ';\n'
     aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], finalResult, set(outputVariables), Agg, list(COMP.values()))
     return aggReduceList, reduceList, enumerateList, finalResult

@@ -302,10 +302,10 @@ if __name__ == '__main__':
     if optFlag:
         if IRmode == IRType.Report:
             reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
-            codeGen(reduceList, enumerateList, outputVariables, BASE_PATH + 'opt' +OUT_NAME, isFull=optJT.isFull)
+            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME)
         elif IRmode == IRType.Aggregation:
             aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
-            codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + 'opt' +OUT_NAME, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=optJT.isFull, isAgg=True)
+            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg)
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
@@ -322,11 +322,11 @@ if __name__ == '__main__':
                 jtout.close()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
-                    codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, isFull=jt.isFull)
+                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName)
                 elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
                     aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
-                    codeGen(reduceList, enumerateList, finalResult, outputVariables, BASE_PATH + outName, aggGroupBy=Agg.groupByVars, aggList=aggList, isFull=jt.isFull, isAgg=True)
+                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
