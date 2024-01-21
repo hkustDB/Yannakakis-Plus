@@ -50,7 +50,7 @@ def getAggSet(Agg: Aggregation, isAll: bool = True):
 
 def getCompSet(COMP: list[Comparison]):
     if not len(COMP):
-        return []
+        return set()
     
     compSet = set()
     pattern = re.compile('v[0-9]+')

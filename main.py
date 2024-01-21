@@ -30,8 +30,8 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/th7/'
-DDL_NAME = 'tpch.ddl'
+BASE_PATH = 'query/lsqb/q2/'
+DDL_NAME = 'lsqb.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6

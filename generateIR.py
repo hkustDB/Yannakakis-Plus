@@ -640,7 +640,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                     extractAlias.append(comp.result)
             # add agg support
             aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggParent, parentNode)
-            extraAttr.extend(aggExtraAttr)
+            extractAttr.extend(aggExtraAttr)
             extractAlias.extend(aggExtraAlias)
         
         def joinSplit(splitVars: list[str], op: str):
@@ -1067,6 +1067,8 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     
     # Get incident aggregation for each node
     def getAggRelation(node: TreeNode) -> list[AggFunc]:
+        if not Agg:
+            return []
         aggs = []
         for aggF in Agg.aggFunc:
             if aggF.doneFlag:
@@ -1389,6 +1391,6 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         finalResult += '+'.join(selectName) if not JT.isFull else '+'.join(outputVariables)
         finalResult += ') from ' + fromTable + ';\n'
     
-    _, reduceList, enumerateList = columnPrune(JT, _, reduceList, enumerateList, finalResult, set(outputVariables), Agg=Agg, COMP=list(COMP.values()))
+    _, reduceList, enumerateList = columnPrune(JT, [], reduceList, enumerateList, finalResult, set(outputVariables), Agg=Agg, COMP=list(COMP.values()))
     return reduceList, enumerateList, finalResult
     
