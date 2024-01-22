@@ -3,14 +3,16 @@ CREATE TABLE nation
     n_nationkey INTEGER,
     n_name      VARCHAR,
     n_regionkey INTEGER,
-    n_comment   VARCHAR
+    n_comment   VARCHAR,
+    dummy   VARCHAR
 );
 
 CREATE TABLE region
 (
     r_regionkey INTEGER,
     r_name      VARCHAR,
-    r_comment   VARCHAR
+    r_comment   VARCHAR,
+    dummy   VARCHAR
 );
 
 CREATE TABLE part
@@ -23,7 +25,8 @@ CREATE TABLE part
     p_size        INTEGER,
     p_container   VARCHAR,
     p_retailprice DECIMAL,
-    p_comment     VARCHAR
+    p_comment     VARCHAR,
+    dummy   VARCHAR
 );
 
 CREATE TABLE supplier
@@ -34,7 +37,8 @@ CREATE TABLE supplier
     s_nationkey INTEGER,
     s_phone     VARCHAR,
     s_acctbal   DECIMAL,
-    s_comment   VARCHAR
+    s_comment   VARCHAR,
+    dummy   VARCHAR
 );
 
 CREATE TABLE partsupp
@@ -43,7 +47,8 @@ CREATE TABLE partsupp
     ps_suppkey    INTEGER,
     ps_availqty   INTEGER,
     ps_supplycost DECIMAL,
-    ps_comment    VARCHAR
+    ps_comment    VARCHAR,
+    dummy   VARCHAR
 );
 
 CREATE TABLE customer
@@ -55,7 +60,8 @@ CREATE TABLE customer
     c_phone      VARCHAR,
     c_acctbal    DECIMAL,
     c_mktsegment VARCHAR,
-    c_comment    VARCHAR
+    c_comment    VARCHAR,
+    dummy   VARCHAR
 );
 
 CREATE TABLE orders
@@ -68,8 +74,25 @@ CREATE TABLE orders
     o_orderpriority VARCHAR,
     o_clerk         VARCHAR,
     o_shippriority  INTEGER,
-    o_comment       VARCHAR
+    o_comment       VARCHAR,
+    dummy   VARCHAR
 );
+
+CREATE TABLE orderswithyear
+(
+    o_year	    INTEGER,
+    o_orderkey      INTEGER,
+    o_custkey       INTEGER,
+    o_orderstatus   VARCHAR,
+    o_totalprice    DECIMAL,
+    o_orderdate     DATE,
+    o_orderpriority VARCHAR,
+    o_clerk         VARCHAR,
+    o_shippriority  INTEGER,
+    o_comment       VARCHAR,
+    dummy   VARCHAR
+);
+
 
 CREATE TABLE lineitem
 (
@@ -88,5 +111,6 @@ CREATE TABLE lineitem
     l_receiptdate   DATE,
     l_shipinstruct  VARCHAR,
     l_shipmode      VARCHAR,
-    l_comment       VARCHAR
+    l_comment       VARCHAR,
+    dummy   VARCHAR
 );

@@ -90,42 +90,84 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     if agg.funcName != AggFuncType.AVG:
                         selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
                     else:
-                        selectAttr.append('sum(' + agg.formular + ')')
+                        selectAttr.append('SUM(' + agg.formular + ')')
                     agg.doneFlag = True
             else:
-                allInOne = True
-                for invar in agg.inVars:
-                    if invar not in childNode.cols:
-                        allInOne = False
-                # complex formular in original same node
-                if allInOne:    # can do aggregatiom
-                    agg.doneFlag = True
-                    selectAttrAlias.append(agg.alias)
-                    for invar in agg.inVars:
-                        index = childNode.cols.index(invar)
-                        sourceName = childNode.col2vars[1][index]
-                        agg.formular = agg.formular.replace(invar, sourceName)
-                    if agg.funcName != AggFuncType.AVG:
-                        selectAttr.append(agg.funcName.name + agg.formular)
-                    else:
-                        selectAttr.append('sum'+ agg.formular)
-                else:   # need to pass variables
+                if 'CASE' in agg.formular:
+                    _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', agg.formular)[:-1]
+                    if not '0.0' in caseRes2:
+                        print(caseRes2)
+                        raise NotImplementedError("Case aggregation res2 not equal 0.0! ")
                     passAggAlias = False
+                    caseCond = caseCond[1:-1]
+                    caseRes1 = caseRes1[1:-1]
+                    pattern = re.compile('v[0-9]+')
+                    condVar = pattern.findall(caseCond)
+                    res1Var = pattern.findall(caseRes1)
+                    # both cond&res at the same node
+                    if condVar[0] in childNode.cols and res1Var[0] in childNode.cols:
+                        passAggAlias = True
+                        for var in condVar:
+                            index = childNode.cols.index(var)
+                            originVar = childNode.col2vars[1][index]
+                            agg.formular = agg.formular.replace(var, originVar)
+                        for var in res1Var:
+                            index = childNode.cols.index(var)
+                            originVar = childNode.col2vars[1][index]
+                            agg.formular = agg.formular.replace(var, originVar)
+                        if agg.funcName != AggFuncType.AVG:
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
+                        else:
+                            selectAttr.append('SUM(' + agg.formular + ')')
+                    # Only support one attr in condition
+                    elif condVar[0] in childNode.cols:
+                        index = childNode.cols.index(condVar[0])
+                        originVar = childNode.col2vars[1][index]
+                        # NOTE: cond satisfies -> caseCond=1 else 0
+                        selectAttr.append('CASE WHEN ' + caseCond.replace(condVar[0], originVar) + ' THEN 1 ELSE 0 END')
+                        selectAttrAlias.append('caseCond')
+                        aggPass2Join.append('caseCond')
+                    elif res1Var[0] in childNode.cols:
+                        for var in res1Var:
+                            index = childNode.cols.index(var)
+                            originVar = childNode.col2vars[1][index]
+                            caseRes1 = caseRes1.replace(var, originVar)
+                        selectAttr.append(caseRes1)
+                        selectAttrAlias.append('caseRes')
+                        aggPass2Join.append('caseRes')
+                    else:
+                        raise NotImplementedError("Error case! ")
+                else:
+                    allInOne = True
                     for invar in agg.inVars:
-                        # pass agg vars may have duplicates
-                        if invar in childNode.cols and invar not in selectAttrAlias:
+                        if invar not in childNode.cols:
+                            allInOne = False
+                    # complex formular in original same node
+                    if allInOne:    # can do aggregatiom
+                        agg.doneFlag = True
+                        selectAttrAlias.append(agg.alias)
+                        for invar in agg.inVars:
                             index = childNode.cols.index(invar)
                             sourceName = childNode.col2vars[1][index]
-                            selectAttr.append(sourceName)
-                            selectAttrAlias.append(invar)
-                            aggPass2Join.append(invar)
+                            agg.formular = agg.formular.replace(invar, sourceName)
+                        if agg.funcName != AggFuncType.AVG:
+                            selectAttr.append(agg.funcName.name + agg.formular)
+                        else:
+                            selectAttr.append('SUM'+ agg.formular)
+                    else:   # need to pass variables
+                        passAggAlias = False
+                        for invar in agg.inVars:
+                            # pass agg vars may have duplicates
+                            if invar in childNode.cols and invar not in selectAttrAlias:
+                                index = childNode.cols.index(invar)
+                                sourceName = childNode.col2vars[1][index]
+                                selectAttr.append(sourceName)
+                                selectAttrAlias.append(invar)
+                                aggPass2Join.append(invar)
             
             if passAggAlias:
-                ## add passing aggregation function name
                 aggPass2Join.append(agg.alias)
-                ## mark this aggregaiton is done
                 agg.doneFlag = True
-                # Agg.allAggDoneFlag[Agg.allAggFuncId.index(agg.aggFuncId)] = True
     else:
         ## -1. joinKey
         for key in joinKey:
@@ -140,12 +182,19 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     if Agg.alias2AggFunc[var].funcName != AggFuncType.AVG:
                         selectAttr.append(Agg.alias2AggFunc[var].funcName.name + '(' + var + ')')
                     else:
-                        selectAttr.append('sum(' + var + ')')
+                        selectAttr.append('SUM(' + var + ')')
+                    selectAttrAlias.append(var)
+                    aggPass2Join.append(var)
+                # Add support for case aggregation
+                if var in set({'caseCond', 'caseRes'}):
+                    selectAttr.append('')
                     selectAttrAlias.append(var)
                     aggPass2Join.append(var)
         else:   # x joinresview & x tablescan
             for comp in childExtract:
                 if comp.result in Agg.groupByVars:
+                    selectAttr.append(comp.expr)
+                    selectAttrAlias.append(comp.result)
                     aggPass2Join.append(comp.result)
                 else:
                     raise NotImplementedError("EXTRACT not in groupBy! ")
@@ -174,7 +223,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         if agg.funcName == AggFuncType.SUM:
                             selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.AVG:
-                            selectAttr.append('sum(' + agg.formular + ' * annot' + ')')
+                            selectAttr.append('SUM(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.COUNT:
                             selectAttr.append(agg.funcName.name + '(' + agg.formular+ ' * annot' + ')' )
                         else:
@@ -191,32 +240,91 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     findInVars = childNode.JoinResView.selectAttrAlias
                 elif childNode.relationType != RelationType.TableScanRelation:
                     findInVars = childNode.cols
-                allInOne = True
-                for invar in agg.inVars:
-                    if invar not in findInVars:
-                        allInOne = False
-                if allInOne:
-                    agg.doneFlag = True
-                    selectAttrAlias.append(agg.alias)
-                    if childNode.JoinResView and 'annot' in findInVars:
-                        if agg.funcName == AggFuncType.SUM:
-                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
-                        elif agg.funcName == AggFuncType.AVG:
-                            selectAttr.append('sum' + '(' + agg.formular + ' * annot' + ')')
-                        elif agg.funcName == AggFuncType.COUNT:
-                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
-                        else:
-                            # MIN/MAX
-                            selectAttr.append(agg.funcName.name + agg.formular)
-                    else:
-                        selectAttr.append(agg.funcName.name + agg.formular)
-                else:   # need to pass variables
+                
+                if 'CASE' in agg.formular:
+                    _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', agg.formular)[:-1]
+                    if not '0.0' in caseRes2:
+                        raise NotImplementedError("Case aggregation res2 not equal 0.0! ")
                     passAggAlias = False
+                    caseCond = caseCond[1:-1]
+                    caseRes1 = caseRes1[1:-1]
+                    pattern = re.compile('v[0-9]+')
+                    condVar = pattern.findall(caseCond)
+                    res1Var = pattern.findall(caseRes1)
+                    if condVar[0] in findInVars and res1Var[0] in findInVars:
+                        passAggAlias = True
+                        selectAttrAlias.append(agg.alias)
+                        if agg.funcName != AggFuncType.AVG:
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
+                        else:
+                            selectAttr.append('SUM(' + agg.formular + ')')
+                    elif 'caseCond' in findInVars and res1Var[0] in findInVars:
+                        passAggAlias = True
+                        selectAttrAlias.append(agg.alias)
+                        dIndex = selectAttrAlias.index('caseCond')
+                        selectAttrAlias.pop(dIndex)
+                        selectAttr.pop(dIndex)
+                        aggPass2Join.remove('caseCond')
+                        if agg.funcName != AggFuncType.AVG:
+                            selectAttr.append(agg.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
+                        else:
+                            selectAttr.append('SUM( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
+                    elif 'caseRes' in findInVars and condVar[0] in findInVars:
+                        passAggAlias = True
+                        selectAttrAlias.append(agg.alias)
+                        dIndex = selectAttrAlias.index('caseRes')
+                        selectAttrAlias.pop(dIndex)
+                        selectAttr.pop(dIndex)
+                        aggPass2Join.remove('caseRes')
+                        if agg.funcName != AggFuncType.AVG:
+                            selectAttr.append(agg.funcName.name + '( CASE WHEN' + caseCond + ' THEN caseRes ELSE 0.0 END)')
+                        else:
+                            selectAttr.append('SUM( CASE WHEN' + caseCond + ' THEN caseRes ELSE 0.0 END)')
+                    elif condVar[0] in childNode.cols and res1Var[0] in childNode.cols:
+                        passAggAlias = True
+                        selectAttrAlias.append(agg.alias)
+                        if agg.funcName != AggFuncType.AVG:
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
+                        else:
+                            selectAttr.append('SUM(' + agg.formular + ')')
+                    elif condVar[0] in findInVars:
+                        selectAttr.append('CASE WHEN ' + caseCond + ' THEN 1 ELSE 0 END')
+                        selectAttrAlias.append('caseCond')
+                        aggPass2Join.append('caseCond')
+                    elif res1Var[0] in findInVars:
+                        selectAttr.append(caseRes1)
+                        selectAttrAlias.append('caseRes')
+                        aggPass2Join.append('caseRes')
+                    else:
+                        raise NotImplementedError("Error case! ")
+                        
+                else:
+                    allInOne = True
                     for invar in agg.inVars:
-                        # pass agg vars may have duplicates
-                        if invar in findInVars and invar not in selectAttrAlias:
-                            selectAttrAlias.append(invar)
-                            aggPass2Join.append(invar)
+                        if invar not in findInVars:
+                            allInOne = False
+                    if allInOne:
+                        agg.doneFlag = True
+                        selectAttrAlias.append(agg.alias)
+                        if childNode.JoinResView and 'annot' in findInVars:
+                            if agg.funcName == AggFuncType.SUM:
+                                selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
+                            elif agg.funcName == AggFuncType.AVG:
+                                selectAttr.append('SUM' + '(' + agg.formular + ' * annot' + ')')
+                            elif agg.funcName == AggFuncType.COUNT:
+                                selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')')
+                            else:
+                                # MIN/MAX
+                                selectAttr.append(agg.funcName.name + agg.formular)
+                        else:
+                            selectAttr.append(agg.funcName.name + agg.formular)
+                    else:   # need to pass variables
+                        passAggAlias = False
+                        for invar in agg.inVars:
+                            # pass agg vars may have duplicates
+                            if invar in findInVars and invar not in selectAttrAlias:
+                                selectAttrAlias.append(invar)
+                                aggPass2Join.append(invar)
             
             if passAggAlias:
                 ## add passing aggregation function name
@@ -408,7 +516,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     reduceList: list[ReducePhase] = []
     enumerateList: list[EnumeratePhase] = []
     
-    # FIXME: match with generateIR
+    # FIXME: match with all agg variables generateIR
     def getAggRelation(relation: Edge) -> list[AggFunc]:
         aggs = []
         joinKey = set(relation.dst.cols) & set(relation.src.cols)
@@ -419,16 +527,14 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         else:
             satisKey = [col for col in childNode.cols if col not in joinKey]
         
-        for index, aggF in enumerate(Agg.aggFunc):
+        for aggF in Agg.aggFunc:
             if aggF.doneFlag:
                 continue
             if len(aggF.inVars) == 0 and aggF.alias in satisKey: # no input vars case
-                # aggF.doneFlag = True
                 aggs.append(aggF)
             elif len(aggF.inVars) == 1 and aggF.inVars[0] in satisKey:
-                # aggF.doneFlag = True
                 aggs.append(aggF)
-            elif len(aggF.inVars) > 1:  # mark true during the process, cauase here is hard to determine 
+            elif len(aggF.inVars) > 1:  # mark true during the process, cauase here is hard to determine
                 for invar in aggF.inVars:
                     if invar in satisKey: # aggregation related, need to more judgement to pass or aggregate
                         aggs.append(aggF)
@@ -484,9 +590,10 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         childCols = set(relation.dst.cols)
         ret: list[Comp] = []
         for alias, vars in computations.alias2Var.items():
-            if vars in parentCols or vars in childCols:
-                if computations.alias2Comp[alias].isExtract:
-                    computations.alias2Comp[alias].isChild = vars in childCols
+            if vars.issubset(parentCols) or vars.issubset(childCols):
+                if computations.alias2Comp[alias].isExtract and not computations.alias2Comp[alias].isDone:
+                    computations.alias2Comp[alias].isChild = vars.issubset(childCols)
+                    computations.alias2Comp[alias].isDone = True
                     ret.append(computations.alias2Comp[alias])
         return ret
     
@@ -626,7 +733,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             else:
                 selectName.extend([out + '/annot as ' + out for _ in range(outputVariables.count(out))])
         elif out in compKeys:
-            newForm = computations.alias2Comp[out]
+            newForm = computations.alias2Comp[out].expr
             pattern = re.compile('v[0-9]+')
             inVars = pattern.findall(newForm)
             for var in inVars:

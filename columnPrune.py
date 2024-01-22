@@ -16,9 +16,9 @@ keep: joinkey | output variables | comparison | aggregation | bag internal joink
 # delete extra column
 def removeAttrAlias(selectAttrs: list[str], selectAlias: list[str], containKeys: set[str], removeAnnot: bool = False):
     if removeAnnot:
-        IG_SET = set({'oriLeft', 'oriRight'})
+        IG_SET = set({'oriLeft', 'oriRight', 'caseCond', 'caseRes'})
     else:
-        IG_SET = set({'annot', 'oriLeft', 'oriRight'})
+        IG_SET = set({'annot', 'oriLeft', 'oriRight', 'caseCond', 'caseRes'})
     
     if not len(selectAttrs):
         selectAlias = [alias for alias in selectAlias if alias in containKeys or 'mf' in alias or alias in IG_SET]
@@ -59,7 +59,7 @@ def getCompSet(COMP: list[Comparison]):
             inVars = pattern.findall(comp.cond)
             compSet.update(inVars)
     return compSet
-    
+
 '''
 agregation: undone: keep internal variables; done keep alias
 '''
@@ -152,9 +152,16 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             for alias in allAggAlias:
                 if alias in aggReduce.aggJoin.selectAttrAlias:
                     curRequireSet.difference(Agg.alias2AggFunc[alias].inVars)   
+            
+            removeAnnotFlag = len(JT.subset) == 1 and index == len(aggReduceList)-1 and (not 'annot' in finalResult)
+            if removeAnnotFlag and 'annot' in aggReduce.aggView.selectAttrAlias:
+                if not len(aggReduce.aggView.selectAttrs):
+                    aggReduce.aggView.selectAttrAlias.remove('annot')
+                else:
+                    index = aggReduce.aggView.selectAttrAlias.index('annot')
+                    aggReduce.aggView.selectAttrAlias.pop(index)
+                    aggReduce.aggView.selectAttrs.pop(index)
                 
-            aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, removeAnnot=(len(JT.subset) == 1 and index == len(aggReduceList)-1 and (not 'annot' in finalResult)))
+            aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, removeAnnot=removeAnnotFlag)
 
     return aggReduceList, reduceList, enumerateList
-        
-        

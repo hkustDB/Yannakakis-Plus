@@ -1128,8 +1128,9 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         ret: list[Comp] = []
         for alias, vars in computations.alias2Var.items():
             if vars.issubset(parentCols) or vars.issubset(childCols):
-                if computations.alias2Comp[alias].isExtract:
+                if computations.alias2Comp[alias].isExtract and not computations.alias2Comp[alias].isDone:
                     computations.alias2Comp[alias].isChild = vars.issubset(childCols)
+                    computations.alias2Comp[alias].isDone = True
                     ret.append(computations.alias2Comp[alias])
         return ret
     

@@ -1,85 +1,92 @@
-CREATE TABLE nation ( nationkey int NOT NULL COMMENT '',
-  name varchar NOT NULL COMMENT '',
-  regionkey int NOT NULL COMMENT '',
-  comment varchar COMMENT '',
+CREATE TABLE nation ( 
+  n_nationkey int NOT NULL COMMENT '',
+  n_name varchar NOT NULL COMMENT '',
+  n_regionkey int NOT NULL COMMENT '',
+  n_comment varchar COMMENT '',
   `dummy` varchar   
 ) DISTRIBUTED BY BROADCAST;
 
-CREATE TABLE region ( regionkey int NOT NULL COMMENT '',
-  name varchar NOT NULL COMMENT '',
-  comment varchar COMMENT '',
+CREATE TABLE region ( 
+  r_regionkey int NOT NULL COMMENT '',
+  r_name varchar NOT NULL COMMENT '',
+  r_comment varchar COMMENT '',
   dummy varchar
 ) DISTRIBUTED BY BROADCAST;
 
-
-CREATE TABLE part (partkey int NOT NULL COMMENT '',
-  name varchar NOT NULL COMMENT '',
-  mfgr varchar NOT NULL COMMENT '',
-  brand varchar NOT NULL COMMENT '',
-  type varchar NOT NULL COMMENT '',
-  size int NOT NULL COMMENT '',
-  container varchar NOT NULL COMMENT '',
-  retailprice decimal(15,2) NOT NULL COMMENT '',
-  comment varchar NOT NULL COMMENT '',
+CREATE TABLE part (
+  p_partkey int NOT NULL COMMENT '',
+  p_name varchar NOT NULL COMMENT '',
+  p_mfgr varchar NOT NULL COMMENT '',
+  p_brand varchar NOT NULL COMMENT '',
+  p_type varchar NOT NULL COMMENT '',
+  p_size int NOT NULL COMMENT '',
+  p_container varchar NOT NULL COMMENT '',
+  p_retailprice decimal(15,2) NOT NULL COMMENT '',
+  p_comment varchar NOT NULL COMMENT '',
   dummy varchar
-) DISTRIBUTED BY HASH  (partkey);
+) DISTRIBUTED BY HASH  (p_partkey);
 
-CREATE TABLE supplier (  suppkey int NOT NULL COMMENT '',
-  name varchar NOT NULL COMMENT '',
-  address varchar NOT NULL COMMENT '',
-  nationkey int NOT NULL COMMENT '',
-  phone varchar NOT NULL COMMENT '',
-  acctbal decimal(15,2) NOT NULL COMMENT '',
-  comment varchar NOT NULL COMMENT '',
+CREATE TABLE supplier (  
+  s_suppkey int NOT NULL COMMENT '',
+  s_name varchar NOT NULL COMMENT '',
+  s_address varchar NOT NULL COMMENT '',
+  s_nationkey int NOT NULL COMMENT '',
+  s_phone varchar NOT NULL COMMENT '',
+  s_acctbal decimal(15,2) NOT NULL COMMENT '',
+  s_comment varchar NOT NULL COMMENT '',
   dummy varchar
-) DISTRIBUTED BY HASH  (suppkey);
+) DISTRIBUTED BY HASH  (s_suppkey);
 
-CREATE TABLE partsupp (  partkey int NOT NULL COMMENT '',
-  suppkey int NOT NULL COMMENT '',
-  availqty int NOT NULL COMMENT '',
-  supplycost decimal(15,2) NOT NULL COMMENT '',
-  comment varchar NOT NULL COMMENT '',
+CREATE TABLE partsupp (  
+  ps_partkey int NOT NULL COMMENT '',
+  ps_suppkey int NOT NULL COMMENT '',
+  ps_availqty int NOT NULL COMMENT '',
+  ps_supplycost decimal(15,2) NOT NULL COMMENT '',
+  ps_comment varchar NOT NULL COMMENT '',
   dummy varchar
-) DISTRIBUTED BY HASH  (partkey);
+) DISTRIBUTED BY HASH  (ps_partkey);
 
-CREATE TABLE customer (  custkey int NOT NULL COMMENT '',
-  name varchar NOT NULL COMMENT '',
-  address varchar NOT NULL COMMENT '',
-  nationkey int NOT NULL COMMENT '',
-  phone varchar NOT NULL COMMENT '',
-  acctbal decimal(15,2) NOT NULL COMMENT '',
-  mktsegment varchar NOT NULL COMMENT '',
-  comment varchar NOT NULL COMMENT '', 
+CREATE TABLE customer (  
+  c_custkey int NOT NULL COMMENT '',
+  c_name varchar NOT NULL COMMENT '',
+  c_address varchar NOT NULL COMMENT '',
+  c_nationkey int NOT NULL COMMENT '',
+  c_phone varchar NOT NULL COMMENT '',
+  c_acctbal decimal(15,2) NOT NULL COMMENT '',
+  c_mktsegment varchar NOT NULL COMMENT '',
+  c_comment varchar NOT NULL COMMENT '', 
   `dummy` varchar 
-) DISTRIBUTED BY HASH  (custkey);
+) DISTRIBUTED BY HASH  (c_custkey);
 
-CREATE TABLE orders (  orderkey bigint NOT NULL COMMENT '',
-  custkey int NOT NULL COMMENT '',
-  orderstatus varchar NOT NULL COMMENT '',
-  totalprice decimal(15,2) NOT NULL COMMENT '',
-  orderdate bigint NOT NULL COMMENT '',
-  orderpriority varchar NOT NULL COMMENT '',
-  clerk varchar NOT NULL COMMENT '',
-  shippriority int NOT NULL COMMENT '',
-  comment varchar NOT NULL COMMENT '',
+CREATE TABLE orders (  
+  o_orderkey bigint NOT NULL COMMENT '',
+  o_custkey int NOT NULL COMMENT '',
+  o_orderstatus varchar NOT NULL COMMENT '',
+  o_totalprice decimal(15,2) NOT NULL COMMENT '',
+  o_orderdate bigint NOT NULL COMMENT '',
+  o_orderpriority varchar NOT NULL COMMENT '',
+  o_clerk varchar NOT NULL COMMENT '',
+  o_shippriority int NOT NULL COMMENT '',
+  o_comment varchar NOT NULL COMMENT '',
   dummy varchar
-) DISTRIBUTED BY HASH  (orderkey);
+) DISTRIBUTED BY HASH  (o_orderkey);
 
-CREATE TABLE lineitem ( orderkey bigint NOT NULL COMMENT '',
-  partkey int NOT NULL COMMENT '',
-  suppkey int NOT NULL COMMENT '',
-  linenumber int NOT NULL COMMENT '',
-  quantity decimal(15,2) NOT NULL COMMENT '',
-  extendedprice decimal(15,2) NOT NULL COMMENT '',
-  discount decimal(15,2) NOT NULL COMMENT '',
-  tax decimal(15,2) NOT NULL COMMENT '',
-  returnflag varchar NOT NULL COMMENT '',
-  linestatus varchar NOT NULL COMMENT '',
-  shipdate bigint NOT NULL COMMENT '',
-  commitdate bigint NOT NULL COMMENT '',
-  receiptdate bigint NOT NULL COMMENT '',
-  shipinstruct varchar NOT NULL COMMENT '',
-  shipmode varchar NOT NULL COMMENT '',
-  comment varchar NOT NULL COMMENT '',
+CREATE TABLE lineitem ( 
+  l_orderkey bigint NOT NULL COMMENT '',
+  l_partkey int NOT NULL COMMENT '',
+  l_suppkey int NOT NULL COMMENT '',
+  l_linenumber int NOT NULL COMMENT '',
+  l_quantity decimal(15,2) NOT NULL COMMENT '',
+  l_extendedprice decimal(15,2) NOT NULL COMMENT '',
+  l_discount decimal(15,2) NOT NULL COMMENT '',
+  l_tax decimal(15,2) NOT NULL COMMENT '',
+  l_returnflag varchar NOT NULL COMMENT '',
+  l_linestatus varchar NOT NULL COMMENT '',
+  l_shipdate bigint NOT NULL COMMENT '',
+  l_commitdate bigint NOT NULL COMMENT '',
+  l_receiptdate bigint NOT NULL COMMENT '',
+  l_shipinstruct varchar NOT NULL COMMENT '',
+  l_shipmode varchar NOT NULL COMMENT '',
+  l_comment varchar NOT NULL COMMENT '',
   dummy varchar
-) DISTRIBUTED BY HASH  (orderkey);
+) DISTRIBUTED BY HASH  (l_orderkey);
