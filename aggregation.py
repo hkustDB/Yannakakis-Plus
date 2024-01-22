@@ -16,9 +16,7 @@ class AggFunc():
         self.alias = alias          # use as alias, sum(source_name) as alias -> sum(alias) as alias
         self.formular = formular    # change to its alias
         self.originForm = formular  # v1 * v2 / v1
-        # FIXME: Change for complex formular
-        # self.sepAlias = []        # used for multiple variables in aggregation function
-        # self.aggFuncId = randint(0, maxsize)
+        self.isChild: bool = True   # mark aggregation relate to child or parent node
         self.doneFlag = False
 
 class Aggregation:
@@ -27,10 +25,7 @@ class Aggregation:
         self.aggFunc = aggFunc
         self.aggFuncCnt = len(aggFunc)
         self.alias2AggFunc = self.getAllAggVars()
-        # To be more precise, allAggAlias
         self.allAggAlias = list(self.alias2AggFunc.keys())
-        # self.allAggFuncId = [func.aggFuncId for func in aggFunc]
-        # self.allAggDoneFlag = [False for _ in range(len(aggFunc))]    # Marked done already, used for agg alias casting in subset (no need for actual group by)
         
     def getAllAggVars(self) -> dict[str, AggFunc]:
         # FIXME: Change for complex formular
