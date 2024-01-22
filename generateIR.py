@@ -246,7 +246,9 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
 
 # (A) Common Function for Reduce & Enumerate
 def splitLR(LR: str):
-    LR = LR.replace('(', '').replace(')', '').replace(' ', '')
+    LR = LR.replace('(', '').replace(')', '')
+    if LR[0] == ' ':
+        LR = LR[1:]
     if '*' in LR: return LR.split('*'), '*'
     elif '+' in LR: return LR.split('+'), '+'
     else: return [LR], ''
