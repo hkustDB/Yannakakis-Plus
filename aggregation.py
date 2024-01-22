@@ -18,7 +18,7 @@ class AggFunc():
         self.originForm = formular  # v1 * v2 / v1
         # FIXME: Change for complex formular
         # self.sepAlias = []        # used for multiple variables in aggregation function
-        self.aggFuncId = randint(0, maxsize)
+        # self.aggFuncId = randint(0, maxsize)
         self.doneFlag = False
 
 class Aggregation:
