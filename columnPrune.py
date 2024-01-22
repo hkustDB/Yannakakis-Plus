@@ -65,7 +65,7 @@ agregation: undone: keep internal variables; done keep alias
 '''
 def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outputVariables: set[str], Agg: Aggregation = None, COMP: list[Comparison] = []):
     # FIXME: No intermediate variable in agg, all trans happens at one node
-    aggKeepSet = getAggSet(Agg, isAll=False) 
+    aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
     
     joinKeyParent: dict[int, set[str]] = dict()     # NodeId -> joinKeys with parent -> reduce

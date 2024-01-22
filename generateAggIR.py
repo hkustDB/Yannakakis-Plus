@@ -430,10 +430,10 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                 else:
                     # just pass on alias for later aggregation
                     selectAttr.append('')
-                    selectAttrAlias.append(agg)
-                    
+                    selectAttrAlias.append(agg)               
         else:
             selectAttrAlias.append('annot')
+        
     elif parentNode.relationType != RelationType.TableScanRelation:
         selectAttrAlias = parentNode.cols.copy()
         selectAttrAlias.extend(aggPass2Join)
@@ -516,39 +516,31 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     reduceList: list[ReducePhase] = []
     enumerateList: list[EnumeratePhase] = []
     
-    # FIXME: match with all agg variables generateIR
-    def getAggRelation(relation: Edge) -> list[AggFunc]:
+    def getAggRelation(node: TreeNode) -> list[AggFunc]:
         aggs = []
-        joinKey = set(relation.dst.cols) & set(relation.src.cols)
-        childNode = jointree.getNode(relation.dst.id)
-        # In case some attributes is not in the original same node
-        if childNode.JoinResView:
-            satisKey = [col for col in childNode.JoinResView.selectAttrAlias if col not in joinKey]
+        if node.parent:
+            joinKeys = set(node.cols) & set(node.parent.cols)
+            satisKeys = [alias for alias in node.cols if alias not in joinKeys]
         else:
-            satisKey = [col for col in childNode.cols if col not in joinKey]
-        
+            satisKeys = node.cols
         for aggF in Agg.aggFunc:
             if aggF.doneFlag:
                 continue
-            if len(aggF.inVars) == 0 and aggF.alias in satisKey: # no input vars case
+            if len(aggF.inVars) != 0 and set(aggF.inVars).issubset(satisKeys): # no input vars case
                 aggs.append(aggF)
-            elif len(aggF.inVars) == 1 and aggF.inVars[0] in satisKey:
+            elif len(aggF.inVars) > 1 and len(set(aggF.inVars) & set(satisKeys)) != 0:
                 aggs.append(aggF)
-            elif len(aggF.inVars) > 1:  # mark true during the process, cauase here is hard to determine
-                for invar in aggF.inVars:
-                    if invar in satisKey: # aggregation related, need to more judgement to pass or aggregate
-                        aggs.append(aggF)
-                        break
         
         aggs.sort(key=lambda agg: agg.funcName.value)
         return aggs
+    
     
     def getLeafRelation(relations: list[Edge]) -> list[list[Edge, list[AggFunc]]]:
         # leafRelation = [rel for rel in relations if rel.dst.isLeaf and not rel.dst.isRoot]
         leafRelation = []
         for rel in relations:
             if rel.dst.isLeaf and not rel.dst.isRoot:
-                leafRelation.append([rel, getAggRelation(rel)])
+                leafRelation.append([rel, getAggRelation(rel.dst)])
         return leafRelation
     
     def getSupportRelation(relations: list[list[Edge, list[AggFunc]]]) -> list[list[Edge, list[AggFunc]]]:
@@ -632,16 +624,16 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         supportRelation = getSupportRelation(leafRelation)
         # no need to sort supportRelation, done in leafRelation already
         if len(supportRelation):
-            rel, aggs = supportRelation[0]
+            rel, aggChild = supportRelation[0]
         else:
-            rel, aggs = leafRelation[0]
+            rel, aggChild = leafRelation[0]
         incidentComp = getCompRelation(rel)
         selfComp = getSelfComp(rel)
         compExtract = getCompExtract(rel)
         updateDirection = []
         aggReduce = None
         if len(incidentComp) == 0:
-            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, compExtract=compExtract, childIsOriLeaf=JT.getNode(rel.dst.id).isLeaf)
+            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggChild, selfComp, compExtract=compExtract, childIsOriLeaf=JT.getNode(rel.dst.id).isLeaf)
         elif len(incidentComp) == 1:
             onlyComp = incidentComp[0]
             corIndex = comparisons.index(onlyComp)
@@ -651,7 +643,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                 updateDirection.append(Direction.Right)
             else:
                 raise RuntimeError("Should not happen! ")
-            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggs, selfComp, incidentComp=incidentComp, compExtract=compExtract, updateDirection=updateDirection, childIsOriLeaf=JT.getNode(rel.dst.id).isLeaf)
+            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggChild, selfComp, incidentComp=incidentComp, compExtract=compExtract, updateDirection=updateDirection, childIsOriLeaf=JT.getNode(rel.dst.id).isLeaf)
             updateComprison(incidentComp, updateDirection)
             comparisons[corIndex] = incidentComp[0]
         else:
