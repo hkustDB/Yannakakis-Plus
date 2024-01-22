@@ -17,6 +17,7 @@ class Comp:
         self.expr = expr
         self.isExtract: bool = False    # NOTE: Currently only aggregation has extract function
         self.isChild: bool = False      # corres to child node
+        self.isDone: bool = False
         
 class CompList:
     def __init__(self, compList: list[Comp]) -> None:
