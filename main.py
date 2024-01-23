@@ -30,7 +30,7 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/tpch/th8/'
+BASE_PATH = 'query/tpch/th19/'
 DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
@@ -208,9 +208,12 @@ def connect():
     aggregations = response['aggregations']
     Agg = None
     for aggregation in aggregations:
-        func, result, formular = aggregation['func'], aggregation['result'], aggregation['args'][0]
-        pattern = re.compile('v[0-9]+')
-        inVars = list(set(pattern.findall(formular)))
+        func, result, formular = aggregation['func'], aggregation['result'], aggregation['args']
+        inVars = []
+        if len(formular):
+            formular = formular[0]
+            pattern = re.compile('v[0-9]+')
+            inVars = list(set(pattern.findall(formular)))
         agg = AggFunc(func, inVars, result, formular)
         aggFunc.append(agg)
     if len(aggFunc):
@@ -320,6 +323,7 @@ if __name__ == '__main__':
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
+                computationList.reset()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
                     codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName)

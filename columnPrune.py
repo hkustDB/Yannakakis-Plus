@@ -82,7 +82,6 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             queue.insert(0, child)
         if node.isRoot: 
             continue
-            
         joinKeyParent[node.id] = set(node.cols) & set(node.parent.cols)
         allJoinKeys |= set(node.cols) & set(node.parent.cols)
     
@@ -115,18 +114,19 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
         else:
             reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys)
     
+    aggKeepSet = getAggSet(Agg, isAll=False) 
     requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet
     ## step2: prune enumerate
     for index, enum in enumerate(reversed(enumerateList)):
         corEnum = enum.semiEnumerate if enum.semiEnumerate else enum.stageEnd
         if index == 0:
-            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, outputVariables | aggKeepSet, removeAnnot=True)
+            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, outputVariables, removeAnnot=True)
         else:
-            if JT.getNode(enum.corresNodeId).parent.id in joinKeyEnum:
-                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[JT.getNode(enum.corresNodeId).parent.id])
-            else:
-                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables)
+            # FIXME: use all joinKeys to prune
+            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[enum.corresNodeId])
+                
     # step3: prune aggReduce (bottom up)
+    aggKeepSet = getAggSet(Agg, isAll=True) 
     if Agg:
         requireVariables = outputVariables | compKeepSet
         for index, aggReduce in enumerate(aggReduceList):

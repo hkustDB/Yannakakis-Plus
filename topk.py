@@ -33,3 +33,8 @@ class CompList:
             self.alias2Var[comp.result] = set(inVars)
             if 'EXTRACT' in comp.expr:
                 self.alias2Comp[comp.result].isExtract = True
+                
+    def reset(self):
+        for alias in self.alias2Comp.keys():
+            self.alias2Comp[alias].isDone = False
+        return 
