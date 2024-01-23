@@ -170,7 +170,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             elif len(enum.semiEnumerate.whereCondList):
                 line += ' where ' + ' and '.join(enum.semiEnumerate.whereCondList)
             
-            line += addGroupBy(enum.semiEnumerate) + END
+            line += END
             outFile.write(line)
             dropView.append(enum.semiEnumerate.viewName)
             continue

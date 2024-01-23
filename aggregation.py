@@ -38,6 +38,7 @@ class Aggregation:
     def initDoneFlag(self):
         for agg in self.aggFunc:
             agg.doneFlag = False
+            agg.formular = agg.originForm
 
 # aggregation additional reduce view (outside subset)   
 ## aggFunc[AggFunc]; aggFunc[i].funcName + '(' + aggFunc[i].inVars +')'

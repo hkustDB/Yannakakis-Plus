@@ -246,11 +246,8 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
 
 # (A) Common Function for Reduce & Enumerate
 def splitLR(LR: str):
-    LR = LR.replace('(', '').replace(')', '')
-    if LR[0] == ' ':
-        LR = LR[1:]
-    if '*' in LR: return LR.split('*'), '*'
-    elif '+' in LR: return LR.split('+'), '+'
+    if '*' in LR: return LR.replace('(', '').replace(')', '').split('*'), '*'
+    elif '+' in LR: return LR.replace('(', '').replace(')', '').split('+'), '+'
     else: return [LR], ''
         
 # -1 change corres selectAttrs (actually no need to change, must be tablescan)
@@ -761,7 +758,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                     inVars = pattern.findall(comp.expr)
                     for var in inVars:
                         originVar = parentNode.col2vars[1][parentNode.cols.index(var)]
-                        comp.expr.replace(var, originVar)
+                        comp.expr = comp.expr.replace(var, originVar)
                     selectAttributes.append(comp.expr)
                     selectAttributesAs.append(comp.result)
                 else:
@@ -879,38 +876,33 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
             ## Extra for agg: annot/aggregation function
             if isAgg:
                 if origiNode.JoinResView:
-                    ### change annot
-                    selectAttr = ['' for _ in range(len(selectAttrAlias))]
-                    if 'annot' in selectAttrAlias:
-                        index = selectAttrAlias.index('annot')
-                        if 'annot' in previousView.selectAttrAlias and 'annot' in origiNode.JoinResView.selectAttrAlias:
-                            selectAttr[index] = 'SUM(' + previousView.viewName + '.annot * ' + origiNode.JoinResView.viewName + '.annot)'
-                        else:
-                            selectAttr[index] = 'SUM(annot)'
-                    ### change aggregation function
                     if 'annot' in previousView.selectAttrAlias and 'annot' in origiNode.JoinResView.selectAttrAlias:
+                        ### change annot 
+                        index = selectAttrAlias.index('annot')
+                        selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                        selectAttr[index] = previousView.viewName + '.annot * ' + origiNode.JoinResView.viewName + '.annot'
+                        selectAttrAlias[index] = 'annot'
+                        ### change aggregation function
                         for index, val in enumerate(selectAttrAlias):
                             if val in Agg.allAggAlias and val in origiNode.JoinResView.selectAttrAlias:
-                                selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + '*' + previousView.viewName + '.annot)') if not JT.isFreeConnex else (val + '*' + previousView.viewName + '.annot')
+                                selectAttr[index] = val + '*' + previousView.viewName + '.annot'
+                                selectAttrAlias[index] = val
                             elif val in Agg.allAggAlias and val in previousView.selectAttrAlias:
-                                selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + '*' + origiNode.JoinResView.viewName + '.annot)') if not JT.isFreeConnex else (val + '*' + origiNode.JoinResView.viewName + '.annot')
+                                selectAttr[index] = val + '*' + origiNode.JoinResView.viewName + '.annot'
+                                selectAttrAlias[index] = val
                     elif 'annot' in previousView.selectAttrAlias:
                         for index, val in enumerate(selectAttrAlias):
                             if val in Agg.allAggAlias and val in origiNode.JoinResView.selectAttrAlias:
-                                selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + '*' + previousView.viewName + '.annot)') if not JT.isFreeConnex else (val + '*' + previousView.viewName + '.annot')
-                            elif val in Agg.allAggAlias:
-                                selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + ')') if not JT.isFreeConnex else val 
+                                selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                                selectAttr[index] = val + '*' + previousView.viewName + '.annot'
+                                selectAttrAlias[index] = val
+                            
                     elif 'annot' in origiNode.JoinResView.selectAttrAlias:
                         for index, val in enumerate(selectAttrAlias):
                             if val in Agg.allAggAlias and val in previousView.selectAttrAlias:
                                 selectAttr = ['' for _ in range(len(selectAttrAlias))]
-                                selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + '*' + origiNode.JoinResView.viewName + '.annot)') if not JT.isFreeConnex else (val + '*' + origiNode.JoinResView.viewName + '.annot')
-                            elif val in Agg.allAggAlias:
-                                selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + ')') if not JT.isFreeConnex else val
-                    else:
-                        for index, val in enumerate(selectAttrAlias):
-                            if val in Agg.allAggAlias:
-                                selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + ')') if not JT.isFreeConnex else val
+                                selectAttr[index] = val + '*' + origiNode.JoinResView.viewName + '.annot'
+                                selectAttrAlias[index] = val
         else:
             joinTable = origiNode.alias
             selectAttrAlias = list(set(origiNode.cols) | set(previousView.selectAttrAlias))
