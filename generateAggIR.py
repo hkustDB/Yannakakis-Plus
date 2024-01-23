@@ -225,7 +225,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         elif agg.funcName == AggFuncType.AVG:
                             selectAttr.append('SUM(' + agg.formular + ' * annot' + ')')
                         elif agg.funcName == AggFuncType.COUNT:
-                            selectAttr.append(agg.funcName.name + '(' + agg.formular+ ' * annot' + ')' )
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ' * annot' + ')' )
                         else:
                             # MIN/MAX
                             selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
@@ -496,7 +496,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     rightVar[i] = node.col2vars[1][index]
                 return incidentComp[0].left + incidentComp[0].op + opR.join(rightVar)
             else: # parse left
-                leftVar, opL = splitLR(incidentComp[0].right)
+                leftVar, opL = splitLR(incidentComp[0].left)
                 for i in range(len(leftVar)):
                     if not 'v' in leftVar[i]: continue
                     index = node.cols.index(leftVar[i])
@@ -727,10 +727,45 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     for out in unDoneOut:
         if out in Agg.allAggAlias:
             func = Agg.alias2AggFunc[out]
-            if func.funcName != AggFuncType.AVG:
-                selectName.extend([out for _ in range(outputVariables.count(out))])
+            if JT.isFreeConnex and len(jointree.subset):
+                if func.funcName == AggFuncType.AVG:
+                    selectName.extend([out + '/annot as ' + out for _ in range(outputVariables.count(out))])
+                elif func.funcName == AggFuncType.COUNT:
+                    selectName.extend(['annot as ' + out for _ in range(outputVariables.count(out))])
+                else:
+                    selectName.extend([out for _ in range(outputVariables.count(out))])
+            elif not len(jointree.subset):
+                if 'CASE' in func.formular:
+                    lastView = aggReduceList[-1].aggJoin if aggReduceList[-1].aggJoin else aggReduceList[-1].aggView
+                    annotFlag = '*annot' if 'annot' in lastView.selectAttrAlias else ''
+                    _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
+                    caseCond = caseCond[1:-1]
+                    caseRes1 = caseRes1[1:-1]
+                    if 'caseCond' in lastView.selectAttrAlias:
+                        selectName.append(func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
+                    elif 'caseRes' in lastView.selectAttrAlias:
+                        selectName.append(func.funcName.name + '( CASE WHEN' + caseCond + ' THEN caseRes ' + annotFlag + 'ELSE 0.0 END)')
+                    else:
+                        selectName.append(func.funcName.name + '(' + func.originForm + annotFlag + ')')
+                else:
+                    if func.doneFlag:
+                        if func.funcName == AggFuncType.AVG:
+                            selectName.extend(['AVG(' + out + '/annot) as ' + out for _ in range(outputVariables.count(out))])
+                        elif func.funcName == AggFuncType.COUNT:
+                            selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
+                        else:
+                            selectName.extend([func.funcName.name + '(' + out + ') as ' + out for _ in range(outputVariables.count(out))])
+                    else:
+                        if func.funcName == AggFuncType.COUNT:
+                            selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
+                        else:
+                            selectName.extend([func.funcName.name + '(' + func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
+                
             else:
-                selectName.extend([out + '/annot as ' + out for _ in range(outputVariables.count(out))])
+                if func.funcName == AggFuncType.AVG:
+                    selectName.extend(['SUM(' + out + '/annot) as ' + out for _ in range(outputVariables.count(out))])
+                else:
+                    selectName.extend([func.funcName.name + '(' + out + ') as ' + out for _ in range(outputVariables.count(out))])
         elif out in compKeys:
             newForm = computations.alias2Comp[out].expr
             pattern = re.compile('v[0-9]+')
@@ -738,10 +773,34 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             for var in inVars:
                 if var in Agg.allAggAlias:
                     func = Agg.alias2AggFunc[var]
-                    if func.funcName != AggFuncType.AVG:
-                        newForm = newForm.replace(var, func.alias )
+                    if JT.isFreeConnex and len(JT.subset):
+                        if func.funcName != AggFuncType.AVG:
+                            newForm = newForm.replace(var, func.alias)
+                        else:
+                            newForm = newForm.replace(var, func.alias + '/annot')
+                    elif not len(JT.subset):
+                        lastView = aggReduceList[-1].aggJoin if aggReduceList[-1].aggJoin else aggReduceList[-1].aggView
+                        annotFlag = '*annot' if 'annot' in lastView.selectAttrAlias else ''
+                        if 'CASE' in func.formular:
+                            _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
+                            caseCond = caseCond[1:-1]
+                            caseRes1 = caseRes1[1:-1]
+                            if 'caseCond' in lastView.selectAttrAlias:
+                                newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
+                            elif 'caseRes' in lastView.selectAttrAlias:
+                                newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN' + caseCond + ' THEN caseRes ' + annotFlag + 'ELSE 0.0 END)')
+                            else:
+                                newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + annotFlag + ')')
+                        else:
+                            if func.doneFlag:
+                                newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')
+                            else:
+                                newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + annotFlag + ')')
                     else:
-                        newForm = newForm.replace(var, func.alias + '/annot')
+                        if func.funcName != AggFuncType.AVG:
+                            newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')
+                        else:
+                            newForm = newForm.replace(var, 'SUM(' + func.alias + '/annot)')
             
             selectName.append(newForm + ' as ' + out)
         else:
@@ -749,10 +808,13 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     
     finalResult = 'select ' + ','.join(selectName) + ' from '
     
-    ## a. subset = 1 special case
-    if len(jointree.subset) == 1:
+    ## a. subset <= 1 special case
+    if len(jointree.subset) <= 1:
         aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], finalResult, set(outputVariables), Agg, list(COMP.values()))
-        finalResult += aggReduceList[-1].aggJoin.viewName + ';\n'
+        finalResult += aggReduceList[-1].aggJoin.viewName
+        if not JT.isFreeConnex:
+            finalResult += ' group by ' + ', '.join(Agg.groupByVars)
+        finalResult += ';\n'
         return aggReduceList, [], [], finalResult
     
     ## b. normal case
@@ -765,6 +827,9 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     elif not len(reduceList):
         fromTable = aggReduceList[-1].aggJoin.viewName
     # oreder by & limit used for checking answer
-    finalResult += fromTable + ';\n'
+    if not JT.isFreeConnex:
+        finalResult += fromTable + ' group by ' + ', '.join(Agg.groupByVars) + ';\n'
+    else:
+        finalResult += fromTable + ';\n'
     aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], finalResult, set(outputVariables), Agg, list(COMP.values()))
     return aggReduceList, reduceList, enumerateList, finalResult

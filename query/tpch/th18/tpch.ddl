@@ -90,3 +90,8 @@ CREATE TABLE lineitem
     l_shipmode      VARCHAR,
     l_comment       VARCHAR
 );
+
+CREATE TABLE view1
+(
+    v1_orderkey INTEGER
+);
