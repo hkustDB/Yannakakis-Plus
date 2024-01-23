@@ -61,7 +61,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             index = childNode.cols.index(key)
             selectAttr.append(childNode.col2vars[1][index])
             groupBy.append(childNode.col2vars[1][index])
-        # NOTE: here extract all in groupBy
+        # NOTE: here extract all in groupBy, need to append in groupBy
         for comp in childExtract:
             if comp.result in Agg.groupByVars:
                 pattern = re.compile('v[0-9]+')
@@ -251,13 +251,14 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     pattern = re.compile('v[0-9]+')
                     condVar = pattern.findall(caseCond)
                     res1Var = pattern.findall(caseRes1)
+                    annotFlag = '*annot' if childNode.JoinResView and 'annot' in findInVars else ''
                     if condVar[0] in findInVars and res1Var[0] in findInVars:
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
                         if agg.funcName != AggFuncType.AVG:
-                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + annotFlag + ')')
                         else:
-                            selectAttr.append('SUM(' + agg.formular + ')')
+                            selectAttr.append('SUM(' + agg.formular + annotFlag + ')')
                     elif 'caseCond' in findInVars and res1Var[0] in findInVars:
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
@@ -266,9 +267,9 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         selectAttr.pop(dIndex)
                         aggPass2Join.remove('caseCond')
                         if agg.funcName != AggFuncType.AVG:
-                            selectAttr.append(agg.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
+                            selectAttr.append(agg.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
                         else:
-                            selectAttr.append('SUM( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
+                            selectAttr.append('SUM( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
                     elif 'caseRes' in findInVars and condVar[0] in findInVars:
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
@@ -277,14 +278,14 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         selectAttr.pop(dIndex)
                         aggPass2Join.remove('caseRes')
                         if agg.funcName != AggFuncType.AVG:
-                            selectAttr.append(agg.funcName.name + '( CASE WHEN' + caseCond + ' THEN caseRes ELSE 0.0 END)')
+                            selectAttr.append(agg.funcName.name + '( CASE WHEN' + caseCond + ' THEN caseRes' + annotFlag + 'ELSE 0.0 END)')
                         else:
-                            selectAttr.append('SUM( CASE WHEN' + caseCond + ' THEN caseRes ELSE 0.0 END)')
-                    elif condVar[0] in childNode.cols and res1Var[0] in childNode.cols:
+                            selectAttr.append('SUM( CASE WHEN' + caseCond + ' THEN caseRes' + annotFlag + 'ELSE 0.0 END)')
+                    elif condVar[0] in findInVars and res1Var[0] in findInVars:
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
                         if agg.funcName != AggFuncType.AVG:
-                            selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
+                            selectAttr.append(agg.funcName.name + '(' + agg.formular + annotFlag + ')')
                         else:
                             selectAttr.append('SUM(' + agg.formular + ')')
                     elif condVar[0] in findInVars:
@@ -292,7 +293,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         selectAttrAlias.append('caseCond')
                         aggPass2Join.append('caseCond')
                     elif res1Var[0] in findInVars:
-                        selectAttr.append(caseRes1)
+                        selectAttr.append(caseRes1 + annotFlag)
                         selectAttrAlias.append('caseRes')
                         aggPass2Join.append('caseRes')
                     else:
@@ -382,6 +383,12 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         aggPass2Join.append(compVar)
         else:
             raise NotImplementedError("More than one aggregation incident comparison is not implemented! ")
+
+    # Add caseCond, caseRes in groupBy
+    if 'caseCond' in selectAttrAlias and 'caseCond' not in groupBy:
+        groupBy.append('caseCond')
+    if 'caseRes' in selectAttrAlias and 'caseRes' not in groupBy:
+        groupBy.append('caseRes')
     
     if childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation and childIsOriLeaf and len(childSelfComp):
         transSelfCompList = makeSelfComp(childSelfComp, childNode)
