@@ -1371,14 +1371,11 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         else:
             fromTable = enumerateList[-1].semiEnumerate.viewName
             totalName = enumerateList[-1].semiEnumerate.selectAttrAlias
-            
-        for alias in totalName:
-            if alias in outputVariables:
-                selectName.append(alias)
         
-        unDoneOut = [out for out in outputVariables if out not in selectName]
-        for undone in unDoneOut:
-            if undone in compKeys:
+        for alias in outputVariables:
+            if alias in totalName:
+                selectName.append(alias)
+            elif alias in compKeys:
                 selectName.append(computations.alias2Comp[undone] + ' as ' + undone)
             else:
                 raise RuntimeError("Undone still not in output! ")

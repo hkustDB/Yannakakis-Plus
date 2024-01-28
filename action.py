@@ -8,7 +8,7 @@ class Action:
     If it has alias, parse it into list([source] as [alias])
     '''
     _viewId = 0
-    _sampleRate = 100
+    _sampleRate = 5
     def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str) -> None:
         self.viewName = viewName
         self.selectAttrs = selectAttrs
