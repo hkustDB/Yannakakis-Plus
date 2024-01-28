@@ -29,9 +29,10 @@ class JoinTree:
         self.isFull: bool = isFull
         self.isFreeConnex: bool = isFreeConnex
         self.subset: list[int] = subset
-        # self.subsetId: list[int] = []
         self.supId = supId
         self.extraEqualConditions = extraEqualConditions
+        self.extraEqualDoneFlag = [False] * len(self.extraEqualConditions)
+        self.extraEqualSet = self.getExtraEqualSet()
         
     def __repr__(self) -> str:
         return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset) + "\nExtra:\n" + str(self.extraEqualConditions)
@@ -55,6 +56,12 @@ class JoinTree:
     
     def getRelations(self) -> dict[int, Edge]:
         return self.edge
+    
+    def getExtraEqualSet(self):
+        extraEqualSet = set()
+        for cond in self.extraEqualConditions:
+            extraEqualSet.update(cond)
+        return extraEqualSet
     
     def findNode(self, id: int):            # test whether already added, nodeId set
         if self.node.get(id, False):
