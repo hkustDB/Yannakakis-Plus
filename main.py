@@ -30,8 +30,8 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/tpch/th19/'
-DDL_NAME = 'tpch.ddl'
+BASE_PATH = 'query/lsqb/q9/'
+DDL_NAME = 'lsqb.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
@@ -170,13 +170,13 @@ def connect():
     for index, jt in enumerate(joinTrees):
         allNodes = dict()
         supId = set()
-        nodes, edges, root, subset, comparisons = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons']
+        nodes, edges, root, subset, comparisons, extraEqualConditions = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraEqualConditions']
         # a. parse relations
         for node in nodes:
             parseRel(node, allNodes, supId)
         # b. parse edge
         allNodes = parse_col2var(allNodes, table2vars)
-        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset)
+        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset, extraEqualConditions)
         JT.setRootById(root)
         CompareMap: dict[int, Comparison] = dict()
         
@@ -196,7 +196,7 @@ def connect():
                 Compare.reversePath()
             CompareMap[Compare.id] = Compare
         # d. final
-        if optJT is not None and JT.root.depth < optJT.root.depth:
+        if optJT is not None and JT.root.depth > optJT.root.depth:
             optJT, optCOMP = JT, CompareMap
         elif optJT is None:
             optJT, optCOMP = JT, CompareMap
@@ -230,7 +230,7 @@ def connect():
         comp = Comp(com['result'], com['expr'])
         tempComp.append(comp)
     computationList = CompList(tempComp)
-    return optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList
+    return optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars
 
 
 def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]]) -> dict[int, TreeNode]:
@@ -296,7 +296,7 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
 if __name__ == '__main__':
     start = time.time()
-    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList = connect()
+    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect()
     IRmode = IRType.Report if not Agg else IRType.Aggregation
     IRmode = IRType.Level_K if topK and topK.mode == 0 else IRmode
     IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
@@ -343,4 +343,5 @@ if __name__ == '__main__':
                 traceback.print_exc()
                 print("Error JT: " + str(index))
     end = time.time()
+    # oriQuerySum(optJT.node, table2vars, BASE_PATH + 'querySum.sql', isFull=optJT.isFull)
     print('Rewrite time(s): ' + str(end-start) + '\n')

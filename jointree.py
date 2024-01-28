@@ -20,9 +20,9 @@ class Edge:
     
     def __repr__(self) -> str:
         return str(self.src.id) + str('->') + str(self.dst.id)
-        
+    
 class JoinTree:
-    def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int]) -> None:
+    def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int], extraEqualConditions: list[list[str, str]]) -> None:
         self.node: dict[int, TreeNode] = node   # id -> TreeNode
         self.edge: dict[int, Edge] = dict()     # id -> (TreeNode1, TreeNode2)
         self.root: TreeNode = None
@@ -31,12 +31,13 @@ class JoinTree:
         self.subset: list[int] = subset
         # self.subsetId: list[int] = []
         self.supId = supId
+        self.extraEqualConditions = extraEqualConditions
         
     def __repr__(self) -> str:
-        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset)
+        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset) + "\nExtra:\n" + str(self.extraEqualConditions)
         
     def __str__(self) -> str:
-        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset)
+        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset) + "\nExtra:\n" + str(self.extraEqualConditions)
     
     @property
     def getRoot(self): return self.root

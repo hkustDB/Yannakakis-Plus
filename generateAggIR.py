@@ -757,7 +757,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                             selectName.extend([func.funcName.name + '(' + out + ') as ' + out for _ in range(outputVariables.count(out))])
                     else:
                         if func.funcName == AggFuncType.COUNT:
-                            selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
+                            selectName.extend(['SUM(annot) as ' + out for _ in range(outputVariables.count(out))])
                         else:
                             selectName.extend([func.funcName.name + '(' + func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
                 

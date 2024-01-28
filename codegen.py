@@ -2,6 +2,7 @@ from enumerate import *
 from reduce import *
 from aggregation import *
 from enumsType import *
+from treenode import *
 
 BEGIN = 'create or replace view '
 END = ';\n'
@@ -204,4 +205,18 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         line = '\n# drop view ' + ', '.join(dropView) + END
         outFile.write(line)
     
+    outFile.close()
+    
+def oriQuerySum(node: dict[int, TreeNode], table2vars: dict[str, list[str]], outpath: str, isFull: bool = False):
+    if not isFull: return
+    outFile = open(outpath, 'w+')
+    outAttrs = []
+    for table in node.values():
+        if table.relationType != RelationType.TableScanRelation:
+            continue
+        name = table.source if table.source == table.alias else table.alias
+        for var in table2vars[table.source]:
+            outAttrs.append(name + '.' + var + '/1000')
+    line = 'sum(' + '+'.join(outAttrs) + ')\n'
+    outFile.write(line)
     outFile.close()
