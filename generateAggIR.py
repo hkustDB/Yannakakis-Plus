@@ -16,7 +16,7 @@ from functools import cmp_to_key
 from sys import maxsize
 
 
-def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], incidentComp: list[Comparison] = [], compExtract: list[Comp] = [], updateDirection: list[Direction] = [], childIsOriLeaf: bool = False) -> AggReducePhase:
+def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFuncList: list[AggFunc] = [], selfComp: list[Comparison] = [], incidentComp: list[Comparison] = [], compExtract: list[Comp] = [], updateDirection: list[Direction] = [], extraEqualCond: list[str] = [], childIsOriLeaf: bool = False) -> AggReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
@@ -61,7 +61,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             index = childNode.cols.index(key)
             selectAttr.append(childNode.col2vars[1][index])
             groupBy.append(childNode.col2vars[1][index])
-        # NOTE: here extract all in groupBy, need to append in groupBy
+        # NOTE: support for EXTRACT
         for comp in childExtract:
             if comp.result in Agg.groupByVars:
                 pattern = re.compile('v[0-9]+')
@@ -168,13 +168,26 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             if passAggAlias:
                 aggPass2Join.append(agg.alias)
                 agg.doneFlag = True
+        # NOTE: support for extraCond (process for bag)
+        if len(extraEqualCond) == 1:
+            eq1, eq2 = extraEqualCond[0][0], extraEqualCond[0][1]
+            if eq1 in childNode.cols:
+                appData = eq1
+            else:
+                appData = eq2
+            if appData not in selectAttrAlias:
+                selectAttr.append(childNode.col2vars[1][childNode.cols.index(appData)])
+                selectAttrAlias.append(appData)
+            if appData not in aggPass2Join: aggPass2Join.append(appData)
+            if appData not in groupBy: groupBy.append(appData)
+        elif len(extraEqualCond) != 0:
+            raise NotImplementedError("Multiple extraEqualCond! ")
     else:
         ## -1. joinKey
         for key in joinKey:
             selectAttr.append('')
             selectAttrAlias.append(key)
             groupBy.append(key)
-        
         ## -2. previousAgg
         if childNode.JoinResView:
             for var in childNode.JoinResView.selectAttrAlias:
@@ -333,6 +346,36 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                 ## mark this aggregaiton is done
                 agg.doneFlag = True
                 # Agg.allAggDoneFlag[Agg.allAggFuncId.index(agg.aggFuncId)] = True
+                
+        if childNode.JoinResView:
+            if len(extraEqualCond) == 1:
+                eq1, eq2 = extraEqualCond[0][0], extraEqualCond[0][1]
+                if eq1 in childNode.JoinResView.selectAttrAlias:
+                    appData = eq1
+                else:
+                    appData = eq2
+                if appData not in selectAttrAlias:
+                    selectAttr.append('')
+                    selectAttrAlias.append(appData)
+                if appData not in aggPass2Join: aggPass2Join.append(appData)
+                if appData not in groupBy: groupBy.append(appData)
+            elif len(extraEqualCond) != 0:
+                raise NotImplementedError("Multiple extraEqualCond! ")
+        else:
+            # NOTE: support for extraCond (process for bag)
+            if len(extraEqualCond) == 1:
+                eq1, eq2 = extraEqualCond[0][0], extraEqualCond[0][1]
+                if eq1 in childNode.cols:
+                    appData = eq1
+                else:
+                    appData = eq2
+                if appData not in selectAttrAlias:
+                    selectAttr.append(childNode.col2vars[1][childNode.cols.index(appData)])
+                    selectAttrAlias.append(appData)
+                if appData not in aggPass2Join: aggPass2Join.append(appData)
+                if appData not in groupBy: groupBy.append(appData)
+            elif len(extraEqualCond) != 0:
+                raise NotImplementedError("Multiple extraEqualCond! ")
     
     ## d. append annot
     if childFlag:
@@ -434,23 +477,25 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     # aggregation function
                     selectAttr.append(agg + ' * ' + parentNode.JoinResView.viewName + '.annot')
                     selectAttrAlias.append(agg)
-                else:
+                elif agg not in selectAttrAlias:
                     # just pass on alias for later aggregation
                     selectAttr.append('')
                     selectAttrAlias.append(agg)               
         else:
             selectAttrAlias.append('annot')
-        
     elif parentNode.relationType != RelationType.TableScanRelation:
         selectAttrAlias = parentNode.cols.copy()
-        selectAttrAlias.extend(aggPass2Join)
+        for agg in aggPass2Join:
+            if agg not in selectAttrAlias: selectAttrAlias.append(agg)
         selectAttrAlias.append('annot')
     else:
         selectAttr = parentNode.col2vars[1].copy()
         selectAttrAlias = parentNode.cols.copy()
-        # selectAttr.append('')
-        selectAttr.extend(['' for _ in range(len(aggPass2Join) + 1)])
-        selectAttrAlias.extend(aggPass2Join)
+        for agg in aggPass2Join:
+            if agg not in selectAttrAlias: 
+                selectAttr.append('')
+                selectAttrAlias.append(agg)
+        selectAttr.append('')
         selectAttrAlias.append('annot')
         for comp in parentExtract:
             if comp.result in Agg.groupByVars:
@@ -507,8 +552,25 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     condComp = []
     if len(incidentComp) and ((childNode.id == incidentComp[0].getBeginNodeId and parentNode.id == incidentComp[0].getEndNodeId) or (childNode.id == incidentComp[0].getEndNodeId and parentNode.id == incidentComp[0].getBeginNodeId)):
         condComp.append(addComp(parentNode))
+        
+    ## g. addExtraEqualCond process:
+    extraEqualWhere = []
+    if len(extraEqualCond) == 1:
+        extraSet = set(extraEqualCond[0])
+        if extraSet.issubset(selectAttrAlias):
+            if not parentNode.JoinResView and parentNode.relationType == RelationType.TableScanRelation:
+                if extraEqualCond[0][0] in parentNode.cols:
+                    oriVar = parentNode.col2vars[1][parentNode.cols.index(extraEqualCond[0][0])]
+                    extraEqualWhere.append(oriVar + '=' + extraEqualCond[0][1])
+                else:
+                    oriVar = parentNode.col2vars[1][parentNode.cols.index(extraEqualCond[0][1])]
+                    extraEqualWhere.append(extraEqualCond[0][0] + '=' + oriVar)
+            else:
+                extraEqualWhere.append(extraEqualCond[0][0] + '=' + extraEqualCond[0][1])
+    elif len(extraEqualCond) != 0:
+        raise NotImplementedError("Multiple extraEqualCond! ")
     
-    aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp + condComp)
+    aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp + condComp + extraEqualWhere)
     aggReduce = AggReducePhase(prepareView, aggView, aggJoin, reduceRel.dst.id)
     return aggReduce
 
@@ -523,13 +585,34 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     reduceList: list[ReducePhase] = []
     enumerateList: list[EnumeratePhase] = []
     
+    def getExtraCond(node: TreeNode) -> list[str]:
+        res = []
+        if not len(JT.extraEqualConditions): return []
+        if node.JoinResView:
+            satisKeys = set(node.JoinResView.selectAttrAlias)
+        else:
+            satisKeys = set(node.cols)
+        if len(set(satisKeys) & JT.extraEqualSet) != 0:
+            for each in JT.extraEqualConditions:
+                if len(set(each) & satisKeys):
+                    res.append(each)
+            return res
+        else:
+            return []
+    
     def getAggRelation(node: TreeNode) -> list[AggFunc]:
         aggs = []
         if node.parent:
             joinKeys = set(node.cols) & set(node.parent.cols)
-            satisKeys = [alias for alias in node.cols if alias not in joinKeys]
+            if node.JoinResView:
+                satisKeys = [alias for alias in node.JoinResView.selectAttrAlias if alias not in joinKeys]
+            else:
+                satisKeys = [alias for alias in node.cols if alias not in joinKeys]
         else:
-            satisKeys = node.cols
+            if node.JoinResView:
+                satisKeys = node.JoinResView.selectAttrAlias
+            else:
+                satisKeys = node.cols
         for aggF in Agg.aggFunc:
             if aggF.doneFlag:
                 continue
@@ -547,7 +630,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         leafRelation = []
         for rel in relations:
             if rel.dst.isLeaf and not rel.dst.isRoot:
-                leafRelation.append([rel, getAggRelation(rel.dst)])
+                leafRelation.append([rel, getAggRelation(jointree.getNode(rel.dst.id))])
         return leafRelation
     
     def getSupportRelation(relations: list[list[Edge, list[AggFunc]]]) -> list[list[Edge, list[AggFunc]]]:
@@ -637,10 +720,11 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         incidentComp = getCompRelation(rel)
         selfComp = getSelfComp(rel)
         compExtract = getCompExtract(rel)
+        extraEqual = getExtraCond(jointree.getNode(rel.dst.id))
         updateDirection = []
         aggReduce = None
         if len(incidentComp) == 0:
-            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggChild, selfComp, compExtract=compExtract, childIsOriLeaf=JT.getNode(rel.dst.id).isLeaf)
+            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggChild, selfComp, compExtract=compExtract, extraEqualCond=extraEqual, childIsOriLeaf=JT.getNode(rel.dst.id).isLeaf)
         elif len(incidentComp) == 1:
             onlyComp = incidentComp[0]
             corIndex = comparisons.index(onlyComp)
@@ -650,7 +734,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                 updateDirection.append(Direction.Right)
             else:
                 raise RuntimeError("Should not happen! ")
-            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggChild, selfComp, incidentComp=incidentComp, compExtract=compExtract, updateDirection=updateDirection, childIsOriLeaf=JT.getNode(rel.dst.id).isLeaf)
+            aggReduce = buildAggReducePhase(rel, jointree, Agg, aggChild, selfComp, incidentComp=incidentComp, compExtract=compExtract, updateDirection=updateDirection, extraEqualCond=extraEqual, childIsOriLeaf=JT.getNode(rel.dst.id).isLeaf)
             updateComprison(incidentComp, updateDirection)
             comparisons[corIndex] = incidentComp[0]
         else:

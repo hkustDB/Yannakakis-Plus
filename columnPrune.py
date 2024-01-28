@@ -67,6 +67,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
     # FIXME: No intermediate variable in agg, all trans happens at one node
     aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
+    extraEqualSet = JT.extraEqualSet
     
     joinKeyParent: dict[int, set[str]] = dict()     # NodeId -> joinKeys with parent -> reduce
     joinKeyEnum: dict[int, set[str]] = dict()
@@ -87,9 +88,9 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
     
     # step1: prune reduce list
     if Agg:
-        orderRequireInit = outputVariables | compKeepSet | aggKeepSet
+        orderRequireInit = outputVariables | compKeepSet | aggKeepSet | extraEqualSet
     else:
-        orderRequireInit = outputVariables | compKeepSet 
+        orderRequireInit = outputVariables | compKeepSet | extraEqualSet
 
     for reduce in reduceList:
         ## Set up joinKeyEnum
@@ -115,7 +116,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys)
     
     aggKeepSet = getAggSet(Agg, isAll=False) 
-    requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet
+    requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
     ## step2: prune enumerate
     for index, enum in enumerate(reversed(enumerateList)):
         corEnum = enum.semiEnumerate if enum.semiEnumerate else enum.stageEnd
@@ -128,7 +129,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
     # step3: prune aggReduce (bottom up)
     aggKeepSet = getAggSet(Agg, isAll=True) 
     if Agg:
-        requireVariables = outputVariables | compKeepSet
+        requireVariables = outputVariables | compKeepSet | extraEqualSet
         for index, aggReduce in enumerate(aggReduceList):
             corNode = JT.getNode(aggReduce.corresId)
             jkp = set()
@@ -147,7 +148,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 if '<' in lastCond or '<=' in lastCond or '>' in lastCond or '>=' in lastCond:
                     requireVariables = outputVariables
                 
-            curRequireSet = requireVariables | jkp | aggKeepSet
+            curRequireSet = requireVariables | jkp | aggKeepSet | extraEqualSet
             allAggAlias = Agg.allAggAlias
             for alias in allAggAlias:
                 if alias in aggReduce.aggJoin.selectAttrAlias:

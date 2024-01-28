@@ -1379,7 +1379,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 selectName.append(computations.alias2Comp[undone] + ' as ' + undone)
             else:
                 raise RuntimeError("Undone still not in output! ")
-            
+    
         finalResult += '+'.join(selectName) if not JT.isFull else '+'.join(outputVariables)
         finalResult += ') from ' + fromTable + ';\n'
     
