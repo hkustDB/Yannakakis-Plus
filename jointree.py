@@ -3,9 +3,17 @@ from enumsType import *
 
 class Edge:
     _id = 0
-    def __init__(self, node1: TreeNode, node2: TreeNode) -> None:
+    def __init__(self, node1: TreeNode, node2: TreeNode, keyType: str) -> None:
         self.src = node1    # parent
         self.dst = node2    # chilren
+        if keyType == 'child':
+            self.keyType = EdgeType.Child
+        elif keyType == 'parent':
+            self.keyType = EdgeType.Parent
+        elif keyType == 'both':
+            self.keyType = EdgeType.Both
+        else:
+            self.keyType = EdgeType.No
         self.id = Edge._id
         self._addId
     

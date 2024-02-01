@@ -760,6 +760,9 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             return selfComp
         
         for func in Agg.aggFunc:
+            if len(func.formular) == 0:
+                selectName.append('COUNT(*)')
+                continue
             if JT.root.relationType != RelationType.TableScanRelation:
                 selectName.append(func.funcName.name + func.formular)
             else:

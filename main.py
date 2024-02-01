@@ -21,6 +21,7 @@ from generateTopKIR import *
 from codegen import *
 from codegenTopK import *
 from topk import *
+from enumsType import EdgeType
 
 
 from random import randint
@@ -30,8 +31,8 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/tpch/th5/'
-DDL_NAME = 'tpch.ddl'
+BASE_PATH = 'query/lsqb/q3/'
+DDL_NAME = 'lsqb.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.txt'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
@@ -179,9 +180,8 @@ def connect():
         JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset, extraEqualConditions)
         JT.setRootById(root)
         CompareMap: dict[int, Comparison] = dict()
-        
         for edge_data in edges:
-            edge = Edge(JT.getNode(edge_data['src']), JT.getNode(edge_data['dst']))
+            edge = Edge(JT.getNode(edge_data['src']), JT.getNode(edge_data['dst']), edge_data['key'])
             JT.addEdge(edge)
         # c. parse comparison
         for compId, comp in enumerate(comparisons):

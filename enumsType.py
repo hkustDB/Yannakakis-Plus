@@ -98,3 +98,9 @@ class GenType(Enum):
     DuckDB = 0
     Mysql = 1
     
+class EdgeType(Enum):
+    Child = 0
+    Parent = 1
+    Both = 2
+    No = 3
+    
