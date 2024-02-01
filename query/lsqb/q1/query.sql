@@ -1,4 +1,4 @@
-SELECT *
+SELECT count(*)
 FROM Country, City, Person, Forum_hasMember_Person, Forum, Post, `Comment`, Comment_hasTag_Tag, Tag, TagClass
 WHERE City.isPartOf_CountryId = Country.CountryId 
 	AND Person.isLocatedIn_CityId = City.CityId

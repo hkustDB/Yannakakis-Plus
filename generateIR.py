@@ -88,6 +88,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
     if childNode.createViewAlready: return [] # only means creave view about bag/tableagg/aux relation, not use for other join
     prepareView = []
     joinTableList, whereCondList = [], []
+    extractAttr, extractAlias = [], []
     
     def splitLR(LR: str):
         if '*' in LR: return LR.split('*'), '*'
