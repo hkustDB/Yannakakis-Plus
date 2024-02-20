@@ -1,8 +1,5 @@
-SELECT t1.T_ID, t1.T_DTS, t1.T_TT_ID, t1.T_TRADE_PRICE,
-    t2.T_ID, t2.T_DTS, t2.T_TT_ID, t2.T_TRADE_PRICE,
-    t1.T_S_SYMB, t1.T_CA_ID
-FROM Trade t1, Trade t2
-WHERE t1.T_TT_ID LIKE '%B%' AND t2.T_TT_ID LIKE '%S%'
-    AND t1.T_CA_ID = t2.T_CA_ID AND t1.T_S_SYMB = t2.T_S_SYMB
-    AND t1.T_DTS <= t2.T_DTS AND t1.T_DTS + 324000000 >= t2.T_DTS
-    AND t1.T_TRADE_PRICE * 1.2 < t2.T_TRADE_PRICE
+SELECT g5.src, g5.dst, g6.dst
+FROM Graph AS g1, Graph AS g2, Graph AS g3,
+    Graph AS g4, Graph AS g5, Graph AS g6, Graph AS g7
+WHERE g1.dst = g2.src AND g2.dst = g3.src AND g3.dst = g4.src
+    AND g4.dst = g5.src AND g5.dst = g6.src AND g6.dst = g7.src AND g1.src < g7.dst
