@@ -31,10 +31,10 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/lsqb/q3/'
-DDL_NAME = 'lsqb.ddl'
+BASE_PATH = 'query/tpch/q20/'
+DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
-OUT_NAME = 'rewrite.txt'
+OUT_NAME = 'rewrite.sql'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
 
@@ -171,7 +171,7 @@ def connect():
     for index, jt in enumerate(joinTrees):
         allNodes = dict()
         supId = set()
-        nodes, edges, root, subset, comparisons, extraEqualConditions = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraEqualConditions']
+        nodes, edges, root, subset, comparisons, extraEqualConditions = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraConditions']
         # a. parse relations
         for node in nodes:
             parseRel(node, allNodes, supId)
@@ -320,9 +320,11 @@ if __name__ == '__main__':
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
             try:
+                '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
+                '''
                 computationList.reset()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
