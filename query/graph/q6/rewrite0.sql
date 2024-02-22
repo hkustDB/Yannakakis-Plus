@@ -1,0 +1,17 @@
+create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view orderView6620718935951558700 as select v7, v2, v8, row_number() over (partition by v2 order by v8) as rn from g1;
+create or replace view minView1858307380708588028 as select v2, v8 as mfL418143095273948924 from orderView6620718935951558700 where rn = 1;
+create or replace view joinView3221132619229835891 as select src as v2, dst as v4, mfL418143095273948924 from Graph AS g2, minView1858307380708588028 where g2.src=minView1858307380708588028.v2;
+create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v10 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create or replace view orderView465427837019590600 as select v4, v6, v10, row_number() over (partition by v4 order by v6 DESC) as rn from g3;
+create or replace view minView5658894713236327862 as select v4, v6 as mfR4670593287467035202 from orderView465427837019590600 where rn = 1;
+create or replace view joinView5953594695163622277 as select v2, v4, mfL418143095273948924, mfR4670593287467035202 from joinView3221132619229835891 join minView5658894713236327862 using(v4) where mfL418143095273948924<mfR4670593287467035202;
+create or replace view sample3834979675944423067 as select * from orderView465427837019590600 where rn % 5 = 1;
+create or replace view maxRn2920803296303508886 as select v4, max(rn) as mrn from joinView5953594695163622277 join sample3834979675944423067 using(v4) where mfL418143095273948924<v6 group by v4;
+create or replace view target4167348587806158776 as select v4, v6, v10 from orderView465427837019590600 join maxRn2920803296303508886 using(v4) where rn < mrn + 5;
+create or replace view end4347110622918502558 as select v2, v6, v10, v4, mfL418143095273948924 from joinView5953594695163622277 join target4167348587806158776 using(v4) where mfL418143095273948924<v6;
+create or replace view sample64194354303802702 as select * from orderView6620718935951558700 where rn % 5 = 1;
+create or replace view maxRn4290819751553636308 as select v2, max(rn) as mrn from end4347110622918502558 join sample64194354303802702 using(v2) where v8<v6 group by v2;
+create or replace view target4057853648481464129 as select v7, v2, v8 from orderView6620718935951558700 join maxRn4290819751553636308 using(v2) where rn < mrn + 5;
+create or replace view end8970694911244070657 as select v2, v6, v7, v8, v10, v4 from end4347110622918502558 join target4057853648481464129 using(v2) where v8<v6;
+select sum(v7+v2+v4+v6+v8+v10) from end8970694911244070657;
