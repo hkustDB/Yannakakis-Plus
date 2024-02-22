@@ -1,23 +1,7 @@
-## AggReduce Phase: 
-
-# AggReduce3
-# 1. aggView
-create or replace view aggView59706204835686343 as select Person2Id as v2, COUNT(*) as annot, Person1Id as v1 from Person_knows_Person as pkp1 group by Person2Id,Person1Id;
-# 2. aggJoin
-create or replace view aggJoin2389445522361230927 as select Person2Id as v4, annot from Person_knows_Person as pkp2, aggView59706204835686343 where pkp2.Person1Id=aggView59706204835686343.v2 and v1<Person2Id;
-
-# AggReduce4
-# 1. aggView
-create or replace view aggView6261091350568131544 as select v4, SUM(annot) as annot from aggJoin2389445522361230927 group by v4;
-# 2. aggJoin
-create or replace view aggJoin1569687142505312090 as select Person1Id as v4, annot from Person_knows_Person as pkp3, aggView6261091350568131544 where pkp3.Person1Id=aggView6261091350568131544.v4;
-
-# AggReduce5
-# 1. aggView
-create or replace view aggView7966239521592312890 as select v4, SUM(annot) as annot from aggJoin1569687142505312090 group by v4;
-# 2. aggJoin
-create or replace view aggJoin8938779501441906732 as select annot from Person_hasInterest_Tag as Person_hasInterest_Tag, aggView7966239521592312890 where Person_hasInterest_Tag.PersonId=aggView7966239521592312890.v4;
-# Final result: 
-select SUM(annot) as v9 from aggJoin8938779501441906732;
-
-# drop view aggView59706204835686343, aggJoin2389445522361230927, aggView6261091350568131544, aggJoin1569687142505312090, aggView7966239521592312890, aggJoin8938779501441906732;
+create or replace view aggView7539785690206959022 as select PersonId as v4, COUNT(*) as annot from Person_hasInterest_Tag as Person_hasInterest_Tag group by PersonId;
+create or replace view aggJoin1765528892078045313 as select Person1Id as v4, annot from Person_knows_Person as pkp3, aggView7539785690206959022 where pkp3.Person1Id=aggView7539785690206959022.v4;
+create or replace view aggView8479562175236726062 as select v4, SUM(annot) as annot from aggJoin1765528892078045313 group by v4;
+create or replace view aggJoin3813763183987085180 as select Person1Id as v2, Person2Id as v4, annot from Person_knows_Person as pkp2, aggView8479562175236726062 where pkp2.Person2Id=aggView8479562175236726062.v4;
+create or replace view aggView7558878546383368612 as select Person2Id as v2, COUNT(*) as annot, Person1Id as v1 from Person_knows_Person as pkp1 group by Person2Id,Person1Id;
+create or replace view aggJoin253657434823046243 as select aggJoin3813763183987085180.annot * aggView7558878546383368612.annot as annot from aggJoin3813763183987085180 join aggView7558878546383368612 using(v2) where v1 < v4;
+select SUM(annot) as v9 from aggJoin253657434823046243;

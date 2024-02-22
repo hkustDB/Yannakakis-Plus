@@ -152,7 +152,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
     for enum in enumerateList:
         # outFile.write('\n# Enumerate' + str(enum.enumeratePhaseId) + '\n')
         if enum.semiEnumerate is not None:
-            outFile.write('# +. SemiEnumerate\n')
+            # outFile.write('# +. SemiEnumerate\n')
             line = BEGIN + enum.semiEnumerate.viewName + ' as select ' + transSelectData(enum.semiEnumerate.selectAttrs, enum.semiEnumerate.selectAttrAlias) + ' from ' + enum.semiEnumerate.fromTable
             line += ' join ' if len(enum.semiEnumerate.joinKey) != 0 else ', '
             line += enum.semiEnumerate.joinTable
