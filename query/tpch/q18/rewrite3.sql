@@ -1,43 +1,11 @@
-## AggReduce Phase: 
-
-# AggReduce9
-# 1. aggView
-create or replace view aggView4249184356050392039 as select o_orderkey as v9, o_orderdate as v13, o_totalprice as v12, o_custkey as v1, COUNT(*) as annot from orders as orders group by o_orderkey,o_orderdate,o_totalprice,o_custkey;
-# 2. aggJoin
-create or replace view aggJoin8005712871207005068 as select v9, v1, v12, v13, annot from aggView4249184356050392039;
-
-# AggReduce10
-# 1. aggView
-create or replace view aggView1696014980844562635 as select c_custkey as v1, c_name as v2, COUNT(*) as annot from customer as customer group by c_custkey,c_name;
-# 2. aggJoin
-create or replace view aggJoin2230684608168095428 as select v1, v2, annot from aggView1696014980844562635;
-
-# AggReduce11
-# 1. aggView
-create or replace view aggView345234016479944906 as select l_orderkey as v9, SUM(l_quantity) as v35, COUNT(*) as annot from lineitem as lineitem group by l_orderkey;
-# 2. aggJoin
-create or replace view aggJoin4732082715583870888 as select v1_orderkey as v9, v35, annot from view1 as view1, aggView345234016479944906 where view1.v1_orderkey=aggView345234016479944906.v9;
-
-##Reduce Phase: 
-
-# Reduce6
-# +. SemiJoin
-create or replace view semiJoinView5074233404742368696 as select v9, v1, v12, v13, annot from aggJoin8005712871207005068 where (v9) in (select v9 from aggJoin4732082715583870888);
-
-# Reduce7
-# +. SemiJoin
-create or replace view semiJoinView2634636614200115460 as select v1, v2, annot from aggJoin2230684608168095428 where (v1) in (select v1 from semiJoinView5074233404742368696);
-
-## Enumerate Phase: 
-
-# Enumerate6
-# +. SemiEnumerate
-create or replace view semiEnum5584632287157036628 as select v9, v1, semiJoinView2634636614200115460.annot * semiJoinView5074233404742368696.annot as annot, v13, v12, v2 from semiJoinView2634636614200115460 join semiJoinView5074233404742368696 using(v1);
-
-# Enumerate7
-# +. SemiEnumerate
-create or replace view semiEnum9219792588567823697 as select v13, v12, v9, v35*semiEnum5584632287157036628.annot as v35, v1, v2 from semiEnum5584632287157036628 join aggJoin4732082715583870888 using(v9);
-# Final result: 
-select v1,v2,v9,v12,v13,v35 from semiEnum9219792588567823697;
-
-# drop view aggView4249184356050392039, aggJoin8005712871207005068, aggView1696014980844562635, aggJoin2230684608168095428, aggView345234016479944906, aggJoin4732082715583870888, semiJoinView5074233404742368696, semiJoinView2634636614200115460, semiEnum5584632287157036628, semiEnum9219792588567823697;
+create or replace view aggView1157917209998376899 as select c_custkey as v1, c_name as v2, COUNT(*) as annot from customer as customer group by c_custkey,c_name;
+create or replace view aggJoin6733215712869387478 as select v1, v2, annot from aggView1157917209998376899;
+create or replace view aggView6517677629330672251 as select o_orderkey as v9, o_totalprice as v12, o_custkey as v1, o_orderdate as v13, COUNT(*) as annot from orders as orders group by o_orderkey,o_totalprice,o_custkey,o_orderdate;
+create or replace view aggJoin8519202874768187174 as select v9, v1, v12, v13, annot from aggView6517677629330672251;
+create or replace view aggView2004765581182648055 as select l_orderkey as v9, SUM(l_quantity) as v35, COUNT(*) as annot from lineitem as lineitem group by l_orderkey;
+create or replace view aggJoin7914505460328168532 as select v1_orderkey as v9, v35, annot from view1 as view1, aggView2004765581182648055 where view1.v1_orderkey=aggView2004765581182648055.v9;
+create or replace view semiJoinView4013381753877344977 as select v9, v1, v12, v13, annot from aggJoin8519202874768187174 where (v1) in (select v1 from aggJoin6733215712869387478);
+create or replace view semiJoinView4072899175651166498 as select v9, v1, v12, v13, annot from semiJoinView4013381753877344977 where (v9) in (select v9 from aggJoin7914505460328168532);
+create or replace view semiEnum6145210118289906145 as select v12, v1, v9, v35*semiJoinView4072899175651166498.annot as v35, v13, semiJoinView4072899175651166498.annot * aggJoin7914505460328168532.annot as annot from semiJoinView4072899175651166498 join aggJoin7914505460328168532 using(v9);
+create or replace view semiEnum8791086892152579551 as select v12, v1, v2, v9, v35*aggJoin6733215712869387478.annot as v35, v13 from semiEnum6145210118289906145 join aggJoin6733215712869387478 using(v1);
+select v1,v2,v9,v12,v13,v35 from semiEnum8791086892152579551;
