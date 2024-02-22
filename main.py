@@ -31,8 +31,8 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/tpch/q20/'
-DDL_NAME = 'tpch.ddl'
+BASE_PATH = 'query/graph/agg9/'
+DDL_NAME = 'graph.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.sql'
 AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
