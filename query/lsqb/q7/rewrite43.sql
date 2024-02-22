@@ -1,23 +1,7 @@
-## AggReduce Phase: 
-
-# AggReduce129
-# 1. aggView
-create or replace view aggView5181431539692889750 as select ParentMessageId as v1, COUNT(*) as annot from Comment_replyOf_Message as Comment_replyOf_Message group by ParentMessageId;
-# 2. aggJoin
-create or replace view aggJoin8698692371445819892 as select MessageId as v1, annot from Person_likes_Message as Person_likes_Message, aggView5181431539692889750 where Person_likes_Message.MessageId=aggView5181431539692889750.v1;
-
-# AggReduce130
-# 1. aggView
-create or replace view aggView1531581859811574152 as select v1, SUM(annot) as annot from aggJoin8698692371445819892 group by v1;
-# 2. aggJoin
-create or replace view aggJoin2051269808907191898 as select MessageId as v1, annot from Message_hasTag_Tag as Message_hasTag_Tag, aggView1531581859811574152 where Message_hasTag_Tag.MessageId=aggView1531581859811574152.v1;
-
-# AggReduce131
-# 1. aggView
-create or replace view aggView3411785364948097293 as select MessageId as v1, COUNT(*) as annot from Message_hasCreator_Person as Message_hasCreator_Person group by MessageId;
-# 2. aggJoin
-create or replace view aggJoin4321547069839256400 as select aggJoin2051269808907191898.annot * aggView3411785364948097293.annot as annot from aggJoin2051269808907191898 join aggView3411785364948097293 using(v1);
-# Final result: 
-select SUM(annot) as v9 from aggJoin4321547069839256400;
-
-# drop view aggView5181431539692889750, aggJoin8698692371445819892, aggView1531581859811574152, aggJoin2051269808907191898, aggView3411785364948097293, aggJoin4321547069839256400;
+create or replace view aggView7264616412067742658 as select ParentMessageId as v1, COUNT(*) as annot from Comment_replyOf_Message as Comment_replyOf_Message group by ParentMessageId;
+create or replace view aggJoin7660831426715462430 as select MessageId as v1, annot from Person_likes_Message as Person_likes_Message, aggView7264616412067742658 where Person_likes_Message.MessageId=aggView7264616412067742658.v1;
+create or replace view aggView8331504639131020759 as select v1, SUM(annot) as annot from aggJoin7660831426715462430 group by v1;
+create or replace view aggJoin1048624821478633070 as select MessageId as v1, annot from Message_hasTag_Tag as Message_hasTag_Tag, aggView8331504639131020759 where Message_hasTag_Tag.MessageId=aggView8331504639131020759.v1;
+create or replace view aggView8038094518290640462 as select v1, SUM(annot) as annot from aggJoin1048624821478633070 group by v1;
+create or replace view aggJoin6760115092410279220 as select annot from Message_hasCreator_Person as Message_hasCreator_Person, aggView8038094518290640462 where Message_hasCreator_Person.MessageId=aggView8038094518290640462.v1;
+select SUM(annot) as v9 from aggJoin6760115092410279220;

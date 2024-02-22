@@ -1,17 +1,5 @@
-## AggReduce Phase: 
-
-# AggReduce12
-# 1. aggView
-create or replace view aggView9065948148548418863 as select p_partkey as v17, COUNT(*) as annot from part as part where p_brand= 'Brand#23' and p_container= 'MED BOX' group by p_partkey;
-# 2. aggJoin
-create or replace view aggJoin4287907213076736929 as select v1_partkey as v17, v1_quantity_avg as v27, annot from view1 as view1, aggView9065948148548418863 where view1.v1_partkey=aggView9065948148548418863.v17;
-
-# AggReduce13
-# 1. aggView
-create or replace view aggView8102726616734602898 as select v17, SUM(annot) as annot, v27 from aggJoin4287907213076736929 group by v17,v27;
-# 2. aggJoin
-create or replace view aggJoin6567227121931260540 as select l_extendedprice as v6, annot from lineitem as lineitem, aggView8102726616734602898 where lineitem.l_partkey=aggView8102726616734602898.v17 and l_quantity>v27;
-# Final result: 
-select (SUM(v6*annot) / 7.0) as v29 from aggJoin6567227121931260540;
-
-# drop view aggView9065948148548418863, aggJoin4287907213076736929, aggView8102726616734602898, aggJoin6567227121931260540;
+create or replace view aggView4604161304104877352 as select l_partkey as v17, SUM(l_extendedprice) as v28, COUNT(*) as annot, l_quantity as v5 from lineitem as lineitem group by l_partkey,l_quantity;
+create or replace view aggJoin5220469165091033411 as select p_partkey as v17, p_brand as v20, p_container as v23, v28, v5, annot from part as part, aggView4604161304104877352 where part.p_partkey=aggView4604161304104877352.v17 and p_brand= 'Brand#23' and p_container= 'MED BOX';
+create or replace view aggView7872279541193796768 as select v17, SUM(v28) as v28, SUM(annot) as annot, v5 from aggJoin5220469165091033411 group by v17,v5;
+create or replace view aggJoin4435968999038576666 as select v28, annot from view1 as view1, aggView7872279541193796768 where view1.v1_partkey=aggView7872279541193796768.v17 and v5>v1_quantity_avg;
+select (SUM(v28) / 7.0) as v29 from aggJoin4435968999038576666;
