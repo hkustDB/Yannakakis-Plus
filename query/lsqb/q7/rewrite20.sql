@@ -1,23 +1,7 @@
-## AggReduce Phase: 
-
-# AggReduce60
-# 1. aggView
-create or replace view aggView3514192231050751550 as select ParentMessageId as v1, COUNT(*) as annot from Comment_replyOf_Message as Comment_replyOf_Message group by ParentMessageId;
-# 2. aggJoin
-create or replace view aggJoin4464464792480221850 as select MessageId as v1, annot from Message_hasCreator_Person as Message_hasCreator_Person, aggView3514192231050751550 where Message_hasCreator_Person.MessageId=aggView3514192231050751550.v1;
-
-# AggReduce61
-# 1. aggView
-create or replace view aggView4259810246838063420 as select v1, SUM(annot) as annot from aggJoin4464464792480221850 group by v1;
-# 2. aggJoin
-create or replace view aggJoin4906867849741956980 as select MessageId as v1, annot from Message_hasTag_Tag as Message_hasTag_Tag, aggView4259810246838063420 where Message_hasTag_Tag.MessageId=aggView4259810246838063420.v1;
-
-# AggReduce62
-# 1. aggView
-create or replace view aggView2096996495603754267 as select v1, SUM(annot) as annot from aggJoin4906867849741956980 group by v1;
-# 2. aggJoin
-create or replace view aggJoin475566479123985447 as select annot from Person_likes_Message as Person_likes_Message, aggView2096996495603754267 where Person_likes_Message.MessageId=aggView2096996495603754267.v1;
-# Final result: 
-select SUM(annot) as v9 from aggJoin475566479123985447;
-
-# drop view aggView3514192231050751550, aggJoin4464464792480221850, aggView4259810246838063420, aggJoin4906867849741956980, aggView2096996495603754267, aggJoin475566479123985447;
+create or replace view aggView2720683626821470417 as select MessageId as v1, COUNT(*) as annot from Person_likes_Message as Person_likes_Message group by MessageId;
+create or replace view aggJoin4257263382063475787 as select ParentMessageId as v1, annot from Comment_replyOf_Message as Comment_replyOf_Message, aggView2720683626821470417 where Comment_replyOf_Message.ParentMessageId=aggView2720683626821470417.v1;
+create or replace view aggView5158833102145216542 as select MessageId as v1, COUNT(*) as annot from Message_hasCreator_Person as Message_hasCreator_Person group by MessageId;
+create or replace view aggJoin1543810278343237564 as select v1, aggJoin4257263382063475787.annot * aggView5158833102145216542.annot as annot from aggJoin4257263382063475787 join aggView5158833102145216542 using(v1);
+create or replace view aggView185774579863361661 as select MessageId as v1, COUNT(*) as annot from Message_hasTag_Tag as Message_hasTag_Tag group by MessageId;
+create or replace view aggJoin8828032930869377773 as select aggJoin1543810278343237564.annot * aggView185774579863361661.annot as annot from aggJoin1543810278343237564 join aggView185774579863361661 using(v1);
+select SUM(annot) as v9 from aggJoin8828032930869377773;
