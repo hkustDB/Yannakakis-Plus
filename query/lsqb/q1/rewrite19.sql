@@ -1,59 +1,19 @@
-## AggReduce Phase: 
-
-# AggReduce171
-# 1. aggView
-create or replace view aggView9119324397201335003 as select TagClassId as v23, COUNT(*) as annot from TagClass as TagClass group by TagClassId;
-# 2. aggJoin
-create or replace view aggJoin7863742578048976585 as select TagId as v22, annot from Tag as Tag, aggView9119324397201335003 where Tag.hasType_TagClassId=aggView9119324397201335003.v23;
-
-# AggReduce172
-# 1. aggView
-create or replace view aggView9169466824432158564 as select v22, SUM(annot) as annot from aggJoin7863742578048976585 group by v22;
-# 2. aggJoin
-create or replace view aggJoin7172440481214865816 as select CommentId as v20, annot from Comment_hasTag_Tag as Comment_hasTag_Tag, aggView9169466824432158564 where Comment_hasTag_Tag.TagId=aggView9169466824432158564.v22;
-
-# AggReduce173
-# 1. aggView
-create or replace view aggView3661448790285781892 as select v20, SUM(annot) as annot from aggJoin7172440481214865816 group by v20;
-# 2. aggJoin
-create or replace view aggJoin1900236164174653380 as select replyOf_PostId as v18, annot from Comment as Comment, aggView3661448790285781892 where Comment.CommentId=aggView3661448790285781892.v20;
-
-# AggReduce174
-# 1. aggView
-create or replace view aggView6387723458011429685 as select v18, SUM(annot) as annot from aggJoin1900236164174653380 group by v18;
-# 2. aggJoin
-create or replace view aggJoin727923058604331956 as select Forum_containerOfId as v9, annot from Post as Post, aggView6387723458011429685 where Post.PostId=aggView6387723458011429685.v18;
-
-# AggReduce175
-# 1. aggView
-create or replace view aggView1135683232160204646 as select v9, SUM(annot) as annot from aggJoin727923058604331956 group by v9;
-# 2. aggJoin
-create or replace view aggJoin1239844945873944601 as select ForumId as v9, annot from Forum as Forum, aggView1135683232160204646 where Forum.ForumId=aggView1135683232160204646.v9;
-
-# AggReduce176
-# 1. aggView
-create or replace view aggView8137221334666316309 as select v9, SUM(annot) as annot from aggJoin1239844945873944601 group by v9;
-# 2. aggJoin
-create or replace view aggJoin1138565620078696030 as select PersonId as v8, annot from Forum_hasMember_Person as Forum_hasMember_Person, aggView8137221334666316309 where Forum_hasMember_Person.ForumId=aggView8137221334666316309.v9;
-
-# AggReduce177
-# 1. aggView
-create or replace view aggView5055435811349813818 as select v8, SUM(annot) as annot from aggJoin1138565620078696030 group by v8;
-# 2. aggJoin
-create or replace view aggJoin3964825005153317205 as select isLocatedIn_CityId as v6, annot from Person as Person, aggView5055435811349813818 where Person.PersonId=aggView5055435811349813818.v8;
-
-# AggReduce178
-# 1. aggView
-create or replace view aggView9064592581129881654 as select v6, SUM(annot) as annot from aggJoin3964825005153317205 group by v6;
-# 2. aggJoin
-create or replace view aggJoin3687281455384051899 as select isPartOf_CountryId as v4, annot from City as City, aggView9064592581129881654 where City.CityId=aggView9064592581129881654.v6;
-
-# AggReduce179
-# 1. aggView
-create or replace view aggView7428193492702721231 as select v4, SUM(annot) as annot from aggJoin3687281455384051899 group by v4;
-# 2. aggJoin
-create or replace view aggJoin7561249161100331892 as select annot from Country as Country, aggView7428193492702721231 where Country.CountryId=aggView7428193492702721231.v4;
-# Final result: 
-select SUM(annot) as v26 from aggJoin7561249161100331892;
-
-# drop view aggView9119324397201335003, aggJoin7863742578048976585, aggView9169466824432158564, aggJoin7172440481214865816, aggView3661448790285781892, aggJoin1900236164174653380, aggView6387723458011429685, aggJoin727923058604331956, aggView1135683232160204646, aggJoin1239844945873944601, aggView8137221334666316309, aggJoin1138565620078696030, aggView5055435811349813818, aggJoin3964825005153317205, aggView9064592581129881654, aggJoin3687281455384051899, aggView7428193492702721231, aggJoin7561249161100331892;
+create or replace view aggView5291248650032577373 as select TagClassId as v23, COUNT(*) as annot from TagClass as TagClass group by TagClassId;
+create or replace view aggJoin5435284645606919790 as select TagId as v22, annot from Tag as Tag, aggView5291248650032577373 where Tag.hasType_TagClassId=aggView5291248650032577373.v23;
+create or replace view aggView4843181338645933739 as select v22, SUM(annot) as annot from aggJoin5435284645606919790 group by v22;
+create or replace view aggJoin6728052908068483136 as select CommentId as v20, annot from Comment_hasTag_Tag as Comment_hasTag_Tag, aggView4843181338645933739 where Comment_hasTag_Tag.TagId=aggView4843181338645933739.v22;
+create or replace view aggView6920343824732546844 as select v20, SUM(annot) as annot from aggJoin6728052908068483136 group by v20;
+create or replace view aggJoin833376617886523288 as select replyOf_PostId as v18, annot from Comment as Comment, aggView6920343824732546844 where Comment.CommentId=aggView6920343824732546844.v20;
+create or replace view aggView6824143254532891070 as select v18, SUM(annot) as annot from aggJoin833376617886523288 group by v18;
+create or replace view aggJoin4349803640824110749 as select Forum_containerOfId as v9, annot from Post as Post, aggView6824143254532891070 where Post.PostId=aggView6824143254532891070.v18;
+create or replace view aggView4830414284612930836 as select v9, SUM(annot) as annot from aggJoin4349803640824110749 group by v9;
+create or replace view aggJoin3130265619686696284 as select ForumId as v9, annot from Forum as Forum, aggView4830414284612930836 where Forum.ForumId=aggView4830414284612930836.v9;
+create or replace view aggView8748422807951894555 as select v9, SUM(annot) as annot from aggJoin3130265619686696284 group by v9;
+create or replace view aggJoin8961230981014388929 as select PersonId as v8, annot from Forum_hasMember_Person as Forum_hasMember_Person, aggView8748422807951894555 where Forum_hasMember_Person.ForumId=aggView8748422807951894555.v9;
+create or replace view aggView2737694219088862162 as select v8, SUM(annot) as annot from aggJoin8961230981014388929 group by v8;
+create or replace view aggJoin4995369364970417010 as select isLocatedIn_CityId as v6, annot from Person as Person, aggView2737694219088862162 where Person.PersonId=aggView2737694219088862162.v8;
+create or replace view aggView5617864328349396602 as select v6, SUM(annot) as annot from aggJoin4995369364970417010 group by v6;
+create or replace view aggJoin6793797256433509342 as select isPartOf_CountryId as v4, annot from City as City, aggView5617864328349396602 where City.CityId=aggView5617864328349396602.v6;
+create or replace view aggView3845820522908587181 as select v4, SUM(annot) as annot from aggJoin6793797256433509342 group by v4;
+create or replace view aggJoin1052664056055154740 as select annot from Country as Country, aggView3845820522908587181 where Country.CountryId=aggView3845820522908587181.v4;
+select SUM(annot) as v26 from aggJoin1052664056055154740;
