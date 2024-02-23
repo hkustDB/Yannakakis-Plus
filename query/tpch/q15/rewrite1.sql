@@ -4,4 +4,4 @@ create or replace view semiJoinView762044418243572660 as select l_suppkey as v1,
 create or replace view semiJoinView6463089272808936664 as select v1, v9 from semiJoinView762044418243572660 where (v1) in (select v1 from semiJoinView3266970094061819581);
 create or replace view semiEnum4826298285266837091 as select v5, v2, v3, v1, v9 from semiJoinView6463089272808936664 join semiJoinView3266970094061819581 using(v1);
 create or replace view semiEnum861942091323434547 as select v5, v2, v3, v1, v9 from semiEnum4826298285266837091, view2 as view2 where view2.v2_total_revenue_max=semiEnum4826298285266837091.v9;
-select sum(distinct v1+v2+v3+v5+v9) from semiEnum861942091323434547;
+select distinct v1, v2, v3, v5, v9 from semiEnum861942091323434547;
