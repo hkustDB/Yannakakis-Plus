@@ -63,7 +63,7 @@ do
                     echo "COPY (" >> ${SUBMIT_QUERY}
                     cat ${QUERY} >> ${SUBMIT_QUERY}
                     echo ") TO '/dev/null' (DELIMITER ',');" >> ${SUBMIT_QUERY}
-                    echo "Start DuckDB Task at ${CUR_PATH}..."
+                    echo "Start DuckDB Task at ${QUERY}"
                     current_task=1
                     while [[ ${current_task} -le 3 ]]
                     do
@@ -71,12 +71,14 @@ do
                         OUT_FILE="${CUR_PATH}/output.txt"
                         rm -f $OUT_FILE
                         touch $OUT_FILE
-                        timeout -s SIGKILL 30m $duckdb -c ".open ${DATABASE}_db" -c ".timer on" -c ".read ${SUBMIT_QUERY}" | grep "Run Time (s): real" >> $OUT_FILE
+                        timeout -s SIGKILL 5m $duckdb -c ".open ${DATABASE}_db" -c ".timer on" -c ".read ${SUBMIT_QUERY}" | grep "Run Time (s): real" >> $OUT_FILE
                         status_code=$?
                         if [[ ${status_code} -eq 137 ]]; then
                             echo "duckdb task timed out." >> $LOG_FILE
+                            break
                         elif [[ ${status_code} -ne 0 ]]; then
                             echo "duckdb task failed." >> $LOG_FILE
+                            break
                         else
                             awk 'BEGIN{sum=0;}{sum+=$5;} END{printf "Exec time(s): %f\n", sum;}' $OUT_FILE >> $LOG_FILE
                         fi
@@ -98,8 +100,7 @@ do
                     TMP_QUERY=$(tail -n 1 ${QUERY})
                     echo ${TMP_QUERY/;/} >> ${SUBMIT_QUERY_2}
                     echo ") TO '/dev/null' (DELIMITER ',');" >> ${SUBMIT_QUERY_2}
-                    echo "Processing ${CUR_PATH}..."
-                    echo "Start DuckDB Task..."
+                    echo "Start DuckDB Task at ${QUERY}"
                     current_task=1
                     while [[ ${current_task} -le 3 ]]
                     do
@@ -107,7 +108,7 @@ do
                         OUT_FILE="${CUR_PATH}/output.txt"
                         rm -f $OUT_FILE
                         touch $OUT_FILE
-                        timeout -s SIGKILL 30m $duckdb -c ".open ${DATABASE}_db" -c ".timer on" -c ".read ${SUBMIT_QUERY_1}" -c ".read ${SUBMIT_QUERY_2}" | grep "Run Time (s): real" >> $OUT_FILE
+                        timeout -s SIGKILL 5m $duckdb -c ".open ${DATABASE}_db" -c ".timer on" -c ".read ${SUBMIT_QUERY_1}" -c ".read ${SUBMIT_QUERY_2}" | grep "Run Time (s): real" >> $OUT_FILE
                         status_code=$?
                         if [[ ${status_code} -eq 137 ]]; then
                             echo "duckdb task timed out." >> $LOG_FILE
