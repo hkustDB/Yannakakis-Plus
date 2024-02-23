@@ -6,4 +6,4 @@ create or replace view bag1144Aux62 as select v1, v11, v12, v14, v15, v16, v23 f
 create or replace view semiJoinView3144981612271586779 as select v1, v11, v12, v14, v15, v16, v23 from bag1144Aux62 where (v15, v14, v23, v1, v12, v16, v11) in (select v15, v14, v23, v1, v12, v16, v11 from semiJoinView7900762472844941164);
 create or replace view semiJoinView6779635431492916798 as select v1, v3 from semiJoinView5873485959451050675 where (v1) in (select v1 from semiJoinView3144981612271586779);
 create or replace view semiEnum4397650937566419321 as select v15, v14, v3, v23, v12, v16, v11, v1 from semiJoinView6779635431492916798 join semiJoinView3144981612271586779 using(v1);
-select sum(distinct v15+v11+v23+v1+v3+v12+v14+v16) from semiEnum4397650937566419321;
+select distinct v15, v11, v23, v1, v3, v12, v14, v16 from semiEnum4397650937566419321;

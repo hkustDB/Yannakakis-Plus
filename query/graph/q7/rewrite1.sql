@@ -4,4 +4,4 @@ create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Gr
 create or replace view semiJoinView3658283898570273011 as select v7, v2, v8 from g1 where (v2) in (select v2 from semiJoinView596447436173072627);
 create or replace view semiEnum4528903754598809729 as select v8, v4, v7, v2 from semiJoinView3658283898570273011 join semiJoinView596447436173072627 using(v2);
 create or replace view semiEnum911701791753244182 as select v6, v8, v4, v7, v2, v10 from semiEnum4528903754598809729 join g3 using(v4);
-select sum(v7+v2+v4+v6+v8+v10) from semiEnum911701791753244182;
+select * from semiEnum911701791753244182;

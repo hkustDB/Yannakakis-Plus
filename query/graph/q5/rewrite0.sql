@@ -10,4 +10,4 @@ create or replace view joinView2360100828730534896 as select v2, v4, mfL77859194
 create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v14 from Graph, (SELECT src, COUNT(*) AS v14 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
 create or replace view minView4984836797190294094 as select v4, max(v14) as mfR7258069369247551387 from g3 group by v4;
 create or replace view joinView8230094885307348624 as select v2, v4 from joinView2360100828730534896 join minView4984836797190294094 using(v4) where mfL5083900544533156654<mfR7258069369247551387;
-select sum(distinct v2+v4) from joinView8230094885307348624;
+select distinct v2, v4 from joinView8230094885307348624;

@@ -6,4 +6,4 @@ create or replace view partAux39 as select p_partkey as v1, p_mfgr as v3 from pa
 create or replace view semiJoinView2181841810624804786 as select v1, v3 from partAux39 where (v3, v1) in (select p_mfgr, p_partkey from part AS part where p_size= 15 and p_type LIKE '%BRASS');
 create or replace view semiJoinView229410536049065637 as select v1, v11, v12, v14, v15, v16, v23 from semiJoinView7397765823883790297 where (v1) in (select v1 from semiJoinView2181841810624804786);
 create or replace view semiEnum606594417112797271 as select v15, v3, v14, v23, v12, v16, v11, v1 from semiJoinView229410536049065637 join semiJoinView2181841810624804786 using(v1);
-select sum(distinct v15+v11+v23+v1+v3+v12+v14+v16) from semiEnum606594417112797271;
+select distinct v15, v11, v23, v1, v3, v12, v14, v16 from semiEnum606594417112797271;

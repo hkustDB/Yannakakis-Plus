@@ -14,4 +14,4 @@ create or replace view sample64194354303802702 as select * from orderView6620718
 create or replace view maxRn4290819751553636308 as select v2, max(rn) as mrn from end4347110622918502558 join sample64194354303802702 using(v2) where v8<v6 group by v2;
 create or replace view target4057853648481464129 as select v7, v2, v8 from orderView6620718935951558700 join maxRn4290819751553636308 using(v2) where rn < mrn + 5;
 create or replace view end8970694911244070657 as select v2, v6, v7, v8, v10, v4 from end4347110622918502558 join target4057853648481464129 using(v2) where v8<v6;
-select sum(v7+v2+v4+v6+v8+v10) from end8970694911244070657;
+select * from end8970694911244070657;
