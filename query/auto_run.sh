@@ -97,8 +97,7 @@ do
                     touch "${SUBMIT_QUERY_2}"
                     ${COMMAND} -n -1 ${QUERY} >> ${SUBMIT_QUERY_1}
                     echo "COPY (" >> ${SUBMIT_QUERY_2}
-                    TMP_QUERY=$(tail -n 1 ${QUERY})
-                    echo ${TMP_QUERY/;/} >> ${SUBMIT_QUERY_2}
+                    tail -n 1 ${QUERY} | sed 's/;//g' >> ${SUBMIT_QUERY_2}
                     echo ") TO '/dev/null' (DELIMITER ',');" >> ${SUBMIT_QUERY_2}
                     echo "Start DuckDB Task at ${QUERY}"
                     current_task=1

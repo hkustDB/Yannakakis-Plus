@@ -1,5 +1,5 @@
 SELECT SUM(l_extendedprice) / 7.0 AS avg_yearly
-FROM lineitem, part, view1
+FROM lineitem, part, q17_inner
 WHERE p_partkey = l_partkey
   AND p_brand = 'Brand#23'
   AND p_container = 'MED BOX'
