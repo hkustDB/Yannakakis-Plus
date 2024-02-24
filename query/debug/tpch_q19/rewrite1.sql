@@ -1,0 +1,3 @@
+create or replace view aggView1188504252453180699 as select l_partkey as v17, SUM(l_extendedprice * (1 - l_discount)) as v27, COUNT(*) as annot from lineitem as lineitem where l_quantity>=21 and l_shipinstruct= 'DELIVER IN PERSON' and l_quantity<=21 + 10 and l_shipmode IN ('AIR','AIR REG') group by l_partkey;
+create or replace view aggJoin1019333617750689010 as select v27, annot from part as part, aggView1188504252453180699 where part.p_partkey=aggView1188504252453180699.v17 and p_brand= 'Brand#34' and p_size>=1 and p_container IN ('LG CASE','LG BOX','LG PACK','LG PKG') and p_size<=15;
+select SUM(v27) as v27 from aggJoin1019333617750689010;
