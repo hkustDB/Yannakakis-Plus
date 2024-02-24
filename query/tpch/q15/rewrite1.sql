@@ -1,7 +1,7 @@
-create or replace view supplierAux69 as select s_suppkey as v1, s_name as v2, s_address as v3, s_phone as v5 from supplier;
-create or replace view semiJoinView3266970094061819581 as select v1, v2, v3, v5 from supplierAux69 where (v2, v3, v5, v1) in (select s_name, s_address, s_phone, s_suppkey from supplier AS supplier);
-create or replace view semiJoinView762044418243572660 as select l_suppkey as v1, total_revenue as v9 from view1 AS view1 where (total_revenue) in (select v2_total_revenue_max from view2 AS view2);
-create or replace view semiJoinView6463089272808936664 as select v1, v9 from semiJoinView762044418243572660 where (v1) in (select v1 from semiJoinView3266970094061819581);
-create or replace view semiEnum4826298285266837091 as select v5, v2, v3, v1, v9 from semiJoinView6463089272808936664 join semiJoinView3266970094061819581 using(v1);
-create or replace view semiEnum861942091323434547 as select v5, v2, v3, v1, v9 from semiEnum4826298285266837091, view2 as view2 where view2.v2_total_revenue_max=semiEnum4826298285266837091.v9;
-select distinct v1, v2, v3, v5, v9 from semiEnum861942091323434547;
+create or replace view supplierAux74 as select s_suppkey as v1, s_name as v2, s_address as v3, s_phone as v5 from supplier;
+create or replace view semiJoinView917567596888505404 as select v1, v2, v3, v5 from supplierAux74 where (v5) in (select s_phone from supplier AS supplier) and (v3) in (select s_address from supplier AS supplier) and (v1) in (select s_suppkey from supplier AS supplier) and (v2) in (select s_name from supplier AS supplier);
+create or replace view semiJoinView4653054340788208155 as select supplier_no as v1, total_revenue as v9 from revenue0 AS revenue0 where (total_revenue) in (select max_tr from q15_inner AS q15_inner);
+create or replace view semiJoinView289438604116215001 as select v1, v2, v3, v5 from semiJoinView917567596888505404 where (v1) in (select v1 from semiJoinView4653054340788208155);
+create or replace view semiEnum2896682860761715349 as select v1, v9, v5, v3, v2 from semiJoinView289438604116215001 join semiJoinView4653054340788208155 using(v1);
+create or replace view semiEnum2394921378855886644 as select v1, v9, v5, v3, v2 from semiEnum2896682860761715349, q15_inner as q15_inner where q15_inner.max_tr=semiEnum2896682860761715349.v9;
+select distinct v1, v2, v3, v5, v9 from semiEnum2394921378855886644;

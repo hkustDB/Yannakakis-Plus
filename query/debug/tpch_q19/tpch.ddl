@@ -98,14 +98,3 @@ CREATE TABLE lineitem
     l_comment       VARCHAR,
     PRIMARY KEY (l_orderkey, l_linenumber)
 );
-
-CREATE TABLE q20_inner1
-(
-    v1_partkey INTEGER
-);
-
-CREATE TABLE q20_inner2
-(
-    v2_quantity_sum DECIMAL
-);
-
