@@ -99,7 +99,7 @@ CREATE TABLE lineitem
     PRIMARY KEY (l_orderkey, l_linenumber)
 );
 
-CREATE TABLE view1
+CREATE TABLE q18_inner
 (
     v1_orderkey INTEGER
 );

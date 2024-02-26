@@ -4,7 +4,7 @@ SELECT s_suppkey,
        s_phone,
        total_revenue
 FROM supplier,
-     view1,
-     view2
+     revenue0, 
+     q15_inner
 WHERE s_suppkey = l_suppkey
-  AND total_revenue = v2_total_revenue_max
+  AND total_revenue = max_tr

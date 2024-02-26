@@ -99,12 +99,12 @@ CREATE TABLE lineitem
     PRIMARY KEY (l_orderkey, l_linenumber)
 );
 
-CREATE TABLE view1
+CREATE TABLE q20_inner1
 (
     v1_partkey INTEGER
 );
 
-CREATE TABLE view2
+CREATE TABLE q20_inner2
 (
     v2_quantity_sum DECIMAL
 );
