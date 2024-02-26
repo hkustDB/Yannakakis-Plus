@@ -99,7 +99,7 @@ CREATE TABLE lineitem
     PRIMARY KEY (l_orderkey, l_linenumber)
 );
 
-CREATE TABLE view1
+CREATE TABLE q17_inner
 (
     v1_partkey      INTEGER,
     v1_quantity_avg DECIMAL

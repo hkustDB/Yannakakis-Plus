@@ -1,5 +1,5 @@
-create or replace view aggView4148472823895937100 as select p_partkey as v17, COUNT(*) as annot from part as part where p_brand= 'Brand#23' and p_container= 'MED BOX' group by p_partkey;
-create or replace view aggJoin1795795129688282403 as select v1_partkey as v17, v1_quantity_avg as v27, annot from view1 as view1, aggView4148472823895937100 where view1.v1_partkey=aggView4148472823895937100.v17;
-create or replace view aggView7732228862085653283 as select v17, SUM(annot) as annot, v27 from aggJoin1795795129688282403 group by v17,v27;
-create or replace view aggJoin2857564100040960635 as select l_extendedprice as v6, annot from lineitem as lineitem, aggView7732228862085653283 where lineitem.l_partkey=aggView7732228862085653283.v17 and l_quantity>v27;
-select (SUM(v6*annot) / 7.0) as v29 from aggJoin2857564100040960635;
+create or replace view aggView429061920924446705 as select l_partkey as v17, SUM(l_extendedprice) as v28, COUNT(*) as annot, l_quantity as v5 from lineitem as lineitem group by l_partkey,l_quantity;
+create or replace view aggJoin6652283243938407469 as select v1_partkey as v17, v28, annot from q17_inner as q17_inner, aggView429061920924446705 where q17_inner.v1_partkey=aggView429061920924446705.v17 and v5>v1_quantity_avg;
+create or replace view aggView7019576003252797757 as select p_partkey as v17, COUNT(*) as annot from part as part where p_brand= 'Brand#23' and p_container= 'MED BOX' group by p_partkey;
+create or replace view aggJoin1718644193224381337 as select v28*aggView7019576003252797757.annot as v28, aggJoin6652283243938407469.annot * aggView7019576003252797757.annot as annot from aggJoin6652283243938407469 join aggView7019576003252797757 using(v17);
+select (SUM(v28) / 7.0) as v29 from aggJoin1718644193224381337;

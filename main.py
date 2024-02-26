@@ -31,7 +31,7 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/tpch/q20/'
+BASE_PATH = 'query/tpch/q18/'
 DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.sql'
@@ -320,11 +320,11 @@ if __name__ == '__main__':
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
             try:
-                '''
+                
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
-                '''
+                
                 computationList.reset()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
