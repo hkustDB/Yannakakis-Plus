@@ -1,0 +1,4 @@
+create or replace view bag1 as select c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice from orders, customer where c_custkey = o_custkey;
+create or replace view l_agg as select l_orderkey, sum(l_quantity) as l_sum from lineitem group by l_orderkey;
+create or replace view bag1_new as select c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice from bag1 where o_orderkey in (select v1_orderkey from q18_inner);
+select c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice, sum(l_sum) from bag1_new, l_agg where o_orderkey = l_orderkey group by c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice;

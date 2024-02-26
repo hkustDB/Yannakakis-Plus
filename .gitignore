@@ -1,3 +1,6 @@
 *.txt
 .DS_Store
 querySum.sql
+graph_db*
+tpch_db*
+lsqb_db*
