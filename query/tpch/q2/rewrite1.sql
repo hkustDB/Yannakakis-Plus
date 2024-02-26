@@ -1,7 +1,6 @@
-create or replace view partAux32 as select p_partkey as v1, p_mfgr as v3 from part where p_size= 15 and p_type LIKE '%BRASS';
-create or replace view semiJoinView340726513702206965 as select v1, v3 from partAux32 where (v1) in (select p_partkey from part AS part where p_size= 15 and p_type LIKE '%BRASS') and (v3) in (select p_mfgr from part AS part where p_size= 15 and p_type LIKE '%BRASS');
-create or replace view bag21 as select partsupp.ps_partkey as v1, supplier.s_suppkey as v10, supplier.s_name as v11, supplier.s_address as v12, supplier.s_nationkey as v13, supplier.s_phone as v14, supplier.s_acctbal as v15, supplier.s_comment as v16, partsupp.ps_availqty as v19, partsupp.ps_supplycost as v20, partsupp.ps_comment as v21, nation.n_name as v23, nation.n_regionkey as v24, nation.n_comment as v25 from supplier as supplier, partsupp as partsupp, nation as nation, q2_inner as q2_inner where supplier.s_suppkey=partsupp.ps_suppkey;
-create or replace view semiJoinView6705603315226323799 as select v1, v11, v12, v14, v15, v16, v23 from bag21 where (v24) in (select r_regionkey from region AS region where r_name= 'EUROPE');
-create or replace view semiJoinView8500955292696861885 as select v1, v11, v12, v14, v15, v16, v23 from semiJoinView6705603315226323799 where (v1) in (select v1 from semiJoinView340726513702206965);
-create or replace view semiEnum7546572035445865268 as select v3, v23, v11, v14, v12, v16, v1, v15 from semiJoinView8500955292696861885 join semiJoinView340726513702206965 using(v1);
-select distinct v15, v11, v23, v1, v3, v12, v14, v16 from semiEnum7546572035445865268;
+create or replace view p_new as select p_partkey, p_mfgr from part where p_size=15 and p_type LIKE '%BRASS';
+create or replace view ps_new as select ps_partkey, ps_supplycost, ps_suppkey from partsupp where (ps_suppkey) in (select (s_suppkey) from supplier);
+create or replace view bag as select p_partkey, p_mfgr, ps_suppkey from p_new, ps_new, q2_inner where p_partkey=ps_partkey and ps_supplycost=v1_supplycost_min and p_partkey = v1_partkey;
+create or replace view n_new as select n_name, n_nationkey from nation where (n_regionkey) in (select (r_regionkey) from region where r_name= 'EUROPE');
+create or replace view s_new as select s_acctbal, s_name, p_partkey, p_mfgr, s_address, s_phone, s_comment, s_nationkey from supplier, bag where s_suppkey = ps_suppkey;
+select distinct s_acctbal, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment from s_new, n_new where s_nationkey = n_nationkey;
