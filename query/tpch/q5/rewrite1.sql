@@ -3,7 +3,7 @@ create or replace view aggJoin1783047296434561713 as select n_nationkey as v4, n
 create or replace view aggView6685505387278648158 as select c_custkey as v1 from customer as customer;
 create or replace view aggView1385806664289654996 as select o_orderkey as v18 from orders as orders, aggView6685505387278648158 where orders.o_custkey=aggView6685505387278648158.v1 and o_orderdate>=DATE '1994-01-01' and o_orderdate<DATE '1995-01-01';
 create or replace view aggJoin4300518076847024286 as select l_suppkey as v20, l_extendedprice as v23, l_discount as v24 from lineitem as lineitem, aggView1385806664289654996 where lineitem.l_orderkey=aggView1385806664289654996.v18;
-create or replace view aggView1070858184991283146 as select v20, SUM((v23 * (1 - v24))) as v49, from aggJoin4300518076847024286 group by v20;
+create or replace view aggView1070858184991283146 as select v20, SUM((v23 * (1 - v24))) as v49 from aggJoin4300518076847024286 group by v20;
 create or replace view aggJoin5689060371720920096 as select s_nationkey as v4, v49 from supplier as supplier, aggView1070858184991283146 where supplier.s_suppkey=aggView1070858184991283146.v20;
 create or replace view aggView2487519104353431862 as select v4, SUM(v49) as v49 from aggJoin5689060371720920096 group by v4;
 create or replace view aggJoin2888579802936114374 as select v42, v49 from aggJoin1783047296434561713 join aggView2487519104353431862 using(v4);
