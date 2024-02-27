@@ -1,2 +1,3 @@
 create or replace view aggView4042123863377922501 as select l_orderkey as v10, COUNT(*) as annot from lineitem as l where l_commitdate<l_receiptdate group by l_orderkey;
-select o_orderpriority as v6, sum(annot) as v26 from orders as o, aggView4042123863377922501 where o.o_orderkey=aggView4042123863377922501.v10 and o_orderdate>=DATE '1993-07-01' and o_orderdate<DATE '1993-10-01' group by v6;
+create or replace view res as select o_orderpriority as v6, sum(annot) as v26 from orders as o, aggView4042123863377922501 where o.o_orderkey=aggView4042123863377922501.v10 and o_orderdate>=DATE '1993-07-01' and o_orderdate<DATE '1993-10-01' group by v6;
+select sum(v6), sum(v26) from res;

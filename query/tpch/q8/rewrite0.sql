@@ -14,4 +14,4 @@ create or replace view aggView840873343196330802 as select v17, SUM( CASE WHEN c
 create or replace view aggJoin896427170897624978 as select v34, v64 * aggJoin2285508056378395160.annot as v64, v65 * aggJoin2285508056378395160.annot as v65 from aggJoin2285508056378395160 join aggView840873343196330802 using(v17);
 create or replace view aggView5834716239239222943 as select v34, SUM(v64) as v64, SUM(v65) as v65 from aggJoin896427170897624978 group by v34;
 create or replace view aggJoin177613965281333503 as select v34, v64, v65 from aggView5834716239239222943;
-select v34,(v64 / v65) as v66 from aggJoin177613965281333503;
+select sum(v34), sum(v64 / v65) from aggJoin177613965281333503;
