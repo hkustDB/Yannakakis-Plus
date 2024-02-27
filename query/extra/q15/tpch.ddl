@@ -99,7 +99,13 @@ CREATE TABLE lineitem
     PRIMARY KEY (l_orderkey, l_linenumber)
 );
 
-CREATE TABLE q18_inner
+CREATE TABLE view1
 (
-    v1_orderkey INTEGER
+    l_suppkey   INTEGER,
+    total_revenue DECIMAL
+);
+
+CREATE TABLE view2
+(
+    v2_total_revenue_max DECIMAL
 );
