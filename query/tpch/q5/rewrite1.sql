@@ -7,4 +7,5 @@ create or replace view aggView1070858184991283146 as select v20, SUM((v23 * (1 -
 create or replace view aggJoin5689060371720920096 as select s_nationkey as v4, v49 from supplier as supplier, aggView1070858184991283146 where supplier.s_suppkey=aggView1070858184991283146.v20;
 create or replace view aggView2487519104353431862 as select v4, SUM(v49) as v49 from aggJoin5689060371720920096 group by v4;
 create or replace view aggJoin2888579802936114374 as select v42, v49 from aggJoin1783047296434561713 join aggView2487519104353431862 using(v4);
-select v42, SUM(v49) as v49 from aggJoin2888579802936114374 group by v42;
+create or replace view res as select v42, SUM(v49) as v49 from aggJoin2888579802936114374 group by v42;
+select sum(v42), sum(v49) from res;

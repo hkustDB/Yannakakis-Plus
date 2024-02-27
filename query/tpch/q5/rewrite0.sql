@@ -9,4 +9,4 @@ create or replace view aggJoin6708146044887183268 as select c_nationkey as v4, v
 create or replace view aggView4605259914557266816 as select v4, SUM(v49) as v49 from aggJoin6708146044887183268 group by v4;
 create or replace view aggJoin3292599836435241439 as select v42, v49 from aggJoin1224321455004475766 join aggView4605259914557266816 using(v4);
 create or replace view aggView2703001326373001904 as select v42, SUM(v49) as v49 from aggJoin3292599836435241439 group by v42;
-select v42, v49 from aggView2703001326373001904;
+select sum(v42), sum(v49) from aggView2703001326373001904;

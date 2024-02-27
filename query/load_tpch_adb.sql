@@ -90,3 +90,52 @@ CREATE TABLE lineitem (
   l_comment varchar NOT NULL COMMENT '',
   dummy varchar
 ) DISTRIBUTED BY HASH  (l_orderkey);
+
+submit job insert overwrite into nation select * from oss_nation;
+submit job insert overwrite into region select * from oss_region;
+submit job insert overwrite into part select * from oss_part;
+submit job insert overwrite into supplier select * from oss_supplier;
+submit job insert overwrite into partsupp select * from oss_partsupp;
+submit job insert overwrite into customer select * from oss_customer;
+submit job insert overwrite into orders select * from oss_orders;
+submit job insert overwrite into lineitem select * from oss_lineitem;
+
+ANALYZE TABLE customer UPDATE HISTOGRAM;
+ANALYZE TABLE lineitem UPDATE HISTOGRAM;
+ANALYZE TABLE nation UPDATE HISTOGRAM;
+ANALYZE TABLE orders UPDATE HISTOGRAM;
+ANALYZE TABLE part UPDATE HISTOGRAM;
+ANALYZE TABLE partsupp UPDATE HISTOGRAM;
+ANALYZE TABLE region UPDATE HISTOGRAM;
+ANALYZE TABLE supplier UPDATE HISTOGRAM;
+
+create or replace view q2_inner as
+SELECT ps_partkey as v1_partkey, MIN(ps_supplycost) as v1_supplycost_min
+FROM partsupp, supplier, nation, region
+WHERE s_suppkey = ps_suppkey
+  AND s_nationkey = n_nationkey
+  AND n_regionkey = r_regionkey
+  AND r_name = 'EUROPE'
+GROUP BY ps_partkey;
+
+create or replace view orderswithyear as select orders.*, year(o_orderdate) as o_year from orders;
+
+create or replace view revenue0 (supplier_no, total_revenue) as select l_suppkey, sum(l_extendedprice * (1 - l_discount))
+from lineitem
+where l_shipdate >= DATE '1995-02-01' and l_shipdate < DATE '1995-05-01'
+group by l_suppkey;
+
+create or replace view q15_inner as select max(total_revenue) as max_tr from revenue0;
+
+create view q17_inner as select l_partkey as v1_partkey, 0.2 * AVG(l_quantity) as v1_quantity_avg from lineitem l2 group by l_partkey;
+
+create or replace view q18_inner as select l_orderkey as v1_orderkey from lineitem l2 group by l_orderkey having sum(l_quantity) > 312;
+
+create or replace view q20_inner1 as SELECT p_partkey as v1_partkey FROM part WHERE p_name LIKE 'forest%';
+
+create or replace view q20_inner2 as 
+SELECT 0.5 * SUM(l_quantity) as v2_quantity_sum FROM lineitem, partsupp
+WHERE l_partkey = ps_partkey
+	AND l_suppkey = ps_suppkey
+	AND l_shipdate >= DATE '1994-01-01'
+	AND l_shipdate < DATE '1995-01-01';

@@ -11,4 +11,5 @@ create or replace view semiEnum369489576106919124 as select v1, v36, v49, v51, v
 create or replace view semiEnum8354409469506246069 as select v4, v49, v18, v36, v51 from semiEnum369489576106919124 join semiJoinView6227451364314842044 using(v1);
 create or replace view semiEnum7617230595300568742 as select v4, v49, v18, v46, v51 from semiEnum8354409469506246069 join aggJoin438804518500025540 using(v36);
 create or replace view semiEnum8176438365171126623 as select v49, v46, v42, v51 from semiEnum7617230595300568742 join aggJoin631674294944158735 using(v4);
-select v42,v46,v49,SUM(v51) as v51 from semiEnum8176438365171126623 group by v42, v46, v49;
+create or replace view res as select v42,v46,v49,SUM(v51) as v51 from semiEnum8176438365171126623 group by v42, v46, v49;
+select sum(v42), sum(v46), sum(v49), sum(v51) from res;

@@ -6,4 +6,5 @@ create or replace view aggView840863631992997695 as select v1, SUM(v39) as v39 f
 create or replace view aggJoin329168676591820320 as select v1, v2, v3, v4, v5, v6, v8, v39 from aggJoin4248808950401377928 join aggView840863631992997695 using(v1);
 create or replace view semiJoinView2024056965438754306 as select v1, v2, v3, v4, v5, v6, v8, v39 from aggJoin329168676591820320 where (v4) in (select v4 from aggJoin7463873462366400880);
 create or replace view semiEnum3794515881919919911 as select v3, v39, v1, v6, v2, v8, v5, v35 from semiJoinView2024056965438754306 join aggJoin7463873462366400880 using(v4);
-select v1,v2,v6,v5,v35,v3,v8,SUM(v39) as v39 from semiEnum3794515881919919911 group by v1, v2, v6, v5, v35, v3, v8;
+create or replace view res as select v1,v2,v6,v5,v35,v3,v8,SUM(v39) as v39 from semiEnum3794515881919919911 group by v1, v2, v6, v5, v35, v3, v8;
+select sum(v1),sum(v2),sum(v6),sum(v5),sum(v35),sum(v3),sum(v8),sum(v39) from res;
