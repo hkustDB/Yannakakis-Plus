@@ -1,4 +1,4 @@
-create or reaplce view res as SELECT o_orderpriority, COUNT(*) AS order_count
+create or replace view res as SELECT o_orderpriority, COUNT(*) AS order_count
 FROM   orders o, lineitem l
 WHERE  o_orderdate >= DATE '1993-07-01'
   AND  o_orderdate < DATE '1993-10-01'
