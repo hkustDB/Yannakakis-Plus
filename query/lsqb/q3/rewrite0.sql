@@ -1,7 +1,4 @@
-create or replace view bag665 as select PersonC.PersonId as v16, CityC.isPartOf_CountryId as v4 from City as CityC, Person as PersonC where CityC.CityId=PersonC.isLocatedIn_CityId;
-create or replace view bag664 as select pkp1.Person2Id as v14, pkp2.Person2Id as v16, CityA.isPartOf_CountryId as v4 from City as CityA, Person as PersonA, Person_knows_Person as pkp1, Person_knows_Person as pkp2, Person_knows_Person as pkp3 where CityA.CityId=PersonA.isLocatedIn_CityId and PersonA.PersonId=pkp1.Person1Id and pkp1.Person2Id=pkp2.Person1Id and pkp2.Person2Id=pkp3.Person1Id;
-create or replace view semiJoinView1138372543856337821 as select v14, v16, v4 from bag664 where (v16, v4) in (select (v16, v4) from bag665);
-create or replace view bag663 as select PersonB.PersonId as v14, CityB.isPartOf_CountryId as v4 from City as CityB, Person as PersonB where CityB.CityId=PersonB.isLocatedIn_CityId;
-create or replace view semiJoinView346066695289826482 as select v14, v4 from bag663 where (v4, v14) in (select (v4, v14) from semiJoinView1138372543856337821);
-create or replace view semiEnum4726413724319691367 as select v16, v4, count(*) as annot from semiJoinView346066695289826482 join semiJoinView1138372543856337821 using(v4, v14) group by (v16, v4);
-select sum(annot) from semiEnum4726413724319691367 join bag665 using(v16, v4);
+create or replace view cpA as select isPartOf_CountryId, PersonId from Person, City where isLocatedIn_CityId=CityId;
+create or replace view bag1 as select cpA.isPartOf_CountryId as cpA_isPartOf_CountryId, cpA.PersonId as cpA_PersonId, cpB.PersonId as cpB_PersonId from cpA, cpA as cpB, Person_knows_Person as pkp1 where cpA.isPartOf_CountryId=cpB.isPartOf_CountryId and pkp1.Person1Id=cpA.PersonId and pkp1.Person2Id=cpB.PersonId;
+create or replace view cpC_new as select cpC.isPartOf_CountryId, cpC.PersonId, pkp2.Person1Id, pkp3.Person2Id from cpA as cpC, Person_knows_Person as pkp2, Person_knows_Person as pkp3 where cpC.PersonId=pkp3.Person1Id and cpC.PersonId=pkp2.Person2Id;
+select count(*) from cpC_new, bag1 where cpC_new.isPartOf_CountryId=bag1.cpA_isPartOf_CountryId and cpC_new.Person2Id=bag1.cpA_PersonId and cpC_new.Person1Id=bag1.cpB_PersonId;
