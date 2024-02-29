@@ -99,13 +99,13 @@ CREATE TABLE lineitem
     PRIMARY KEY (l_orderkey, l_linenumber)
 );
 
-CREATE TABLE q20_inner1
+CREATE TABLE revenue0
 (
-    v1_partkey INTEGER
+    supplier_no   INTEGER,
+    total_revenue DECIMAL
 );
 
-CREATE TABLE q20_inner2
+CREATE TABLE q15_inner
 (
-    v2_quantity_sum DECIMAL
+    max_tr DECIMAL
 );
-
