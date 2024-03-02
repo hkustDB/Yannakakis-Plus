@@ -23,7 +23,6 @@ from codegenTopK import *
 from topk import *
 from enumsType import EdgeType
 
-
 from random import randint
 import os
 import re
@@ -31,11 +30,13 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/tpch/q18/'
-DDL_NAME = 'tpch.ddl'
+
+BASE_PATH = 'query/extra/q2/'
+DDL_NAME = 'lsqb.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.sql'
-AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
+
+# AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
 
 ''' Formatt

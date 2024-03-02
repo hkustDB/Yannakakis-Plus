@@ -1,4 +1,4 @@
-create or replace view res as SELECT supp_nation,
+SELECT supp_nation,
        cust_nation,
        l_year,
        SUM(volume) AS revenue
@@ -20,5 +20,4 @@ FROM (SELECT n1.n_name                          AS supp_nation,
         AND n1.n_name = 'FRANCE'
         AND n2.n_name = 'GERMANY'
         AND l_shipdate BETWEEN DATE '1995-01-01' AND DATE '1996-12-31') AS shipping
-GROUP BY supp_nation, cust_nation, l_year;
-select sum(supp_nation), sum(cust_nation), sum(l_year), sum(revenue) from res;
+GROUP BY supp_nation, cust_nation, l_year

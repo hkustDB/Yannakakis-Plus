@@ -189,7 +189,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
             if len(extraExtract):
                 extractAttr, extractAlias = makeExtract(extraExtract)
             prepareView.append(CreateAuxView(childNode.alias, selectAttributes + extractAttr, selectAttributesAs + extractAlias, fromTable, whereCondList))
-        # childNode.createViewAlready = True
+        childNode.JoinResView = prepareView[-1]
     
     elif childNode.relationType == RelationType.TableAggRelation: 
         aggNodes = childNode.aggRelation
@@ -437,7 +437,6 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     # (B) with comparison (1 / >= 2 should all be done, just select the first comparison, others should be done during enumeration)
     if direction != Direction.SemiJoin:
         comp = incidentComp[0]
-        
         # 2. Aux Node: Support Relation for auxiliary relation case, all aux relations will be create here; this is only for aux -> node not used for bag(aux) -> 
         if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
             # must create auxiliary view in buildPrepareView
@@ -738,9 +737,14 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
     
     # (D) Semijoin
-    else:
+    else:   
         # NOTE: For semijoin, we only need to support EXTRACT in enumerate phase for tablescan-rel
         viewName = 'semiJoinView' + str(randint(0, maxsize))
+        
+        # NOTE: Optimize, Replace semiJoinView with auxiliary parentNode
+        if parentNode.relationType == RelationType.AuxiliaryRelation:
+            viewName = parentNode.JoinResView.viewName
+            
         selectAttributes, selectAttributesAs = [], []
         fromTable = ''
         if parentNode.JoinResView is not None: # already has alias
@@ -1173,6 +1177,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
                 helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
                 helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
+                helperLeftTo = helperLeftFrom if rel.keyType == EdgeType.Child else helperLeftTo
                 # use orioginal short comparison
                 if onlyComp.getPredType == predType.Short: # do only once
                     if len(onlyComp.originPath) > 1 and pathIdx + 1 < len(onlyComp.originPath):
@@ -1196,6 +1201,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                     helperLeftFrom = ''
                 helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
+                helperRightTo = helperRightFrom if rel.keyType == EdgeType.Child else helperRightTo
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom]
                 retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo])
                 updateDirection.append(Direction.Right)
@@ -1263,6 +1269,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
                 helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
                 helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
+                helperLeftTo = helperLeftFrom if rel.keyType == EdgeType.Child else helperLeftTo
                 # original short comparison
                 if len(onlyComp.originPath) > 1 and pathIdx + 1 < len(onlyComp.originPath):
                     helperRightFrom = onlyComp.helperAttr[pathIdx+1][0]
@@ -1281,6 +1288,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 
                 helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
+                helperRightTo = helperRightFrom if rel.keyType == EdgeType.Child else helperRightTo
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom] # update
                 retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo], lastRel=True)
             else:
