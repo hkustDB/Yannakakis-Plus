@@ -1,3 +1,0 @@
-# 0. Prepare
-create or replace view bag653 as select Person_knows_Person.Person1Id as v1, Post.Forum_containerOfId as v10, Post.isLocatedIn_CountryId as v11, Person_knows_Person.Person2Id as v2, Comment.CommentId as v3, Comment.isLocatedIn_CountryId as v5, Comment.replyOf_PostId as v6, Comment.replyOf_CommentId as v7 from Person_knows_Person as Person_knows_Person, Comment as Comment, Post as Post where Person_knows_Person.Person1Id=Comment.hasCreator_PersonId and Comment.replyOf_PostId=Post.PostId and Post.hasCreator_PersonId=Person_knows_Person.Person2Id;
-select COUNT(*) from bag653;
