@@ -1,4 +1,4 @@
-CREATE TABLE nation ( 
+CREATE TABLE IF NOT EXISTS nation ( 
   n_nationkey int NOT NULL COMMENT '',
   n_name varchar NOT NULL COMMENT '',
   n_regionkey int NOT NULL COMMENT '',
@@ -6,14 +6,14 @@ CREATE TABLE nation (
   `dummy` varchar   
 ) DISTRIBUTED BY BROADCAST;
 
-CREATE TABLE region ( 
+CREATE TABLE IF NOT EXISTS region ( 
   r_regionkey int NOT NULL COMMENT '',
   r_name varchar NOT NULL COMMENT '',
   r_comment varchar COMMENT '',
   dummy varchar
 ) DISTRIBUTED BY BROADCAST;
 
-CREATE TABLE part (
+CREATE TABLE IF NOT EXISTS part (
   p_partkey int NOT NULL COMMENT '',
   p_name varchar NOT NULL COMMENT '',
   p_mfgr varchar NOT NULL COMMENT '',
@@ -26,7 +26,7 @@ CREATE TABLE part (
   dummy varchar
 ) DISTRIBUTED BY HASH  (p_partkey);
 
-CREATE TABLE supplier (  
+CREATE TABLE IF NOT EXISTS supplier (  
   s_suppkey int NOT NULL COMMENT '',
   s_name varchar NOT NULL COMMENT '',
   s_address varchar NOT NULL COMMENT '',
@@ -37,7 +37,7 @@ CREATE TABLE supplier (
   dummy varchar
 ) DISTRIBUTED BY HASH  (s_suppkey);
 
-CREATE TABLE partsupp (  
+CREATE TABLE IF NOT EXISTS partsupp (  
   ps_partkey int NOT NULL COMMENT '',
   ps_suppkey int NOT NULL COMMENT '',
   ps_availqty int NOT NULL COMMENT '',
@@ -46,7 +46,7 @@ CREATE TABLE partsupp (
   dummy varchar
 ) DISTRIBUTED BY HASH  (ps_partkey);
 
-CREATE TABLE customer (  
+CREATE TABLE IF NOT EXISTS customer (  
   c_custkey int NOT NULL COMMENT '',
   c_name varchar NOT NULL COMMENT '',
   c_address varchar NOT NULL COMMENT '',
@@ -58,7 +58,7 @@ CREATE TABLE customer (
   `dummy` varchar 
 ) DISTRIBUTED BY HASH  (c_custkey);
 
-CREATE TABLE orders (  
+CREATE TABLE IF NOT EXISTS orders (  
   o_orderkey bigint NOT NULL COMMENT '',
   o_custkey int NOT NULL COMMENT '',
   o_orderstatus varchar NOT NULL COMMENT '',
@@ -71,7 +71,7 @@ CREATE TABLE orders (
   dummy varchar
 ) DISTRIBUTED BY HASH  (o_orderkey);
 
-CREATE TABLE lineitem ( 
+CREATE TABLE IF NOT EXISTS lineitem ( 
   l_orderkey bigint NOT NULL COMMENT '',
   l_partkey int NOT NULL COMMENT '',
   l_suppkey int NOT NULL COMMENT '',
