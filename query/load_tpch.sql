@@ -53,34 +53,42 @@ CREATE TABLE CUSTOMER ( C_CUSTKEY     INTEGER NOT NULL,
 COPY CUSTOMER FROM '/home/bchenba/TPC-H/1T/customer.tbl' ( DELIMITER '|' );
 
 drop table if exists orders;
-CREATE TABLE ORDERS  ( O_ORDERKEY       INTEGER NOT NULL,
-                           O_CUSTKEY        INTEGER NOT NULL,
-                           O_ORDERSTATUS    CHAR(1) NOT NULL,
-                           O_TOTALPRICE     DECIMAL(15,2) NOT NULL,
-                           O_ORDERDATE      DATE NOT NULL,
-                           O_ORDERPRIORITY  CHAR(15) NOT NULL,  
-                           O_CLERK          CHAR(15) NOT NULL, 
-                           O_SHIPPRIORITY   INTEGER NOT NULL,
-                           O_COMMENT        VARCHAR(79) NOT NULL);
+CREATE TABLE orders (  
+  o_orderkey bigint NOT NULL,
+  o_custkey int NOT NULL,
+  o_orderstatus varchar NOT NULL,
+  o_totalprice decimal(15,2) NOT NULL,
+  o_orderdate DATE NOT NULL,
+  o_orderpriority varchar NOT NULL,
+  o_clerk varchar NOT NULL,
+  o_shippriority int NOT NULL,
+  o_comment varchar NOT NULL,
+  dummy varchar
+);
+
 COPY ORDERS FROM '/home/bchenba/TPC-H/1T/orders.tbl' ( DELIMITER '|' );
 
 drop table if exists lineitem;
-CREATE TABLE LINEITEM ( L_ORDERKEY    INTEGER NOT NULL,
-                             L_PARTKEY     INTEGER NOT NULL,
-                             L_SUPPKEY     INTEGER NOT NULL,
-                             L_LINENUMBER  INTEGER NOT NULL,
-                             L_QUANTITY    DECIMAL(15,2) NOT NULL,
-                             L_EXTENDEDPRICE  DECIMAL(15,2) NOT NULL,
-                             L_DISCOUNT    DECIMAL(15,2) NOT NULL,
-                             L_TAX         DECIMAL(15,2) NOT NULL,
-                             L_RETURNFLAG  CHAR(1) NOT NULL,
-                             L_LINESTATUS  CHAR(1) NOT NULL,
-                             L_SHIPDATE    DATE NOT NULL,
-                             L_COMMITDATE  DATE NOT NULL,
-                             L_RECEIPTDATE DATE NOT NULL,
-                             L_SHIPINSTRUCT CHAR(25) NOT NULL,
-                             L_SHIPMODE     CHAR(10) NOT NULL,
-                             L_COMMENT      VARCHAR(44) NOT NULL);
+CREATE TABLE lineitem ( 
+  l_orderkey bigint NOT NULL,
+  l_partkey int NOT NULL,
+  l_suppkey int NOT NULL,
+  l_linenumber int NOT NULL,
+  l_quantity decimal(15,2) NOT NULL,
+  l_extendedprice decimal(15,2) NOT NULL,
+  l_discount decimal(15,2) NOT NULL,
+  l_tax decimal(15,2) NOT NULL,
+  l_returnflag varchar NOT NULL,
+  l_linestatus varchar NOT NULL,
+  l_shipdate DATE NOT NULL,
+  l_commitdate DATE NOT NULL,
+  l_receiptdate DATE NOT NULL,
+  l_shipinstruct varchar NOT NULL,
+  l_shipmode varchar NOT NULL,
+  l_comment varchar NOT NULL,
+  dummy varchar
+);
+
 COPY LINEITEM FROM '/home/bchenba/TPC-H/1T/lineitem.tbl' ( DELIMITER '|' );
 
 create or replace view q2_inner as
@@ -101,7 +109,7 @@ group by l_suppkey;
 
 create or replace view q15_inner as select max(total_revenue) as max_tr from revenue0;
 
-create view q17_inner as select l_partkey as v1_partkey, 0.2 * AVG(l_quantity) as v1_quantity_avg from lineitem l2 group by l_partkey;
+create or replace view q17_inner as select l_partkey as v1_partkey, 0.2 * AVG(l_quantity) as v1_quantity_avg from lineitem l2 group by l_partkey;
 
 create or replace view q18_inner as select l_orderkey as v1_orderkey from lineitem l2 group by l_orderkey having sum(l_quantity) > 312;
 
