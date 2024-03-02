@@ -1,6 +1,9 @@
 *.txt
 .DS_Store
+
 querySum.sql
+rewrite*.sql
+
 graph_db*
 tpch_db*
 lsqb_db*
