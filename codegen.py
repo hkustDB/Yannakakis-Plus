@@ -171,23 +171,29 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             dropView.append(enum.semiEnumerate.viewName)
             continue
         
-        # outFile.write('# 1. createSample\n')
-        line = BEGIN + enum.createSample.viewName + ' as select ' + enum.createSample.selectAttrAlias[0] + ' from ' + enum.createSample.fromTable + ' where ' + enum.createSample.whereCond + END
-        dropView.append(enum.createSample.viewName)
-        outFile.write(line)
+        if enum.createSample:
+            # outFile.write('# 1. createSample\n')
+            line = BEGIN + enum.createSample.viewName + ' as select ' + enum.createSample.selectAttrAlias[0] + ' from ' + enum.createSample.fromTable + ' where ' + enum.createSample.whereCond + END
+            dropView.append(enum.createSample.viewName)
+            outFile.write(line)
         
-        # outFile.write('# 2. selectMax\n')
-        line = BEGIN + enum.selectMax.viewName + ' as select ' + transSelectData(enum.selectMax.selectAttrs, enum.selectMax.selectAttrAlias, row_numer=False, max_rn=True) + ' from ' + enum.selectMax.fromTable + ' join ' + enum.selectMax.joinTable + ' using(' + ', '.join(enum.selectMax.joinKey) + ') where ' + enum.selectMax.whereCond + ' group by ' + ', '.join(enum.selectMax.groupCond) + END 
-        dropView.append(enum.selectMax.viewName)
-        outFile.write(line)
+        if enum.selectMax:
+            # outFile.write('# 2. selectMax\n')
+            line = BEGIN + enum.selectMax.viewName + ' as select ' + transSelectData(enum.selectMax.selectAttrs, enum.selectMax.selectAttrAlias, row_numer=False, max_rn=True) + ' from ' + enum.selectMax.fromTable + ' join ' + enum.selectMax.joinTable + ' using(' + ', '.join(enum.selectMax.joinKey) + ') where ' + enum.selectMax.whereCond + ' group by ' + ', '.join(enum.selectMax.groupCond) + END 
+            dropView.append(enum.selectMax.viewName)
+            outFile.write(line)
         
-        # outFile.write('# 3. selectTarget\n')
-        line = BEGIN + enum.selectTarget.viewName + ' as select ' + ', '.join(enum.selectTarget.selectAttrAlias) + ' from ' + enum.selectTarget.fromTable + ' join ' + enum.selectTarget.joinTable + ' using(' + ', '.join(enum.selectTarget.joinKey) + ')' + ' where ' + enum.selectTarget.whereCond + END
-        dropView.append(enum.selectTarget.viewName)
-        outFile.write(line)
+        if enum.selectTarget:
+            # outFile.write('# 3. selectTarget\n')
+            line = BEGIN + enum.selectTarget.viewName + ' as select ' + ', '.join(enum.selectTarget.selectAttrAlias) + ' from ' + enum.selectTarget.fromTable + ' join ' + enum.selectTarget.joinTable + ' using(' + ', '.join(enum.selectTarget.joinKey) + ')' + ' where ' + enum.selectTarget.whereCond + END
+            dropView.append(enum.selectTarget.viewName)
+            outFile.write(line)
         
         # outFile.write('# 4. stageEnd\n')
-        line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ' join ' + enum.stageEnd.joinTable + ' using(' + ', '.join(enum.stageEnd.joinKey) + ')' + ' where ' + enum.stageEnd.whereCond 
+        if enum.stageEnd.joinUsingFlag:
+            line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ' join ' + enum.stageEnd.joinTable + ' using(' + ', '.join(enum.stageEnd.joinKey) + ')' + ' where ' + enum.stageEnd.whereCond 
+        else:
+            line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ', ' + enum.stageEnd.joinTable + ' where ' + enum.stageEnd.whereCond 
         line += ' and ' if len(enum.stageEnd.whereCondList) else ''
         line += ' and '.join(enum.stageEnd.whereCondList) + addGroupBy(enum.stageEnd) + END
         dropView.append(enum.stageEnd.viewName)

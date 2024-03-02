@@ -448,7 +448,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         
     # 2. orderView
         # optimize for non-full with no ordering case
-        if JT.isFull or (not JT.isFull and childNode.id in JT.subset):
+        if (JT.isFull or (not JT.isFull and childNode.id in JT.subset)) and (reduceRel.keyType != EdgeType.Child):
             viewName = 'orderView' + str(randint(0, maxsize))
             noAliasFlag = False
             if childNode.JoinResView is not None:
@@ -464,9 +464,6 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             joinKey = list(set(childNode.cols) & set(parentNode.cols))
             if not len(joinKey):
                 raise NotImplementedError("Need support for cross join! ")
-        
-            # maintain allJoinKey set
-            allJoinKeySet.update(joinKey)
         
             partiKey = joinKey.copy()
             orderKey = [] # leave for primary key space in orderKey
@@ -574,36 +571,61 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         viewName = 'minView' + str(randint(0, maxsize))
         mfAttr = helperLeft if direction == Direction.Left else helperRight
         joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        allJoinKeySet.update(joinKey)
         selectAttr, selectAttrAlias = [], []
-        if JT.isFull or (not JT.isFull and childNode.id in JT.subset):
+        if JT.isFull or (not JT.isFull and childNode.id in JT.subset): # has orderView
             mfWords = mfAttr[0] + ' as ' + mfAttr[1]
             selectAttrAlias = joinKey + [mfWords]
         else:
-            if direction == Direction.Left:
-                if '<' in comp.op: aggAttr = 'min('
-                else: aggAttr = 'max('
-            else:
-                if '<' in comp.op: aggAttr = 'max('
-                else: aggAttr = 'min('
-            if not childNode.JoinResView and childNode.relationType == RelationType.TableScanRelation:
-                for key in joinKey:
-                    index = childNode.cols.index(key)
-                    oriName = childNode.col2vars[1][index]
-                    selectAttr.append(oriName)
-                    selectAttrAlias.append(key)
-                if 'v' in mfAttr[0]:
-                    index = childNode.cols.index(mfAttr[0])
-                    oriName = childNode.col2vars[1][index]
-                    mfWords = aggAttr + oriName + ') as ' + mfAttr[1]
+            # NOTE: Extra support for PK join
+            if reduceRel.keyType == EdgeType.Child:
+                if not childNode.JoinResView and childNode.relationType == RelationType.TableScanRelation:
+                    for key in joinKey:
+                        index = childNode.cols.index(key)
+                        oriName = childNode.col2vars[1][index]
+                        selectAttr.append(oriName)
+                        selectAttrAlias.append(key)
+                    if 'v' in mfAttr[0]:
+                        index = childNode.cols.index(mfAttr[0])
+                        oriName = childNode.col2vars[1][index]
+                        mfWords = oriName + ' as ' + mfAttr[1]
+                    else:
+                        mfWords = mfAttr[0] + ' as ' + mfAttr[1] 
+                    selectAttr.append('')
+                    selectAttrAlias.append(mfWords)       
                 else:
-                    mfWords = aggAttr + mfAttr[0] + ') as ' + mfAttr[1] 
-                selectAttr.append('')
-                selectAttrAlias.append(mfWords)       
+                    mfWords = mfAttr[0] + ' as ' + mfAttr[1]
+                    selectAttrAlias = joinKey + [mfWords]
             else:
-                mfWords = aggAttr + mfAttr[0] + ') as ' + mfAttr[1]
-                selectAttrAlias = joinKey + [mfWords]
+                if direction == Direction.Left:
+                    if '<' in comp.op: aggAttr = 'min('
+                    else: aggAttr = 'max('
+                else:
+                    if '<' in comp.op: aggAttr = 'max('
+                    else: aggAttr = 'min('
+                if not childNode.JoinResView and childNode.relationType == RelationType.TableScanRelation:
+                    for key in joinKey:
+                        index = childNode.cols.index(key)
+                        oriName = childNode.col2vars[1][index]
+                        selectAttr.append(oriName)
+                        selectAttrAlias.append(key)
+                    if 'v' in mfAttr[0]:
+                        index = childNode.cols.index(mfAttr[0])
+                        oriName = childNode.col2vars[1][index]
+                        mfWords = aggAttr + oriName + ') as ' + mfAttr[1]
+                    else:
+                        mfWords = aggAttr + mfAttr[0] + ') as ' + mfAttr[1] 
+                    selectAttr.append('')
+                    selectAttrAlias.append(mfWords)       
+                else:
+                    mfWords = aggAttr + mfAttr[0] + ') as ' + mfAttr[1]
+                    selectAttrAlias = joinKey + [mfWords]
+                    
+        addiSelfComp = []
+        if childFlag and len(childSelfComp):
+            addiSelfComp = makeSelfComp(childSelfComp, childNode)
 
-        if JT.isFull or (not JT.isFull and childNode.id in JT.subset):
+        if (JT.isFull or (not JT.isFull and childNode.id in JT.subset)) and (reduceRel.keyType != EdgeType.Child):
             fromTable = orderView.viewName
             minView = SelectMinAttr(viewName, [], selectAttrAlias, fromTable, attrFrom=mfAttr[0], attrTo=mfAttr[1])
         else:
@@ -613,7 +635,10 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 fromTable = childNode.source + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
             else:
                 fromTable = childNode.alias
-            minView = SelectMinAttr(viewName, selectAttr, selectAttrAlias, fromTable, attrFrom=mfAttr[0], attrTo=mfAttr[1], whereCond='', groupBy=selectAttrAlias[:-1])
+            if reduceRel.keyType == EdgeType.Child:
+                minView = SelectMinAttr(viewName, selectAttr, selectAttrAlias, fromTable, attrFrom=mfAttr[0], attrTo=mfAttr[1], whereCond=' and '.join(addiSelfComp))
+            else:
+                minView = SelectMinAttr(viewName, selectAttr, selectAttrAlias, fromTable, attrFrom=mfAttr[0], attrTo=mfAttr[1], whereCond=' and '.join(addiSelfComp), groupBy=selectAttrAlias[:-1])
     
     # 4. joinView
         viewName = 'joinView' + str(randint(0, maxsize))
@@ -834,12 +859,12 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
 def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: JoinTree, lastEnum: bool = False, isAgg = False, Agg: Aggregation = None, compExtract: list[Comp] = []) -> EnumeratePhase:
     createSample = selectMax = selectTarget = stageEnd = semiEnumerate = None
     origiNode = JT.getNode(corReducePhase.corresNodeId)
+    origiFlag = origiNode.JoinResView is None and origiNode.relationType == RelationType.TableScanRelation
     
     if (corReducePhase.reduceDirection == Direction.SemiJoin):
         '''
         Only semi need selfComp when enumerate, because cqc already use selfComp when build orderView
         '''
-        origiFlag = origiNode.JoinResView is None and origiNode.relationType == RelationType.TableScanRelation
         origiSelfCompFlag = origiNode.isLeaf and len(corReducePhase.semiView.whereCondList) and origiNode.relationType == RelationType.TableScanRelation
         childNode: TreeNode = corReducePhase.reduceRel.dst
 
@@ -934,7 +959,116 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
             semiEnumerate = SemiEnumerate(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, joinCond)
         retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType, corReducePhase.reduceRel)
         return retEnum
+
+    # TODO: Add enumerate process for PK
+    if corReducePhase.reduceRel.keyType == EdgeType.Child:
+        viewName = 'pkJoin' + str(randint(0, maxsize))
+        selectAttr, selectAttrAlias = [], []
+        if not origiNode.JoinResView and origiNode.relationType == RelationType.TableScanRelation:
+            for a in origiNode.cols:
+                idx = origiNode.cols.index(a)
+                selectAttr.append(origiNode.col2vars[1][idx])
+                selectAttrAlias.append(a)
+            for a in previousView.selectAttrAlias:
+                if a not in selectAttrAlias:
+                    selectAttr.append('')
+                    selectAttrAlias.append(a)
+        else:
+            selectAttrAlias = origiNode.JoinResView.selectAttrAlias | previousView.selectAttrAlias
+            selectAttr = [''] * len(selectAttrAlias)
+        
+        for idx, alias in enumerate(selectAttrAlias):
+            if not ('mf' not in alias and (alias in allJoinKeySet or alias in outVars or alias in compKeySet)):
+                selectAttrAlias.pop(idx)
+                selectAttr.pop(idx)
+        leftMf, rightMf = '', ''
+        oriMfFrom, oriMfTo = corReducePhase.minView.attrFrom, corReducePhase.minView.attrTo
     
+        # previous mf
+        for alias in previousView.selectAttrAlias:
+            if 'mfL' in alias:
+                leftMf = alias
+            elif 'mfR' in alias:
+                rightMf = alias
+        if corReducePhase.reduceDirection == Direction.Left and leftMf == oriMfTo:
+            leftMf = oriMfFrom
+        elif corReducePhase.reduceDirection == Direction.Right and rightMf == oriMfTo:
+            rightMf = oriMfFrom
+        # used as stageEnd whereCond as well
+        if leftMf == '':
+            leftMf = corReducePhase.incidentComp[0].left
+        if rightMf == '':
+            rightMf = corReducePhase.incidentComp[0].right
+        if not origiNode.JoinResView and origiNode.relationType == RelationType.TableScanRelation:
+            if leftMf in origiNode.cols:
+                idx = origiNode.cols.index(leftMf)
+                leftMf = origiNode.col2vars[1][idx]
+            if rightMf in origiNode.cols:
+                idx = origiNode.cols.index(rightMf)
+                rightMf = origiNode.col2vars[1][idx]
+        whereCond = leftMf + corReducePhase.reduceOp + rightMf
+        
+        # CHECK: optimize -> last enum, no need to select mf attributes
+        if not lastEnum:
+            mfAdd = ([leftMf] if leftMf != '' and 'mf' in leftMf else []) + ([rightMf] if rightMf != '' and 'mf' in rightMf else [])
+            # NOTE: Which side mf to delete is about the next reduciable relation's direction: left -> keep mfR; right -> keep mfL
+            selectAttrAlias += mfAdd
+        
+        fromTable = previousView.viewName
+        if origiNode.JoinResView:
+            joinTable = origiNode.JoinResView.viewName
+        elif origiNode.relationType == RelationType.TableScanRelation:
+            joinTable = origiNode.source
+        else:
+            joinTable = origiNode.alias
+        
+        ## Extra for agg: annot/aggregation function
+        if isAgg and origiNode.JoinResView:
+            if 'annot' in previousView.selectAttrAlias and 'annot' in origiNode.JoinResView.selectAttrAlias:
+                ### change annot 
+                index = selectAttrAlias.index('annot')
+                selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                selectAttr[index] = fromTable + '.annot * ' + joinTable + '.annot'
+                selectAttrAlias[index] = 'annot'
+                ### change aggregation function
+                for index, val in enumerate(selectAttrAlias):
+                    if val in Agg.allAggAlias and val in origiNode.JoinResView.selectAttrAlias:
+                        selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + '*' + fromTable + '.annot)') if not JT.isFreeConnex else (val + '*' + fromTable + '.annot')
+                        selectAttrAlias[index] = val
+                    elif val in Agg.allAggAlias and val in previousView.selectAttrAlias:
+                        selectAttr[index] = val + '*' + joinTable + '.annot'
+                        selectAttrAlias[index] = val
+            elif 'annot' in previousView.selectAttrAlias:
+                for index, val in enumerate(selectAttrAlias):
+                    if val in Agg.allAggAlias and val in origiNode.JoinResView.selectAttrAlias:
+                        selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                        selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + '(' + val + '*' + fromTable + '.annot)') if not JT.isFreeConnex else (val + '*' + fromTable + '.annot')
+                        selectAttrAlias[index] = val
+        
+            elif 'annot' in origiNode.JoinResView.selectAttrAlias:
+                for index, val in enumerate(selectAttrAlias):
+                    if val in Agg.allAggAlias and val in previousView.selectAttrAlias:
+                        selectAttr = ['' for _ in range(len(selectAttrAlias))]
+                        selectAttr[index] = (Agg.alias2AggFunc[val].funcName.name + val + '(' + '*' + fromTable + '.annot)') if not JT.isFreeConnex else (val + '*' + fromTable + '.annot')
+                        selectAttrAlias[index] = val
+        # deal with >=2 later comparison
+        whereCondList = []
+        for comp in corReducePhase.incidentComp[1:]:
+            whereCondList.append(comp.left + comp.op + comp.right)
+        if corReducePhase.minView.whereCond != '':
+            whereCondList.append(corReducePhase.minView.whereCond)  # add self-comparison
+        joinKey = corReducePhase.joinView.joinKey
+        if not origiNode.JoinResView and origiNode.relationType == RelationType.TableScanRelation:
+            for key in joinKey:
+                idx = origiNode.cols.index(key)
+                oriKey = origiNode.col2vars[1][idx]
+                cond = fromTable + '.' + key + '=' + joinTable + '.' + oriKey
+                whereCondList.insert(0, cond)
+            stageEnd = StageEnd(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, whereCondList, joinUsingFlag=False)
+        else:
+            stageEnd = StageEnd(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, whereCondList)
+        retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType, corReducePhase.reduceRel)
+        return retEnum
     
 # 1. createSample
     viewName = 'sample' + str(randint(0, maxsize))
@@ -989,6 +1123,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
     joinKey = selectMax.selectAttrAlias
     selectTarget = SelectTargetSource(viewName, [], selectAttrAlias, fromTable, joinTable, joinKey)
 # 4. stageEnd
+
     viewName = 'end' + str(randint(0, maxsize))
     selectAttr = []
     selectAttrAlias = set(previousView.selectAttrAlias) | set(selectTarget.selectAttrAlias) # alias union + mf value
@@ -1041,7 +1176,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         whereCondList.append(comp.left + comp.op + comp.right)
     
     stageEnd = StageEnd(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, '', whereCond, whereCondList)
-
+    
     retEnum = EnumeratePhase(createSample, selectMax, selectTarget, stageEnd, semiEnumerate, corReducePhase.corresNodeId, corReducePhase.reduceDirection, corReducePhase.PhaseType, corReducePhase.reduceRel)
     return retEnum
 
@@ -1177,7 +1312,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
                 helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
                 helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
-                helperLeftTo = helperLeftFrom if rel.keyType == EdgeType.Child else helperLeftTo
+                # helperLeftTo = helperLeftFrom if rel.keyType == EdgeType.Child else helperLeftTo
                 # use orioginal short comparison
                 if onlyComp.getPredType == predType.Short: # do only once
                     if len(onlyComp.originPath) > 1 and pathIdx + 1 < len(onlyComp.originPath):
@@ -1201,7 +1336,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                     helperLeftFrom = ''
                 helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
-                helperRightTo = helperRightFrom if rel.keyType == EdgeType.Child else helperRightTo
+                # helperRightTo = helperRightFrom if rel.keyType == EdgeType.Child else helperRightTo
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom]
                 retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo])
                 updateDirection.append(Direction.Right)
@@ -1269,7 +1404,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 pathIdx = onlyComp.originPath.index([rel.dst.id, rel.src.id])
                 helperLeftFrom = onlyComp.helperAttr[pathIdx-1][1] if rel.dst.id != onlyComp.originBeginNodeId else onlyComp.left
                 helperLeftTo = 'mfL' + str(randint(0, maxsize)) if not supportRelationFlag else helperLeftFrom
-                helperLeftTo = helperLeftFrom if rel.keyType == EdgeType.Child else helperLeftTo
+                # helperLeftTo = helperLeftFrom if rel.keyType == EdgeType.Child else helperLeftTo
                 # original short comparison
                 if len(onlyComp.originPath) > 1 and pathIdx + 1 < len(onlyComp.originPath):
                     helperRightFrom = onlyComp.helperAttr[pathIdx+1][0]
@@ -1288,7 +1423,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 
                 helperRightFrom = onlyComp.helperAttr[pathIdx+1][0] if rel.dst.id != onlyComp.originEndNodeId else onlyComp.right
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
-                helperRightTo = helperRightFrom if rel.keyType == EdgeType.Child else helperRightTo
+                # helperRightTo = helperRightFrom if rel.keyType == EdgeType.Child else helperRightTo
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom] # update
                 retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo], lastRel=True)
             else:
