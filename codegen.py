@@ -55,21 +55,22 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         line += ' group by ' + ','.join(agg.aggView.groupBy) + END
         dropView.append(agg.aggView.viewName)
         outFile.write(line)
-        # outFile.write('# 2. aggJoin\n')
-        line = BEGIN + agg.aggJoin.viewName + ' as select ' + transSelectData(agg.aggJoin.selectAttrs, agg.aggJoin.selectAttrAlias) + ' from '
-        if agg.aggJoin.fromTable != '':
-            joinSentence = agg.aggJoin.fromTable
-            if agg.aggJoin._joinFlag == ' JOIN ':
-                joinSentence += ' join ' + agg.aggJoin.joinTable + ' using(' + ','.join(agg.aggJoin.alterJoinKey) + ')'
+        if 'Join' in agg.aggJoin.viewName:
+            # outFile.write('# 2. aggJoin\n')
+            line = BEGIN + agg.aggJoin.viewName + ' as select ' + transSelectData(agg.aggJoin.selectAttrs, agg.aggJoin.selectAttrAlias) + ' from '
+            if agg.aggJoin.fromTable != '':
+                joinSentence = agg.aggJoin.fromTable
+                if agg.aggJoin._joinFlag == ' JOIN ':
+                    joinSentence += ' join ' + agg.aggJoin.joinTable + ' using(' + ','.join(agg.aggJoin.alterJoinKey) + ')'
+                else:
+                    joinSentence += ', ' + agg.aggJoin.joinTable
+                line += joinSentence
             else:
-                joinSentence += ', ' + agg.aggJoin.joinTable
-            line += joinSentence
-        else:
-            line += agg.aggJoin.joinTable
-        line += ' where ' if len(agg.aggJoin.whereCondList) else ''
-        line += ' and '.join(agg.aggJoin.whereCondList) + END
-        dropView.append(agg.aggJoin.viewName)
-        outFile.write(line)
+                line += agg.aggJoin.joinTable
+            line += ' where ' if len(agg.aggJoin.whereCondList) else ''
+            line += ' and '.join(agg.aggJoin.whereCondList) + END
+            dropView.append(agg.aggJoin.viewName)
+            outFile.write(line)
     
     # 1. reduceList rewrite
     for reduce in reduceList:
@@ -90,7 +91,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                 dropView.append(prepare.viewName)
                 outFile.write(line)
         
-        if reduce.semiView is not None:
+        if reduce.semiView is not None and not 'Aux' in reduce.semiView.viewName:
             # outFile.write('# +. SemiJoin\n')
             # TODO: Add change for auxNode creation
             line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + ', '.join(reduce.semiView.inRight) + ' from ' + reduce.semiView.joinTable

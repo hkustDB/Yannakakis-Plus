@@ -291,9 +291,9 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         selectAttr.pop(dIndex)
                         aggPass2Join.remove('caseRes')
                         if agg.funcName != AggFuncType.AVG:
-                            selectAttr.append(agg.funcName.name + '( CASE WHEN' + caseCond + ' THEN caseRes' + annotFlag + 'ELSE 0.0 END)')
+                            selectAttr.append(agg.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes' + annotFlag + ' ELSE 0.0 END)')
                         else:
-                            selectAttr.append('SUM( CASE WHEN' + caseCond + ' THEN caseRes' + annotFlag + 'ELSE 0.0 END)')
+                            selectAttr.append('SUM( CASE WHEN ' + caseCond + ' THEN caseRes' + annotFlag + ' ELSE 0.0 END)')
                     elif condVar[0] in findInVars and res1Var[0] in findInVars:
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
@@ -571,6 +571,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         raise NotImplementedError("Multiple extraEqualCond! ")
     
     aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp + condComp + extraEqualWhere)
+    if fromTable == '' and len(aggJoin.whereCondList) == 0:
+        aggJoin.viewName = aggView.viewName
     aggReduce = AggReducePhase(prepareView, aggView, aggJoin, reduceRel.dst.id)
     return aggReduce
 
@@ -831,7 +833,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                     if 'caseCond' in lastView.selectAttrAlias:
                         selectName.append(func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
                     elif 'caseRes' in lastView.selectAttrAlias:
-                        selectName.append(func.funcName.name + '( CASE WHEN' + caseCond + ' THEN caseRes ' + annotFlag + 'ELSE 0.0 END)')
+                        selectName.append(func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + annotFlag + ' ELSE 0.0 END)')
                     else:
                         selectName.append(func.funcName.name + '(' + func.originForm + annotFlag + ')')
                 else:
@@ -875,7 +877,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                             if 'caseCond' in lastView.selectAttrAlias:
                                 newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
                             elif 'caseRes' in lastView.selectAttrAlias:
-                                newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN' + caseCond + ' THEN caseRes ' + annotFlag + 'ELSE 0.0 END)')
+                                newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + annotFlag + ' ELSE 0.0 END)')
                             else:
                                 newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + annotFlag + ')')
                         else:
