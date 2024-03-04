@@ -31,8 +31,8 @@ import traceback
 import requests
 
 
-BASE_PATH = 'query/extra/q2/'
-DDL_NAME = 'lsqb.ddl'
+BASE_PATH = 'query/extra/q3/'
+DDL_NAME = 'tpch.ddl'
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.sql'
 

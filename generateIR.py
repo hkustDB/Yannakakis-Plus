@@ -573,7 +573,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         joinKey = list(set(childNode.cols) & set(parentNode.cols))
         allJoinKeySet.update(joinKey)
         selectAttr, selectAttrAlias = [], []
-        if JT.isFull or (not JT.isFull and childNode.id in JT.subset): # has orderView
+        if (JT.isFull or (not JT.isFull and childNode.id in JT.subset)) and reduceRel.keyType != EdgeType.Child: # has orderView
             mfWords = mfAttr[0] + ' as ' + mfAttr[1]
             selectAttrAlias = joinKey + [mfWords]
         else:
@@ -588,11 +588,12 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                     if 'v' in mfAttr[0]:
                         index = childNode.cols.index(mfAttr[0])
                         oriName = childNode.col2vars[1][index]
+                        selectAttr.append(oriName)
                         mfWords = oriName + ' as ' + mfAttr[1]
                     else:
+                        selectAttr.append(mfAttr[0])
                         mfWords = mfAttr[0] + ' as ' + mfAttr[1] 
-                    selectAttr.append('')
-                    selectAttrAlias.append(mfWords)       
+                    selectAttrAlias.append(mfAttr[1])       
                 else:
                     mfWords = mfAttr[0] + ' as ' + mfAttr[1]
                     selectAttrAlias = joinKey + [mfWords]

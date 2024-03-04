@@ -52,7 +52,9 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         # outFile.write('# 1. aggView\n')
         line = BEGIN + agg.aggView.viewName + ' as select ' + transSelectData(agg.aggView.selectAttrs, agg.aggView.selectAttrAlias) + ' from ' + agg.aggView.fromTable
         line += (' where ' + ' and '.join(agg.aggView.selfComp)) if len(agg.aggView.selfComp) else ''
-        line += ' group by ' + ','.join(agg.aggView.groupBy) + END
+        if len(agg.aggView.groupBy):
+            line += ' group by ' + ','.join(agg.aggView.groupBy)
+        line += END
         dropView.append(agg.aggView.viewName)
         outFile.write(line)
         if 'Join' in agg.aggJoin.viewName:
