@@ -1,5 +1,6 @@
 *.txt
 .DS_Store
+rewrite_and_run.result
 
 querySum.sql
 rewrite*.sql

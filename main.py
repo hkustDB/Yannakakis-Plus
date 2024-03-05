@@ -1,10 +1,11 @@
 """
 Usage:
-  main.py <query> [options]
-
+  main.py <query> <ddl> [options]
+  
 Options:
   -h --help     Show help.
   <query>       Set execute query path, like topk1/
+  <ddl>         Set ddl filename
   -b, --base base   Set level-k log base [default: 32]
   -m, --mode mode   Set topK algorithm mode. 0: level-k, 1: product-k [default: 0]
   -g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
@@ -31,8 +32,8 @@ import traceback
 import requests
 
 
-BASE_PATH = 'query/extra/q3/'
-DDL_NAME = 'tpch.ddl'
+BASE_PATH = 'query/tpch/q20/'
+DDL_NAME = "tpch.ddl"
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.sql'
 
@@ -74,9 +75,12 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
     elif name == 'AuxiliaryRelation':
         source, cols, alias, supportId = removeEqual(line, 3)
         cols = pattern.findall(cols)
-        supportId, supportRel = int(supportId.split('\n')[0]), supportId.split('\n')[1]
-        if supportId not in allNodes and supportRel != '':
-            parseRelRecur(supportRel, allNodes, supId)
+        if '\n' in supportId:
+            supportId, supportRel = int(supportId.split('\n')[0]), supportId.split('\n')[1]
+            if supportId not in allNodes and supportRel != '':
+                parseRelRecur(supportRel, allNodes, supId)
+        else:
+            supportId = int(supportId.split('=')[1])
         auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
         supId.add(supportId)
         allNodes[id] = auxNode
@@ -99,10 +103,13 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
     elif name == 'BagRelation':
         inAlias, cols, alias, internalRelations = removeEqual(line, 3)
         cols = pattern.findall(cols)
-        inId, internalRelations = internalRelations.split('\n', 1)
-        inId = [int(id) for id in inId.split(',')]
-        for internal in internalRelations.split('\n'):
-            if internal != '': parseRelRecur(internal)
+        if '\n' in internalRelations:
+            inId, internalRelations = internalRelations.split('\n', 1)
+            for internal in internalRelations.split('\n'):
+                if internal != '': parseRelRecur(internal)
+        else:
+            inId = internalRelations.split('=', 1)[1]
+        inId = [int(id) for id in inId.split(',')][::-1]
         bagNode = BagTreeNode(id, inAlias, cols, [], alias, inId, inAlias)
         allNodes[id] = bagNode
     else:
@@ -115,13 +122,13 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         inAlias = node['internal']
         inId, internal = node['internalRelations'].split('\n', 1)
         inId = inId.split(',')
-        inId = [int(each) for each in inId]
+        inId = [int(each) for each in inId][::-1]
         internal = internal.split('\n')
         for inter in internal:
             if inter != '': parseRelRecur(inter, allNodes, supId)
         bagNode = BagTreeNode(id, str(inAlias), cols, [], alias, inId, inAlias)
         allNodes[id] = bagNode
-                
+    
     elif name == 'AuxiliaryRelation':
         source = node['source']
         supportId = node['support']
@@ -133,7 +140,7 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         source = node['source']
         tsNode = TableTreeNode(id, source, cols, [], alias)
         allNodes[id] = tsNode
-            
+        
     elif name == 'TableAggRelation':
         source = node['source']
         aggList, aggs = node['aggList'].split('\n', 1)
@@ -150,7 +157,7 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
     return 
 
 
-def connect():
+def connect(base: int, mode: int, type: GenType):
     headers = {'Content-Type': 'application/json'}
     body = dict()
     ddl_file = open(BASE_PATH + DDL_NAME)
@@ -223,7 +230,7 @@ def connect():
     topK_data = response['topK']
     topK = None
     if topK_data:
-        topK = TopK(topK_data['orderByVariable'], topK_data['desc'], topK_data['limit'], mode=0, base=32, genType=GenType.DuckDB)
+        topK = TopK(topK_data['orderByVariable'], topK_data['desc'], topK_data['limit'], mode=mode, base=base, genType=type)
     # 6. computations
     computations = response['computations']
     tempComp = []
@@ -282,7 +289,7 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
             vars = [allBagVarMap[col] for col in treeNode.cols]
             treeNode.setcol2vars([treeNode.cols, vars])
-            
+        
         elif treeNode.relationType == RelationType.AuxiliaryRelation:
             supCols, supVars = allNodes[treeNode.supRelationId].col2vars
             auxCols, auxVars = [], []
@@ -296,8 +303,16 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
 
 if __name__ == '__main__':
+    # base, mode, type = 2, 0, 'D'
+    arguments = docopt(__doc__)
+    DDL_NAME = arguments['<ddl>'] + '.ddl'
+    BASE_PATH = arguments['<query>'] + '/'
+    base = int(arguments['--base'])
+    mode=int(arguments['--mode'])
+    type=GenType.Mysql if arguments['--genType'] == 'M' else GenType.DuckDB
+    
     start = time.time()
-    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect()
+    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
     IRmode = IRType.Level_K if topK and topK.mode == 0 else IRmode
     IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
@@ -321,11 +336,11 @@ if __name__ == '__main__':
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
             try:
-                
+                '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
-                
+                '''
                 computationList.reset()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
