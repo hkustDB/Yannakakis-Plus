@@ -36,15 +36,15 @@ do
         CUR_PATH="${SCRIPT_PATH}/${dir}"
         for file in $(ls ${CUR_PATH})
         do
-            result_file="${CUR_PATH}/rewrite_time.txt"
-            rm -f $result_file
-            touch $result_file
+            LOG_FILE="${CUR_PATH}/rewrite_time.txt"
+            rm -f ${LOG_FILE}
+            touch ${LOG_FILE}
             filename="${file%.*}"
             IsSuffix ${file}
             ret=$?
             if [ $ret -eq 0 ] && [ ${filename} = "query" ]
             then
-                $python main.py "${CUR_PATH}" "${DDL_NAME}" -b "$b" -m "$m" -g "$g" | grep "Rewrite time(s)" >> $result_file
+                $python main.py "${CUR_PATH}" "${DDL_NAME}" -b "$b" -m "$m" -g "$g" | grep "Rewrite time(s)" >> ${LOG_FILE}
             fi
         done
     fi
