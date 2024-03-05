@@ -532,6 +532,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     if val in Agg.allAggAlias:
                         selectAttr[index] = val + '*' + joinTable + '.annot'
                         selectAttrAlias[index] = val
+                selectAttr.append('')
                 selectAttrAlias.append('annot')
         elif 'annot' in selectAttrAlias and pkFlag:
             # update annotation

@@ -463,7 +463,8 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             ## NOTE: Use the original, avoid importing annot
             joinKey = list(set(childNode.cols) & set(parentNode.cols))
             if not len(joinKey):
-                raise NotImplementedError("Need support for cross join! ")
+                pass
+                # raise NotImplementedError("Need support for cross join! ")
         
             partiKey = joinKey.copy()
             orderKey = [] # leave for primary key space in orderKey
