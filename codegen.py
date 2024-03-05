@@ -138,6 +138,8 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         if reduce.bagAuxView:
             # outFile.write('# 5. bagAuxView\n')
             line = BEGIN + reduce.bagAuxView.viewName + ' as select ' + transSelectData(reduce.bagAuxView.selectAttrs, reduce.bagAuxView.selectAttrAlias) + ' from ' + reduce.bagAuxView.joinTableList[0]
+            if (len(reduce.bagAuxView.joinKey) != len(reduce.bagAuxView.joinTableList) - 1):
+                raise RuntimeError("Error JoinKey number (wrong bag internal table join)! ")
             for i in range(1, len(reduce.bagAuxView.joinTableList)):
                 line += ' join ' + reduce.bagAuxView.joinTableList[i] + ' using(' + ','.join(reduce.bagAuxView.joinKey[i-1]) + ')'
             line += (' where ' + ' and '.join(reduce.bagAuxView.whereCondList)) if len(reduce.bagAuxView.whereCondList) else ''

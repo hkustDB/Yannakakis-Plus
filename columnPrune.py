@@ -111,9 +111,11 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             if reduce.orderView:
                 reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias = removeAttrAlias(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, orderRequireInit | allJoinKeys)
             
-            reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias = removeAttrAlias(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias, orderRequireInit | allJoinKeys)
+            if reduce.joinView:
+                reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias = removeAttrAlias(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias, orderRequireInit | allJoinKeys)
         else:
-            reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys)
+            if reduce.semiView:
+                reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys)
     
     aggKeepSet = getAggSet(Agg, isAll=False) 
     requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
