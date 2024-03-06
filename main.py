@@ -22,6 +22,7 @@ from generateTopKIR import *
 from codegen import *
 from codegenTopK import *
 from topk import *
+from estimator import *
 from enumsType import EdgeType
 
 from random import randint
@@ -32,13 +33,13 @@ import traceback
 import requests
 
 
-BASE_PATH = 'query/tpch/q20/'
+BASE_PATH = 'query/tpch/q2/'
 DDL_NAME = "tpch.ddl"
 QUERY_NAME = 'query.sql'
 OUT_NAME = 'rewrite.sql'
+COST_NAME = 'cost.txt'
 
 # AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
-
 
 ''' Formatt
 RelationName;id;source/inalias(bag);cols;tableDisplayName;[AggList(tableagg)|internalRelations(bag)|supportingRelation(aux)|group+func(agg)]
@@ -166,7 +167,7 @@ def connect(base: int, mode: int, type: GenType):
     query_file = open(BASE_PATH + QUERY_NAME)
     body['query'] = query_file.read()
     query_file.close()
-    response = requests.post(url="http://localhost:8848/api/v1/parse", headers=headers, json=body).json()['data']
+    response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&desc=false", headers=headers, json=body).json()['data']
     # 1. 
     table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
     # 2. parse jointree
@@ -303,14 +304,15 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
 
 if __name__ == '__main__':
-    # base, mode, type = 2, 0, 'D'
+    base, mode, type = 2, 0, 'D'
+    '''
     arguments = docopt(__doc__)
     DDL_NAME = arguments['<ddl>'] + '.ddl'
     BASE_PATH = arguments['<query>'] + '/'
     base = int(arguments['--base'])
     mode=int(arguments['--mode'])
     type=GenType.Mysql if arguments['--genType'] == 'M' else GenType.DuckDB
-    
+    '''
     start = time.time()
     optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
@@ -319,6 +321,11 @@ if __name__ == '__main__':
     # sign for whether process all JT
     optFlag = False
     if optFlag:
+        cost_height, cost_fanout, cost_estimate = getEstimation(DDL_NAME.split('.')[0], optJT)
+        costOutName = COST_NAME.split('.')[0] + 'opt' + '.' + COST_NAME.split('.')[1]
+        costout = open(BASE_PATH + costOutName, 'w+')
+        costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
+        costout.close()
         if IRmode == IRType.Report:
             reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
             codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME)
@@ -334,7 +341,12 @@ if __name__ == '__main__':
             codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=topK.genType)  
     else:
         for jt, comp, index in allRes:
+            cost_height, cost_fanout, cost_estimate = getEstimation(DDL_NAME.split('.')[0], jt)
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
+            costOutName = COST_NAME.split('.')[0] + str(index) + '.' + COST_NAME.split('.')[1]
+            costout = open(BASE_PATH + costOutName, 'w+')
+            costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
+            costout.close()
             try:
                 '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')

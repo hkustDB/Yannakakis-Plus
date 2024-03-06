@@ -17,8 +17,9 @@ class TreeNode:
                                     # zipped = zip(a,b), zip(*zipped)
         self.children: list[TreeNode] = []
         self.parent: TreeNode = None
+        self.anscestors: set[TreeNode] = set()
         
-        self.estimateSize = -1                      # estimate relation size
+        self.statistics: list[int, int] = []                    # estimate relation size
         self.relationType: RelationType = None
         self.createViewAlready: bool = False        # create view TableAgg, Aux, bag already
         self.reducePhase: Union[ReducePhase, AggReducePhase, LevelKReducePhase, ProductKReducePhase] = None        # Attach reduce information to the node
@@ -28,12 +29,15 @@ class TreeNode:
         self.enumDone: bool = False                 # mark for whether done in enumerate phase
         self.optDone: bool = False                  # mark for optimize
     
-    @property
-    def getcol2vars(self): 
-        return self.col2vars
+    def setAnscestors(self, anscestors):
+        self.anscestors = anscestors
     
     def setcol2vars(self, col2vars: list[list[str]]):
         self.col2vars = col2vars
+
+    @property
+    def getcol2vars(self): 
+        return self.col2vars
     
     @property
     def getNodeAlias(self):
@@ -50,6 +54,10 @@ class TreeNode:
     @property
     def depth(self):
         return 1 + max([0] + [c.depth for c in self.children])
+    
+    @property
+    def fanout(self):
+        return max([len(self.children)] + [len(c.children) for c in self.children])
     
     def removeChild(self, child):
         self.children.remove(child)
