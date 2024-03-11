@@ -33,6 +33,8 @@ class Aggregation:
         for agg in self.aggFunc:
             if agg.alias not in ret:
                 ret[agg.alias] = agg
+            else:
+                raise NotImplementedError("One alias maps multiple aggregation functions! ")
         return ret
     
     def initDoneFlag(self):

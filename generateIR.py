@@ -579,7 +579,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             selectAttrAlias = joinKey + [mfWords]
         else:
             # NOTE: Extra support for PK join
-            if reduceRel.keyType == EdgeType.Child:
+            if reduceRel.keyType == EdgeType.Child or reduceRel.keyType == EdgeType.Both:
                 if not childNode.JoinResView and childNode.relationType == RelationType.TableScanRelation:
                     for key in joinKey:
                         index = childNode.cols.index(key)
@@ -637,7 +637,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 fromTable = childNode.source + ' as ' + childNode.alias if childNode.alias != childNode.source else childNode.source
             else:
                 fromTable = childNode.alias
-            if reduceRel.keyType == EdgeType.Child:
+            if reduceRel.keyType == EdgeType.Child or reduceRel.keyType == EdgeType.Both:
                 minView = SelectMinAttr(viewName, selectAttr, selectAttrAlias, fromTable, attrFrom=mfAttr[0], attrTo=mfAttr[1], whereCond=' and '.join(addiSelfComp))
             else:
                 minView = SelectMinAttr(viewName, selectAttr, selectAttrAlias, fromTable, attrFrom=mfAttr[0], attrTo=mfAttr[1], whereCond=' and '.join(addiSelfComp), groupBy=selectAttrAlias[:-1])
@@ -963,7 +963,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         return retEnum
 
     # TODO: Add enumerate process for PK
-    if corReducePhase.reduceRel.keyType == EdgeType.Child:
+    if corReducePhase.reduceRel.keyType == EdgeType.Child or corReducePhase.reduceRel.keyType == EdgeType.Both:
         viewName = 'pkJoin' + str(randint(0, maxsize))
         selectAttr, selectAttrAlias = [], []
         if not origiNode.JoinResView and origiNode.relationType == RelationType.TableScanRelation:

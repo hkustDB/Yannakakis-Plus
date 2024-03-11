@@ -5,6 +5,8 @@ rewrite_and_run.result
 querySum.sql
 rewrite*.sql
 
+query/extra*
+
 graph_db*
 tpch_db*
 lsqb_db*
