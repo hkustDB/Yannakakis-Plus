@@ -56,7 +56,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     selectAttr, selectAttrAlias  = [], []
     aggPass2Join, groupBy = [], []
     pkFlag = False
-    if reduceRel.keyType == EdgeType.Child and childFlag:
+    if (reduceRel.keyType == EdgeType.Child or reduceRel.keyType == EdgeType.Both) and childFlag:
         pkFlag = True
     
     if childFlag: # xjoinview & tablescan
@@ -511,17 +511,23 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             selectAttrAlias[index] = 'annot'
             # original aggregation
             for index, val in enumerate(selectAttrAlias):
-                if val in Agg.allAggAlias:
+                if val in Agg.allAggAlias and Agg.alias2AggFunc[val].funcName != AggFuncType.MIN and Agg.alias2AggFunc[val].funcName != AggFuncType.MAX:
                     selectAttr[index] = val + '*' + joinTable + '.annot'
+                    selectAttrAlias[index] = val
+                elif val in Agg.allAggAlias:
+                    selectAttr[index] = val
                     selectAttrAlias[index] = val
             # new aggregation & pass on aggregation variables
             for agg in aggPass2Join:
-                if agg in Agg.allAggAlias:
+                if agg in Agg.allAggAlias and Agg.alias2AggFunc[val].funcName != AggFuncType.MIN and Agg.alias2AggFunc[val].funcName != AggFuncType.MAX:
                     # aggregation function
                     selectAttr.append(agg + ' * ' + parentNode.JoinResView.viewName + '.annot')
                     selectAttrAlias.append(agg)
+                elif agg in Agg.allAggAlias:
+                    selectAttr.append(agg)
+                    selectAttrAlias.append(agg)
                 elif agg not in selectAttrAlias:
-                    # just pass on alias for later aggregation
+                    # FIXME: just pass on alias for later aggregation for special case
                     selectAttr.append('')
                     selectAttrAlias.append(agg)         
         elif 'annot' not in selectAttrAlias and not pkFlag:
@@ -529,8 +535,11 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                 selectAttr.extend(['' for _ in range(len(selectAttrAlias))])
                 # original aggregation
                 for index, val in enumerate(selectAttrAlias):
-                    if val in Agg.allAggAlias:
+                    if val in Agg.allAggAlias and Agg.alias2AggFunc[val].funcName != AggFuncType.MIN and Agg.alias2AggFunc[val].funcName != AggFuncType.MAX:
                         selectAttr[index] = val + '*' + joinTable + '.annot'
+                        selectAttrAlias[index] = val
+                    elif val in Agg.allAggAlias:
+                        selectAttr[index] = val
                         selectAttrAlias[index] = val
                 selectAttr.append('')
                 selectAttrAlias.append('annot')
@@ -539,9 +548,12 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             selectAttr.extend(['' for _ in range(len(selectAttrAlias))])
             # new aggregation & pass on aggregation variables
             for agg in aggPass2Join:
-                if agg in Agg.allAggAlias:
+                if agg in Agg.allAggAlias and Agg.alias2AggFunc[val].funcName != AggFuncType.MIN and Agg.alias2AggFunc[val].funcName != AggFuncType.MAX:
                     # aggregation function
                     selectAttr.append(agg + ' * ' + parentNode.JoinResView.viewName + '.annot')
+                    selectAttrAlias.append(agg)
+                elif agg in Agg.allAggAlias:
+                    selectAttr.append(agg)
                     selectAttrAlias.append(agg)
                 elif agg not in selectAttrAlias:
                     # just pass on alias for later aggregation
