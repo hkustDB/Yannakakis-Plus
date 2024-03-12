@@ -8,7 +8,7 @@ SCRIPT_PATH=$(dirname "${SCRIPT}")
 INPUT_DIR="query/$2"
 INPUT_DIR_PATH="${SCRIPT_PATH}/${INPUT_DIR}"
 DDL_NAME=$1
-g=${3:-D}
+g=${3:-M}
 b=${4:-2}
 m=${5:-0}
 
