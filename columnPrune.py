@@ -117,13 +117,21 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             if reduce.semiView:
                 reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys)
     
-    aggKeepSet = getAggSet(Agg, isAll=False) 
+    aggHasLeft: bool = False
+    for func in Agg.aggFunc:
+        if not func.doneFlag:
+            aggHasLeft = True
+            break
+    
+    aggKeepSet = getAggSet(Agg, isAll=True) 
+    finalKeepSet = outputVariables if not aggHasLeft else outputVariables | aggKeepSet
+    finalAnnotKeep = True if 'annot' in finalResult else False
     requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
     ## step2: prune enumerate
     for index, enum in enumerate(reversed(enumerateList)):
         corEnum = enum.semiEnumerate if enum.semiEnumerate else enum.stageEnd
         if index == 0:
-            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, outputVariables, removeAnnot=True)
+            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, finalKeepSet, removeAnnot=finalAnnotKeep)
         else:
             # FIXME: use all joinKeys to prune
             corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[enum.corresNodeId])
@@ -156,7 +164,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 if alias in aggReduce.aggJoin.selectAttrAlias:
                     curRequireSet.difference(Agg.alias2AggFunc[alias].inVars)   
             
-            curRequireSet = curRequireSet | getAggSet(Agg, isAll=False) 
+            curRequireSet = curRequireSet | getAggSet(Agg, isAll=True)
             
             removeAnnotFlag = len(JT.subset) == 1 and index == len(aggReduceList)-1 and (not 'annot' in finalResult)
             if removeAnnotFlag and 'annot' in aggReduce.aggView.selectAttrAlias:

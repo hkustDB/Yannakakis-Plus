@@ -309,10 +309,10 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/extra/6a/')
-    globalVar.set_value('DDL_NAME', "job.ddl")
+    globalVar.set_value('BASE_PATH', 'query/extra/tpch_q9/')
+    globalVar.set_value('DDL_NAME', "tpch.ddl")
     # auto-rewrite keep here
-    
+    '''
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -323,7 +323,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    
+    '''
     start = time.time()
     optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
@@ -365,11 +365,11 @@ if __name__ == '__main__':
             costout.close()
             '''
             try:
-                '''
+                
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
-                '''
+                
                 computationList.reset()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
