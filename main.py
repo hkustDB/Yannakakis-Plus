@@ -22,8 +22,9 @@ from generateTopKIR import *
 from codegen import *
 from codegenTopK import *
 from topk import *
-from estimator import *
+# from estimator import *
 from enumsType import EdgeType
+import globalVar
 
 from random import randint
 import os
@@ -32,12 +33,6 @@ import time
 import traceback
 import requests
 
-
-BASE_PATH = 'query/lsqb/q1/'
-DDL_NAME = "lsqb.ddl"
-QUERY_NAME = 'query.sql'
-OUT_NAME = 'rewrite.sql'
-COST_NAME = 'cost.txt'
 
 # AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
@@ -159,6 +154,9 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
 
 
 def connect(base: int, mode: int, type: GenType):
+    BASE_PATH = globalVar.get_value('BASE_PATH')
+    DDL_NAME = globalVar.get_value('DDL_NAME')
+    QUERY_NAME = globalVar.get_value('QUERY_NAME')
     headers = {'Content-Type': 'application/json'}
     body = dict()
     ddl_file = open(BASE_PATH + DDL_NAME)
@@ -305,19 +303,34 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
 if __name__ == '__main__':
     base, mode, type = 2, 0, 'D'
+    globalVar._init()
+    globalVar.set_value('QUERY_NAME', 'query.sql')
+    globalVar.set_value('OUT_NAME', 'rewrite.sql')
+    globalVar.set_value('COST_NAME', 'cost.txt')
+    globalVar.set_value('GEN_TYPE', 'Mysql')
+    # code debug keep here
+    globalVar.set_value('BASE_PATH', 'query/extra/6a/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
+    # auto-rewrite keep here
     
     arguments = docopt(__doc__)
-    DDL_NAME = arguments['<ddl>'] + '.ddl'
-    BASE_PATH = arguments['<query>'] + '/'
+    globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
+    globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
     base = int(arguments['--base'])
     mode=int(arguments['--mode'])
     type=GenType.Mysql if arguments['--genType'] == 'M' else GenType.DuckDB
+    if type == GenType.Mysql:
+        globalVar.set_value('GEN_TYPE', 'Mysql')
+    else:
+        globalVar.set_value('GEN_TYPE', 'DuckDB')
     
     start = time.time()
     optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
     IRmode = IRType.Level_K if topK and topK.mode == 0 else IRmode
     IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
+    BASE_PATH = globalVar.get_value('BASE_PATH')
+    OUT_NAME = globalVar.get_value('OUT_NAME')
     # sign for whether process all JT
     optFlag = False
     if optFlag:
@@ -330,10 +343,10 @@ if __name__ == '__main__':
         '''
         if IRmode == IRType.Report:
             reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
-            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME)
+            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
         elif IRmode == IRType.Aggregation:
             aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
-            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg)
+            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg, genType=type)
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
@@ -360,11 +373,11 @@ if __name__ == '__main__':
                 computationList.reset()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
-                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName)
+                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, genType=type)
                 elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
                     aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
-                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg)
+                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, genType=type)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)

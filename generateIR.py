@@ -9,6 +9,8 @@ from typing import Union
 from columnPrune import columnPrune
 from topk import *
 
+
+import globalVar
 import re
 import copy
 
@@ -257,21 +259,23 @@ def transSelfComp(originalVars: list[str], comp: Comparison, childNode: TreeNode
             
     leftVar, opL = splitLR(comp.left)
     rightVar, opR = splitLR(comp.right)
-        
+
     for i in range(len(leftVar)):
         # NOTE: continue for constant
-        if not 'v' in leftVar[i]: continue
-        index = childNode.cols.index(leftVar[i])
-        # leftVar[i] = (childNode.alias if tableAlias else '') + (originalVars[index] if len(originalVars) and originalVars[index] != '' else leftVar[i])
-        leftVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else leftVar[i]        
-        
+        try:
+            index = childNode.cols.index(leftVar[i])
+            # leftVar[i] = (childNode.alias if tableAlias else '') + (originalVars[index] if len(originalVars) and originalVars[index] != '' else leftVar[i])
+            leftVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else leftVar[i]        
+        except:
+            pass
     for i in range(len(rightVar)):
-        # NOTE: continue for constant
-        if not 'v' in rightVar[i]: continue
-        index = childNode.cols.index(rightVar[i])
-        # rightVar[i] = (childNode.alias if tableAlias else '') + (originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i])
-        rightVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i]
-                
+        try:
+            # NOTE: continue for constant
+            index = childNode.cols.index(rightVar[i])
+            # rightVar[i] = (childNode.alias if tableAlias else '') + (originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i])
+            rightVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i]
+        except:
+            pass     
     return opL.join(leftVar), opR.join(rightVar)
 
 
@@ -1467,18 +1471,23 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
             else:
                 raise RuntimeError("Error viewName! ")
             
-            for alias in totalName:
-                if alias in outputVariables:
-                    selectName.append(alias)
-            unDoneOut = [out for out in outputVariables if out not in selectName]
-            for undone in unDoneOut:
-                if undone in compKeys:
-                    selectName.append(computations.alias2Comp[undone] + ' as ' + undone)
+            for out in outputVariables:
+                if out in totalName:
+                    selectName.append(out)
+                elif out in compKeys:
+                    selectName.append(computations.alias2Comp[out] + ' as ' + out)
+            
+            if len(selectName) != len(outputVariables):
+                raise RuntimeError("Miss some outputs! ")
+
+            if globalVar.get_value('GEN_TYPE') == 'Mysql':
+                if JT.isFull:
+                    finalResult = 'select sum(' + '+'.join(selectName) +') from ' + fromTable + ';\n'
                 else:
-                    raise RuntimeError("Undone still not in output! ")
-                
-            finalResult = 'select sum(' + ('distinct ' if not JT.isFull else '') + '+'.join(selectName) +') from ' + fromTable + ';\n'
-        
+                    finalResult = 'create or replace view res as select distinct ' + '+'.join(selectName) +') from ' + fromTable + ';\n'
+                    finalResult += 'select sum(' + '+'.join(selectName) +') from res;\n'
+            else:
+                finalResult = 'select ' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +') from ' + fromTable + ';\n'
         _, reduceList, _ = columnPrune(JT, _, reduceList, [], finalResult, set(outputVariables), None, list(COMP.values()))
         return reduceList, [], finalResult
     
@@ -1518,17 +1527,22 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
             fromTable = enumerateList[-1].semiEnumerate.viewName
             totalName = enumerateList[-1].semiEnumerate.selectAttrAlias
         
-        for alias in outputVariables:
-            if alias in totalName:
-                selectName.append(alias)
-            elif alias in compKeys:
-                selectName.append(computations.alias2Comp[undone] + ' as ' + undone)
+        for out in outputVariables:
+                if out in totalName:
+                    selectName.append(out)
+                elif out in compKeys:
+                    selectName.append(computations.alias2Comp[out] + ' as ' + out)
+        if len(selectName) != len(outputVariables):
+            raise RuntimeError("Miss some outputs! ")
+
+        if globalVar.get_value('GEN_TYPE') == 'Mysql':
+            if JT.isFull:
+                finalResult = 'select sum(' + '+'.join(selectName) +') from ' + fromTable + ';\n'
             else:
-                raise RuntimeError("Undone still not in output! ")
-    
-        finalResult += '+'.join(selectName) if not JT.isFull else '+'.join(outputVariables)
-        finalResult += ') from ' + fromTable + ';\n'
-    
+                finalResult = 'create or replace view res as select distinct ' + ', '.join(selectName) +' from ' + fromTable + ';\n'
+                finalResult += 'select sum(' + '+'.join(selectName) +') from res;\n'
+        else:
+            finalResult = 'select ' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +' from ' + fromTable + ';\n'
+
     _, reduceList, enumerateList = columnPrune(JT, [], reduceList, enumerateList, finalResult, set(outputVariables), Agg=Agg, COMP=list(COMP.values()))
     return reduceList, enumerateList, finalResult
-    

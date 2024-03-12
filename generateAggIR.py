@@ -10,6 +10,7 @@ from generateIR import *
 from codegen import transSelectData
 from columnPrune import columnPrune
 from topk import *
+import globalVar
 
 from random import choice, randint
 from functools import cmp_to_key
@@ -21,6 +22,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
     aggView = aggJoin = None
+
     
     childSelfComp = [comp for comp in selfComp if childNode.id == comp.path[0][0]]
     parentSelfComp = [comp for comp in selfComp if parentNode.id == comp.path[0][0]]
@@ -294,12 +296,17 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
                         if not pkFlag:
-                            if agg.funcName != AggFuncType.AVG:
-                                selectAttr.append(agg.funcName.name + '(' + agg.formular + annotFlag + ')')
-                            else:
+                            if agg.funcName == AggFuncType.AVG:
                                 selectAttr.append('SUM(' + agg.formular + annotFlag + ')')
+                            elif agg.funcName == AggFuncType.MIN or agg.funcName == AggFuncType.MAX:
+                                selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
+                            else:
+                                selectAttr.append(agg.funcName.name + '(' + agg.formular + annotFlag + ')')
                         else:
-                            selectAttr.append(agg.formular + annotFlag)
+                            if agg.funcName == AggFuncType.MIN or agg.funcName == AggFuncType.MAX:
+                                selectAttr.append(agg.formular)
+                            else:
+                                selectAttr.append(agg.formular + annotFlag)
                     elif 'caseCond' in findInVars and res1Var[0] in findInVars:
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
@@ -307,7 +314,9 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         selectAttrAlias.pop(dIndex)
                         selectAttr.pop(dIndex)
                         aggPass2Join.remove('caseCond')
-                        if agg.funcName != AggFuncType.AVG:
+                        if agg.funcName == AggFuncType.MIN or agg.funcName == AggFuncType.MAX:
+                            selectAttr.append(agg.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
+                        elif agg.funcName != AggFuncType.AVG:
                             selectAttr.append(agg.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
                         else:
                             selectAttr.append('SUM( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
@@ -318,7 +327,9 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         selectAttrAlias.pop(dIndex)
                         selectAttr.pop(dIndex)
                         aggPass2Join.remove('caseRes')
-                        if agg.funcName != AggFuncType.AVG:
+                        if agg.funcName == AggFuncType.MIN or agg.funcName == AggFuncType.MAX:
+                            selectAttr.append(agg.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ELSE 0.0 END)')
+                        elif agg.funcName != AggFuncType.AVG:
                             selectAttr.append(agg.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes' + annotFlag + ' ELSE 0.0 END)')
                         else:
                             selectAttr.append('SUM( CASE WHEN ' + caseCond + ' THEN caseRes' + annotFlag + ' ELSE 0.0 END)')
@@ -326,19 +337,26 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
                         if not pkFlag:
-                            if agg.funcName != AggFuncType.AVG:
+                            if agg.funcName == AggFuncType.MIN or agg.funcName == AggFuncType.MAX:
+                                selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
+                            elif agg.funcName != AggFuncType.AVG:
                                 selectAttr.append(agg.funcName.name + '(' + agg.formular + annotFlag + ')')
                             else:
                                 selectAttr.append('SUM(' + agg.formular + annotFlag + ')')
                         else:
-                            selectAttr.append(agg.formular + annotFlag)
-
+                            if agg.funcName == AggFuncType.MIN or agg.funcName == AggFuncType.MAX:
+                                selectAttr.append(agg.formular)
+                            else:
+                                selectAttr.append(agg.formular + annotFlag)
                     elif condVar[0] in findInVars:
                         selectAttr.append('CASE WHEN ' + caseCond + ' THEN 1 ELSE 0 END')
                         selectAttrAlias.append('caseCond')
                         aggPass2Join.append('caseCond')
                     elif res1Var[0] in findInVars:
-                        selectAttr.append(caseRes1 + annotFlag)
+                        if agg.funcName == AggFuncType.MIN or agg.funcName == AggFuncType.MAX:
+                            selectAttr.append(caseRes1)
+                        else:
+                            selectAttr.append(caseRes1 + annotFlag)
                         selectAttrAlias.append('caseRes')
                         aggPass2Join.append('caseRes')
                     else:
@@ -364,13 +382,16 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                                     # MIN/MAX
                                     selectAttr.append(agg.funcName.name + agg.formular)
                             else:
-                                if agg.funcName != AggFuncType.MIN or agg.funcName != AggFuncType.MAX:
+                                if agg.funcName != AggFuncType.MIN and agg.funcName != AggFuncType.MAX:
                                     selectAttr.append(agg.formular + ' * annot')
                                 else:
                                     selectAttr.append(agg.formular)
                         else:
                             if not pkFlag:
-                                selectAttr.append(agg.funcName.name + agg.formular)
+                                if agg.formular[0] != '(':
+                                    selectAttr.append(agg.funcName.name + '(' + agg.formular + ')')
+                                else:
+                                    selectAttr.append(agg.funcName.name + agg.formular)
                             else:
                                 selectAttr.append(agg.formular)
                     else:   # need to pass variables
@@ -420,19 +441,21 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                 raise NotImplementedError("Multiple extraEqualCond! ")
     
     ## d. append annot
-    if childFlag and not pkFlag:
+    # NOTE: Extra optimization foe job benchmark
+    if globalVar.get_value('DDL_NAME') != 'job.ddl':
+        if childFlag and not pkFlag:
             selectAttr.append('COUNT(*)')
             selectAttrAlias.append('annot')
-    elif childNode.JoinResView:
-        if not 'annot' in childNode.JoinResView.selectAttrAlias and not pkFlag:
+        elif childNode.JoinResView:
+            if not 'annot' in childNode.JoinResView.selectAttrAlias and not pkFlag:
+                selectAttr.append('COUNT(*)')
+                selectAttrAlias.append('annot')
+            elif not pkFlag:
+                selectAttr.append('SUM(annot)')
+                selectAttrAlias.append('annot')
+        elif childNode.relationType != RelationType.TableScanRelation and not pkFlag:
             selectAttr.append('COUNT(*)')
             selectAttrAlias.append('annot')
-        elif not pkFlag:
-            selectAttr.append('SUM(annot)')
-            selectAttrAlias.append('annot')
-    elif childNode.relationType != RelationType.TableScanRelation and not pkFlag:
-        selectAttr.append('COUNT(*)')
-        selectAttrAlias.append('annot')
     
     # Extra process for comparison case
     if len(incidentComp):
@@ -502,7 +525,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     selectAttr, selectAttrAlias = [], []
     if parentNode.JoinResView:
         selectAttrAlias = parentNode.JoinResView.selectAttrAlias.copy()
-        if 'annot' in selectAttrAlias and not pkFlag:
+        if 'annot' in selectAttrAlias and not pkFlag:   # Should not happen for job.ddl <- no annot at all
             # update annotation
             selectAttr.extend(['' for _ in range(len(selectAttrAlias))])
             index = selectAttrAlias.index('annot')
@@ -519,7 +542,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     selectAttrAlias[index] = val
             # new aggregation & pass on aggregation variables
             for agg in aggPass2Join:
-                if agg in Agg.allAggAlias and Agg.alias2AggFunc[val].funcName != AggFuncType.MIN and Agg.alias2AggFunc[val].funcName != AggFuncType.MAX:
+                if agg in Agg.allAggAlias and Agg.alias2AggFunc[agg].funcName != AggFuncType.MIN and Agg.alias2AggFunc[agg].funcName != AggFuncType.MAX:
                     # aggregation function
                     selectAttr.append(agg + ' * ' + parentNode.JoinResView.viewName + '.annot')
                     selectAttrAlias.append(agg)
@@ -541,14 +564,20 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     elif val in Agg.allAggAlias:
                         selectAttr[index] = val
                         selectAttrAlias[index] = val
-                selectAttr.append('')
-                selectAttrAlias.append('annot')
+                # new aggregation & pass on aggregation variables
+                for agg in aggPass2Join:
+                    if agg not in selectAttrAlias: 
+                        selectAttr.append('')
+                        selectAttrAlias.append(agg)
+                if globalVar.get_value('DDL_NAME') != 'job.ddl':
+                    selectAttr.append('')
+                    selectAttrAlias.append('annot')
         elif 'annot' in selectAttrAlias and pkFlag:
             # update annotation
             selectAttr.extend(['' for _ in range(len(selectAttrAlias))])
             # new aggregation & pass on aggregation variables
             for agg in aggPass2Join:
-                if agg in Agg.allAggAlias and Agg.alias2AggFunc[val].funcName != AggFuncType.MIN and Agg.alias2AggFunc[val].funcName != AggFuncType.MAX:
+                if agg in Agg.allAggAlias and Agg.alias2AggFunc[agg].funcName != AggFuncType.MIN and Agg.alias2AggFunc[agg].funcName != AggFuncType.MAX:
                     # aggregation function
                     selectAttr.append(agg + ' * ' + parentNode.JoinResView.viewName + '.annot')
                     selectAttrAlias.append(agg)
@@ -565,7 +594,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
         for agg in aggPass2Join:
             if agg not in selectAttrAlias: selectAttrAlias.append(agg)
         if not pkFlag: 
-            selectAttrAlias.append('annot')
+            if globalVar.get_value('DDL_NAME') != 'job.ddl':
+                selectAttrAlias.append('annot')
     else:
         selectAttr = parentNode.col2vars[1].copy()
         selectAttrAlias = parentNode.cols.copy()
@@ -574,8 +604,9 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                 selectAttr.append('')
                 selectAttrAlias.append(agg)
         if not pkFlag:
-            selectAttr.append('')
-            selectAttrAlias.append('annot')
+            if globalVar.get_value('DDL_NAME') != 'job.ddl':
+                selectAttr.append('')
+                selectAttrAlias.append('annot')
         for comp in parentExtract:
             if comp.result in Agg.groupByVars:
                 pattern = re.compile('v[0-9]+')
@@ -870,7 +901,10 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             buildSent += line
         if buildSent != '':
             buildSent = '# 0. Prepare\n' + buildSent
-        finalResult = buildSent + 'select ' + '+'.join(selectName) + ' from '
+        if globalVar.get_value('GEN_TYPE') == 'Mysql':
+            finalResult = buildSent + 'select sum(' + '+'.join(selectName) + ') from '
+        else:
+            finalResult = buildSent + 'select ' + ', '.join(selectName) + ' from '
         ## fromTable, whereCond
         if JT.root.relationType == RelationType.TableScanRelation:
             finalResult += JT.root.source
@@ -892,89 +926,117 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     selectName = Agg.groupByVars.copy()
     unDoneOut = [out for out in outputVariables if out not in selectName]
     
-    for out in unDoneOut:
-        if out in Agg.allAggAlias:
-            func = Agg.alias2AggFunc[out]
-            if JT.isFreeConnex and len(jointree.subset):
-                if func.funcName == AggFuncType.AVG:
-                    selectName.extend([out + '/annot as ' + out for _ in range(outputVariables.count(out))])
-                elif func.funcName == AggFuncType.COUNT:
-                    selectName.extend(['annot as ' + out for _ in range(outputVariables.count(out))])
-                else:
-                    selectName.extend([out for _ in range(outputVariables.count(out))])
-            elif not len(jointree.subset):
-                if 'CASE' in func.formular:
-                    lastView = aggReduceList[-1].aggJoin if aggReduceList[-1].aggJoin else aggReduceList[-1].aggView
-                    annotFlag = '*annot' if 'annot' in lastView.selectAttrAlias else ''
-                    _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
-                    caseCond = caseCond[1:-1]
-                    caseRes1 = caseRes1[1:-1]
-                    if 'caseCond' in lastView.selectAttrAlias:
-                        selectName.append(func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
-                    elif 'caseRes' in lastView.selectAttrAlias:
-                        selectName.append(func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + annotFlag + ' ELSE 0.0 END)')
+    selectName = []
+    for out in outputVariables:
+        if out in Agg.groupByVars:
+            selectName.append(out)
+        else:
+            if out in Agg.allAggAlias:
+                func = Agg.alias2AggFunc[out]
+                if JT.isFreeConnex and len(jointree.subset):
+                    if func.funcName == AggFuncType.AVG:
+                        selectName.extend([out + '/annot as ' + out for _ in range(outputVariables.count(out))])
+                    elif func.funcName == AggFuncType.COUNT:
+                        selectName.extend(['annot as ' + out for _ in range(outputVariables.count(out))])
                     else:
-                        selectName.append(func.funcName.name + '(' + func.originForm + annotFlag + ')')
-                else:
-                    if func.doneFlag:
-                        if func.funcName == AggFuncType.AVG:
-                            selectName.extend(['AVG(' + out + '/annot) as ' + out for _ in range(outputVariables.count(out))])
-                        elif func.funcName == AggFuncType.COUNT:
-                            selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
-                        else:
-                            selectName.extend([func.funcName.name + '(' + out + ') as ' + out for _ in range(outputVariables.count(out))])
-                    else:
-                        if func.funcName == AggFuncType.COUNT:
-                            selectName.extend(['SUM(annot) as ' + out for _ in range(outputVariables.count(out))])
-                        else:
-                            selectName.extend([func.funcName.name + '(' + func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
-                
-            else:
-                if func.funcName == AggFuncType.AVG:
-                    selectName.extend(['SUM(' + out + '/annot) as ' + out for _ in range(outputVariables.count(out))])
-                else:
-                    selectName.extend([func.funcName.name + '(' + out + ') as ' + out for _ in range(outputVariables.count(out))])
-        elif out in compKeys:
-            newForm = computations.alias2Comp[out].expr
-            pattern = re.compile('v[0-9]+')
-            inVars = pattern.findall(newForm)
-            for var in inVars:
-                if var in Agg.allAggAlias:
-                    func = Agg.alias2AggFunc[var]
-                    if JT.isFreeConnex and len(JT.subset):
-                        if func.funcName != AggFuncType.AVG:
-                            newForm = newForm.replace(var, func.alias)
-                        else:
-                            newForm = newForm.replace(var, func.alias + '/annot')
-                    elif not len(JT.subset):
+                        selectName.extend([out for _ in range(outputVariables.count(out))])
+                elif not len(jointree.subset):
+                    if 'CASE' in func.formular:
                         lastView = aggReduceList[-1].aggJoin if aggReduceList[-1].aggJoin else aggReduceList[-1].aggView
                         annotFlag = '*annot' if 'annot' in lastView.selectAttrAlias else ''
-                        if 'CASE' in func.formular:
-                            _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
-                            caseCond = caseCond[1:-1]
-                            caseRes1 = caseRes1[1:-1]
-                            if 'caseCond' in lastView.selectAttrAlias:
-                                newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
-                            elif 'caseRes' in lastView.selectAttrAlias:
-                                newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + annotFlag + ' ELSE 0.0 END)')
+                        _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
+                        caseCond = caseCond[1:-1]
+                        caseRes1 = caseRes1[1:-1]
+                        if 'caseCond' in lastView.selectAttrAlias:
+                            if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                selectName.append(func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
                             else:
-                                newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + annotFlag + ')')
+                                selectName.append(func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
+                        elif 'caseRes' in lastView.selectAttrAlias:
+                            if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                selectName.append(func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + annotFlag + ' ELSE 0.0 END)')
+                            else:
+                                selectName.append(func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ELSE 0.0 END)')
                         else:
-                            if func.doneFlag:
+                            if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                selectName.append(func.funcName.name + '(' + func.originForm + annotFlag + ')')
+                            else:
+                                selectName.append(func.funcName.name + '(' + func.originForm + ')')
+                    else:
+                        if func.doneFlag:
+                            if func.funcName == AggFuncType.AVG:
+                                selectName.extend(['AVG(' + out + '/annot) as ' + out for _ in range(outputVariables.count(out))])
+                            elif func.funcName == AggFuncType.COUNT:
+                                selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
+                            else:
+                                selectName.extend([func.funcName.name + '(' + out + ') as ' + out for _ in range(outputVariables.count(out))])
+                        else:
+                            if func.funcName == AggFuncType.COUNT:
+                                selectName.extend(['SUM(annot) as ' + out for _ in range(outputVariables.count(out))])
+                            else:
+                                selectName.extend([func.funcName.name + '(' + func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
+                
+                else:
+                    if func.funcName == AggFuncType.AVG:
+                        selectName.extend(['SUM(' + out + '/annot) as ' + out for _ in range(outputVariables.count(out))])
+                    else:
+                        selectName.extend([func.funcName.name + '(' + out + ') as ' + out for _ in range(outputVariables.count(out))])
+            elif out in compKeys:
+                newForm = computations.alias2Comp[out].expr
+                pattern = re.compile('v[0-9]+')
+                inVars = pattern.findall(newForm)
+                for var in inVars:
+                    if var in Agg.allAggAlias:
+                        func = Agg.alias2AggFunc[var]
+                        if JT.isFreeConnex and len(JT.subset):
+                            if func.funcName == AggFuncType.AVG:
+                                newForm = newForm.replace(var, func.alias + '/annot')   
+                            else:
+                                newForm = newForm.replace(var, func.alias)
+                        elif not len(JT.subset):
+                            lastView = aggReduceList[-1].aggJoin if aggReduceList[-1].aggJoin else aggReduceList[-1].aggView
+                            annotFlag = '*annot' if 'annot' in lastView.selectAttrAlias else ''
+                            if 'CASE' in func.formular:
+                                _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
+                                caseCond = caseCond[1:-1]
+                                caseRes1 = caseRes1[1:-1]
+                                if 'caseCond' in lastView.selectAttrAlias:
+                                    if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
+                                    else:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
+                                elif 'caseRes' in lastView.selectAttrAlias:
+                                    if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + annotFlag + ' ELSE 0.0 END)')
+                                    else:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ELSE 0.0 END)')
+                                else:
+                                    if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + annotFlag + ')')
+                                    else:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
+                            else:
+                                if func.doneFlag:
+                                    newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')
+                                else:
+                                    if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + annotFlag + ')')
+                                    else:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
+                        else:
+                            if func.funcName != AggFuncType.AVG and func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
                                 newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')
                             else:
-                                newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + annotFlag + ')')
-                    else:
-                        if func.funcName != AggFuncType.AVG:
-                            newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')
-                        else:
-                            newForm = newForm.replace(var, 'SUM(' + func.alias + '/annot)')
+                                newForm = newForm.replace(var, 'SUM(' + func.alias + '/annot)')
             
-            selectName.append(newForm + ' as ' + out)
-        else:
-            raise NotImplementedError("Other output variables exists! ")
-    
-    finalResult = 'select ' + ','.join(selectName) + ' from '
+                selectName.append(newForm + ' as ' + out)
+            else:
+                raise NotImplementedError("Other output variables exists! ")
+
+    if globalVar.get_value('GEN_TYPE') == 'Mysql':
+        finalResult = 'create or replace view res as select ' + ', '.join(selectName) + ' from '
+    else:
+        finalResult = 'select ' + ','.join(selectName) + ' from '
     
     ## a. subset <= 1 special case
     if len(jointree.subset) <= 1:
@@ -983,6 +1045,8 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         if not JT.isFreeConnex:
             finalResult += ' group by ' + ', '.join(Agg.groupByVars)
         finalResult += ';\n'
+        if globalVar.get_value('GEN_TYPE') == 'Mysql':
+            finalResult += 'select sum(' + '+'.join(selectName) + ') from res;' 
         return aggReduceList, [], [], finalResult
     
     ## b. normal case

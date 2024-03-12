@@ -72,7 +72,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
     joinKeyParent: dict[int, set[str]] = dict()     # NodeId -> joinKeys with parent -> reduce
     joinKeyEnum: dict[int, set[str]] = dict()
     addUpJoinKey: set[str] = set()
-    allJoinKeys: set() = set()
+    allJoinKeys: set[str] = set()
 
     # step0: top down -> joinkey
     queue: list[TreeNode] = []
@@ -156,6 +156,8 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 if alias in aggReduce.aggJoin.selectAttrAlias:
                     curRequireSet.difference(Agg.alias2AggFunc[alias].inVars)   
             
+            curRequireSet = curRequireSet | getAggSet(Agg, isAll=False) 
+            
             removeAnnotFlag = len(JT.subset) == 1 and index == len(aggReduceList)-1 and (not 'annot' in finalResult)
             if removeAnnotFlag and 'annot' in aggReduce.aggView.selectAttrAlias:
                 if not len(aggReduce.aggView.selectAttrs):
@@ -164,7 +166,5 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                     index = aggReduce.aggView.selectAttrAlias.index('annot')
                     aggReduce.aggView.selectAttrAlias.pop(index)
                     aggReduce.aggView.selectAttrs.pop(index)
-                
             aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, removeAnnot=removeAnnotFlag)
-
     return aggReduceList, reduceList, enumerateList
