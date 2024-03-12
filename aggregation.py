@@ -14,7 +14,7 @@ class AggFunc():
         self.funcName = AggFuncType[funcName]    # aggregation type: SUM, COUNT, AVG, MIN/MAX
         self.inVars = inVars        # input var alias -> [v1, v2]
         self.alias = alias          # use as alias, sum(source_name) as alias -> sum(alias) as alias
-        self.formular = formular    # change to its alias
+        self.formular = formular if formular[0] != '(' else formular[1:-1]   # change to its alias
         self.originForm = formular  # v1 * v2 / v1
         self.isChild: bool = True   # mark aggregation relate to child or parent node
         self.doneFlag = False
