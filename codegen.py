@@ -27,7 +27,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     return ret
 
 # TODO: final output variables error? 
-def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, aggList: list[AggReducePhase] = [], isFreeConnex: bool = True, Agg: Aggregation = None):
+def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, aggList: list[AggReducePhase] = [], isFreeConnex: bool = True, Agg: Aggregation = None, genType: GenType = GenType.DuckDB):
     outFile = open(outPath, 'w+')
     dropView = []
     # 0. aggReduceList
