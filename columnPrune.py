@@ -118,10 +118,11 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys)
     
     aggHasLeft: bool = False
-    for func in Agg.aggFunc:
-        if not func.doneFlag:
-            aggHasLeft = True
-            break
+    if Agg:
+        for func in Agg.aggFunc:
+            if not func.doneFlag:
+                aggHasLeft = True
+                break
     
     aggKeepSet = getAggSet(Agg, isAll=True) 
     finalKeepSet = outputVariables if not aggHasLeft else outputVariables | aggKeepSet
