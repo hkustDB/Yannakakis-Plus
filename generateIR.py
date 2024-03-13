@@ -1482,11 +1482,11 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 if JT.isFull:
                     finalResult = 'select sum(' + '+'.join(selectName) +') from ' + fromTable + ';\n'
                 else:
-                    finalResult = 'create or replace view res as select distinct ' + '+'.join(selectName) +') from ' + fromTable + ';\n'
+                    finalResult = 'create or replace view res as select distinct ' + ', '.join(selectName) +' from ' + fromTable + ';\n'
                     finalResult += 'select sum(' + '+'.join(selectName) +') from res;\n'
             else:
                 finalResult = 'select ' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +') from ' + fromTable + ';\n'
-        _, reduceList, _ = columnPrune(JT, _, reduceList, [], finalResult, set(outputVariables), None, list(COMP.values()))
+        _, reduceList, _ = columnPrune(JT, [], reduceList, [], finalResult, set(outputVariables), None, list(COMP.values()))
         return reduceList, [], finalResult
     
     def getCompChildExtract(relation: Edge) -> list[Comp]:
