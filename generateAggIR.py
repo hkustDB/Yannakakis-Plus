@@ -954,7 +954,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         elif not len(reduceList) and 'annot' in aggReduceList[-1].aggJoin.selectAttrAlias:
             finalAnnotFlag = True
     
-    ## common select attrs
+    # FIXME: Recheck the final process part
     selectName = []
     for out in outputVariables:
         if out in Agg.groupByVars:
@@ -962,44 +962,63 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         else:
             if out in Agg.allAggAlias:
                 func = Agg.alias2AggFunc[out]
-                if JT.isFreeConnex and len(jointree.subset):
-                    if func.doneFlag:
+                if JT.isFreeConnex and len(jointree.subset): # select a, b, c-done, d*annot-undone from A; group by = a, b
+                    if func.doneFlag: # not use annot
                         if func.funcName == AggFuncType.AVG:
                             selectName.extend([out + '/annot' * finalAnnotFlag + 'as ' + out for _ in range(outputVariables.count(out))])
                         elif func.funcName == AggFuncType.COUNT:
                             if finalAnnotFlag:
-                                selectName.extend(['SUM(annot) as ' + out for _ in range(outputVariables.count(out))])
+                                selectName.extend(['annot as ' + out for _ in range(outputVariables.count(out))])
                             else:
-                                selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
+                                selectName.extend(['1 as ' + out for _ in range(outputVariables.count(out))])
                         else:
                             selectName.extend([out for _ in range(outputVariables.count(out))])
                     else:
                         if func.funcName == AggFuncType.AVG:
-                            selectName.extend([(func.originForm) + '/annot' * finalAnnotFlag + 'as ' + out for _ in range(outputVariables.count(out))])
+                            selectName.extend(['(' + func.originForm + ')' + '/annot' * finalAnnotFlag + 'as ' + out for _ in range(outputVariables.count(out))])
                         elif func.funcName == AggFuncType.COUNT:
                             if finalAnnotFlag:
-                                selectName.extend(['SUM(annot) as ' + out for _ in range(outputVariables.count(out))])
+                                selectName.extend(['annot as ' + out for _ in range(outputVariables.count(out))])
                             else:
-                                selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
+                                selectName.extend(['1 as ' + out for _ in range(outputVariables.count(out))])
+                        elif func.funcName == AggFuncType.SUM:
+                            selectName.extend(['(' + func.originForm + ')' + '* annot' * finalAnnotFlag + ' as ' + out for _ in range(outputVariables.count(out))])
                         else:
-                            selectName.extend([(func.originForm + '* annot' * finalAnnotFlag) + ' as ' + out for _ in range(outputVariables.count(out))])
-                elif not len(jointree.subset):
+                            selectName.extend(['(' + func.originForm + ')' + ' as ' + out for _ in range(outputVariables.count(out))])
+                elif not len(jointree.subset): # free-connex but subset = 0 -> len(group by) != 0
                     if 'CASE' in func.formular:
                         _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
                         caseCond = caseCond[1:-1]
                         caseRes1 = caseRes1[1:-1]
                         if 'caseCond' in lastView.selectAttrAlias:
-                            if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                            if func.funcName == AggFuncType.AVG:
+                                selectName.append(func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + '/ annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                            elif func.funcName == AggFuncType.COUNT:
+                                selectName.append('SUM((CASE WHEN caseCond = 1 THEN 1 ELSE 0.0 END)' + '*annot' * finalAnnotFlag + ')')
+                            elif func.funcName == AggFuncType.SUM:
                                 selectName.append(func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
                             else:
                                 selectName.append(func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
                         elif 'caseRes' in lastView.selectAttrAlias:
-                            if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                            if func.funcName == AggFuncType.AVG:
+                                selectName.append(func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + '/ annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                            elif func.funcName == AggFuncType.COUNT:
+                                selectName.append('SUM( CASE WHEN ' + caseCond + ' THEN 1' + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                            elif func.funcName == AggFuncType.SUM:
                                 selectName.append(func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
                             else:
                                 selectName.append(func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ELSE 0.0 END)')
                         else:
-                            if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                            if func.doneFlag == True:
+                                continue
+                            if func.funcName == AggFuncType.AVG:
+                                selectName.append(func.funcName.name + '(' + func.originForm + ')')
+                            elif func.funcName == AggFuncType.COUNT:
+                                if finalAnnotFlag:
+                                    selectName.append('SUM(' + '(' + func.originForm + ') * annot' + ')')
+                                else:
+                                    selectName.append('COUNT(' + func.originForm + ')') # FIXME: split
+                            elif func.funcName == AggFuncType.SUM:
                                 selectName.append(func.funcName.name + '(' + func.originForm + '* annot' * finalAnnotFlag + ')')
                             else:
                                 selectName.append(func.funcName.name + '(' + func.originForm + ')')
@@ -1020,9 +1039,13 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                                     selectName.extend(['SUM(annot) as ' + out for _ in range(outputVariables.count(out))])
                                 else:
                                     selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
+                            elif func.funcName == AggFuncType.AVG:
+                                selectName.extend(['AVG(' + func.originForm + '/annot' * finalAnnotFlag + ') as ' + out for _ in range(outputVariables.count(out))])
+                            elif func.funcName == AggFuncType.MIN and func.funcName == AggFuncType.MAX:
+                                selectName.extend([func.funcName.name + '(' + func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
                             else:
                                 selectName.extend([func.funcName.name + '(' + func.originForm + '* annot' * finalAnnotFlag + ') as ' + out for _ in range(outputVariables.count(out))])
-                else: # non-free connex with subset (Enum)
+                else: # non-freeConnex without subset=0?
                     if func.doneFlag:
                         if func.funcName == AggFuncType.AVG:
                             selectName.extend(['SUM(' + out + '/annot' * finalAnnotFlag + ') as ' + out for _ in range(outputVariables.count(out))])
@@ -1041,8 +1064,10 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                                 selectName.extend(['SUM(annot) as ' + out for _ in range(outputVariables.count(out))])
                             else:
                                 selectName.extend(['COUNT(*) as ' + out for _ in range(outputVariables.count(out))])
+                        elif func.funcName == AggFuncType.MIN and func.funcName == AggFuncType.MAX:
+                                selectName.extend([func.funcName.name + '(' + func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
                         else:
-                            selectName.extend([func.funcName.name + '(' + func.originForm + ') as ' + out for _ in range(outputVariables.count(out))])
+                            selectName.extend([func.funcName.name + '(' + func.originForm + '*annot' * finalAnnotFlag + ') as ' + out for _ in range(outputVariables.count(out))])
             elif out in compKeys:
                 newForm = computations.alias2Comp[out].expr
                 pattern = re.compile('v[0-9]+')
@@ -1051,27 +1076,62 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                     if var in Agg.allAggAlias:
                         func = Agg.alias2AggFunc[var]
                         if JT.isFreeConnex and len(JT.subset):
-                            if func.funcName == AggFuncType.AVG:
-                                newForm = newForm.replace(var, func.alias + '/annot' * finalAnnotFlag)   
+                            if func.doneFlag: # not use annot
+                                if func.funcName == AggFuncType.AVG:
+                                    newForm = newForm.replace(var, func.alias + '/annot' * finalAnnotFlag)
+                                elif func.funcName == AggFuncType.COUNT:
+                                    if finalAnnotFlag:
+                                        newForm = newForm.replace(var, 'annot')
+                                    else:
+                                        newForm = newForm.replace(var, '1')
+                                else:
+                                    newForm = newForm.replace(var, func.alias)
                             else:
-                                newForm = newForm.replace(var, func.alias)
+                                if func.funcName == AggFuncType.AVG:
+                                    newForm = newForm.replace(var, '(' + func.originForm + ')' + '/annot' * finalAnnotFlag)
+                                elif func.funcName == AggFuncType.COUNT:
+                                    if finalAnnotFlag:
+                                        newForm = newForm.replace(var, 'annot')
+                                    else:
+                                        newForm = newForm.replace(var, '1')
+                                elif func.funcName == AggFuncType.SUM:
+                                    newForm = newForm.replace(var, '(' + func.originForm + ')' + '* annot' * finalAnnotFlag)
+                                else:
+                                    newForm = newForm.replace(var, '(' + func.originForm + ')')
                         elif not len(JT.subset):
                             if 'CASE' in func.formular:
                                 _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
                                 caseCond = caseCond[1:-1]
                                 caseRes1 = caseRes1[1:-1]
                                 if 'caseCond' in lastView.selectAttrAlias:
-                                    if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + '/ annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        newForm = newForm.replace(var, 'SUM((CASE WHEN caseCond = 1 THEN 1 ELSE 0.0 END)' + '*annot' * finalAnnotFlag + ')')
+                                    elif func.funcName == AggFuncType.SUM:
                                         newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
                                     else:
                                         newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
                                 elif 'caseRes' in lastView.selectAttrAlias:
-                                    if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + '/ annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                                    elif func.funcName == AggFuncType.SUM:
                                         newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
                                     else:
                                         newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ELSE 0.0 END)')
                                 else:
-                                    if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
+                                    if func.doneFlag == True:
+                                        continue
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        if finalAnnotFlag:
+                                            newForm = newForm.replace(var, 'SUM(' + '(' + func.originForm + ') * annot' + ')')
+                                        else:
+                                            newForm = newForm.replace(var, 'COUNT(' + func.originForm + ')')
+                                    elif func.funcName == AggFuncType.SUM:
                                         newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + '* annot' * finalAnnotFlag + ')')
                                     else:
                                         newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
@@ -1079,21 +1139,40 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                                 if func.doneFlag:
                                     newForm = newForm.replace(var, func.funcName.name + '(' + func.alias + ')')
                                 else:
-                                    if func.funcName != AggFuncType.MIN and func.funcName != AggFuncType.MAX:
-                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + '* annot' * finalAnnotFlag + ')')
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, func.funcName.name + '((' + func.originForm + ')' + '/ annot' * finalAnnotFlag + ')')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        if finalAnnotFlag:
+                                            newForm = newForm.replace(var, 'SUM(annot)')
+                                        else:
+                                            newForm = newForm.replace(var, 'COUNT(*)')
+                                    elif func.funcName == AggFuncType.SUM:
+                                        newForm = newForm.replace(var, func.funcName.name + '((' + func.originForm + ')' + '* annot' * finalAnnotFlag + ')')
                                     else:
                                         newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
                         else:
-                            if func.funcName == AggFuncType.AVG:
-                                newForm = newForm.replace(var, 'SUM(' + func.alias + '/annot)')
-                            elif func.funcName == AggFuncType.COUNT:
-                                if finalAnnotFlag:
-                                    newForm = newForm.replace(var, 'SUM(annot)')
+                            if func.doneFlag:
+                                if func.funcName == AggFuncType.AVG:
+                                    newForm = newForm.replace(var, 'SUM(' + out + '/annot' * finalAnnotFlag + ') as ')
+                                elif func.funcName == AggFuncType.COUNT:
+                                    if finalAnnotFlag:
+                                        newForm = newForm.replace(var, 'SUM(annot) as ' + out)
+                                    else:
+                                        newForm = newForm.replace(var, 'COUNT(*) as ')
                                 else:
-                                    newForm = newForm.replace(var, 'COUNT(*)')
+                                    newForm = newForm.replace(var, func.funcName.name + '(' + out + ') as ')
                             else:
-                                newForm = newForm.replace(var, func.funcName.name + '(' + func.alias +  + ')')
-            
+                                if func.funcName == AggFuncType.AVG:
+                                    newForm = newForm.replace(var, 'SUM(' + '(' + func.originForm + ')' + '/annot' * finalAnnotFlag + ') as ' + out)
+                                elif func.funcName == AggFuncType.COUNT:
+                                    if finalAnnotFlag:
+                                        newForm = newForm.replace(var, 'SUM(annot) as ' + out)
+                                    else:
+                                        newForm = newForm.replace(var, 'COUNT(*) as ' + out)
+                                elif func.funcName == AggFuncType.MIN and func.funcName == AggFuncType.MAX:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ') as ' + out)
+                                else:
+                                    newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + '*annot' * finalAnnotFlag + ') as ' + out)
                 selectName.append(newForm + ' as ' + out)
             else:
                 raise NotImplementedError("Other output variables exists! ")
@@ -1111,6 +1190,9 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             finalResult += ' group by ' + ', '.join(Agg.groupByVars)
         finalResult += ';\n'
         if globalVar.get_value('GEN_TYPE') == 'Mysql':
+            for id, alias in enumerate(selectName):
+                if 'as' in alias:
+                    selectName[id] = alias.split(' as ')[1]
             finalResult += 'select sum(' + '+'.join(selectName) + ') from res;' 
         return aggReduceList, [], [], finalResult
         
