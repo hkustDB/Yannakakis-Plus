@@ -3,6 +3,7 @@ from reduce import *
 from aggregation import *
 from enumsType import *
 from treenode import *
+import globalVar
 
 BEGIN = 'create or replace view '
 END = ';\n'
@@ -96,7 +97,9 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         if reduce.semiView is not None and not 'Aux' in reduce.semiView.viewName:
             # outFile.write('# +. SemiJoin\n')
             # TODO: Add change for auxNode creation
-            line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + ', '.join(reduce.semiView.inRight) + ' from ' + reduce.semiView.joinTable
+            line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + '(' * (True if globalVar.get_value('GEN_TYPE') == 'DuckDB' else False)
+            line += ', '.join(reduce.semiView.inRight) + ')' * (True if globalVar.get_value('GEN_TYPE') == 'DuckDB' else False)
+            line += ' from ' + reduce.semiView.joinTable
             line += ' where ' if len(reduce.semiView.whereCondList) != 0 else ''
             line += ' and '.join(reduce.semiView.whereCondList) + ')' 
             line += ' and ' if len(reduce.semiView.outerWhereCondList) else ''

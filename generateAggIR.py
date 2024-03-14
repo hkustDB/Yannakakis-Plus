@@ -117,6 +117,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     res1Var = pattern.findall(caseRes1)
                     # both cond&res at the same node
                     if condVar[0] in childNode.cols and res1Var[0] in childNode.cols:
+                        Agg.alias2AggFunc[agg.alias].doneFlag = True
+                        agg.doneFlag = True
                         passAggAlias = True
                         for var in condVar:
                             index = childNode.cols.index(var)
@@ -156,6 +158,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     for invar in agg.inVars:
                         if invar not in childNode.cols:
                             allInOne = False
+                            break
                     # complex formular in original same node
                     if allInOne:    # can do aggregatiom
                         Agg.alias2AggFunc[agg.alias].doneFlag = True
@@ -181,15 +184,15 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                                 sourceName = childNode.col2vars[1][index]
                                 # NOTE: add aggregate attribute
                                 if not pkFlag:
-                                    selectAttr.append('SUM(' + sourceName + '/COUNT(*))')
+                                    selectAttr.append('SUM(' + sourceName + ')/COUNT(*)')
                                 else:
                                     selectAttr.append('SUM(' + sourceName + ')')
                                 selectAttrAlias.append(invar)
                                 aggPass2Join.append(invar)
             if passAggAlias:
                 aggPass2Join.append(agg.alias)
-                Agg.alias2AggFunc[agg.alias].doneFlag = True
-                agg.doneFlag = True
+                # Agg.alias2AggFunc[agg.alias].doneFlag = True
+                # agg.doneFlag = True
         # FIXME: support for extraCond (process for bag)
         if len(extraEqualCond) == 1:
             eq1, eq2 = extraEqualCond[0][0], extraEqualCond[0][1]
@@ -276,12 +279,12 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                                 selectAttr.append(agg.formular)
                             else:
                                 selectAttr.append(agg.formular + ' * annot')
-                            
+
+                    Agg.alias2AggFunc[agg.alias].doneFlag = True
+                    agg.doneFlag = True 
                     selectAttrAlias.append(agg.alias)
                 else:
                     raise RuntimeError("Must be one name in inVars/aggFunciton alias! ")
-                Agg.alias2AggFunc[agg.alias].doneFlag = True
-                agg.doneFlag = True
             else:
                 if childNode.JoinResView:
                     findInVars = childNode.JoinResView.selectAttrAlias
@@ -300,6 +303,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     res1Var = pattern.findall(caseRes1)
                     annotFlag = '*annot' if childNode.JoinResView and 'annot' in findInVars else ''
                     if condVar[0] in findInVars and res1Var[0] in findInVars:
+                        Agg.alias2AggFunc[agg.alias].doneFlag = True
+                        agg.doneFlag = True
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
                         if not pkFlag:
@@ -315,6 +320,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                             else:
                                 selectAttr.append(agg.formular + annotFlag)
                     elif 'caseCond' in findInVars and res1Var[0] in findInVars:
+                        Agg.alias2AggFunc[agg.alias].doneFlag = True
+                        agg.doneFlag = True
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
                         dIndex = selectAttrAlias.index('caseCond')
@@ -328,6 +335,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         else:
                             selectAttr.append('SUM( CASE WHEN caseCond = 1 THEN ' + caseRes1 + annotFlag + ' ELSE 0.0 END)')
                     elif 'caseRes' in findInVars and condVar[0] in findInVars:
+                        Agg.alias2AggFunc[agg.alias].doneFlag = True
+                        agg.doneFlag = True
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
                         dIndex = selectAttrAlias.index('caseRes')
@@ -341,6 +350,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                         else:
                             selectAttr.append('SUM( CASE WHEN ' + caseCond + ' THEN caseRes' + annotFlag + ' ELSE 0.0 END)')
                     elif condVar[0] in findInVars and res1Var[0] in findInVars:
+                        Agg.alias2AggFunc[agg.alias].doneFlag = True
+                        agg.doneFlag = True
                         passAggAlias = True
                         selectAttrAlias.append(agg.alias)
                         if not pkFlag:
@@ -374,6 +385,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     for invar in agg.inVars:
                         if invar not in findInVars:
                             allInOne = False
+                            break
                     if allInOne:
                         Agg.alias2AggFunc[agg.alias].doneFlag = True
                         agg.doneFlag = True
@@ -408,7 +420,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                             # pass agg vars may have duplicates
                             if invar in findInVars and invar not in selectAttrAlias:
                                 if not pkFlag:
-                                    selectAttr.append('SUM(' + invar + '/COUNT(*))')
+                                    selectAttr.append('SUM(' + invar + ')/COUNT(*)')
                                 else:
                                     selectAttr.append('SUM(' + invar + ')')
                                 selectAttrAlias.append(invar)
@@ -416,8 +428,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
             
             if passAggAlias:
                 aggPass2Join.append(agg.alias)
-                Agg.alias2AggFunc[agg.alias].doneFlag = True
-                agg.doneFlag = True
+                # Agg.alias2AggFunc[agg.alias].doneFlag = True
+                # agg.doneFlag = True
                 
         # FIXME: extraCond
         if childNode.JoinResView:
@@ -689,7 +701,10 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                 extraEqualWhere.append(extraEqualCond[0][0] + '=' + extraEqualCond[0][1])
     elif len(extraEqualCond) != 0:
         raise NotImplementedError("Multiple extraEqualCond! ")
-    
+    if len(selectAttr) and len(selectAttr) != len(selectAttrAlias):
+        print(selectAttr)
+        print(selectAttrAlias)
+        raise RuntimeError("Error aggJOin! ")
     aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp + condComp + extraEqualWhere)
     if fromTable == '' and len(aggJoin.whereCondList) == 0:
         aggJoin.viewName = aggView.viewName
@@ -1122,7 +1137,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                                     else:
                                         newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ELSE 0.0 END)')
                                 else:
-                                    if func.doneFlag == True:
+                                    if func.doneFlag:
                                         continue
                                     if func.funcName == AggFuncType.AVG:
                                         newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')

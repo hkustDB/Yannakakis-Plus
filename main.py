@@ -309,7 +309,7 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/graph/q9/')
+    globalVar.set_value('BASE_PATH', 'query/graph/q1/')
     globalVar.set_value('DDL_NAME', "graph.ddl")
     # auto-rewrite keep here
     
@@ -365,11 +365,11 @@ if __name__ == '__main__':
             costout.close()
             '''
             try:
-                
+                '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
-                
+                '''
                 computationList.reset()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
