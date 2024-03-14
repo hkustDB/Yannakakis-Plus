@@ -62,7 +62,7 @@ def makeExtract(extracts: list[Comp]):
         attr.append(extract.expr)
     return attr, alias
 
-def makeSubsetAgg(aggFuncList: list[AggFunc], childNode: TreeNode):
+def makeSubsetAgg(aggFuncList: list[AggFunc], childNode: TreeNode, Agg: Aggregation, oriFlag = 1):
     attr, alias = [], []
     for agg in aggFuncList:
         if not len(agg.inVars):
@@ -74,19 +74,25 @@ def makeSubsetAgg(aggFuncList: list[AggFunc], childNode: TreeNode):
                     allInOne = False
                     raise NotImplementedError("Not support attributes in diffrent nodes! ")
             if allInOne:
+                Agg.alias2AggFunc[agg.alias].doneFlag = True
                 alias.append(agg.alias)
-                for invar in agg.inVars:
-                    index = childNode.cols.index(invar)
-                    sourName = childNode.col2vars[1][index]
-                    agg.formular = agg.formular.replace(invar, sourName)
-                attr.append(agg.formular)
+                if oriFlag:
+                    for invar in agg.inVars:
+                        index = childNode.cols.index(invar)
+                        sourName = childNode.col2vars[1][index]
+                        agg.formular = agg.formular.replace(invar, sourName)
+                    attr.append(agg.formular)
+                else:   # case view from aggregation but left aggregation in subset
+                    attr.append(agg.formular)
             else:
                 raise NotImplementedError("Not support attributes in diffrent nodes! ")
+    if len(attr) != len(alias):
+        raise RuntimeError("makeSubsetAgg! ")
     return attr, alias
 
 
 # prepareView is ahead of joinView
-def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comparison] = [], childExtract: list[Comp] = [], extraNode: TreeNode = None, direction: Direction = Direction.Left, extraSelfComp: list[Comparison] = [], extraExtract: list[Comp] = [], aggFuncList: list[AggFunc] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']):
+def buildPrepareView(JT: JoinTree, childNode: TreeNode, Agg: Aggregation = None, childSelfComp: list[Comparison] = [], childExtract: list[Comp] = [], extraNode: TreeNode = None, direction: Direction = Direction.Left, extraSelfComp: list[Comparison] = [], extraExtract: list[Comp] = [], aggFuncList: list[AggFunc] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']):
     if childNode.createViewAlready: return [] # only means creave view about bag/tableagg/aux relation, not use for other join
     prepareView = []
     joinTableList, whereCondList = [], []
@@ -143,7 +149,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
         else:
             # NOTE: Add extract support
             extractAttr, extractAlias = makeExtract(childExtract)
-            aggAttr, aggAlias = makeSubsetAgg(aggFuncList, childNode)
+            aggAttr, aggAlias = makeSubsetAgg(aggFuncList, childNode, Agg)
             prepareView.append(CreateBagView(childNode.alias, childNode.col2vars[1] + extractAttr + aggAttr, childNode.cols + extractAlias + aggAlias, '', joinTableList, whereCondList))
     
     # Here child means parent
@@ -172,7 +178,6 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
             selectAttributes = childNode.col2vars[1]
             selectAttributesAs = childNode.cols
 
-        
         if extraNode.JoinResView is not None:
             fromTable = extraNode.JoinResView.viewName 
             prepareView.append(CreateAuxView(childNode.alias, [''] * len(selectAttributesAs) + extractAttr, selectAttributesAs + extractAlias, fromTable))
@@ -239,7 +244,7 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, childSelfComp: list[Comp
             extractAttr, extractAlias = makeExtract(childExtract)
         aggAttr, aggAlias = [], []
         if len(aggFuncList):
-            aggAttr, aggAlias = makeSubsetAgg(aggFuncList, childNode)
+            aggAttr, aggAlias = makeSubsetAgg(aggFuncList, childNode, Agg)
 
         prepareView.append(CreateTableAggView(childNode.alias, originalVars + extractAttr + aggAttr, childNode.cols + extractAlias + aggAlias, fromTable, joinTableList, whereCondList))
     
@@ -292,7 +297,7 @@ def makeSelfComp(selfComparisons: list[Comparison], childNode: TreeNode) -> list
 '''
 Used for build reducePhase for bag with auxiliary inside: auxNode->childNode
 '''
-def buildBagAuxReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Comparison], selfComp: list[Comparison], direction: Direction, auxNode: AuxTreeNode, helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']) -> ReducePhase:
+def buildBagAuxReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Comparison], selfComp: list[Comparison], direction: Direction, auxNode: AuxTreeNode, Agg: Aggregation = None, helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', '']) -> ReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = auxNode
     prepareView = []
@@ -401,7 +406,7 @@ def buildBagAuxReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Com
 '''
 NOTE: aggFuncList only related to childNode & not support / no need to support auxiliary relation
 '''
-def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Comparison], selfComp: list[Comparison], direction: Direction, compExtract: list[Comp] = [], aggChild: list[AggFunc] = [], aggParent: list[AggFunc] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', ''], lastRel: bool = False) -> ReducePhase:
+def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Comparison], selfComp: list[Comparison], direction: Direction, Agg: Aggregation = None, compExtract: list[Comp] = [], aggChild: list[AggFunc] = [], aggParent: list[AggFunc] = [], helperLeft: list[str, str] = ['', ''], helperRight: list[str, str] = ['', ''], lastRel: bool = False) -> ReducePhase:
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     prepareView = []
@@ -427,12 +432,12 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     '''BEGIN: Normal case'''
     # 1. prepareView(Aux, Agg, Bag create view using child alias)
     if childNode.isLeaf and childNode.relationType != RelationType.TableScanRelation and childNode.relationType != RelationType.AuxiliaryRelation:
-        ret = buildPrepareView(JT, childNode, childSelfComp, childExtract=childExtract, aggFuncList=aggChild)
+        ret = buildPrepareView(JT, childNode,  Agg=Agg, childSelfComp=childSelfComp, childExtract=childExtract, aggFuncList=aggChild)
         if ret != []: prepareView.extend(ret)
     
     # build aux for parent node is different
     if parentNode.relationType != RelationType.TableScanRelation and parentNode.relationType != RelationType.AuxiliaryRelation:
-        ret = buildPrepareView(JT, parentNode, parentSelfComp, childExtract=parentExtract, aggFuncList=aggParent)
+        ret = buildPrepareView(JT, parentNode,  Agg=Agg, childSelfComp=parentSelfComp, childExtract=parentExtract, aggFuncList=aggParent)
         if ret != []: prepareView.extend(ret)
     elif parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
         ret = buildPrepareView(JT, parentNode, parentSelfComp, extraNode=childNode, direction=direction, extraSelfComp=childSelfComp, extraExtract=childExtract, helperLeft=helperLeft, helperRight=helperRight)
@@ -542,7 +547,9 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                     else:
                         raise NotImplementedError("Only support EXTRACT function in groupBy & appear in output attrs! ")
                 # add support for aggregation in subset
-                aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggChild, childNode)
+                aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggChild, childNode, Agg)
+            elif noAliasFlag and 'agg' in childNode.JoinResView.viewName:
+                aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggChild, childNode, Agg, oriFlag=0)
             
             ## NOTE: orderView must have annot -> used for later enumerate join
             if noAliasFlag: # have JoinView, must not be leaf
@@ -652,7 +659,11 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         selectAttributes, selectAttributesAs = [], []
         extractAttr, extractAlias = [], []
         if parentNode.JoinResView is not None: # already has alias 
-            selectAttributesAs = parentNode.JoinResView.selectAttrAlias + [mfAttr[1]]
+            selectAttributesAs = parentNode.JoinResView.selectAttrAlias.copy() + [mfAttr[1]]
+            if 'agg' in parentNode.JoinResView.viewName:
+                aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggParent, parentNode, Agg=Agg, oriFlag=0)
+                extractAttr.extend(aggExtraAttr)
+                extractAlias.extend(aggExtraAlias)
         elif parentNode.relationType != RelationType.TableScanRelation: # create view node already
             selectAttributesAs = parentNode.cols + [mfAttr[1]]
         else:
@@ -669,7 +680,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                     extractAttr.append(comp.expr)
                     extractAlias.append(comp.result)
             # add agg support
-            aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggParent, parentNode)
+            aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggParent, parentNode, Agg=Agg)
             extractAttr.extend(aggExtraAttr)
             extractAlias.extend(aggExtraAlias)
         
@@ -779,8 +790,13 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         selectAttributes, selectAttributesAs = [], []
         fromTable = ''
         if parentNode.JoinResView is not None: # already has alias
-            selectAttributesAs = parentNode.JoinResView.selectAttrAlias
+            selectAttributesAs = parentNode.JoinResView.selectAttrAlias.copy()
             fromTable = parentNode.JoinResView.viewName
+            if 'agg' in parentNode.JoinResView.viewName:
+                aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggParent, parentNode, Agg, oriFlag=0)
+                selectAttributes = [''] * len(selectAttributesAs)
+                selectAttributes.extend(aggExtraAttr)
+                selectAttributesAs.extend(aggExtraAlias)
         elif parentNode.relationType != RelationType.TableScanRelation: # create view node already
             selectAttributesAs = parentNode.cols
             fromTable = parentNode.alias
@@ -800,7 +816,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                 else:
                     raise NotImplementedError("Only support EXTRACT function in groupBy & appear in output attrs! ")
             # add support for agg in subset
-            aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggParent, parentNode)
+            aggExtraAttr, aggExtraAlias = makeSubsetAgg(aggParent, parentNode, Agg)
             selectAttributes.extend(aggExtraAttr)
             selectAttributesAs.extend(aggExtraAlias)
 
@@ -977,8 +993,11 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                 if a not in selectAttrAlias:
                     selectAttr.append('')
                     selectAttrAlias.append(a)
+        elif origiNode.JoinResView:
+            selectAttrAlias = list(set(origiNode.JoinResView.selectAttrAlias) | set(previousView.selectAttrAlias))
+            selectAttr = [''] * len(selectAttrAlias)
         else:
-            selectAttrAlias = origiNode.JoinResView.selectAttrAlias | previousView.selectAttrAlias
+            selectAttrAlias = list(set(origiNode.cols) | set(previousView.selectAttrAlias))
             selectAttr = [''] * len(selectAttrAlias)
         
         for idx, alias in enumerate(selectAttrAlias):
@@ -1213,7 +1232,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 continue
             if len(aggF.inVars) != 0 and set(aggF.inVars).issubset(node.cols): # no input vars case
                 aggs.append(aggF)
-                aggF.doneFlag = True
+                # aggF.doneFlag = True
         
         aggs.sort(key=lambda agg: agg.funcName.value)
         return aggs
@@ -1306,7 +1325,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         updateDirection = []
         retReduce = None
         if len(incidentComp) == 0:  # semijoin only
-            retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent)
+            retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, Agg=Agg, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent)
         else: # default, for short comparison use cqc if only one incident comparison
             if len(incidentComp) > 1:
                 incidentComp.sort(key=lambda comp: (len(comp.originPath), comp.predType), reverse=True)
@@ -1326,7 +1345,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 else:
                     helperRightFrom = ''
                 onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo]
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftTo], helperRight=[helperRightFrom, helperRightFrom])
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, Agg=Agg, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftTo], helperRight=[helperRightFrom, helperRightFrom])
                 updateDirection.append(Direction.Left)
             elif rel.dst.id == onlyComp.getEndNodeId:
                 pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
@@ -1342,7 +1361,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
                 # helperRightTo = helperRightFrom if rel.keyType == EdgeType.Child else helperRightTo
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom]
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo])
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, Agg=Agg, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo])
                 updateDirection.append(Direction.Right)
             else:
                 raise RuntimeError("Should not happen! ")
@@ -1397,7 +1416,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     aggParent = getAggRelation(rel.src)
     # no differ number of comparison cases
     if len(incidentComp) == 0:  # semijoin only
-        retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, lastRel=True)
+        retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.SemiJoin, Agg=Agg, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, lastRel=True)
     else:
         if len(incidentComp) > 1:
             incidentComp.sort(key=lambda comp: (len(comp.originPath), comp.predType), reverse=True)
@@ -1416,7 +1435,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                     helperRightFrom = onlyComp.right
 
                 onlyComp.helperAttr[pathIdx] = [helperLeftFrom, helperLeftTo] # update
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftTo], helperRight=[helperRightFrom, helperRightFrom], lastRel=True)
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Left, Agg=Agg, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftTo], helperRight=[helperRightFrom, helperRightFrom], lastRel=True)
             elif rel.dst.id == onlyComp.getEndNodeId: # root <- dst
                 pathIdx = onlyComp.originPath.index([rel.src.id, rel.dst.id])
                 # original short comparison
@@ -1429,7 +1448,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 helperRightTo = 'mfR' + str(randint(0, maxsize)) if not supportRelationFlag else helperRightFrom
                 # helperRightTo = helperRightFrom if rel.keyType == EdgeType.Child else helperRightTo
                 onlyComp.helperAttr[pathIdx] = [helperRightTo, helperRightFrom] # update
-                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo], lastRel=True)
+                retReduce = buildReducePhase(rel, JT, incidentComp, selfComp, Direction.Right, Agg=Agg, compExtract=compExtract, aggChild=aggChild, aggParent=aggParent, helperLeft=[helperLeftFrom, helperLeftFrom], helperRight=[helperRightFrom, helperRightTo], lastRel=True)
             else:
                 raise RuntimeError("Last comparison error! ")
         else:
@@ -1485,7 +1504,7 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                     finalResult = 'create or replace view res as select distinct ' + ', '.join(selectName) +' from ' + fromTable + ';\n'
                     finalResult += 'select sum(' + '+'.join(selectName) +') from res;\n'
             else:
-                finalResult = 'select ' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +') from ' + fromTable + ';\n'
+                finalResult = 'select ' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +' from ' + fromTable + ';\n'
         _, reduceList, _ = columnPrune(JT, [], reduceList, [], finalResult, set(outputVariables), None, list(COMP.values()))
         return reduceList, [], finalResult
     

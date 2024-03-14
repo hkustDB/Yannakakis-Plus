@@ -41,6 +41,9 @@ class Aggregation:
         for agg in self.aggFunc:
             agg.doneFlag = False
             agg.formular = agg.originForm
+        for value in self.alias2AggFunc.values():
+            value.doneFlag = False
+            value.formular = value.originForm
 
 # aggregation additional reduce view (outside subset)   
 ## aggFunc[AggFunc]; aggFunc[i].funcName + '(' + aggFunc[i].inVars +')'
