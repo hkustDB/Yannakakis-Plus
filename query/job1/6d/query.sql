@@ -14,10 +14,10 @@ WHERE k.keyword IN ('superhero',
                     'tv-special',
                     'fight',
                     'violence')
+  AND n.name LIKE '%Downey%Robert%'
   AND t.production_year > 2000
   AND k.id = mk.keyword_id
   AND t.id = mk.movie_id
   AND t.id = ci.movie_id
   AND ci.movie_id = mk.movie_id
-  AND n.id = ci.person_id;
-
+  AND n.id = ci.person_id
