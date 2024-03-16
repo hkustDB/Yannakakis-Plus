@@ -1,0 +1,16 @@
+create or replace view aggView2307084345049236228 as select id as v17, name as v39 from company_name as cn where country_code<> '[pl]' and ((name LIKE '20th Century Fox%') OR (name LIKE 'Twentieth Century Fox%'));
+create or replace view aggJoin2761071036898641829 as select movie_id as v24, company_type_id as v18, note as v19, v39 from movie_companies as mc, aggView2307084345049236228 where mc.company_id=aggView2307084345049236228.v17;
+create or replace view aggView459511994129513162 as select id as v24, title as v41 from title as t where production_year>1950;
+create or replace view aggJoin9130859038297386180 as select v24, v18, v19, v39 from aggJoin2761071036898641829 join aggView459511994129513162 using(v24);
+create or replace view aggView4737210915760825609 as select id as v13 from link_type as lt;
+create or replace view aggJoin994335539053436967 as select movie_id as v24 from movie_link as ml, aggView4737210915760825609 where ml.link_type_id=aggView4737210915760825609.v13;
+create or replace view aggView8884439713095353464 as select v24 from aggJoin994335539053436967 group by v24;
+create or replace view aggJoin3057222329150082778 as select movie_id as v24, keyword_id as v22 from movie_keyword as mk, aggView8884439713095353464 where mk.movie_id=aggView8884439713095353464.v24;
+create or replace view aggView4056781659196095954 as select id as v22 from keyword as k where keyword IN ('sequel','revenge','based-on-novel');
+create or replace view aggJoin4005509946451943443 as select v24 from aggJoin3057222329150082778 join aggView4056781659196095954 using(v22);
+create or replace view aggView6381304594531252128 as select v24 from aggJoin4005509946451943443 group by v24;
+create or replace view aggJoin7839555389581825770 as select v18, v19, v39 as v39 from aggJoin9130859038297386180 join aggView6381304594531252128 using(v24);
+create or replace view aggView8651378320360085481 as select v18, MIN(v39) as v39, MIN(v19) as v40 from aggJoin7839555389581825770 group by v18;
+create or replace view aggJoin2209347286936497448 as select v39, v40 from company_type as ct, aggView8651378320360085481 where ct.id=aggView8651378320360085481.v18 and kind<> 'production companies';
+create or replace view res as select MIN(v39) as v39, MIN(v40) as v40, MIN(v41) as v41 from aggJoin2209347286936497448;
+select sum(v39+v40+v41) from res;

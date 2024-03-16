@@ -1,0 +1,14 @@
+create or replace view aggView6545627013442517293 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin5688424228177935200 as select person_id as v2, name as v3 from aka_name as an1, aggView6545627013442517293 where an1.person_id=aggView6545627013442517293.v2;
+create or replace view aggView3139349192267748853 as select v2, MIN(v3) as v51 from aggJoin5688424228177935200 group by v2;
+create or replace view aggJoin7534669448879968499 as select movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView3139349192267748853 where ci.person_id=aggView3139349192267748853.v2 and note= '(voice: English version)';
+create or replace view aggView3733045878621521754 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin5914853192632865479 as select v11, v13, v51 from aggJoin7534669448879968499 join aggView3733045878621521754 using(v15);
+create or replace view aggView1899622514496240262 as select v11, MIN(v51) as v51 from aggJoin5914853192632865479 group by v11;
+create or replace view aggJoin1712133245147869612 as select id as v11, title as v40, v51 from title as t, aggView1899622514496240262 where t.id=aggView1899622514496240262.v11;
+create or replace view aggView9038999852735389106 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin1031929308911848511 as select movie_id as v11, note as v27 from movie_companies as mc, aggView9038999852735389106 where mc.company_id=aggView9038999852735389106.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView1241608918652818665 as select v11 from aggJoin1031929308911848511 group by v11;
+create or replace view aggJoin8877397540225807867 as select v40, v51 as v51 from aggJoin1712133245147869612 join aggView1241608918652818665 using(v11);
+create or replace view res as select MIN(v51) as v51, MIN(v40) as v52 from aggJoin8877397540225807867;
+select sum(v51+v52) from res;

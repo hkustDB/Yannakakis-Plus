@@ -1,0 +1,14 @@
+create or replace view aggView2433104156458231333 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin671552019351663402 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v52 from cast_info as ci, aggView2433104156458231333 where ci.movie_id=aggView2433104156458231333.v11 and note= '(voice: English version)';
+create or replace view aggView6852712558763137096 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin93009298162549195 as select v2, v11, v13, v15, v52 as v52, v51 from aggJoin671552019351663402 join aggView6852712558763137096 using(v2);
+create or replace view aggView8636305816934859235 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin5420264224035199697 as select v2, v11, v13, v52, v51 from aggJoin93009298162549195 join aggView8636305816934859235 using(v15);
+create or replace view aggView4198411565645218745 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin4500872468077887163 as select movie_id as v11, note as v27 from movie_companies as mc, aggView4198411565645218745 where mc.company_id=aggView4198411565645218745.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView3918148878020172959 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin5655811294847876507 as select v11, v13, v52, v51 from aggJoin5420264224035199697 join aggView3918148878020172959 using(v2);
+create or replace view aggView6943558302656072914 as select v11, MIN(v52) as v52, MIN(v51) as v51 from aggJoin5655811294847876507 group by v11;
+create or replace view aggJoin5038127791414683101 as select v27, v52, v51 from aggJoin4500872468077887163 join aggView6943558302656072914 using(v11);
+create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin5038127791414683101;
+select sum(v51+v52) from res;

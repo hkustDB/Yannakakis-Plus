@@ -1,0 +1,14 @@
+create or replace view aggView5935334838773991507 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin1901497569578113904 as select movie_id as v31, info as v15 from movie_info as mi, aggView5935334838773991507 where mi.info_type_id=aggView5935334838773991507.v8;
+create or replace view aggView8447672425152542714 as select v31, MIN(v15) as v43 from aggJoin1901497569578113904 group by v31;
+create or replace view aggJoin1355691547883114691 as select movie_id as v31, info_type_id as v10, info as v20, v43 from movie_info_idx as mi_idx, aggView8447672425152542714 where mi_idx.movie_id=aggView8447672425152542714.v31;
+create or replace view aggView446673702547184146 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin3203594955100384180 as select v31, v20, v43 from aggJoin1355691547883114691 join aggView446673702547184146 using(v10);
+create or replace view aggView1780780044446396015 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin3929079715205400057 as select movie_id as v31, note as v5 from cast_info as ci, aggView1780780044446396015 where ci.person_id=aggView1780780044446396015.v22 and note IN ('(producer)','(executive producer)');
+create or replace view aggView7568199430523538226 as select v31 from aggJoin3929079715205400057 group by v31;
+create or replace view aggJoin5819942140578193636 as select v31, v20, v43 as v43 from aggJoin3203594955100384180 join aggView7568199430523538226 using(v31);
+create or replace view aggView7604954219411467664 as select v31, MIN(v43) as v43, MIN(v20) as v44 from aggJoin5819942140578193636 group by v31;
+create or replace view aggJoin5984080291472939286 as select title as v32, v43, v44 from title as t, aggView7604954219411467664 where t.id=aggView7604954219411467664.v31;
+create or replace view res as select MIN(v43) as v43, MIN(v44) as v44, MIN(v32) as v45 from aggJoin5984080291472939286;
+select sum(v43+v44+v45) from res;

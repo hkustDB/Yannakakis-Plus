@@ -1,0 +1,16 @@
+create or replace view aggView8191238063932287910 as select id as v26 from info_type as it2 where info= 'bottom 10 rank';
+create or replace view aggJoin258791072089145248 as select movie_id as v29 from movie_info_idx as mi_idx, aggView8191238063932287910 where mi_idx.info_type_id=aggView8191238063932287910.v26;
+create or replace view aggView531627725650983147 as select id as v21 from info_type as it1 where info= 'budget';
+create or replace view aggJoin1870161836075514073 as select movie_id as v29, info as v22 from movie_info as mi, aggView531627725650983147 where mi.info_type_id=aggView531627725650983147.v21;
+create or replace view aggView9108259120086250108 as select id as v1 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin2479016490016256010 as select movie_id as v29, company_type_id as v8 from movie_companies as mc, aggView9108259120086250108 where mc.company_id=aggView9108259120086250108.v1;
+create or replace view aggView2732993150897098327 as select id as v8 from company_type as ct where kind IN ('production companies','distributors');
+create or replace view aggJoin5661058500361096058 as select v29 from aggJoin2479016490016256010 join aggView2732993150897098327 using(v8);
+create or replace view aggView4852746449065499084 as select v29 from aggJoin5661058500361096058 group by v29;
+create or replace view aggJoin131817982947058753 as select v29 from aggJoin258791072089145248 join aggView4852746449065499084 using(v29);
+create or replace view aggView4599371703443857030 as select v29 from aggJoin131817982947058753 group by v29;
+create or replace view aggJoin7249205485054483893 as select v29, v22 from aggJoin1870161836075514073 join aggView4599371703443857030 using(v29);
+create or replace view aggView8391226700599695613 as select v29, MIN(v22) as v41 from aggJoin7249205485054483893 group by v29;
+create or replace view aggJoin6830621173078031899 as select title as v30, production_year as v33, v41 from title as t, aggView8391226700599695613 where t.id=aggView8391226700599695613.v29 and production_year>2000 and ((title LIKE 'Birdemic%') OR (title LIKE '%Movie%'));
+create or replace view res as select MIN(v41) as v41, MIN(v30) as v42 from aggJoin6830621173078031899;
+select sum(v41+v42) from res;

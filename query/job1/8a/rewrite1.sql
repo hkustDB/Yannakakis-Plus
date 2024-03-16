@@ -1,0 +1,14 @@
+create or replace view aggView6416831730545292024 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin40568382940763119 as select id as v2, name as v29, v51 from name as n1, aggView6416831730545292024 where n1.id=aggView6416831730545292024.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView1046496939576906572 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin372286338895595733 as select movie_id as v11, company_id as v25, note as v27, v52 from movie_companies as mc, aggView1046496939576906572 where mc.movie_id=aggView1046496939576906572.v11 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView9022187215163828014 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin2790528059103636972 as select person_id as v2, movie_id as v11, note as v13 from cast_info as ci, aggView9022187215163828014 where ci.role_id=aggView9022187215163828014.v15 and note= '(voice: English version)';
+create or replace view aggView2554005907059157317 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin2181894742671630385 as select v11, v27, v52 from aggJoin372286338895595733 join aggView2554005907059157317 using(v25);
+create or replace view aggView1828292280576985496 as select v11, MIN(v52) as v52 from aggJoin2181894742671630385 group by v11;
+create or replace view aggJoin7829688858447048357 as select v2, v13, v52 from aggJoin2790528059103636972 join aggView1828292280576985496 using(v11);
+create or replace view aggView1310796123251035128 as select v2, MIN(v52) as v52 from aggJoin7829688858447048357 group by v2;
+create or replace view aggJoin9011603757059198372 as select v29, v51 as v51, v52 from aggJoin40568382940763119 join aggView1310796123251035128 using(v2);
+create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin9011603757059198372;
+select sum(v51+v52) from res;

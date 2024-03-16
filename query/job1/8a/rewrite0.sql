@@ -1,0 +1,14 @@
+create or replace view aggView7448866481520928553 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin4799327210118162709 as select id as v2, name as v29, v51 from name as n1, aggView7448866481520928553 where n1.id=aggView7448866481520928553.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView2947480852696056922 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin7866248448663042097 as select movie_id as v11, note as v27 from movie_companies as mc, aggView2947480852696056922 where mc.company_id=aggView2947480852696056922.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView5932047859241485363 as select v2, MIN(v51) as v51 from aggJoin4799327210118162709 group by v2;
+create or replace view aggJoin3917894645046691980 as select movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView5932047859241485363 where ci.person_id=aggView5932047859241485363.v2 and note= '(voice: English version)';
+create or replace view aggView8568408630489338906 as select v11 from aggJoin7866248448663042097 group by v11;
+create or replace view aggJoin2958991392801551261 as select id as v11, title as v40 from title as t, aggView8568408630489338906 where t.id=aggView8568408630489338906.v11;
+create or replace view aggView1577912311672258755 as select v11, MIN(v40) as v52 from aggJoin2958991392801551261 group by v11;
+create or replace view aggJoin2504572840564924537 as select v13, v15, v51 as v51, v52 from aggJoin3917894645046691980 join aggView1577912311672258755 using(v11);
+create or replace view aggView445504412304293415 as select v15, MIN(v51) as v51, MIN(v52) as v52 from aggJoin2504572840564924537 group by v15;
+create or replace view aggJoin3591271553468161608 as select role as v38, v51, v52 from role_type as rt, aggView445504412304293415 where rt.id=aggView445504412304293415.v15 and role= 'actress';
+create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin3591271553468161608;
+select sum(v51+v52) from res;

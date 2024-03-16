@@ -1,0 +1,12 @@
+create or replace view aggView6028718886906531289 as select id as v4, link as v37 from link_type as lt;
+create or replace view aggJoin7135040313176493318 as select movie_id as v13, linked_movie_id as v11, v37 from movie_link as ml, aggView6028718886906531289 where ml.link_type_id=aggView6028718886906531289.v4;
+create or replace view aggView7976365978277039405 as select id as v13, title as v38 from title as t1;
+create or replace view aggJoin8884547896818237624 as select v13, v11, v37 from aggJoin7135040313176493318 join aggView7976365978277039405 using(v13);
+create or replace view aggView5166116148140773774 as select id as v11, title as v39 from title as t2;
+create or replace view aggJoin6566557374868179689 as select v13, v37 from aggJoin8884547896818237624 join aggView5166116148140773774 using(v11);
+create or replace view aggView7263283314655758928 as select v13, MIN(v37) as v37 from aggJoin6566557374868179689 group by v13;
+create or replace view aggJoin1510780699781285315 as select keyword_id as v8, v37 from movie_keyword as mk, aggView7263283314655758928 where mk.movie_id=aggView7263283314655758928.v13;
+create or replace view aggView876252523802028129 as select v8, MIN(v37) as v37 from aggJoin1510780699781285315 group by v8;
+create or replace view aggJoin3206542123946294333 as select keyword as v2, v37 from keyword as k, aggView876252523802028129 where k.id=aggView876252523802028129.v8 and keyword= 'character-name-in-title';
+create or replace view res as select MIN(v37) as v37, MIN(v38) as v38, MIN(v39) as v39 from aggJoin3206542123946294333;
+select sum(v37+v38+v39) from res;

@@ -1,0 +1,16 @@
+create or replace view aggView5259311479754071400 as select id as v17, name as v39 from company_name as cn where country_code<> '[pl]' and ((name LIKE '20th Century Fox%') OR (name LIKE 'Twentieth Century Fox%'));
+create or replace view aggJoin9041961783395121860 as select movie_id as v24, company_type_id as v18, note as v19, v39 from movie_companies as mc, aggView5259311479754071400 where mc.company_id=aggView5259311479754071400.v17;
+create or replace view aggView8210993769901410768 as select id as v24, title as v41 from title as t where production_year>1950;
+create or replace view aggJoin4682270273876236831 as select movie_id as v24, keyword_id as v22, v41 from movie_keyword as mk, aggView8210993769901410768 where mk.movie_id=aggView8210993769901410768.v24;
+create or replace view aggView6500132331694075429 as select id as v18 from company_type as ct where kind<> 'production companies';
+create or replace view aggJoin6085328164511877672 as select v24, v19, v39 from aggJoin9041961783395121860 join aggView6500132331694075429 using(v18);
+create or replace view aggView1135810828928573867 as select id as v22 from keyword as k where keyword IN ('sequel','revenge','based-on-novel');
+create or replace view aggJoin7686197385314679352 as select v24, v41 from aggJoin4682270273876236831 join aggView1135810828928573867 using(v22);
+create or replace view aggView4867300568227876347 as select v24, MIN(v41) as v41 from aggJoin7686197385314679352 group by v24;
+create or replace view aggJoin1828686480326095454 as select v24, v19, v39 as v39, v41 from aggJoin6085328164511877672 join aggView4867300568227876347 using(v24);
+create or replace view aggView2081256693307964950 as select v24, MIN(v39) as v39, MIN(v41) as v41, MIN(v19) as v40 from aggJoin1828686480326095454 group by v24;
+create or replace view aggJoin8572736953640584970 as select link_type_id as v13, v39, v41, v40 from movie_link as ml, aggView2081256693307964950 where ml.movie_id=aggView2081256693307964950.v24;
+create or replace view aggView203991246689425612 as select v13, MIN(v39) as v39, MIN(v41) as v41, MIN(v40) as v40 from aggJoin8572736953640584970 group by v13;
+create or replace view aggJoin540351972147086371 as select v39, v41, v40 from link_type as lt, aggView203991246689425612 where lt.id=aggView203991246689425612.v13;
+create or replace view res as select MIN(v39) as v39, MIN(v40) as v40, MIN(v41) as v41 from aggJoin540351972147086371;
+select sum(v39+v40+v41) from res;

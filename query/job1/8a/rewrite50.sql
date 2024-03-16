@@ -1,0 +1,14 @@
+create or replace view aggView2537138702490587502 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin8499259484035390349 as select person_id as v2, name as v3 from aka_name as an1, aggView2537138702490587502 where an1.person_id=aggView2537138702490587502.v2;
+create or replace view aggView4174759682137274375 as select v2, MIN(v3) as v51 from aggJoin8499259484035390349 group by v2;
+create or replace view aggJoin1860531179624163504 as select movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView4174759682137274375 where ci.person_id=aggView4174759682137274375.v2 and note= '(voice: English version)';
+create or replace view aggView5638526818644840511 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin4226562148152958689 as select v11, v13, v51 from aggJoin1860531179624163504 join aggView5638526818644840511 using(v15);
+create or replace view aggView9026385485811717122 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin2903550459785463162 as select movie_id as v11, note as v27 from movie_companies as mc, aggView9026385485811717122 where mc.company_id=aggView9026385485811717122.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView7961759822147133222 as select v11 from aggJoin2903550459785463162 group by v11;
+create or replace view aggJoin1462990844714546745 as select v11, v13, v51 as v51 from aggJoin4226562148152958689 join aggView7961759822147133222 using(v11);
+create or replace view aggView5382959841072169457 as select v11, MIN(v51) as v51 from aggJoin1462990844714546745 group by v11;
+create or replace view aggJoin2220114073337020470 as select title as v40, v51 from title as t, aggView5382959841072169457 where t.id=aggView5382959841072169457.v11;
+create or replace view res as select MIN(v51) as v51, MIN(v40) as v52 from aggJoin2220114073337020470;
+select sum(v51+v52) from res;

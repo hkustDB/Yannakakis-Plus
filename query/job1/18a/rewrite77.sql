@@ -1,0 +1,14 @@
+create or replace view aggView8428202353913913709 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin1702654195593100577 as select movie_id as v31, info_type_id as v10, info as v20, v45 from movie_info_idx as mi_idx, aggView8428202353913913709 where mi_idx.movie_id=aggView8428202353913913709.v31;
+create or replace view aggView6431172151713673719 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin3764535206856720707 as select movie_id as v31, info as v15 from movie_info as mi, aggView6431172151713673719 where mi.info_type_id=aggView6431172151713673719.v8;
+create or replace view aggView8572219448536184470 as select v31, MIN(v15) as v43 from aggJoin3764535206856720707 group by v31;
+create or replace view aggJoin755830553698827525 as select person_id as v22, movie_id as v31, note as v5, v43 from cast_info as ci, aggView8572219448536184470 where ci.movie_id=aggView8572219448536184470.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView8333614514355738547 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin2958095743846766060 as select v31, v20, v45 from aggJoin1702654195593100577 join aggView8333614514355738547 using(v10);
+create or replace view aggView2820649079674325091 as select v31, MIN(v45) as v45, MIN(v20) as v44 from aggJoin2958095743846766060 group by v31;
+create or replace view aggJoin1458391401926010687 as select v22, v5, v43 as v43, v45, v44 from aggJoin755830553698827525 join aggView2820649079674325091 using(v31);
+create or replace view aggView4420234368755619836 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin3981333393754979830 as select v5, v43, v45, v44 from aggJoin1458391401926010687 join aggView4420234368755619836 using(v22);
+create or replace view res as select MIN(v43) as v43, MIN(v44) as v44, MIN(v45) as v45 from aggJoin3981333393754979830;
+select sum(v43+v44+v45) from res;

@@ -1,0 +1,10 @@
+create or replace view aggView3813347342869159070 as select id as v8, keyword as v35 from keyword as k where keyword IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence');
+create or replace view aggJoin8780686770575969213 as select movie_id as v23, v35 from movie_keyword as mk, aggView3813347342869159070 where mk.keyword_id=aggView3813347342869159070.v8;
+create or replace view aggView5031262530130925158 as select v23, MIN(v35) as v35 from aggJoin8780686770575969213 group by v23;
+create or replace view aggJoin3478164007464643705 as select id as v23, title as v24, v35 from title as t, aggView5031262530130925158 where t.id=aggView5031262530130925158.v23 and production_year>2014;
+create or replace view aggView5333527420168078427 as select v23, MIN(v35) as v35, MIN(v24) as v37 from aggJoin3478164007464643705 group by v23;
+create or replace view aggJoin2064159148794446771 as select person_id as v14, v35, v37 from cast_info as ci, aggView5333527420168078427 where ci.movie_id=aggView5333527420168078427.v23;
+create or replace view aggView1490547760561840341 as select v14, MIN(v35) as v35, MIN(v37) as v37 from aggJoin2064159148794446771 group by v14;
+create or replace view aggJoin1498163079367909797 as select name as v15, v35, v37 from name as n, aggView1490547760561840341 where n.id=aggView1490547760561840341.v14 and name LIKE '%Downey%Robert%';
+create or replace view res as select MIN(v35) as v35, MIN(v15) as v36, MIN(v37) as v37 from aggJoin1498163079367909797;
+select sum(v35+v36+v37) from res;

@@ -1,0 +1,14 @@
+create or replace view aggView7208208168307437438 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin1238533906403367670 as select movie_id as v31, info as v15 from movie_info as mi, aggView7208208168307437438 where mi.info_type_id=aggView7208208168307437438.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView1836162201580263979 as select v31, MIN(v15) as v43 from aggJoin1238533906403367670 group by v31;
+create or replace view aggJoin1874077603298908092 as select id as v31, title as v32, v43 from title as t, aggView1836162201580263979 where t.id=aggView1836162201580263979.v31;
+create or replace view aggView8996389520117998801 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin7589979108088347394 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView8996389520117998801 where mi_idx.info_type_id=aggView8996389520117998801.v10;
+create or replace view aggView1340049181734842600 as select v31, MIN(v20) as v44 from aggJoin7589979108088347394 group by v31;
+create or replace view aggJoin6710988761328089941 as select v31, v32, v43 as v43, v44 from aggJoin1874077603298908092 join aggView1340049181734842600 using(v31);
+create or replace view aggView7983039274718730388 as select v31, MIN(v43) as v43, MIN(v44) as v44, MIN(v32) as v45 from aggJoin6710988761328089941 group by v31;
+create or replace view aggJoin5778350247426020493 as select person_id as v22, note as v5, v43, v44, v45 from cast_info as ci, aggView7983039274718730388 where ci.movie_id=aggView7983039274718730388.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView5255833296205741587 as select v22, MIN(v43) as v43, MIN(v44) as v44, MIN(v45) as v45 from aggJoin5778350247426020493 group by v22;
+create or replace view aggJoin5621477053413763872 as select gender as v26, v43, v44, v45 from name as n, aggView5255833296205741587 where n.id=aggView5255833296205741587.v22 and gender= 'm';
+create or replace view res as select MIN(v43) as v43, MIN(v44) as v44, MIN(v45) as v45 from aggJoin5621477053413763872;
+select sum(v43+v44+v45) from res;

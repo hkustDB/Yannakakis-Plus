@@ -1,0 +1,14 @@
+create or replace view aggView5601166167957315279 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin6892853484297388314 as select id as v2, name as v29, v51 from name as n1, aggView5601166167957315279 where n1.id=aggView5601166167957315279.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView4979509482132844926 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin5460550067147605460 as select movie_id as v11, company_id as v25, note as v27, v52 from movie_companies as mc, aggView4979509482132844926 where mc.movie_id=aggView4979509482132844926.v11 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView1930581051416591893 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin4439395725935780482 as select person_id as v2, movie_id as v11, note as v13 from cast_info as ci, aggView1930581051416591893 where ci.role_id=aggView1930581051416591893.v15 and note= '(voice: English version)';
+create or replace view aggView5035977034851841923 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin7757486493971881024 as select v11, v27, v52 from aggJoin5460550067147605460 join aggView5035977034851841923 using(v25);
+create or replace view aggView1145199003097604626 as select v11, MIN(v52) as v52 from aggJoin7757486493971881024 group by v11;
+create or replace view aggJoin3012166770091129595 as select v2, v13, v52 from aggJoin4439395725935780482 join aggView1145199003097604626 using(v11);
+create or replace view aggView3531941160169259497 as select v2, MIN(v51) as v51 from aggJoin6892853484297388314 group by v2;
+create or replace view aggJoin8979663029215227335 as select v13, v52 as v52, v51 from aggJoin3012166770091129595 join aggView3531941160169259497 using(v2);
+create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin8979663029215227335;
+select sum(v51+v52) from res;

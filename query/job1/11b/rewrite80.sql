@@ -1,0 +1,16 @@
+create or replace view aggView5589757029128632697 as select id as v17, name as v39 from company_name as cn where country_code<> '[pl]' and ((name LIKE '%Film%') OR (name LIKE '%Warner%'));
+create or replace view aggJoin5539387311078746016 as select movie_id as v24, company_type_id as v18, v39 from movie_companies as mc, aggView5589757029128632697 where mc.company_id=aggView5589757029128632697.v17;
+create or replace view aggView5145554039602933343 as select id as v24, title as v41 from title as t where title LIKE '%Money%' and production_year= 1998;
+create or replace view aggJoin3377548321625237187 as select v24, v18, v39 from aggJoin5539387311078746016 join aggView5145554039602933343 using(v24);
+create or replace view aggView915671128046954061 as select id as v18 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin4675376007059200510 as select v24, v39 from aggJoin3377548321625237187 join aggView915671128046954061 using(v18);
+create or replace view aggView2426867451570762693 as select v24, MIN(v39) as v39 from aggJoin4675376007059200510 group by v24;
+create or replace view aggJoin7233567870474515063 as select movie_id as v24, keyword_id as v22, v39 from movie_keyword as mk, aggView2426867451570762693 where mk.movie_id=aggView2426867451570762693.v24;
+create or replace view aggView3863853613356850379 as select id as v22 from keyword as k where keyword= 'sequel';
+create or replace view aggJoin6327842035170254623 as select v24, v39 from aggJoin7233567870474515063 join aggView3863853613356850379 using(v22);
+create or replace view aggView3749796772122081575 as select v24, MIN(v39) as v39 from aggJoin6327842035170254623 group by v24;
+create or replace view aggJoin299970402187677523 as select link_type_id as v13, v39 from movie_link as ml, aggView3749796772122081575 where ml.movie_id=aggView3749796772122081575.v24;
+create or replace view aggView3596008231603300157 as select v13, MIN(v39) as v39 from aggJoin299970402187677523 group by v13;
+create or replace view aggJoin1513965688324960727 as select link as v14, v39 from link_type as lt, aggView3596008231603300157 where lt.id=aggView3596008231603300157.v13 and link LIKE '%follows%';
+create or replace view res as select MIN(v39) as v39, MIN(v14) as v40, MIN(v41) as v41 from aggJoin1513965688324960727;
+select sum(v39+v40+v41) from res;

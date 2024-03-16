@@ -1,0 +1,14 @@
+create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v14 from Graph, (SELECT src, COUNT(*) AS v14 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create or replace view minView8494185864046076624 as select v4, v14 as mfR1348701345716028091 from g3;
+create or replace view joinView5711397236512192983 as select src as v2, dst as v4, mfR1348701345716028091 from Graph AS g2, minView8494185864046076624 where g2.dst=minView8494185864046076624.v4;
+create or replace view g4 as select Graph.src as v7, Graph.dst as v2, v16 from Graph, (SELECT dst, COUNT(*) AS v16 FROM Graph GROUP BY dst) AS c3 where Graph.src = c3.dst;
+create or replace view minView3443247486628606302 as select v2, v16 as mfL3257515856336475877 from g4;
+create or replace view joinView2212350355665911040 as select v2, v4, mfR1348701345716028091, mfL3257515856336475877 from joinView5711397236512192983 join minView3443247486628606302 using(v2);
+create or replace view g5 as select Graph.src as v4, Graph.dst as v10, v18 from Graph, (SELECT dst, COUNT(*) AS v18 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c4.dst;
+create or replace view minView7880823769839667615 as select v4, v18 as mfR242770319108575118 from g5;
+create or replace view joinView4647535588451586557 as select v2, v4, mfR1348701345716028091, mfL3257515856336475877, mfR242770319108575118 from joinView2212350355665911040 join minView7880823769839667615 using(v4) where mfL3257515856336475877<mfR242770319108575118;
+create or replace view g1 as select Graph.src as v1, Graph.dst as v2, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view minView2742358493815503411 as select v2, v12 as mfL5699214840680020740 from g1;
+create or replace view joinView6599999127820731137 as select v2, v4 from joinView4647535588451586557 join minView2742358493815503411 using(v2) where mfL5699214840680020740<mfR1348701345716028091;
+create or replace view res as select distinct v2, v4 from joinView6599999127820731137;
+select sum(v2+v4) from res;

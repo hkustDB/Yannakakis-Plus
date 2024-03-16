@@ -3,7 +3,7 @@
 rewrite_and_run.result
 
 querySum.sql
-rewrite*.sql
+query/job2/[1-9]*/rewrite*.sql
 
 query/extra*
 

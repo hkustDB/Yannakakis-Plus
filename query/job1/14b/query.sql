@@ -26,8 +26,7 @@ WHERE it1.info = 'countries'
   AND mi_idx.info > '6.0'
   AND t.production_year > 2010
   AND (t.title LIKE '%murder%'
-       OR t.title LIKE '%Murder%'
-       OR t.title LIKE '%Mord%')
+       OR t.title LIKE '%Murder%')
   AND kt.id = t.kind_id
   AND t.id = mi.movie_id
   AND t.id = mk.movie_id

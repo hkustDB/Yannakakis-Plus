@@ -1,0 +1,14 @@
+create or replace view aggView4987553713704908860 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin2724052744206110301 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v52 from cast_info as ci, aggView4987553713704908860 where ci.movie_id=aggView4987553713704908860.v11 and note= '(voice: English version)';
+create or replace view aggView6629198851595664362 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin7761888902771879198 as select person_id as v2, name as v3 from aka_name as an1, aggView6629198851595664362 where an1.person_id=aggView6629198851595664362.v2;
+create or replace view aggView6812243616146944830 as select v2, MIN(v3) as v51 from aggJoin7761888902771879198 group by v2;
+create or replace view aggJoin5538274846889254005 as select v11, v13, v15, v52 as v52, v51 from aggJoin2724052744206110301 join aggView6812243616146944830 using(v2);
+create or replace view aggView1964388219682802911 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin1767336791491216589 as select v11, v13, v52, v51 from aggJoin5538274846889254005 join aggView1964388219682802911 using(v15);
+create or replace view aggView787646263651720633 as select v11, MIN(v52) as v52, MIN(v51) as v51 from aggJoin1767336791491216589 group by v11;
+create or replace view aggJoin2170254578127008968 as select company_id as v25, note as v27, v52, v51 from movie_companies as mc, aggView787646263651720633 where mc.movie_id=aggView787646263651720633.v11 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView6420565641028157387 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin7609693485282268150 as select v27, v52, v51 from aggJoin2170254578127008968 join aggView6420565641028157387 using(v25);
+create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin7609693485282268150;
+select sum(v51+v52) from res;

@@ -1,0 +1,16 @@
+create or replace view aggView7362290392030032526 as select id as v1, name as v41 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin6459048018566695728 as select movie_id as v29, company_type_id as v8, v41 from movie_companies as mc, aggView7362290392030032526 where mc.company_id=aggView7362290392030032526.v1;
+create or replace view aggView8902904943656032746 as select id as v29, title as v43 from title as t where production_year>=2000 and production_year<=2010;
+create or replace view aggJoin4856642012780521070 as select v29, v8, v41 from aggJoin6459048018566695728 join aggView8902904943656032746 using(v29);
+create or replace view aggView7960444813150782021 as select id as v8 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin5616061773833997736 as select v29, v41 from aggJoin4856642012780521070 join aggView7960444813150782021 using(v8);
+create or replace view aggView7562581814587857685 as select id as v26 from info_type as it2 where info= 'rating';
+create or replace view aggJoin207313617284112284 as select movie_id as v29, info as v27 from movie_info_idx as mi_idx, aggView7562581814587857685 where mi_idx.info_type_id=aggView7562581814587857685.v26 and info>'7.0';
+create or replace view aggView5957934036122735913 as select v29, MIN(v27) as v42 from aggJoin207313617284112284 group by v29;
+create or replace view aggJoin7447604610878066722 as select movie_id as v29, info_type_id as v21, v42 from movie_info as mi, aggView5957934036122735913 where mi.movie_id=aggView5957934036122735913.v29 and info IN ('Drama','Horror','Western','Family');
+create or replace view aggView5217304799367047033 as select id as v21 from info_type as it1 where info= 'genres';
+create or replace view aggJoin5342841581640640402 as select v29, v42 from aggJoin7447604610878066722 join aggView5217304799367047033 using(v21);
+create or replace view aggView8831720005018917965 as select v29, MIN(v42) as v42 from aggJoin5342841581640640402 group by v29;
+create or replace view aggJoin5025298589710330552 as select v41 as v41, v42 from aggJoin5616061773833997736 join aggView8831720005018917965 using(v29);
+create or replace view res as select MIN(v41) as v41, MIN(v42) as v42, MIN(v43) as v43 from aggJoin5025298589710330552;
+select sum(v41+v42+v43) from res;
