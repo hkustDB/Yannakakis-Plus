@@ -10,7 +10,7 @@ FROM company_name AS cn,
      movie_keyword AS mk,
      movie_link AS ml,
      title AS t
-WHERE cn.country_code !='[pl]'
+WHERE cn.country_code <>'[pl]'
   AND (cn.name LIKE '%Film%'
        OR cn.name LIKE '%Warner%')
   AND ct.kind ='production companies'
@@ -33,4 +33,3 @@ WHERE cn.country_code !='[pl]'
   AND ml.movie_id = mi.movie_id
   AND mk.movie_id = mi.movie_id
   AND mc.movie_id = mi.movie_id
-

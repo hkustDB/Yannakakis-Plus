@@ -16,8 +16,8 @@ FROM complete_cast AS cc,
      movie_keyword AS mk,
      title AS t
 WHERE cct1.kind = 'crew'
-  AND cct2.kind != 'complete+verified'
-  AND cn.country_code != '[us]'
+  AND cct2.kind <> 'complete+verified'
+  AND cn.country_code <> '[us]'
   AND it1.info = 'countries'
   AND it2.info = 'rating'
   AND k.keyword IN ('murder',

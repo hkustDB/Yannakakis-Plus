@@ -18,7 +18,7 @@ FROM company_name AS cn1,
      movie_link AS ml,
      title AS t1,
      title AS t2
-WHERE cn1.country_code != '[us]'
+WHERE cn1.country_code <> '[us]'
   AND it1.info = 'rating'
   AND it2.info = 'rating'
   AND kt1.kind IN ('tv series',
