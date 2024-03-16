@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
+            "args": [
+                "<ddl>=lsqb",
+                "<query>=/Users/cbn/Desktop/SQLRewriter/query/extra/q1",
+                "--base=2",
+                "--mode=0",
+                "--genType=D",
+            ],
             "justMyCode": true
         }
     ]

@@ -27,10 +27,14 @@ class Comparison:
         # path = ['4<->1', '1<->2', '2<->3', '3<->5']
         self.id = id
         self.op = self.parseOP(op)
-        self.left = left # crude left
-        self.right = right
-        self.cond = cond[1:-1] if cond[0] == '(' and cond[-1] == ')' else cond
         self.fullOp = fullOp
+        self.cond = cond[1:-1] if cond[0] == '(' and cond[-1] == ')' else cond
+        if self.op == ' OR ':
+            self.left, self.right = self.cond.split(' OR ')
+        else:
+            self.left = left # crude left
+            self.right = right
+        
         if left == right:
             if '=' in self.cond:
                 self.right = self.cond.split('=')[1]
@@ -117,7 +121,8 @@ class Comparison:
             return ' IN '
         elif 'intInLiterals' in OP:
             return ' IN '
-        
+        elif 'or' in OP:
+            return ' OR '
         else:
             raise NotImplementedError("Not proper relation! ")
 

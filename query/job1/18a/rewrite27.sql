@@ -1,0 +1,13 @@
+create or replace view aggView756500868976225723 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin1942130204313921998 as select movie_id as v31, info as v15 from movie_info as mi, aggView756500868976225723 where mi.info_type_id=aggView756500868976225723.v8;
+create or replace view aggView48497374964909748 as select v31, MIN(v15) as v43 from aggJoin1942130204313921998 group by v31;
+create or replace view aggJoin5787438914057471661 as select id as v31, title as v32, v43 from title as t, aggView48497374964909748 where t.id=aggView48497374964909748.v31;
+create or replace view aggView3840207833010989873 as select v31, MIN(v43) as v43, MIN(v32) as v45 from aggJoin5787438914057471661 group by v31;
+create or replace view aggJoin3793139994137170457 as select movie_id as v31, info_type_id as v10, info as v20, v43, v45 from movie_info_idx as mi_idx, aggView3840207833010989873 where mi_idx.movie_id=aggView3840207833010989873.v31;
+create or replace view aggView2540851279475474102 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin5133217338784774363 as select v31, v20, v43, v45 from aggJoin3793139994137170457 join aggView2540851279475474102 using(v10);
+create or replace view aggView7996244296525050088 as select v31, MIN(v43) as v43, MIN(v45) as v45, MIN(v20) as v44 from aggJoin5133217338784774363 group by v31;
+create or replace view aggJoin5143771621959965725 as select person_id as v22, note as v5, v43, v45, v44 from cast_info as ci, aggView7996244296525050088 where ci.movie_id=aggView7996244296525050088.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView1104407904207496818 as select v22, MIN(v43) as v43, MIN(v45) as v45, MIN(v44) as v44 from aggJoin5143771621959965725 group by v22;
+create or replace view aggJoin4388903130532454908 as select name as v23, gender as v26, v43, v45, v44 from name as n, aggView1104407904207496818 where n.id=aggView1104407904207496818.v22 and gender= 'm' and name LIKE '%Tim%';
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin4388903130532454908;

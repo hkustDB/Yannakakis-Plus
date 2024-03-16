@@ -40,13 +40,14 @@ class SelectTargetSource(Action):
         
         
 class StageEnd(Action):
-    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], joinCond: str = '', whereCond: str = '', whereCondList = []) -> None:
+    def __init__(self, viewName: str, selectAttrs: list[str], selectAttrAlias: list[str], fromTable: str, joinTable: str, joinKey: list[str], joinCond: str = '', whereCond: str = '', whereCondList = [], joinUsingFlag: bool = True) -> None:
         super().__init__(viewName, selectAttrs, selectAttrAlias, fromTable)
         self.joinTable = joinTable
         self.joinKey = joinKey
         self.joinCond = joinCond
         self.whereCond = whereCond
         self.whereCondList = whereCondList
+        self.joinUsingFlag = joinUsingFlag
         self.enumerateType = EnumerateType.StageEnd
     
     # TODO:

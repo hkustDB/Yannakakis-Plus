@@ -1,10 +1,11 @@
 """
 Usage:
-  main.py <query> [options]
-
+  main.py <query> <ddl> [options]
+  
 Options:
   -h --help     Show help.
   <query>       Set execute query path, like topk1/
+  <ddl>         Set ddl filename
   -b, --base base   Set level-k log base [default: 32]
   -m, --mode mode   Set topK algorithm mode. 0: level-k, 1: product-k [default: 0]
   -g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
@@ -21,8 +22,9 @@ from generateTopKIR import *
 from codegen import *
 from codegenTopK import *
 from topk import *
+# from estimator import *
 from enumsType import EdgeType
-
+import globalVar
 
 from random import randint
 import os
@@ -31,12 +33,8 @@ import time
 import traceback
 import requests
 
-BASE_PATH = 'query/tpch/q20/'
-DDL_NAME = 'tpch.ddl'
-QUERY_NAME = 'query.sql'
-OUT_NAME = 'rewrite.sql'
-AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
+# AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
 
 ''' Formatt
 RelationName;id;source/inalias(bag);cols;tableDisplayName;[AggList(tableagg)|internalRelations(bag)|supportingRelation(aux)|group+func(agg)]
@@ -73,9 +71,12 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
     elif name == 'AuxiliaryRelation':
         source, cols, alias, supportId = removeEqual(line, 3)
         cols = pattern.findall(cols)
-        supportId, supportRel = int(supportId.split('\n')[0]), supportId.split('\n')[1]
-        if supportId not in allNodes and supportRel != '':
-            parseRelRecur(supportRel, allNodes, supId)
+        if '\n' in supportId:
+            supportId, supportRel = int(supportId.split('\n')[0]), supportId.split('\n')[1]
+            if supportId not in allNodes and supportRel != '':
+                parseRelRecur(supportRel, allNodes, supId)
+        else:
+            supportId = int(supportId.split('=')[1])
         auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
         supId.add(supportId)
         allNodes[id] = auxNode
@@ -98,10 +99,13 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
     elif name == 'BagRelation':
         inAlias, cols, alias, internalRelations = removeEqual(line, 3)
         cols = pattern.findall(cols)
-        inId, internalRelations = internalRelations.split('\n', 1)
-        inId = [int(id) for id in inId.split(',')]
-        for internal in internalRelations.split('\n'):
-            if internal != '': parseRelRecur(internal)
+        if '\n' in internalRelations:
+            inId, internalRelations = internalRelations.split('\n', 1)
+            for internal in internalRelations.split('\n'):
+                if internal != '': parseRelRecur(internal)
+        else:
+            inId = internalRelations.split('=', 1)[1]
+        inId = [int(id) for id in inId.split(',')][::-1]
         bagNode = BagTreeNode(id, inAlias, cols, [], alias, inId, inAlias)
         allNodes[id] = bagNode
     else:
@@ -114,13 +118,13 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         inAlias = node['internal']
         inId, internal = node['internalRelations'].split('\n', 1)
         inId = inId.split(',')
-        inId = [int(each) for each in inId]
+        inId = [int(each) for each in inId][::-1]
         internal = internal.split('\n')
         for inter in internal:
             if inter != '': parseRelRecur(inter, allNodes, supId)
         bagNode = BagTreeNode(id, str(inAlias), cols, [], alias, inId, inAlias)
         allNodes[id] = bagNode
-                
+    
     elif name == 'AuxiliaryRelation':
         source = node['source']
         supportId = node['support']
@@ -132,7 +136,7 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         source = node['source']
         tsNode = TableTreeNode(id, source, cols, [], alias)
         allNodes[id] = tsNode
-            
+        
     elif name == 'TableAggRelation':
         source = node['source']
         aggList, aggs = node['aggList'].split('\n', 1)
@@ -149,7 +153,10 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
     return 
 
 
-def connect():
+def connect(base: int, mode: int, type: GenType):
+    BASE_PATH = globalVar.get_value('BASE_PATH')
+    DDL_NAME = globalVar.get_value('DDL_NAME')
+    QUERY_NAME = globalVar.get_value('QUERY_NAME')
     headers = {'Content-Type': 'application/json'}
     body = dict()
     ddl_file = open(BASE_PATH + DDL_NAME)
@@ -158,7 +165,11 @@ def connect():
     query_file = open(BASE_PATH + QUERY_NAME)
     body['query'] = query_file.read()
     query_file.close()
-    response = requests.post(url="http://localhost:8848/api/v1/parse", headers=headers, json=body).json()['data']
+    try:
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout", headers=headers, json=body).json()['data']
+    except:
+        traceback.print_exc()
+        print("Error query: " + QUERY_NAME)
     # 1. 
     table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
     # 2. parse jointree
@@ -222,7 +233,7 @@ def connect():
     topK_data = response['topK']
     topK = None
     if topK_data:
-        topK = TopK(topK_data['orderByVariable'], topK_data['desc'], topK_data['limit'], mode=0, base=32, genType=GenType.DuckDB)
+        topK = TopK(topK_data['orderByVariable'], topK_data['desc'], topK_data['limit'], mode=mode, base=base, genType=type)
     # 6. computations
     computations = response['computations']
     tempComp = []
@@ -281,7 +292,7 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
             vars = [allBagVarMap[col] for col in treeNode.cols]
             treeNode.setcol2vars([treeNode.cols, vars])
-            
+        
         elif treeNode.relationType == RelationType.AuxiliaryRelation:
             supCols, supVars = allNodes[treeNode.supRelationId].col2vars
             auxCols, auxVars = [], []
@@ -295,20 +306,51 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
 
 if __name__ == '__main__':
+    base, mode, type = 2, 0, 'D'
+    globalVar._init()
+    globalVar.set_value('QUERY_NAME', 'query.sql')
+    globalVar.set_value('OUT_NAME', 'rewrite.sql')
+    globalVar.set_value('COST_NAME', 'cost.txt')
+    globalVar.set_value('GEN_TYPE', 'Mysql')
+    # code debug keep here
+    globalVar.set_value('BASE_PATH', 'query/job2/33a/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
+    # auto-rewrite keep here
+    
+    arguments = docopt(__doc__)
+    globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
+    globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
+    base = int(arguments['--base'])
+    mode=int(arguments['--mode'])
+    type=GenType.Mysql if arguments['--genType'] == 'M' else GenType.DuckDB
+    if type == GenType.Mysql:
+        globalVar.set_value('GEN_TYPE', 'Mysql')
+    else:
+        globalVar.set_value('GEN_TYPE', 'DuckDB')
+    
     start = time.time()
-    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect()
+    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
     IRmode = IRType.Level_K if topK and topK.mode == 0 else IRmode
     IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
+    BASE_PATH = globalVar.get_value('BASE_PATH')
+    OUT_NAME = globalVar.get_value('OUT_NAME')
     # sign for whether process all JT
     optFlag = False
     if optFlag:
+        '''
+        cost_height, cost_fanout, cost_estimate = getEstimation(DDL_NAME.split('.')[0], optJT)
+        costOutName = COST_NAME.split('.')[0] + 'opt' + '.' + COST_NAME.split('.')[1]
+        costout = open(BASE_PATH + costOutName, 'w+')
+        costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
+        costout.close()
+        '''
         if IRmode == IRType.Report:
             reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
-            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME)
+            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
         elif IRmode == IRType.Aggregation:
             aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
-            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg)
+            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg, genType=type)
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
@@ -319,6 +361,13 @@ if __name__ == '__main__':
     else:
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
+            '''
+            cost_height, cost_fanout, cost_estimate = getEstimation(DDL_NAME.split('.')[0], jt)
+            costOutName = COST_NAME.split('.')[0] + str(index) + '.' + COST_NAME.split('.')[1]
+            costout = open(BASE_PATH + costOutName, 'w+')
+            costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
+            costout.close()
+            '''
             try:
                 '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
@@ -328,11 +377,11 @@ if __name__ == '__main__':
                 computationList.reset()
                 if IRmode == IRType.Report:
                     reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
-                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName)
+                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, genType=type)
                 elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
                     aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
-                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg)
+                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, genType=type)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)

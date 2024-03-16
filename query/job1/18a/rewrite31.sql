@@ -1,0 +1,13 @@
+create or replace view aggView5331628850133971156 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin9213327837780704921 as select person_id as v22, movie_id as v31, note as v5, v45 from cast_info as ci, aggView5331628850133971156 where ci.movie_id=aggView5331628850133971156.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView8951812430495919462 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin938213348641443271 as select movie_id as v31, info as v15 from movie_info as mi, aggView8951812430495919462 where mi.info_type_id=aggView8951812430495919462.v8;
+create or replace view aggView4227970149222651349 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin9100211865148441188 as select v31, v5, v45 from aggJoin9213327837780704921 join aggView4227970149222651349 using(v22);
+create or replace view aggView4457933007729178884 as select v31, MIN(v45) as v45 from aggJoin9100211865148441188 group by v31;
+create or replace view aggJoin8934126235398043942 as select v31, v15, v45 from aggJoin938213348641443271 join aggView4457933007729178884 using(v31);
+create or replace view aggView9013254015230050332 as select v31, MIN(v45) as v45, MIN(v15) as v43 from aggJoin8934126235398043942 group by v31;
+create or replace view aggJoin7022970720755247907 as select info_type_id as v10, info as v20, v45, v43 from movie_info_idx as mi_idx, aggView9013254015230050332 where mi_idx.movie_id=aggView9013254015230050332.v31;
+create or replace view aggView4926763687136857368 as select v10, MIN(v45) as v45, MIN(v43) as v43, MIN(v20) as v44 from aggJoin7022970720755247907 group by v10;
+create or replace view aggJoin7623648597092959446 as select info as v11, v45, v43, v44 from info_type as it2, aggView4926763687136857368 where it2.id=aggView4926763687136857368.v10 and info= 'votes';
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin7623648597092959446;

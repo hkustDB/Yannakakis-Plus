@@ -1,0 +1,13 @@
+create or replace view aggView7854678292945739667 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin7811013954665417805 as select id as v2, name as v29, v51 from name as n1, aggView7854678292945739667 where n1.id=aggView7854678292945739667.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView2669082392096035318 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin1029835658677027883 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v52 from cast_info as ci, aggView2669082392096035318 where ci.movie_id=aggView2669082392096035318.v11 and note= '(voice: English version)';
+create or replace view aggView9038220928700209175 as select v2, MIN(v51) as v51 from aggJoin7811013954665417805 group by v2;
+create or replace view aggJoin6505957515480919223 as select v11, v13, v15, v52 as v52, v51 from aggJoin1029835658677027883 join aggView9038220928700209175 using(v2);
+create or replace view aggView6376403337761403902 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin7250522513862936403 as select v11, v13, v52, v51 from aggJoin6505957515480919223 join aggView6376403337761403902 using(v15);
+create or replace view aggView2344068276454042812 as select v11, MIN(v52) as v52, MIN(v51) as v51 from aggJoin7250522513862936403 group by v11;
+create or replace view aggJoin7195775461324089704 as select company_id as v25, note as v27, v52, v51 from movie_companies as mc, aggView2344068276454042812 where mc.movie_id=aggView2344068276454042812.v11 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView6390059904116587052 as select v25, MIN(v52) as v52, MIN(v51) as v51 from aggJoin7195775461324089704 group by v25;
+create or replace view aggJoin8939384897189699856 as select country_code as v18, v52, v51 from company_name as cn, aggView6390059904116587052 where cn.id=aggView6390059904116587052.v25 and country_code= '[jp]';
+select MIN(v51) as v51,MIN(v52) as v52 from aggJoin8939384897189699856;

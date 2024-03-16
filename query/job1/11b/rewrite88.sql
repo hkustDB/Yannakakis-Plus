@@ -1,0 +1,15 @@
+create or replace view aggView3365286508743427554 as select id as v13, link as v40 from link_type as lt where link LIKE '%follows%';
+create or replace view aggJoin5974800185063840343 as select movie_id as v24, v40 from movie_link as ml, aggView3365286508743427554 where ml.link_type_id=aggView3365286508743427554.v13;
+create or replace view aggView4660728152530458441 as select id as v22 from keyword as k where keyword= 'sequel';
+create or replace view aggJoin3901737518360120974 as select movie_id as v24 from movie_keyword as mk, aggView4660728152530458441 where mk.keyword_id=aggView4660728152530458441.v22;
+create or replace view aggView7940901375132330837 as select id as v18 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin3318638752962152068 as select movie_id as v24, company_id as v17 from movie_companies as mc, aggView7940901375132330837 where mc.company_type_id=aggView7940901375132330837.v18;
+create or replace view aggView2352922087243552978 as select v24, MIN(v40) as v40 from aggJoin5974800185063840343 group by v24;
+create or replace view aggJoin8110429977891994072 as select v24, v17, v40 from aggJoin3318638752962152068 join aggView2352922087243552978 using(v24);
+create or replace view aggView163493428895328803 as select v24 from aggJoin3901737518360120974 group by v24;
+create or replace view aggJoin4153664677174867588 as select id as v24, title as v28, production_year as v31 from title as t, aggView163493428895328803 where t.id=aggView163493428895328803.v24 and title LIKE '%Money%' and production_year= 1998;
+create or replace view aggView8387238427025833768 as select v24, MIN(v28) as v41 from aggJoin4153664677174867588 group by v24;
+create or replace view aggJoin3726380362949484946 as select v17, v40 as v40, v41 from aggJoin8110429977891994072 join aggView8387238427025833768 using(v24);
+create or replace view aggView1902995092003036471 as select v17, MIN(v40) as v40, MIN(v41) as v41 from aggJoin3726380362949484946 group by v17;
+create or replace view aggJoin1378147464337867405 as select name as v2, country_code as v3, v40, v41 from company_name as cn, aggView1902995092003036471 where cn.id=aggView1902995092003036471.v17 and country_code<> '[pl]' and ((name LIKE '%Film%') OR (name LIKE '%Warner%'));
+select MIN(v2) as v39,MIN(v40) as v40,MIN(v41) as v41 from aggJoin1378147464337867405;

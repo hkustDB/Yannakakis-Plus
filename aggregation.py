@@ -14,7 +14,7 @@ class AggFunc():
         self.funcName = AggFuncType[funcName]    # aggregation type: SUM, COUNT, AVG, MIN/MAX
         self.inVars = inVars        # input var alias -> [v1, v2]
         self.alias = alias          # use as alias, sum(source_name) as alias -> sum(alias) as alias
-        self.formular = formular    # change to its alias
+        self.formular = formular if len(formular) and formular[0] != '(' else formular[1:-1]   # change to its alias
         self.originForm = formular  # v1 * v2 / v1
         self.isChild: bool = True   # mark aggregation relate to child or parent node
         self.doneFlag = False
@@ -33,12 +33,17 @@ class Aggregation:
         for agg in self.aggFunc:
             if agg.alias not in ret:
                 ret[agg.alias] = agg
+            else:
+                raise NotImplementedError("One alias maps multiple aggregation functions! ")
         return ret
     
     def initDoneFlag(self):
         for agg in self.aggFunc:
             agg.doneFlag = False
             agg.formular = agg.originForm
+        for value in self.alias2AggFunc.values():
+            value.doneFlag = False
+            value.formular = value.originForm
 
 # aggregation additional reduce view (outside subset)   
 ## aggFunc[AggFunc]; aggFunc[i].funcName + '(' + aggFunc[i].inVars +')'

@@ -3,6 +3,7 @@ from reduce import *
 from aggregation import *
 from enumsType import *
 from treenode import *
+import globalVar
 
 BEGIN = 'create or replace view '
 END = ';\n'
@@ -27,7 +28,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     return ret
 
 # TODO: final output variables error? 
-def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, aggList: list[AggReducePhase] = [], isFreeConnex: bool = True, Agg: Aggregation = None):
+def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, aggList: list[AggReducePhase] = [], isFreeConnex: bool = True, Agg: Aggregation = None, genType: GenType = GenType.DuckDB):
     outFile = open(outPath, 'w+')
     dropView = []
     # 0. aggReduceList
@@ -52,24 +53,27 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         # outFile.write('# 1. aggView\n')
         line = BEGIN + agg.aggView.viewName + ' as select ' + transSelectData(agg.aggView.selectAttrs, agg.aggView.selectAttrAlias) + ' from ' + agg.aggView.fromTable
         line += (' where ' + ' and '.join(agg.aggView.selfComp)) if len(agg.aggView.selfComp) else ''
-        line += ' group by ' + ','.join(agg.aggView.groupBy) + END
+        if len(agg.aggView.groupBy):
+            line += ' group by ' + ','.join(agg.aggView.groupBy)
+        line += END
         dropView.append(agg.aggView.viewName)
         outFile.write(line)
-        # outFile.write('# 2. aggJoin\n')
-        line = BEGIN + agg.aggJoin.viewName + ' as select ' + transSelectData(agg.aggJoin.selectAttrs, agg.aggJoin.selectAttrAlias) + ' from '
-        if agg.aggJoin.fromTable != '':
-            joinSentence = agg.aggJoin.fromTable
-            if agg.aggJoin._joinFlag == ' JOIN ':
-                joinSentence += ' join ' + agg.aggJoin.joinTable + ' using(' + ','.join(agg.aggJoin.alterJoinKey) + ')'
+        if 'Join' in agg.aggJoin.viewName:
+            # outFile.write('# 2. aggJoin\n')
+            line = BEGIN + agg.aggJoin.viewName + ' as select ' + transSelectData(agg.aggJoin.selectAttrs, agg.aggJoin.selectAttrAlias) + ' from '
+            if agg.aggJoin.fromTable != '':
+                joinSentence = agg.aggJoin.fromTable
+                if agg.aggJoin._joinFlag == ' JOIN ':
+                    joinSentence += ' join ' + agg.aggJoin.joinTable + ' using(' + ','.join(agg.aggJoin.alterJoinKey) + ')'
+                else:
+                    joinSentence += ', ' + agg.aggJoin.joinTable
+                line += joinSentence
             else:
-                joinSentence += ', ' + agg.aggJoin.joinTable
-            line += joinSentence
-        else:
-            line += agg.aggJoin.joinTable
-        line += ' where ' if len(agg.aggJoin.whereCondList) else ''
-        line += ' and '.join(agg.aggJoin.whereCondList) + END
-        dropView.append(agg.aggJoin.viewName)
-        outFile.write(line)
+                line += agg.aggJoin.joinTable
+            line += ' where ' if len(agg.aggJoin.whereCondList) else ''
+            line += ' and '.join(agg.aggJoin.whereCondList) + END
+            dropView.append(agg.aggJoin.viewName)
+            outFile.write(line)
     
     # 1. reduceList rewrite
     for reduce in reduceList:
@@ -90,10 +94,12 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                 dropView.append(prepare.viewName)
                 outFile.write(line)
         
-        if reduce.semiView is not None:
+        if reduce.semiView is not None and not 'Aux' in reduce.semiView.viewName:
             # outFile.write('# +. SemiJoin\n')
             # TODO: Add change for auxNode creation
-            line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + ', '.join(reduce.semiView.inRight) + ' from ' + reduce.semiView.joinTable
+            line = BEGIN + reduce.semiView.viewName + ' as select ' + transSelectData(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias) + ' from ' + reduce.semiView.fromTable + ' where (' + ', '.join(reduce.semiView.inLeft) + ') in (select ' + '(' * (True if globalVar.get_value('GEN_TYPE') == 'DuckDB' else False)
+            line += ', '.join(reduce.semiView.inRight) + ')' * (True if globalVar.get_value('GEN_TYPE') == 'DuckDB' else False)
+            line += ' from ' + reduce.semiView.joinTable
             line += ' where ' if len(reduce.semiView.whereCondList) != 0 else ''
             line += ' and '.join(reduce.semiView.whereCondList) + ')' 
             line += ' and ' if len(reduce.semiView.outerWhereCondList) else ''
@@ -135,6 +141,8 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         if reduce.bagAuxView:
             # outFile.write('# 5. bagAuxView\n')
             line = BEGIN + reduce.bagAuxView.viewName + ' as select ' + transSelectData(reduce.bagAuxView.selectAttrs, reduce.bagAuxView.selectAttrAlias) + ' from ' + reduce.bagAuxView.joinTableList[0]
+            if (len(reduce.bagAuxView.joinKey) != len(reduce.bagAuxView.joinTableList) - 1):
+                raise RuntimeError("Error JoinKey number (wrong bag internal table join)! ")
             for i in range(1, len(reduce.bagAuxView.joinTableList)):
                 line += ' join ' + reduce.bagAuxView.joinTableList[i] + ' using(' + ','.join(reduce.bagAuxView.joinKey[i-1]) + ')'
             line += (' where ' + ' and '.join(reduce.bagAuxView.whereCondList)) if len(reduce.bagAuxView.whereCondList) else ''
@@ -170,23 +178,29 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             dropView.append(enum.semiEnumerate.viewName)
             continue
         
-        # outFile.write('# 1. createSample\n')
-        line = BEGIN + enum.createSample.viewName + ' as select ' + enum.createSample.selectAttrAlias[0] + ' from ' + enum.createSample.fromTable + ' where ' + enum.createSample.whereCond + END
-        dropView.append(enum.createSample.viewName)
-        outFile.write(line)
+        if enum.createSample:
+            # outFile.write('# 1. createSample\n')
+            line = BEGIN + enum.createSample.viewName + ' as select ' + enum.createSample.selectAttrAlias[0] + ' from ' + enum.createSample.fromTable + ' where ' + enum.createSample.whereCond + END
+            dropView.append(enum.createSample.viewName)
+            outFile.write(line)
         
-        # outFile.write('# 2. selectMax\n')
-        line = BEGIN + enum.selectMax.viewName + ' as select ' + transSelectData(enum.selectMax.selectAttrs, enum.selectMax.selectAttrAlias, row_numer=False, max_rn=True) + ' from ' + enum.selectMax.fromTable + ' join ' + enum.selectMax.joinTable + ' using(' + ', '.join(enum.selectMax.joinKey) + ') where ' + enum.selectMax.whereCond + ' group by ' + ', '.join(enum.selectMax.groupCond) + END 
-        dropView.append(enum.selectMax.viewName)
-        outFile.write(line)
+        if enum.selectMax:
+            # outFile.write('# 2. selectMax\n')
+            line = BEGIN + enum.selectMax.viewName + ' as select ' + transSelectData(enum.selectMax.selectAttrs, enum.selectMax.selectAttrAlias, row_numer=False, max_rn=True) + ' from ' + enum.selectMax.fromTable + ' join ' + enum.selectMax.joinTable + ' using(' + ', '.join(enum.selectMax.joinKey) + ') where ' + enum.selectMax.whereCond + ' group by ' + ', '.join(enum.selectMax.groupCond) + END 
+            dropView.append(enum.selectMax.viewName)
+            outFile.write(line)
         
-        # outFile.write('# 3. selectTarget\n')
-        line = BEGIN + enum.selectTarget.viewName + ' as select ' + ', '.join(enum.selectTarget.selectAttrAlias) + ' from ' + enum.selectTarget.fromTable + ' join ' + enum.selectTarget.joinTable + ' using(' + ', '.join(enum.selectTarget.joinKey) + ')' + ' where ' + enum.selectTarget.whereCond + END
-        dropView.append(enum.selectTarget.viewName)
-        outFile.write(line)
+        if enum.selectTarget:
+            # outFile.write('# 3. selectTarget\n')
+            line = BEGIN + enum.selectTarget.viewName + ' as select ' + ', '.join(enum.selectTarget.selectAttrAlias) + ' from ' + enum.selectTarget.fromTable + ' join ' + enum.selectTarget.joinTable + ' using(' + ', '.join(enum.selectTarget.joinKey) + ')' + ' where ' + enum.selectTarget.whereCond + END
+            dropView.append(enum.selectTarget.viewName)
+            outFile.write(line)
         
         # outFile.write('# 4. stageEnd\n')
-        line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ' join ' + enum.stageEnd.joinTable + ' using(' + ', '.join(enum.stageEnd.joinKey) + ')' + ' where ' + enum.stageEnd.whereCond 
+        if enum.stageEnd.joinUsingFlag:
+            line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ' join ' + enum.stageEnd.joinTable + ' using(' + ', '.join(enum.stageEnd.joinKey) + ')' + ' where ' + enum.stageEnd.whereCond 
+        else:
+            line = BEGIN + enum.stageEnd.viewName + ' as select ' + ', '.join(enum.stageEnd.selectAttrAlias) + ' from ' + enum.stageEnd.fromTable + ', ' + enum.stageEnd.joinTable + ' where ' + enum.stageEnd.whereCond 
         line += ' and ' if len(enum.stageEnd.whereCondList) else ''
         line += ' and '.join(enum.stageEnd.whereCondList) + addGroupBy(enum.stageEnd) + END
         dropView.append(enum.stageEnd.viewName)
