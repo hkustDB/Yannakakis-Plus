@@ -1,0 +1,13 @@
+create or replace view aggView7829274889409322638 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin4209033888733454413 as select movie_id as v31, info as v15 from movie_info as mi, aggView7829274889409322638 where mi.info_type_id=aggView7829274889409322638.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView7647670431901796365 as select v31, MIN(v15) as v43 from aggJoin4209033888733454413 group by v31;
+create or replace view aggJoin7447014135005751635 as select person_id as v22, movie_id as v31, note as v5, v43 from cast_info as ci, aggView7647670431901796365 where ci.movie_id=aggView7647670431901796365.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView4606924145277798228 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin4402181883521158457 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView4606924145277798228 where mi_idx.info_type_id=aggView4606924145277798228.v10;
+create or replace view aggView7904534492705919807 as select v31, MIN(v20) as v44 from aggJoin4402181883521158457 group by v31;
+create or replace view aggJoin8863269018588022329 as select id as v31, title as v32, v44 from title as t, aggView7904534492705919807 where t.id=aggView7904534492705919807.v31;
+create or replace view aggView22078693478167274 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin535054616682972946 as select v31, v5, v43 from aggJoin7447014135005751635 join aggView22078693478167274 using(v22);
+create or replace view aggView6408186063230624267 as select v31, MIN(v43) as v43 from aggJoin535054616682972946 group by v31;
+create or replace view aggJoin4354309609801574005 as select v32, v44 as v44, v43 from aggJoin8863269018588022329 join aggView6408186063230624267 using(v31);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v32) as v45 from aggJoin4354309609801574005;

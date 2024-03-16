@@ -1,0 +1,13 @@
+create or replace view aggView5528201850759024267 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin303859585502017873 as select movie_id as v31, info_type_id as v10, info as v20, v45 from movie_info_idx as mi_idx, aggView5528201850759024267 where mi_idx.movie_id=aggView5528201850759024267.v31;
+create or replace view aggView2238340908148139225 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin5879811496701681069 as select v31, v20, v45 from aggJoin303859585502017873 join aggView2238340908148139225 using(v10);
+create or replace view aggView3036042573005988387 as select v31, MIN(v45) as v45, MIN(v20) as v44 from aggJoin5879811496701681069 group by v31;
+create or replace view aggJoin5855936227143926414 as select movie_id as v31, info_type_id as v8, info as v15, v45, v44 from movie_info as mi, aggView3036042573005988387 where mi.movie_id=aggView3036042573005988387.v31;
+create or replace view aggView2039419596807675493 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin62461628965223637 as select movie_id as v31, note as v5 from cast_info as ci, aggView2039419596807675493 where ci.person_id=aggView2039419596807675493.v22 and note IN ('(producer)','(executive producer)');
+create or replace view aggView587025366255031492 as select v31 from aggJoin62461628965223637 group by v31;
+create or replace view aggJoin3597660784030708961 as select v8, v15, v45 as v45, v44 as v44 from aggJoin5855936227143926414 join aggView587025366255031492 using(v31);
+create or replace view aggView3663924064449393462 as select v8, MIN(v45) as v45, MIN(v44) as v44, MIN(v15) as v43 from aggJoin3597660784030708961 group by v8;
+create or replace view aggJoin3129266169485127663 as select info as v9, v45, v44, v43 from info_type as it1, aggView3663924064449393462 where it1.id=aggView3663924064449393462.v8 and info= 'budget';
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin3129266169485127663;
