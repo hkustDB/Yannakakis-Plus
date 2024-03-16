@@ -12,7 +12,7 @@ FROM company_name AS cn,
      movie_info_idx AS mi_idx,
      movie_keyword AS mk,
      title AS t
-WHERE cn.country_code != '[us]'
+WHERE cn.country_code <> '[us]'
   AND it1.info = 'countries'
   AND it2.info = 'rating'
   AND k.keyword IN ('murder',
@@ -49,4 +49,3 @@ WHERE cn.country_code != '[us]'
   AND it2.id = mi_idx.info_type_id
   AND ct.id = mc.company_type_id
   AND cn.id = mc.company_id
-

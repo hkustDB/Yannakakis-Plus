@@ -23,7 +23,7 @@ def removeAttrAlias(selectAttrs: list[str], selectAlias: list[str], containKeys:
     # TODO: Maybe remove joinket mistakenly
     if Agg:
         for alias in Agg.allAggAlias:
-            if alias in containKeys:
+            if alias in selectAlias:
                 containKeys = containKeys.difference(set(Agg.alias2AggFunc[alias].inVars))   
 
     if not len(selectAttrs):
@@ -133,14 +133,12 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys, Agg=Agg)
     
     aggHasLeft: bool = False
-    aggKeepSet = set()
     if Agg:
         for func in Agg.aggFunc:
             if not func.doneFlag:
                 aggHasLeft = True
                 break
-    
-    aggKeepSet = getAggSet(Agg, isAll=True) 
+     
     finalKeepSet = outputVariables if not aggHasLeft else outputVariables | aggKeepSet
     finalAnnotKeep = True if 'annot' in finalResult else False
     requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
@@ -154,7 +152,6 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[enum.corresNodeId], Agg=Agg)
                 
     # step3: prune aggReduce (bottom up)
-    aggKeepSet = getAggSet(Agg, isAll=True) 
     if Agg:
         requireVariables = outputVariables | compKeepSet | extraEqualSet
         for index, aggReduce in enumerate(aggReduceList):

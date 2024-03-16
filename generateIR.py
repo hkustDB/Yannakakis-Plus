@@ -22,6 +22,17 @@ allJoinKeySet = set()
 compKeySet = set()
 outVars = []
 
+# (A) Common Function for Reduce & Enumerate
+def splitLR(LR: str):
+    if '*' in LR: return LR.replace('(', '').replace(')', '').split('*'), '*'
+    elif '+' in LR: return LR.replace('(', '').replace(')', '').split('+'), '+'
+    elif 'LIKE' in LR: 
+        if LR[0] == '(' and LR[-1] == ')':
+            return LR[1:-1].split(' LIKE '), ' LIKE '
+        else:
+            raise NotImplementedError("Special LIKE case! ")
+    else: return [LR], ''
+
 def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
     whereCondList = []
     joinKey = list(set(inNode.cols) & set(preNode.cols))
@@ -98,11 +109,6 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, Agg: Aggregation = None,
     joinTableList, whereCondList = [], []
     extractAttr, extractAlias = [], []
     
-    def splitLR(LR: str):
-        if '*' in LR: return LR.split('*'), '*'
-        elif '+' in LR: return LR.split('+'), '+'
-        else: return [LR], ''
-    
     if childNode.relationType == RelationType.BagRelation:
         for index, id in enumerate(childNode.insideId):
             inNode = JT.getNode(id)
@@ -139,7 +145,10 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, Agg: Aggregation = None,
                 trans2Alias(leftVar, nodes)
                 trans2Alias(rightVar, nodes)
                 
-                whereCondList.append(opL.join(leftVar) + comp.op + opR.join(rightVar))
+                if comp.op == ' OR ':
+                    whereCondList.append('(' + opL.join(leftVar) + comp.op + opR.join(rightVar) + ')')
+                else:
+                    whereCondList.append(opL.join(leftVar) + comp.op + opR.join(rightVar))
         
         if len(childNode.insideId) > 2:
             if set(inNode.cols) & set(preNode.cols):
@@ -236,7 +245,10 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, Agg: Aggregation = None,
                     index = childNode.cols.index(rightVar[i])
                     rightVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i]
                 
-                whereCondList.append(opL.join(leftVar) + comp.op + opR.join(rightVar))
+                if comp.op == ' OR ':
+                    whereCondList.append('(' + opL.join(leftVar) + comp.op + opR.join(rightVar) + ')')
+                else:
+                    whereCondList.append(opL.join(leftVar) + comp.op + opR.join(rightVar))
                 
         # NOTE: Add extract support
         extractAttr, extractAlias = [], []
@@ -251,12 +263,6 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, Agg: Aggregation = None,
     childNode.createViewAlready = True # only apply for tableAgg & bag relation
     return prepareView
 
-
-# (A) Common Function for Reduce & Enumerate
-def splitLR(LR: str):
-    if '*' in LR: return LR.replace('(', '').replace(')', '').split('*'), '*'
-    elif '+' in LR: return LR.replace('(', '').replace(')', '').split('+'), '+'
-    else: return [LR], ''
         
 # -1 change corres selectAttrs (actually no need to change, must be tablescan)
 def transSelfComp(originalVars: list[str], comp: Comparison, childNode: TreeNode):
@@ -281,7 +287,16 @@ def transSelfComp(originalVars: list[str], comp: Comparison, childNode: TreeNode
             rightVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i]
         except:
             pass     
-    return opL.join(leftVar), opR.join(rightVar)
+    if opL == ' LIKE ':
+        if opR == ' LIKE ':
+            return '(' + opL.join(leftVar) + ')', '(' + opR.join(rightVar) + ')'
+        else:
+            return '(' + opL.join(leftVar) + ')', opR.join(rightVar)
+    else:
+        if opR == ' LIKE ':
+            return opL.join(leftVar), '(' + opR.join(rightVar) + ')'
+        else:
+            return opL.join(leftVar), opR.join(rightVar)
 
 
 #  -2 TableScan childnode, use children attrs
@@ -290,7 +305,10 @@ def makeSelfComp(selfComparisons: list[Comparison], childNode: TreeNode) -> list
     
     for comp in selfComparisons:
         left, right = transSelfComp(childNode.col2vars[1], comp, childNode)
-        whereCondList.append(left + comp.op + right)
+        if comp.op == ' OR ':
+            whereCondList.append('(' + left + comp.op + right + ')')
+        else:
+            whereCondList.append(left + comp.op + right)
         
     return whereCondList
 
@@ -685,7 +703,10 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             extractAlias.extend(aggExtraAlias)
         
         def joinSplit(splitVars: list[str], op: str):
-            return op.join(splitVars)
+            if op == ' OR ':
+                return '(' + op.join(splitVars) + ')'
+            else:
+                return op.join(splitVars)
         
         # handle extra mf comaprison alias
         whereCond = [helperLeft[1], comp.op, helperRight[1]]
@@ -713,6 +734,10 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
                         except:
                             continue
                     whereCond[0] = joinSplit(splitVars, op)
+
+        if comp.op == ' OR ':
+            whereCond.insert(0, '(')
+            whereCond.append(')')
         
         joinCondList = []
         

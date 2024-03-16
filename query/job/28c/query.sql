@@ -17,7 +17,7 @@ FROM complete_cast AS cc,
      title AS t
 WHERE cct1.kind = 'cast'
   AND cct2.kind = 'complete'
-  AND cn.country_code != '[us]'
+  AND cn.country_code <> '[us]'
   AND it1.info = 'countries'
   AND it2.info = 'rating'
   AND k.keyword IN ('murder',

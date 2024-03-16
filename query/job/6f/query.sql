@@ -19,5 +19,5 @@ WHERE k.keyword IN ('superhero',
   AND t.id = mk.movie_id
   AND t.id = ci.movie_id
   AND ci.movie_id = mk.movie_id
-  AND n.id = ci.person_id
+  AND n.id = ci.person_id;
 
