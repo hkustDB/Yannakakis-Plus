@@ -1,0 +1,14 @@
+create or replace view aggView6995753661825093622 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin708624418868156330 as select movie_id as v31, note as v5 from cast_info as ci, aggView6995753661825093622 where ci.person_id=aggView6995753661825093622.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView2844843741144139832 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin2462522152796827954 as select movie_id as v31, info as v15 from movie_info as mi, aggView2844843741144139832 where mi.info_type_id=aggView2844843741144139832.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView4240006905613449385 as select v31, MIN(v15) as v43 from aggJoin2462522152796827954 group by v31;
+create or replace view aggJoin4298781421126617647 as select id as v31, title as v32, v43 from title as t, aggView4240006905613449385 where t.id=aggView4240006905613449385.v31;
+create or replace view aggView2659818224519264163 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin8912747696998003154 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView2659818224519264163 where mi_idx.info_type_id=aggView2659818224519264163.v10;
+create or replace view aggView4471047901215611970 as select v31, MIN(v20) as v44 from aggJoin8912747696998003154 group by v31;
+create or replace view aggJoin1204807190825428590 as select v31, v5, v44 from aggJoin708624418868156330 join aggView4471047901215611970 using(v31);
+create or replace view aggView436000627364824181 as select v31, MIN(v44) as v44 from aggJoin1204807190825428590 group by v31;
+create or replace view aggJoin584356937300594560 as select v32, v43 as v43, v44 from aggJoin4298781421126617647 join aggView436000627364824181 using(v31);
+create or replace view res as select MIN(v43) as v43, MIN(v44) as v44, MIN(v32) as v45 from aggJoin584356937300594560;
+select sum(v43+v44+v45) from res;

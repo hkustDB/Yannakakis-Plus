@@ -1,0 +1,10 @@
+create or replace view aggView7637073639427542404 as select id as v15, title as v27 from title as t where production_year>2005;
+create or replace view aggJoin3193333675614067186 as select movie_id as v15, company_type_id as v1, note as v9, v27 from movie_companies as mc, aggView7637073639427542404 where mc.movie_id=aggView7637073639427542404.v15 and note LIKE '%(theatrical)%' and note LIKE '%(France)%';
+create or replace view aggView7020129624816662565 as select id as v3 from info_type as it;
+create or replace view aggJoin3138890342341755976 as select movie_id as v15, info as v13 from movie_info as mi, aggView7020129624816662565 where mi.info_type_id=aggView7020129624816662565.v3 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
+create or replace view aggView294122761530659476 as select v15 from aggJoin3138890342341755976 group by v15;
+create or replace view aggJoin7925542237513074647 as select v1, v9, v27 as v27 from aggJoin3193333675614067186 join aggView294122761530659476 using(v15);
+create or replace view aggView937297068236530004 as select id as v1 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin1903011716160120406 as select v9, v27 from aggJoin7925542237513074647 join aggView937297068236530004 using(v1);
+create or replace view res as select MIN(v27) as v27 from aggJoin1903011716160120406;
+select sum(v27) from res;

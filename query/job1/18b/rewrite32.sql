@@ -1,0 +1,14 @@
+create or replace view aggView2736329537248242089 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin8085424175386986706 as select movie_id as v31, note as v5 from cast_info as ci, aggView2736329537248242089 where ci.person_id=aggView2736329537248242089.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView1605293942784344457 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin8787539720193436877 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView1605293942784344457 where mi_idx.info_type_id=aggView1605293942784344457.v10 and info>'8.0';
+create or replace view aggView1477343018483731617 as select v31, MIN(v20) as v44 from aggJoin8787539720193436877 group by v31;
+create or replace view aggJoin7914812512570271309 as select v31, v44 from aggJoin8085424175386986706 join aggView1477343018483731617 using(v31);
+create or replace view aggView194194534898629497 as select v31, MIN(v44) as v44 from aggJoin7914812512570271309 group by v31;
+create or replace view aggJoin6811164336287638867 as select id as v31, title as v32, v44 from title as t, aggView194194534898629497 where t.id=aggView194194534898629497.v31 and production_year>=2008 and production_year<=2014;
+create or replace view aggView3032853804032494873 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin2092349551505025053 as select movie_id as v31, info as v15 from movie_info as mi, aggView3032853804032494873 where mi.info_type_id=aggView3032853804032494873.v8 and info IN ('Horror','Thriller');
+create or replace view aggView1103591419530330125 as select v31, MIN(v15) as v43 from aggJoin2092349551505025053 group by v31;
+create or replace view aggJoin1893409892572150831 as select v32, v44 as v44, v43 from aggJoin6811164336287638867 join aggView1103591419530330125 using(v31);
+create or replace view res as select MIN(v43) as v43, MIN(v44) as v44, MIN(v32) as v45 from aggJoin1893409892572150831;
+select sum(v43+v44+v45) from res;

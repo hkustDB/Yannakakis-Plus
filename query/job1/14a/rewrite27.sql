@@ -1,0 +1,16 @@
+create or replace view aggView3189948753464263466 as select id as v3 from info_type as it2 where info= 'rating';
+create or replace view aggJoin725726940201360220 as select movie_id as v23, info as v18 from movie_info_idx as mi_idx, aggView3189948753464263466 where mi_idx.info_type_id=aggView3189948753464263466.v3 and info<'8.5';
+create or replace view aggView2000868861953649671 as select id as v1 from info_type as it1 where info= 'countries';
+create or replace view aggJoin2630215168599488513 as select movie_id as v23 from movie_info as mi, aggView2000868861953649671 where mi.info_type_id=aggView2000868861953649671.v1 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American');
+create or replace view aggView9087365399775854878 as select id as v5 from keyword as k where keyword IN ('murder','murder-in-title','blood','violence');
+create or replace view aggJoin2826753986468038924 as select movie_id as v23 from movie_keyword as mk, aggView9087365399775854878 where mk.keyword_id=aggView9087365399775854878.v5;
+create or replace view aggView7140969402764220664 as select v23 from aggJoin2826753986468038924 group by v23;
+create or replace view aggJoin7071231180406845353 as select v23, v18 from aggJoin725726940201360220 join aggView7140969402764220664 using(v23);
+create or replace view aggView1568784501401091067 as select v23, MIN(v18) as v35 from aggJoin7071231180406845353 group by v23;
+create or replace view aggJoin5614121496291250742 as select v23, v35 from aggJoin2630215168599488513 join aggView1568784501401091067 using(v23);
+create or replace view aggView3450677643274929845 as select v23, MIN(v35) as v35 from aggJoin5614121496291250742 group by v23;
+create or replace view aggJoin5139956112190057139 as select title as v24, kind_id as v8, v35 from title as t, aggView3450677643274929845 where t.id=aggView3450677643274929845.v23 and production_year>2010;
+create or replace view aggView1168286052675769196 as select id as v8 from kind_type as kt where kind= 'movie';
+create or replace view aggJoin8649151260838997528 as select v24, v35 from aggJoin5139956112190057139 join aggView1168286052675769196 using(v8);
+create or replace view res as select MIN(v35) as v35, MIN(v24) as v36 from aggJoin8649151260838997528;
+select sum(v35+v36) from res;

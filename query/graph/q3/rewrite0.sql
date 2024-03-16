@@ -1,0 +1,12 @@
+create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view g2 as select Graph.src as v2, Graph.dst as v4, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c3 where Graph.src = c3.src;
+create or replace view orderView3664920607448166591 as select v7, v2, v8, row_number() over (partition by v2 order by v8) as rn from g1;
+create or replace view minView1564548315930648309 as select v2, v8 as mfL2215056477229918814 from orderView3664920607448166591 where rn = 1;
+create or replace view joinView9091585942024182718 as select v2, v4, v12, mfL2215056477229918814 from g2 join minView1564548315930648309 using(v2);
+create or replace view g3 as select Graph.src as v4, Graph.dst as v9, v10, v14 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2, (SELECT dst, COUNT(*) AS v14 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c2.src and Graph.dst = c4.dst;
+create or replace view orderView953588789290412640 as select v2, v4, v12, mfL2215056477229918814, row_number() over (partition by v4 order by mfL2215056477229918814) as rn from joinView9091585942024182718;
+create or replace view minView8237732532661293294 as select v4, mfL2215056477229918814 as mfL3861076614748508091 from orderView953588789290412640 where rn = 1;
+create or replace view joinView5522748887908031588 as select v4, v9, v10, v14, mfL3861076614748508091 from g3 join minView8237732532661293294 using(v4) where mfL3861076614748508091<v10;
+create or replace view pkJoin8862624014922160193 as select v9, v14, v2, v12, v10, v4, mfL2215056477229918814 from joinView5522748887908031588 join joinView9091585942024182718 using(v4) where mfL2215056477229918814<v10 and v12<v14 and rn = 1;
+create or replace view pkJoin8405345772887289399 as select v7, v9, v8, v2, v14, v10, v12, v4 from pkJoin8862624014922160193 join g1 using(v2) where v8<v10 and rn = 1;
+select sum(v7+v2+v4+v9+v8+v10+v12+v14) from pkJoin8405345772887289399;

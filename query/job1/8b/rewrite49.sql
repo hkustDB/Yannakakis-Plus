@@ -1,0 +1,14 @@
+create or replace view aggView8764599618213760774 as select person_id as v2, MIN(name) as v51 from aka_name as an group by person_id;
+create or replace view aggJoin4560591252175790198 as select id as v2, name as v29, v51 from name as n, aggView8764599618213760774 where n.id=aggView8764599618213760774.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView2377132267724913624 as select v2, MIN(v51) as v51 from aggJoin4560591252175790198 group by v2;
+create or replace view aggJoin8171547759347301033 as select movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView2377132267724913624 where ci.person_id=aggView2377132267724913624.v2 and note= '(voice: English version)';
+create or replace view aggView5565757772341025794 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin1950717269223572502 as select movie_id as v11, note as v27 from movie_companies as mc, aggView5565757772341025794 where mc.company_id=aggView5565757772341025794.v25 and ((note LIKE '%(2006)%') OR (note LIKE '%(2007)%')) and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView7318219188647378673 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin8697709508746393691 as select v11, v13, v51 from aggJoin8171547759347301033 join aggView7318219188647378673 using(v15);
+create or replace view aggView9064067824416730772 as select v11 from aggJoin1950717269223572502 group by v11;
+create or replace view aggJoin1742698445351792970 as select v11, v13, v51 as v51 from aggJoin8697709508746393691 join aggView9064067824416730772 using(v11);
+create or replace view aggView4911009586592827976 as select v11, MIN(v51) as v51 from aggJoin1742698445351792970 group by v11;
+create or replace view aggJoin8929730040281139344 as select title as v40, v51 from title as t, aggView4911009586592827976 where t.id=aggView4911009586592827976.v11 and production_year<=2007 and ((title LIKE 'One Piece%') OR (title LIKE 'Dragon Ball Z%')) and production_year>=2006;
+create or replace view res as select MIN(v51) as v51, MIN(v40) as v52 from aggJoin8929730040281139344;
+select sum(v51+v52) from res;

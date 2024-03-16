@@ -1,0 +1,10 @@
+create or replace view aggView6475259859492311362 as select id as v14, title as v27 from title as t where production_year>2005;
+create or replace view aggJoin744934792137303773 as select movie_id as v14, info_type_id as v1, info as v9, v27 from movie_info_idx as mi_idx, aggView6475259859492311362 where mi_idx.movie_id=aggView6475259859492311362.v14 and info>'5.0';
+create or replace view aggView5958927469341658546 as select id as v3 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin5940493921672795776 as select movie_id as v14 from movie_keyword as mk, aggView5958927469341658546 where mk.keyword_id=aggView5958927469341658546.v3;
+create or replace view aggView5024042615534117217 as select v14 from aggJoin5940493921672795776 group by v14;
+create or replace view aggJoin4212208818307453788 as select v1, v9, v27 as v27 from aggJoin744934792137303773 join aggView5024042615534117217 using(v14);
+create or replace view aggView8326874920105658351 as select v1, MIN(v27) as v27, MIN(v9) as v26 from aggJoin4212208818307453788 group by v1;
+create or replace view aggJoin8646366138756605500 as select v27, v26 from info_type as it, aggView8326874920105658351 where it.id=aggView8326874920105658351.v1 and info= 'rating';
+create or replace view res as select MIN(v26) as v26, MIN(v27) as v27 from aggJoin8646366138756605500;
+select sum(v26+v27) from res;

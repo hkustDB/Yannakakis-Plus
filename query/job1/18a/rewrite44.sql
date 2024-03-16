@@ -1,0 +1,14 @@
+create or replace view aggView3339369175123321926 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin1063962739671459684 as select movie_id as v31, info as v15 from movie_info as mi, aggView3339369175123321926 where mi.info_type_id=aggView3339369175123321926.v8;
+create or replace view aggView5471746046399490047 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin1569466648228139438 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView5471746046399490047 where mi_idx.info_type_id=aggView5471746046399490047.v10;
+create or replace view aggView1899871816804870003 as select v31, MIN(v20) as v44 from aggJoin1569466648228139438 group by v31;
+create or replace view aggJoin9162383797861072381 as select person_id as v22, movie_id as v31, note as v5, v44 from cast_info as ci, aggView1899871816804870003 where ci.movie_id=aggView1899871816804870003.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView4809450911834331883 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin9078757583472608309 as select v31, v5, v44 from aggJoin9162383797861072381 join aggView4809450911834331883 using(v22);
+create or replace view aggView3918784223478945278 as select v31, MIN(v44) as v44 from aggJoin9078757583472608309 group by v31;
+create or replace view aggJoin2688102982182028517 as select id as v31, title as v32, v44 from title as t, aggView3918784223478945278 where t.id=aggView3918784223478945278.v31;
+create or replace view aggView7005414918635864685 as select v31, MIN(v44) as v44, MIN(v32) as v45 from aggJoin2688102982182028517 group by v31;
+create or replace view aggJoin4442306510321014387 as select v15, v44, v45 from aggJoin1063962739671459684 join aggView7005414918635864685 using(v31);
+create or replace view res as select MIN(v15) as v43, MIN(v44) as v44, MIN(v45) as v45 from aggJoin4442306510321014387;
+select sum(v43+v44+v45) from res;

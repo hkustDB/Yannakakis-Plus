@@ -17,8 +17,7 @@ WHERE (an.name LIKE '%a%'
                   'featured in')
   AND n.name_pcode_cf BETWEEN 'A' AND 'F'
   AND (n.gender='m'
-       OR (n.gender = 'f'
-           AND n.name LIKE 'A%'))
+       OR AND n.name LIKE 'A%')
   AND t.production_year BETWEEN 1980 AND 2010
   AND n.id = an.person_id
   AND n.id = pi.person_id

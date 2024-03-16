@@ -1,0 +1,14 @@
+create or replace view aggView5269273674441078689 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin7144828157815448406 as select movie_id as v31, info_type_id as v8, info as v15, v45 from movie_info as mi, aggView5269273674441078689 where mi.movie_id=aggView5269273674441078689.v31;
+create or replace view aggView5634475961657061398 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin1962742862643081249 as select v31, v15, v45 from aggJoin7144828157815448406 join aggView5634475961657061398 using(v8);
+create or replace view aggView1276024939097947623 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin8812577141396660029 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView1276024939097947623 where mi_idx.info_type_id=aggView1276024939097947623.v10;
+create or replace view aggView7706301196793701437 as select v31, MIN(v20) as v44 from aggJoin8812577141396660029 group by v31;
+create or replace view aggJoin8910063810770386847 as select v31, v15, v45 as v45, v44 from aggJoin1962742862643081249 join aggView7706301196793701437 using(v31);
+create or replace view aggView7000820647007588347 as select v31, MIN(v45) as v45, MIN(v44) as v44, MIN(v15) as v43 from aggJoin8910063810770386847 group by v31;
+create or replace view aggJoin646041941915590649 as select person_id as v22, note as v5, v45, v44, v43 from cast_info as ci, aggView7000820647007588347 where ci.movie_id=aggView7000820647007588347.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView5962469168791730097 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin1349342508964098434 as select v5, v45, v44, v43 from aggJoin646041941915590649 join aggView5962469168791730097 using(v22);
+create or replace view res as select MIN(v43) as v43, MIN(v44) as v44, MIN(v45) as v45 from aggJoin1349342508964098434;
+select sum(v43+v44+v45) from res;
