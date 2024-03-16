@@ -316,7 +316,7 @@ if __name__ == '__main__':
     globalVar.set_value('BASE_PATH', 'query/job2/33a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
-    '''
+    
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -327,7 +327,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    '''
+    
     start = time.time()
     optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation

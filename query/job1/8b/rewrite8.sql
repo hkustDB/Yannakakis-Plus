@@ -1,0 +1,13 @@
+create or replace view aggView991526335025911851 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin7662975005910190528 as select person_id as v2, movie_id as v11, note as v13 from cast_info as ci, aggView991526335025911851 where ci.role_id=aggView991526335025911851.v15 and note= '(voice: English version)';
+create or replace view aggView3993309350123619947 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin53907992049201677 as select movie_id as v11, note as v27 from movie_companies as mc, aggView3993309350123619947 where mc.company_id=aggView3993309350123619947.v25 and ((note LIKE '%(2006)%') OR (note LIKE '%(2007)%')) and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView8577590820858909695 as select v11 from aggJoin53907992049201677 group by v11;
+create or replace view aggJoin3754745280737909085 as select id as v11, title as v40 from title as t, aggView8577590820858909695 where t.id=aggView8577590820858909695.v11 and production_year<=2007 and ((title LIKE 'One Piece%') OR (title LIKE 'Dragon Ball Z%')) and production_year>=2006;
+create or replace view aggView8661303031682654285 as select v11, MIN(v40) as v52 from aggJoin3754745280737909085 group by v11;
+create or replace view aggJoin1392276809040205231 as select v2, v52 from aggJoin7662975005910190528 join aggView8661303031682654285 using(v11);
+create or replace view aggView2803807878839252956 as select v2, MIN(v52) as v52 from aggJoin1392276809040205231 group by v2;
+create or replace view aggJoin6779796928259059156 as select id as v2, v52 from name as n, aggView2803807878839252956 where n.id=aggView2803807878839252956.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView8090320588391564020 as select v2, MIN(v52) as v52 from aggJoin6779796928259059156 group by v2;
+create or replace view aggJoin6486878168355712307 as select name as v3, v52 from aka_name as an, aggView8090320588391564020 where an.person_id=aggView8090320588391564020.v2;
+select MIN(v3) as v51,MIN(v52) as v52 from aggJoin6486878168355712307;

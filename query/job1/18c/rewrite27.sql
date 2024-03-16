@@ -1,0 +1,13 @@
+create or replace view aggView5402257983188251652 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin7459977502088094160 as select movie_id as v31, info as v15 from movie_info as mi, aggView5402257983188251652 where mi.info_type_id=aggView5402257983188251652.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView8607239685746130605 as select v31, MIN(v15) as v43 from aggJoin7459977502088094160 group by v31;
+create or replace view aggJoin3258329275474750779 as select person_id as v22, movie_id as v31, note as v5, v43 from cast_info as ci, aggView8607239685746130605 where ci.movie_id=aggView8607239685746130605.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView9187654670197614221 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin1736162815037539391 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView9187654670197614221 where mi_idx.info_type_id=aggView9187654670197614221.v10;
+create or replace view aggView7798701583701808635 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin5345606934466926387 as select v31, v5, v43 from aggJoin3258329275474750779 join aggView7798701583701808635 using(v22);
+create or replace view aggView2770186094760148737 as select v31, MIN(v43) as v43 from aggJoin5345606934466926387 group by v31;
+create or replace view aggJoin2884460738179831011 as select v31, v20, v43 from aggJoin1736162815037539391 join aggView2770186094760148737 using(v31);
+create or replace view aggView6698094113119183884 as select v31, MIN(v43) as v43, MIN(v20) as v44 from aggJoin2884460738179831011 group by v31;
+create or replace view aggJoin6757252868152869120 as select title as v32, v43, v44 from title as t, aggView6698094113119183884 where t.id=aggView6698094113119183884.v31;
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v32) as v45 from aggJoin6757252868152869120;
