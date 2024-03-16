@@ -1,0 +1,13 @@
+create or replace view aggView6108109493443435661 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin26746472140298895 as select movie_id as v11, company_id as v25, note as v27, v52 from movie_companies as mc, aggView6108109493443435661 where mc.movie_id=aggView6108109493443435661.v11 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView7202390693750920376 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin6566075351160131493 as select v11, v27, v52 from aggJoin26746472140298895 join aggView7202390693750920376 using(v25);
+create or replace view aggView8909817325607115672 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin7915586372456155819 as select person_id as v2, movie_id as v11, note as v13 from cast_info as ci, aggView8909817325607115672 where ci.role_id=aggView8909817325607115672.v15 and note= '(voice: English version)';
+create or replace view aggView8431555902321938213 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin2566606371012401991 as select person_id as v2, name as v3 from aka_name as an1, aggView8431555902321938213 where an1.person_id=aggView8431555902321938213.v2;
+create or replace view aggView5394532149366325046 as select v11, MIN(v52) as v52 from aggJoin6566075351160131493 group by v11;
+create or replace view aggJoin5759942378065061065 as select v2, v13, v52 from aggJoin7915586372456155819 join aggView5394532149366325046 using(v11);
+create or replace view aggView7508496056840763317 as select v2, MIN(v52) as v52 from aggJoin5759942378065061065 group by v2;
+create or replace view aggJoin8621320912177539869 as select v3, v52 from aggJoin2566606371012401991 join aggView7508496056840763317 using(v2);
+select MIN(v3) as v51,MIN(v52) as v52 from aggJoin8621320912177539869;

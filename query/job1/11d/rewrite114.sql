@@ -1,0 +1,15 @@
+create or replace view aggView8516063730569547414 as select id as v17, name as v39 from company_name as cn where country_code<> '[pl]';
+create or replace view aggJoin4074303162377706933 as select movie_id as v24, company_type_id as v18, note as v19, v39 from movie_companies as mc, aggView8516063730569547414 where mc.company_id=aggView8516063730569547414.v17;
+create or replace view aggView8863702316155421858 as select id as v24, title as v41 from title as t where production_year>1950;
+create or replace view aggJoin2151813133361896687 as select v24, v18, v19, v39 from aggJoin4074303162377706933 join aggView8863702316155421858 using(v24);
+create or replace view aggView3272969654845658310 as select id as v22 from keyword as k where keyword IN ('sequel','revenge','based-on-novel');
+create or replace view aggJoin5713021129198254626 as select movie_id as v24 from movie_keyword as mk, aggView3272969654845658310 where mk.keyword_id=aggView3272969654845658310.v22;
+create or replace view aggView6165996742396966093 as select v24 from aggJoin5713021129198254626 group by v24;
+create or replace view aggJoin6227744170646225815 as select movie_id as v24, link_type_id as v13 from movie_link as ml, aggView6165996742396966093 where ml.movie_id=aggView6165996742396966093.v24;
+create or replace view aggView1315318529301228093 as select id as v13 from link_type as lt;
+create or replace view aggJoin4176482134678519599 as select v24 from aggJoin6227744170646225815 join aggView1315318529301228093 using(v13);
+create or replace view aggView4714459403760662756 as select v24 from aggJoin4176482134678519599 group by v24;
+create or replace view aggJoin3039391348581353078 as select v18, v19, v39 as v39 from aggJoin2151813133361896687 join aggView4714459403760662756 using(v24);
+create or replace view aggView3892105330401290574 as select id as v18 from company_type as ct where kind<> 'production companies';
+create or replace view aggJoin2414759380884563659 as select v19, v39 from aggJoin3039391348581353078 join aggView3892105330401290574 using(v18);
+select MIN(v39) as v39,MIN(v19) as v40,MIN(v41) as v41 from aggJoin2414759380884563659;
