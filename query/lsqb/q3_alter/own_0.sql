@@ -1,0 +1,3 @@
+create or replace view cpA as select PersonId from Person, City where isLocatedIn_CityId=CityId;
+create or replace view bag1 as select cpB.PersonId as cpB_PersonId from cpA, cpA as cpB, Person_knows_Person as pkp1 where pkp1.Person1Id=cpA.PersonId and pkp1.Person2Id=cpB.PersonId;
+select count(*) from cpA as cpC, bag1, Person_knows_Person as pkp2, Person_knows_Person as pkp3 where cpC.PersonId=pkp3.Person1Id and cpC.PersonId=pkp2.Person2Id and pkp2.Person1Id=bag1.cpB_PersonId;

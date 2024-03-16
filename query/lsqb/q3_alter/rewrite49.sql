@@ -1,0 +1,17 @@
+create or replace view aggView1399638258340891988 as select Person1Id as v16, COUNT(*) as annot from Person_knows_Person as pkp3 group by Person1Id;
+create or replace view aggJoin2525679709991578369 as select PersonId as v16, isLocatedIn_CityId as v12, annot from Person as PersonC, aggView1399638258340891988 where PersonC.PersonId=aggView1399638258340891988.v16;
+create or replace view aggView5283006530357955455 as select CityId as v10, COUNT(*) as annot from City as CityB group by CityId;
+create or replace view aggJoin7162897341268570514 as select PersonId as v14, annot from Person as PersonB, aggView5283006530357955455 where PersonB.isLocatedIn_CityId=aggView5283006530357955455.v10;
+create or replace view aggView8990219067469711182 as select v14, SUM(annot) as annot from aggJoin7162897341268570514 group by v14;
+create or replace view aggJoin5524736301175847442 as select Person1Id as v13, Person2Id as v14, annot from Person_knows_Person as pkp1, aggView8990219067469711182 where pkp1.Person2Id=aggView8990219067469711182.v14;
+create or replace view aggView5252427021086112083 as select CityId as v8, COUNT(*) as annot from City as CityA group by CityId;
+create or replace view aggJoin8260420586968916574 as select PersonId as v13, annot from Person as PersonA, aggView5252427021086112083 where PersonA.isLocatedIn_CityId=aggView5252427021086112083.v8;
+create or replace view aggView7662538691116661540 as select v13, SUM(annot) as annot from aggJoin8260420586968916574 group by v13;
+create or replace view aggJoin5907098337528757284 as select v14, aggJoin5524736301175847442.annot * aggView7662538691116661540.annot as annot from aggJoin5524736301175847442 join aggView7662538691116661540 using(v13);
+create or replace view aggView7921166414844829892 as select v14, SUM(annot) as annot from aggJoin5907098337528757284 group by v14;
+create or replace view aggJoin7450736003479257766 as select Person2Id as v16, annot from Person_knows_Person as pkp2, aggView7921166414844829892 where pkp2.Person1Id=aggView7921166414844829892.v14;
+create or replace view aggView8189776077783690592 as select CityId as v12, COUNT(*) as annot from City as CityC group by CityId;
+create or replace view aggJoin1420053998512999760 as select v16, aggJoin2525679709991578369.annot * aggView8189776077783690592.annot as annot from aggJoin2525679709991578369 join aggView8189776077783690592 using(v12);
+create or replace view aggView5856871237856735314 as select v16, SUM(annot) as annot from aggJoin1420053998512999760 group by v16;
+create or replace view aggJoin7699599935609648304 as select aggJoin7450736003479257766.annot * aggView5856871237856735314.annot as annot from aggJoin7450736003479257766 join aggView5856871237856735314 using(v16);
+select SUM(annot) as v19 from aggJoin7699599935609648304;

@@ -4,3 +4,5 @@ querySum.sql
 graph_db*
 tpch_db*
 lsqb_db*
+job_db*
+query/extra/*

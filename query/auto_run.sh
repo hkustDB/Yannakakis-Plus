@@ -65,7 +65,7 @@ do
                     echo ") TO '/dev/null' (DELIMITER ',');" >> ${SUBMIT_QUERY}
                     echo "Start DuckDB Task at ${QUERY}"
                     current_task=1
-                    while [[ ${current_task} -le 3 ]]
+                    while [[ ${current_task} -le 5 ]]
                     do
                         echo "Current Task: ${current_task}"
                         OUT_FILE="${CUR_PATH}/output.txt"
@@ -101,7 +101,7 @@ do
                     echo ") TO '/dev/null' (DELIMITER ',');" >> ${SUBMIT_QUERY_2}
                     echo "Start DuckDB Task at ${QUERY}"
                     current_task=1
-                    while [[ ${current_task} -le 3 ]]
+                    while [[ ${current_task} -le 5 ]]
                     do
                         echo "Current Task: ${current_task}"
                         OUT_FILE="${CUR_PATH}/output.txt"
