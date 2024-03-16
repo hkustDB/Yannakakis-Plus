@@ -165,7 +165,11 @@ def connect(base: int, mode: int, type: GenType):
     query_file = open(BASE_PATH + QUERY_NAME)
     body['query'] = query_file.read()
     query_file.close()
-    response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&desc=false", headers=headers, json=body).json()['data']
+    try:
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout", headers=headers, json=body).json()['data']
+    except:
+        traceback.print_exc()
+        print("Error query: " + QUERY_NAME)
     # 1. 
     table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
     # 2. parse jointree
@@ -309,7 +313,7 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job/29a/')
+    globalVar.set_value('BASE_PATH', 'query/job2/33a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
     '''
