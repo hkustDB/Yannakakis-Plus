@@ -1,0 +1,14 @@
+create or replace view aggView2229419092913853576 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin9123115880360868918 as select id as v2, name as v29, v51 from name as n1, aggView2229419092913853576 where n1.id=aggView2229419092913853576.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView7632219115967275790 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin4825337192799087965 as select person_id as v2, movie_id as v11, note as v13 from cast_info as ci, aggView7632219115967275790 where ci.role_id=aggView7632219115967275790.v15 and note= '(voice: English version)';
+create or replace view aggView4571314086469954359 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin2341456890781204649 as select movie_id as v11, note as v27 from movie_companies as mc, aggView4571314086469954359 where mc.company_id=aggView4571314086469954359.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView3478701517329559563 as select v11 from aggJoin2341456890781204649 group by v11;
+create or replace view aggJoin5635860606667603944 as select v2, v11, v13 from aggJoin4825337192799087965 join aggView3478701517329559563 using(v11);
+create or replace view aggView2434189422750728064 as select v2, MIN(v51) as v51 from aggJoin9123115880360868918 group by v2;
+create or replace view aggJoin8299761725699630451 as select v11, v13, v51 from aggJoin5635860606667603944 join aggView2434189422750728064 using(v2);
+create or replace view aggView826587607597156175 as select v11, MIN(v51) as v51 from aggJoin8299761725699630451 group by v11;
+create or replace view aggJoin6685453628337935541 as select title as v40, v51 from title as t, aggView826587607597156175 where t.id=aggView826587607597156175.v11;
+create or replace view res as select MIN(v51) as v51, MIN(v40) as v52 from aggJoin6685453628337935541;
+select sum(v51+v52) from res;

@@ -1,0 +1,11 @@
+create or replace view bag4032 as select g6.src as v10, g6.dst as v12, g5.src as v8 from Graph as g6, Graph as g5, Graph as g4 where g6.src=g5.dst and g5.src=g4.dst and g4.src=g6.dst;
+create or replace view orderView1331602484956834901 as select v10, v12, v8, ((v12 + v8) + v10) as oriRight, row_number() over (partition by v12 order by ((v12 + v8) + v10) DESC) as rn from bag4032;
+create or replace view minView6946212655081560657 as select v12, oriRight as mfR8035959814329077067 from orderView1331602484956834901 where rn = 1;
+create or replace view joinView5166151846611528038 as select src as v2, dst as v12, mfR8035959814329077067 from Graph AS g7, minView6946212655081560657 where g7.dst=minView6946212655081560657.v12;
+create or replace view bag4031 as select g2.src as v2, g3.src as v4, g3.dst as v6 from Graph as g3, Graph as g2, Graph as g1 where g3.src=g2.dst and g2.src=g1.dst and g1.src=g3.dst;
+create or replace view orderView4561897485221595759 as select v2, v4, v6, ((v6 + v2) + v4) as oriLeft, row_number() over (partition by v2 order by ((v6 + v2) + v4)) as rn from bag4031;
+create or replace view minView5269919821592592126 as select v2, oriLeft as mfL8286790202450401327 from orderView4561897485221595759 where rn = 1;
+create or replace view joinView1250468602611385170 as select v2, v12, mfR8035959814329077067, mfL8286790202450401327 from joinView5166151846611528038 join minView5269919821592592126 using(v2) where mfL8286790202450401327<=mfR8035959814329077067;
+create or replace view pkJoin2289727244697158135 as select v12, v4, v2, v6, mfR8035959814329077067 from joinView1250468602611385170 join bag4031 using(v2) where oriLeft<=mfR8035959814329077067 and rn = 1;
+create or replace view pkJoin8566376327946746275 as select v4, v10, v2, v6, v8, v12 from pkJoin2289727244697158135 join bag4032 using(v12) where ((v6 + v2) + v4)<=oriRight and rn = 1;
+select sum(v6+v2+v2+v4+v4+v6+v12+v8+v8+v10+v10+v12+v2+v12) from pkJoin8566376327946746275;
