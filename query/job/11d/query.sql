@@ -9,8 +9,8 @@ FROM company_name AS cn,
      movie_keyword AS mk,
      movie_link AS ml,
      title AS t
-WHERE cn.country_code !='[pl]'
-  AND ct.kind != 'production companies'
+WHERE cn.country_code <>'[pl]'
+  AND ct.kind <> 'production companies'
   AND k.keyword IN ('sequel',
                     'revenge',
                     'based-on-novel')
@@ -25,4 +25,3 @@ WHERE cn.country_code !='[pl]'
   AND ml.movie_id = mk.movie_id
   AND ml.movie_id = mc.movie_id
   AND mk.movie_id = mc.movie_id
-

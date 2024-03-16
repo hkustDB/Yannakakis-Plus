@@ -1000,7 +1000,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                             selectName.extend(['(' + func.originForm + ')' + '* annot' * finalAnnotFlag + ' as ' + out for _ in range(outputVariables.count(out))])
                         else:
                             selectName.extend(['(' + func.originForm + ')' + ' as ' + out for _ in range(outputVariables.count(out))])
-                elif not len(jointree.subset): # free-connex but subset = 0 -> len(group by) != 0
+                elif not len(jointree.subset): # free-connex but subset = 0 -> len(group by) == 0
                     if 'CASE' in func.formular:
                         _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
                         caseCond = caseCond[1:-1]
