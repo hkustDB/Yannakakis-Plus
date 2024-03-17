@@ -1,0 +1,13 @@
+create or replace view aggView644961865350186935 as select id as v31, title as v45 from title as t where production_year>=2008 and production_year<=2014;
+create or replace view aggJoin2200232129189541952 as select movie_id as v31, info_type_id as v10, info as v20, v45 from movie_info_idx as mi_idx, aggView644961865350186935 where mi_idx.movie_id=aggView644961865350186935.v31 and info>'8.0';
+create or replace view aggView7497216136415360275 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin7379920094904233758 as select movie_id as v31 from cast_info as ci, aggView7497216136415360275 where ci.person_id=aggView7497216136415360275.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView232822321828554789 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin5496921404928367855 as select movie_id as v31, info as v15 from movie_info as mi, aggView232822321828554789 where mi.info_type_id=aggView232822321828554789.v8 and info IN ('Horror','Thriller');
+create or replace view aggView587939434793401964 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin2248472946674263154 as select v31, v20, v45 from aggJoin2200232129189541952 join aggView587939434793401964 using(v10);
+create or replace view aggView1241023061593465169 as select v31 from aggJoin7379920094904233758 group by v31;
+create or replace view aggJoin753390569935222503 as select v31, v20, v45 as v45 from aggJoin2248472946674263154 join aggView1241023061593465169 using(v31);
+create or replace view aggView3567545926521652157 as select v31, MIN(v45) as v45, MIN(v20) as v44 from aggJoin753390569935222503 group by v31;
+create or replace view aggJoin331886192066143550 as select v15, v45, v44 from aggJoin5496921404928367855 join aggView3567545926521652157 using(v31);
+select MIN(v15) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin331886192066143550;

@@ -1,0 +1,13 @@
+create or replace view aggView6276557654445098441 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin4494949651754188661 as select person_id as v22, movie_id as v31, note as v5, v45 from cast_info as ci, aggView6276557654445098441 where ci.movie_id=aggView6276557654445098441.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView4724136053350411100 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin5491119747754550036 as select movie_id as v31, info as v15 from movie_info as mi, aggView4724136053350411100 where mi.info_type_id=aggView4724136053350411100.v8;
+create or replace view aggView6992862481444629111 as select v31, MIN(v15) as v43 from aggJoin5491119747754550036 group by v31;
+create or replace view aggJoin8969893349799502696 as select v22, v31, v5, v45 as v45, v43 from aggJoin4494949651754188661 join aggView6992862481444629111 using(v31);
+create or replace view aggView7415805762622394283 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin1514661097872373724 as select v31, v5, v45, v43 from aggJoin8969893349799502696 join aggView7415805762622394283 using(v22);
+create or replace view aggView3029350472923696026 as select v31, MIN(v45) as v45, MIN(v43) as v43 from aggJoin1514661097872373724 group by v31;
+create or replace view aggJoin2919464202455776218 as select info_type_id as v10, info as v20, v45, v43 from movie_info_idx as mi_idx, aggView3029350472923696026 where mi_idx.movie_id=aggView3029350472923696026.v31;
+create or replace view aggView763345905782838960 as select v10, MIN(v45) as v45, MIN(v43) as v43, MIN(v20) as v44 from aggJoin2919464202455776218 group by v10;
+create or replace view aggJoin1766699536408631366 as select info as v11, v45, v43, v44 from info_type as it2, aggView763345905782838960 where it2.id=aggView763345905782838960.v10 and info= 'votes';
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin1766699536408631366;

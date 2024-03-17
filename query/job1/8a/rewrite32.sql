@@ -1,0 +1,13 @@
+create or replace view aggView6844326726114741179 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin1987760829892473918 as select movie_id as v11, company_id as v25, note as v27, v52 from movie_companies as mc, aggView6844326726114741179 where mc.movie_id=aggView6844326726114741179.v11 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView6831980159281048908 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin5046518125581410191 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView6831980159281048908 where ci.person_id=aggView6831980159281048908.v2 and note= '(voice: English version)';
+create or replace view aggView653184495430584366 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin5519291409425091610 as select v11, v27, v52 from aggJoin1987760829892473918 join aggView653184495430584366 using(v25);
+create or replace view aggView4768652155863770393 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin644071723878216240 as select v2, v11, v13, v51 from aggJoin5046518125581410191 join aggView4768652155863770393 using(v15);
+create or replace view aggView845442636635797415 as select v11, MIN(v52) as v52 from aggJoin5519291409425091610 group by v11;
+create or replace view aggJoin6635821884461030220 as select v2, v13, v51 as v51, v52 from aggJoin644071723878216240 join aggView845442636635797415 using(v11);
+create or replace view aggView4118697813168931551 as select v2, MIN(v51) as v51, MIN(v52) as v52 from aggJoin6635821884461030220 group by v2;
+create or replace view aggJoin8386332100410370625 as select name as v29, v51, v52 from name as n1, aggView4118697813168931551 where n1.id=aggView4118697813168931551.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+select MIN(v51) as v51,MIN(v52) as v52 from aggJoin8386332100410370625;
