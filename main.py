@@ -166,7 +166,8 @@ def connect(base: int, mode: int, type: GenType):
     body['query'] = query_file.read()
     query_file.close()
     try:
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50", headers=headers, json=body).json()['data']
+        # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
