@@ -569,7 +569,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     selectAttr.append(agg + ' * ' + parentNode.JoinResView.viewName + '.annot')
                     selectAttrAlias.append(agg)
                 elif agg in Agg.allAggAlias:
-                    selectAttr.append(agg)
+                    selectAttr.append('')
                     selectAttrAlias.append(agg)
                 elif agg not in selectAttrAlias:
                     # FIXME: just pass on alias for later aggregation for special case
@@ -610,6 +610,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                     # just pass on alias for later aggregation
                     selectAttr.append('')
                     selectAttrAlias.append(agg)
+        else:
+            selectAttrAlias.extend(aggPass2Join)
 
     elif parentNode.relationType != RelationType.TableScanRelation:
         selectAttrAlias = parentNode.cols.copy()

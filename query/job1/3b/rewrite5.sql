@@ -1,8 +1,8 @@
-create or replace view aggView5366784521917327511 as select id as v12, title as v24 from title as t where production_year>2010;
-create or replace view aggJoin2508966762641392373 as select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView5366784521917327511 where mk.movie_id=aggView5366784521917327511.v12;
-create or replace view aggView6147301575223633505 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
-create or replace view aggJoin5550975631470247953 as select v1, v24 as v24 from aggJoin2508966762641392373 join aggView6147301575223633505 using(v12);
-create or replace view aggView1658139867321706356 as select v1, MIN(v24) as v24 from aggJoin5550975631470247953 group by v1;
-create or replace view aggJoin6900929691221711793 as select keyword as v2, v24 from keyword as k, aggView1658139867321706356 where k.id=aggView1658139867321706356.v1 and keyword LIKE '%sequel%';
-create or replace view res as select MIN(v24) as v24 from aggJoin6900929691221711793;
+create or replace view aggView7058238463283192075 as select id as v12, title as v24 from title as t where production_year>2010;
+create or replace view aggJoin5825732242735738447 as select movie_id as v12, info as v7, v24 from movie_info as mi, aggView7058238463283192075 where mi.movie_id=aggView7058238463283192075.v12 and info= 'Bulgaria';
+create or replace view aggView3745130749341891025 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin4832512760788029824 as select movie_id as v12 from movie_keyword as mk, aggView3745130749341891025 where mk.keyword_id=aggView3745130749341891025.v1;
+create or replace view aggView2555422829880926662 as select v12 from aggJoin4832512760788029824 group by v12;
+create or replace view aggJoin1338092620561397863 as select v7, v24 as v24 from aggJoin5825732242735738447 join aggView2555422829880926662 using(v12);
+create or replace view res as select MIN(v24) as v24 from aggJoin1338092620561397863;
 select sum(v24) from res;
