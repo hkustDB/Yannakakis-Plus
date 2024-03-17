@@ -1,8 +1,8 @@
-create or replace view aggView5248625958622993958 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
-create or replace view aggJoin6619578995335779499 as select movie_id as v12 from movie_keyword as mk, aggView5248625958622993958 where mk.keyword_id=aggView5248625958622993958.v1;
-create or replace view aggView1546715653651591046 as select v12 from aggJoin6619578995335779499 group by v12;
-create or replace view aggJoin5752648342759404815 as select id as v12, title as v13 from title as t, aggView1546715653651591046 where t.id=aggView1546715653651591046.v12 and production_year>2010;
-create or replace view aggView4008381639735970024 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
-create or replace view aggJoin5646914428583061327 as select v13 from aggJoin5752648342759404815 join aggView4008381639735970024 using(v12);
-create or replace view res as select MIN(v13) as v24 from aggJoin5646914428583061327;
+create or replace view aggView8387371842546616865 as select id as v12, title as v24 from title as t where production_year>2010;
+create or replace view aggJoin506335641656422490 as select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView8387371842546616865 where mk.movie_id=aggView8387371842546616865.v12;
+create or replace view aggView1486983218008784272 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
+create or replace view aggJoin8519751901517517156 as select v1, v24 as v24 from aggJoin506335641656422490 join aggView1486983218008784272 using(v12);
+create or replace view aggView463327341623015403 as select v1, MIN(v24) as v24 from aggJoin8519751901517517156 group by v1;
+create or replace view aggJoin2956373591834156068 as select keyword as v2, v24 from keyword as k, aggView463327341623015403 where k.id=aggView463327341623015403.v1 and keyword LIKE '%sequel%';
+create or replace view res as select MIN(v24) as v24 from aggJoin2956373591834156068;
 select sum(v24) from res;
