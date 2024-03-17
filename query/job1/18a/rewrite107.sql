@@ -1,0 +1,13 @@
+create or replace view aggView4252869645093538988 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin2335939361638361581 as select movie_id as v31, info as v15 from movie_info as mi, aggView4252869645093538988 where mi.info_type_id=aggView4252869645093538988.v8;
+create or replace view aggView5749708432576426051 as select v31, MIN(v15) as v43 from aggJoin2335939361638361581 group by v31;
+create or replace view aggJoin2712876324773396362 as select id as v31, title as v32, v43 from title as t, aggView5749708432576426051 where t.id=aggView5749708432576426051.v31;
+create or replace view aggView5049092133235624992 as select v31, MIN(v43) as v43, MIN(v32) as v45 from aggJoin2712876324773396362 group by v31;
+create or replace view aggJoin1568433673353285543 as select movie_id as v31, info_type_id as v10, info as v20, v43, v45 from movie_info_idx as mi_idx, aggView5049092133235624992 where mi_idx.movie_id=aggView5049092133235624992.v31;
+create or replace view aggView7843386908122816907 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin1285874496138679125 as select v31, v20, v43, v45 from aggJoin1568433673353285543 join aggView7843386908122816907 using(v10);
+create or replace view aggView3923235731590013965 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin7017624271699670735 as select movie_id as v31, note as v5 from cast_info as ci, aggView3923235731590013965 where ci.person_id=aggView3923235731590013965.v22 and note IN ('(producer)','(executive producer)');
+create or replace view aggView4165080307712341524 as select v31 from aggJoin7017624271699670735 group by v31;
+create or replace view aggJoin7720425224880114377 as select v20, v43 as v43, v45 as v45 from aggJoin1285874496138679125 join aggView4165080307712341524 using(v31);
+select MIN(v43) as v43,MIN(v20) as v44,MIN(v45) as v45 from aggJoin7720425224880114377;
