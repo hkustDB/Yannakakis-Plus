@@ -1,8 +1,7 @@
-create or replace view aggView984318477582561825 as select id as v12, title as v24 from title as t where production_year>2010;
-create or replace view aggJoin8511664774005812465 as select movie_id as v12, info as v7, v24 from movie_info as mi, aggView984318477582561825 where mi.movie_id=aggView984318477582561825.v12 and info= 'Bulgaria';
-create or replace view aggView5899046346102595850 as select v12, MIN(v24) as v24 from aggJoin8511664774005812465 group by v12;
-create or replace view aggJoin4179191546806367660 as select keyword_id as v1, v24 from movie_keyword as mk, aggView5899046346102595850 where mk.movie_id=aggView5899046346102595850.v12;
-create or replace view aggView8290413106782505262 as select v1, MIN(v24) as v24 from aggJoin4179191546806367660 group by v1;
-create or replace view aggJoin2438714765538048357 as select keyword as v2, v24 from keyword as k, aggView8290413106782505262 where k.id=aggView8290413106782505262.v1 and keyword LIKE '%sequel%';
-create or replace view res as select MIN(v24) as v24 from aggJoin2438714765538048357;
-select sum(v24) from res;
+create or replace view aggView3043622330591691419 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin6180376463471073383 as select movie_id as v12 from movie_keyword as mk, aggView3043622330591691419 where mk.keyword_id=aggView3043622330591691419.v1;
+create or replace view aggView4028231746155103084 as select v12 from aggJoin6180376463471073383 group by v12;
+create or replace view aggJoin8627885726980442485 as select id as v12, title as v13 from title as t, aggView4028231746155103084 where t.id=aggView4028231746155103084.v12 and production_year>2010;
+create or replace view aggView5322831934113106259 as select v12, MIN(v13) as v24 from aggJoin8627885726980442485 group by v12;
+create or replace view aggJoin6222316271636818764 as select v24 from movie_info as mi, aggView5322831934113106259 where mi.movie_id=aggView5322831934113106259.v12 and info= 'Bulgaria';
+select MIN(v24) as v24 from aggJoin6222316271636818764;

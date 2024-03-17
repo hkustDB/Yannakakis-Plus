@@ -1,8 +1,7 @@
-create or replace view aggView5975746246490940734 as select movie_id as v12 from movie_info as mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German') group by movie_id;
-create or replace view aggJoin6106592494563270232 as select id as v12, title as v13 from title as t, aggView5975746246490940734 where t.id=aggView5975746246490940734.v12 and production_year>2005;
-create or replace view aggView6739948423715328702 as select v12, MIN(v13) as v24 from aggJoin6106592494563270232 group by v12;
-create or replace view aggJoin6356488731121126010 as select keyword_id as v1, v24 from movie_keyword as mk, aggView6739948423715328702 where mk.movie_id=aggView6739948423715328702.v12;
-create or replace view aggView1814574159668381303 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
-create or replace view aggJoin1637235041473140910 as select v24 from aggJoin6356488731121126010 join aggView1814574159668381303 using(v1);
-create or replace view res as select MIN(v24) as v24 from aggJoin1637235041473140910;
-select sum(v24) from res;
+create or replace view aggView7493066401119627959 as select id as v12, title as v24 from title as t where production_year>2005;
+create or replace view aggJoin2584188569479809111 as select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView7493066401119627959 where mk.movie_id=aggView7493066401119627959.v12;
+create or replace view aggView4008955059278777440 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin1794692595124712598 as select v12, v24 from aggJoin2584188569479809111 join aggView4008955059278777440 using(v1);
+create or replace view aggView5955372722928107145 as select v12, MIN(v24) as v24 from aggJoin1794692595124712598 group by v12;
+create or replace view aggJoin4160275569250401378 as select info as v7, v24 from movie_info as mi, aggView5955372722928107145 where mi.movie_id=aggView5955372722928107145.v12 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
+select MIN(v24) as v24 from aggJoin4160275569250401378;

@@ -1,8 +1,7 @@
-create or replace view aggView867621827807409276 as select id as v12, title as v24 from title as t where production_year>2010;
-create or replace view aggJoin3954541168482689336 as select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView867621827807409276 where mk.movie_id=aggView867621827807409276.v12;
-create or replace view aggView1349991976306517786 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
-create or replace view aggJoin1700169648575173878 as select v1, v24 as v24 from aggJoin3954541168482689336 join aggView1349991976306517786 using(v12);
-create or replace view aggView2372342364905622425 as select v1, MIN(v24) as v24 from aggJoin1700169648575173878 group by v1;
-create or replace view aggJoin3119980891746988218 as select keyword as v2, v24 from keyword as k, aggView2372342364905622425 where k.id=aggView2372342364905622425.v1 and keyword LIKE '%sequel%';
-create or replace view res as select MIN(v24) as v24 from aggJoin3119980891746988218;
-select sum(v24) from res;
+create or replace view aggView2630194412140258364 as select id as v12, title as v24 from title as t where production_year>2010;
+create or replace view aggJoin3922989126465398742 as select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView2630194412140258364 where mk.movie_id=aggView2630194412140258364.v12;
+create or replace view aggView1947598862031434369 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin1002046271428062740 as select v12, v24 from aggJoin3922989126465398742 join aggView1947598862031434369 using(v1);
+create or replace view aggView8637732122418460011 as select v12, MIN(v24) as v24 from aggJoin1002046271428062740 group by v12;
+create or replace view aggJoin2474277049635155180 as select info as v7, v24 from movie_info as mi, aggView8637732122418460011 where mi.movie_id=aggView8637732122418460011.v12 and info= 'Bulgaria';
+select MIN(v24) as v24 from aggJoin2474277049635155180;

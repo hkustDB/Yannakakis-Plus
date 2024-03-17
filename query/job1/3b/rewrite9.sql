@@ -1,8 +1,7 @@
-create or replace view aggView4320776618974930332 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
-create or replace view aggJoin2799948211716596347 as select id as v12, title as v13 from title as t, aggView4320776618974930332 where t.id=aggView4320776618974930332.v12 and production_year>2010;
-create or replace view aggView1889624193304828684 as select v12, MIN(v13) as v24 from aggJoin2799948211716596347 group by v12;
-create or replace view aggJoin3092244103586151719 as select keyword_id as v1, v24 from movie_keyword as mk, aggView1889624193304828684 where mk.movie_id=aggView1889624193304828684.v12;
-create or replace view aggView6399079127806335610 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
-create or replace view aggJoin6381370238978880320 as select v24 from aggJoin3092244103586151719 join aggView6399079127806335610 using(v1);
-create or replace view res as select MIN(v24) as v24 from aggJoin6381370238978880320;
-select sum(v24) from res;
+create or replace view aggView8730026486729789359 as select id as v12, title as v24 from title as t where production_year>2010;
+create or replace view aggJoin640539165065462618 as select movie_id as v12, info as v7, v24 from movie_info as mi, aggView8730026486729789359 where mi.movie_id=aggView8730026486729789359.v12 and info= 'Bulgaria';
+create or replace view aggView5817859862792046515 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin8711827084899904568 as select movie_id as v12 from movie_keyword as mk, aggView5817859862792046515 where mk.keyword_id=aggView5817859862792046515.v1;
+create or replace view aggView6610594034850401717 as select v12 from aggJoin8711827084899904568 group by v12;
+create or replace view aggJoin8290662304307541557 as select v7, v24 as v24 from aggJoin640539165065462618 join aggView6610594034850401717 using(v12);
+select MIN(v24) as v24 from aggJoin8290662304307541557;
