@@ -1,0 +1,13 @@
+create or replace view aggView2829103178679285908 as select id as v31, title as v45 from title as t where production_year>=2008 and production_year<=2014;
+create or replace view aggJoin7287187949326393273 as select movie_id as v31, info_type_id as v8, info as v15, v45 from movie_info as mi, aggView2829103178679285908 where mi.movie_id=aggView2829103178679285908.v31 and info IN ('Horror','Thriller');
+create or replace view aggView627175478871018167 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin3435299988313101995 as select movie_id as v31, note as v5 from cast_info as ci, aggView627175478871018167 where ci.person_id=aggView627175478871018167.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView5472497512471226809 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin568223886461629355 as select v31, v15, v45 from aggJoin7287187949326393273 join aggView5472497512471226809 using(v8);
+create or replace view aggView6242642018222304052 as select v31, MIN(v45) as v45, MIN(v15) as v43 from aggJoin568223886461629355 group by v31;
+create or replace view aggJoin4591647689381244415 as select v31, v5, v45, v43 from aggJoin3435299988313101995 join aggView6242642018222304052 using(v31);
+create or replace view aggView6083631270778704585 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin7472930505381993354 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView6083631270778704585 where mi_idx.info_type_id=aggView6083631270778704585.v10 and info>'8.0';
+create or replace view aggView6198781006593092496 as select v31, MIN(v20) as v44 from aggJoin7472930505381993354 group by v31;
+create or replace view aggJoin739166127744917750 as select v45 as v45, v43 as v43, v44 from aggJoin4591647689381244415 join aggView6198781006593092496 using(v31);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin739166127744917750;
