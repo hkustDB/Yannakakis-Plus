@@ -1,0 +1,13 @@
+create or replace view orderView8960512765798591286 as select src as v6, dst as v8, row_number() over (partition by src order by dst DESC) as rn from Graph as g4;
+create or replace view minView1707543492691931180 as select v6, v8 as mfR3743611573690944956 from orderView8960512765798591286 where rn = 1;
+create or replace view joinView6290154575221552664 as select src as v4, dst as v6, mfR3743611573690944956 from Graph AS g3, minView1707543492691931180 where g3.dst=minView1707543492691931180.v6;
+create or replace view orderView6251214491269222885 as select v4, v6, mfR3743611573690944956, row_number() over (partition by v4 order by mfR3743611573690944956 DESC) as rn from joinView6290154575221552664;
+create or replace view minView3414051676570365962 as select v4, mfR3743611573690944956 as mfR5477546232559876142 from orderView6251214491269222885 where rn = 1;
+create or replace view joinView5183257377331652425 as select src as v2, dst as v4, mfR5477546232559876142 from Graph AS g2, minView3414051676570365962 where g2.dst=minView3414051676570365962.v4;
+create or replace view orderView6947436191204978212 as select v2, v4, mfR5477546232559876142, row_number() over (partition by v2 order by mfR5477546232559876142 DESC) as rn from joinView5183257377331652425;
+create or replace view minView8515310714985328020 as select v2, mfR5477546232559876142 as mfR90487875286104144 from orderView6947436191204978212 where rn = 1;
+create or replace view joinView5225727947132870132 as select src as v1, dst as v2, mfR90487875286104144 from Graph AS g1, minView8515310714985328020 where g1.dst=minView8515310714985328020.v2 and src<mfR90487875286104144;
+create or replace view pkJoin6163766025425721977 as select v1, v2, v4, mfR5477546232559876142 from joinView5225727947132870132 join joinView5183257377331652425 using(v2) where v1<mfR5477546232559876142 and rn = 1;
+create or replace view pkJoin6973037015115493145 as select v6, v1, v4, v2, mfR3743611573690944956 from pkJoin6163766025425721977 join joinView6290154575221552664 using(v4) where v1<mfR3743611573690944956 and rn = 1;
+create or replace view pkJoin163961639809136881 as select v6, v8, v1, v4, v2 from pkJoin6973037015115493145, Graph where v1<dst and pkJoin6973037015115493145.v6=Graph.src and rn = 1;
+select sum(v1+v2+v4+v6+v8) from pkJoin163961639809136881;

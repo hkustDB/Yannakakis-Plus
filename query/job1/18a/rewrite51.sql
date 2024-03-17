@@ -1,0 +1,14 @@
+create or replace view aggView5331976591349606767 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin8614409549430834350 as select movie_id as v31, info as v15 from movie_info as mi, aggView5331976591349606767 where mi.info_type_id=aggView5331976591349606767.v8;
+create or replace view aggView868447874044848827 as select v31, MIN(v15) as v43 from aggJoin8614409549430834350 group by v31;
+create or replace view aggJoin5546929923853495046 as select person_id as v22, movie_id as v31, note as v5, v43 from cast_info as ci, aggView868447874044848827 where ci.movie_id=aggView868447874044848827.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView1478906087395410866 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin8318377627130833900 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView1478906087395410866 where mi_idx.info_type_id=aggView1478906087395410866.v10;
+create or replace view aggView2129237136326090387 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin5398997965497512294 as select v31, v5, v43 from aggJoin5546929923853495046 join aggView2129237136326090387 using(v22);
+create or replace view aggView6837845742896879636 as select v31, MIN(v43) as v43 from aggJoin5398997965497512294 group by v31;
+create or replace view aggJoin4672032679207421609 as select id as v31, title as v32, v43 from title as t, aggView6837845742896879636 where t.id=aggView6837845742896879636.v31;
+create or replace view aggView2180337908902024563 as select v31, MIN(v43) as v43, MIN(v32) as v45 from aggJoin4672032679207421609 group by v31;
+create or replace view aggJoin158321897055131570 as select v20, v43, v45 from aggJoin8318377627130833900 join aggView2180337908902024563 using(v31);
+create or replace view res as select MIN(v43) as v43, MIN(v20) as v44, MIN(v45) as v45 from aggJoin158321897055131570;
+select sum(v43+v44+v45) from res;

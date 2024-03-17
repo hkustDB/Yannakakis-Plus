@@ -1,0 +1,12 @@
+create or replace view g3 as select Graph.src as v4, Graph.dst as v9, v10, v14 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2, (SELECT dst, COUNT(*) AS v14 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c2.src and Graph.dst = c4.dst;
+create or replace view g2 as select Graph.src as v2, Graph.dst as v4, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c3 where Graph.src = c3.src;
+create or replace view orderView3022580464551458751 as select v4, v9, v10, v14, row_number() over (partition by v4 order by v10 DESC) as rn from g3;
+create or replace view minView6528306546617400149 as select v4, v10 as mfR2330543629807945923 from orderView3022580464551458751 where rn = 1;
+create or replace view joinView8979056540523915404 as select v2, v4, v12, mfR2330543629807945923 from g2 join minView6528306546617400149 using(v4);
+create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view orderView2218666416747623255 as select v7, v2, v8, row_number() over (partition by v2 order by v8) as rn from g1;
+create or replace view minView1640493149499020198 as select v2, v8 as mfL5672071693864277194 from orderView2218666416747623255 where rn = 1;
+create or replace view joinView6584821061449453419 as select v2, v4, v12, mfR2330543629807945923, mfL5672071693864277194 from joinView8979056540523915404 join minView1640493149499020198 using(v2) where mfL5672071693864277194<mfR2330543629807945923;
+create or replace view pkJoin3025897747642938401 as select v7, v8, v2, v12, mfR2330543629807945923, v4, mfR2330543629807945923 from joinView6584821061449453419 join g1 using(v2) where v8<mfR2330543629807945923 and rn = 1;
+create or replace view pkJoin4597129002481348790 as select v7, v9, v14, v8, v2, v10, v12, v4 from pkJoin3025897747642938401 join g3 using(v4) where v8<v10 and v12<v14 and rn = 1;
+select sum(v7+v2+v4+v9+v8+v10+v12+v14) from pkJoin4597129002481348790;

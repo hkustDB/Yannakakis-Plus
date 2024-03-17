@@ -1,0 +1,10 @@
+create or replace view aggView2349114630152355771 as select id as v15, title as v28, production_year as v29 from title as t where production_year<=2010 and production_year>=2005;
+create or replace view aggJoin7740391769955445095 as select movie_id as v15, info_type_id as v3, v28, v29 from movie_info_idx as mi_idx, aggView2349114630152355771 where mi_idx.movie_id=aggView2349114630152355771.v15;
+create or replace view aggView8978600770838470110 as select id as v3 from info_type as it where info= 'bottom 10 rank';
+create or replace view aggJoin1527537922999283009 as select v15, v28, v29 from aggJoin7740391769955445095 join aggView8978600770838470110 using(v3);
+create or replace view aggView2576864710555038151 as select id as v1 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin1239037316214001551 as select movie_id as v15, note as v9 from movie_companies as mc, aggView2576864710555038151 where mc.company_type_id=aggView2576864710555038151.v1 and note NOT LIKE '%(as Metro-Goldwyn-Mayer Pictures)%';
+create or replace view aggView6705408908045918942 as select v15, MIN(v9) as v27 from aggJoin1239037316214001551 group by v15;
+create or replace view aggJoin5165123742285955246 as select v28 as v28, v29 as v29, v27 from aggJoin1527537922999283009 join aggView6705408908045918942 using(v15);
+create or replace view res as select MIN(v27) as v27, MIN(v28) as v28, MIN(v29) as v29 from aggJoin5165123742285955246;
+select sum(v27+v28+v29) from res;
