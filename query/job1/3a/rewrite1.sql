@@ -1,8 +1,8 @@
-create or replace view aggView8860888494135719774 as select id as v12, title as v24 from title as t where production_year>2005;
-create or replace view aggJoin8608301401870953705 as select movie_id as v12, info as v7, v24 from movie_info as mi, aggView8860888494135719774 where mi.movie_id=aggView8860888494135719774.v12 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
-create or replace view aggView1467044867245868846 as select v12, MIN(v24) as v24 from aggJoin8608301401870953705 group by v12;
-create or replace view aggJoin1494386638262024040 as select keyword_id as v1, v24 from movie_keyword as mk, aggView1467044867245868846 where mk.movie_id=aggView1467044867245868846.v12;
-create or replace view aggView8509929546494024645 as select v1, MIN(v24) as v24 from aggJoin1494386638262024040 group by v1;
-create or replace view aggJoin4215946384124567962 as select keyword as v2, v24 from keyword as k, aggView8509929546494024645 where k.id=aggView8509929546494024645.v1 and keyword LIKE '%sequel%';
-create or replace view res as select MIN(v24) as v24 from aggJoin4215946384124567962;
+create or replace view aggView1301991989124764098 as select movie_id as v12 from movie_info as mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German') group by movie_id;
+create or replace view aggJoin8186134659751629109 as select id as v12, title as v13 from title as t, aggView1301991989124764098 where t.id=aggView1301991989124764098.v12 and production_year>2005;
+create or replace view aggView22160282860016648 as select v12, MIN(v13) as v24 from aggJoin8186134659751629109 group by v12;
+create or replace view aggJoin8099344040086099183 as select keyword_id as v1, v24 from movie_keyword as mk, aggView22160282860016648 where mk.movie_id=aggView22160282860016648.v12;
+create or replace view aggView1387717901737369300 as select v1, MIN(v24) as v24 from aggJoin8099344040086099183 group by v1;
+create or replace view aggJoin6993838159464638060 as select v24 from keyword as k, aggView1387717901737369300 where k.id=aggView1387717901737369300.v1 and keyword LIKE '%sequel%';
+create or replace view res as select MIN(v24) as v24 from aggJoin6993838159464638060;
 select sum(v24) from res;
