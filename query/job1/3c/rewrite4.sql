@@ -1,8 +1,8 @@
-create or replace view aggView7184092162226235760 as select id as v12, title as v24 from title as t where production_year>1990;
-create or replace view aggJoin6186249687304535915 as select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView7184092162226235760 where mk.movie_id=aggView7184092162226235760.v12;
-create or replace view aggView3281561515468585872 as select movie_id as v12 from movie_info as mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American') group by movie_id;
-create or replace view aggJoin9122526659315922852 as select v1, v24 as v24 from aggJoin6186249687304535915 join aggView3281561515468585872 using(v12);
-create or replace view aggView5990313764384431341 as select v1, MIN(v24) as v24 from aggJoin9122526659315922852 group by v1;
-create or replace view aggJoin6294801409705042924 as select keyword as v2, v24 from keyword as k, aggView5990313764384431341 where k.id=aggView5990313764384431341.v1 and keyword LIKE '%sequel%';
-create or replace view res as select MIN(v24) as v24 from aggJoin6294801409705042924;
+create or replace view aggView2680813275364084650 as select id as v12, title as v24 from title as t where production_year>1990;
+create or replace view aggJoin299286053747406502 as select movie_id as v12, info as v7, v24 from movie_info as mi, aggView2680813275364084650 where mi.movie_id=aggView2680813275364084650.v12 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American');
+create or replace view aggView4178252682908357894 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin6211648411140133492 as select movie_id as v12 from movie_keyword as mk, aggView4178252682908357894 where mk.keyword_id=aggView4178252682908357894.v1;
+create or replace view aggView8894190939502447536 as select v12 from aggJoin6211648411140133492 group by v12;
+create or replace view aggJoin3877780271983272546 as select v7, v24 as v24 from aggJoin299286053747406502 join aggView8894190939502447536 using(v12);
+create or replace view res as select MIN(v24) as v24 from aggJoin3877780271983272546;
 select sum(v24) from res;
