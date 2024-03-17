@@ -1,0 +1,13 @@
+create or replace view aggView5627496541509706463 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin3680482764794492792 as select movie_id as v31, info_type_id as v10, info as v20, v45 from movie_info_idx as mi_idx, aggView5627496541509706463 where mi_idx.movie_id=aggView5627496541509706463.v31;
+create or replace view aggView6160936266069428859 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin5323807887753174437 as select movie_id as v31, info as v15 from movie_info as mi, aggView6160936266069428859 where mi.info_type_id=aggView6160936266069428859.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView8891985140056899776 as select v31, MIN(v15) as v43 from aggJoin5323807887753174437 group by v31;
+create or replace view aggJoin4451831318467084308 as select v31, v10, v20, v45 as v45, v43 from aggJoin3680482764794492792 join aggView8891985140056899776 using(v31);
+create or replace view aggView6769467470879531685 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin5437052595176081712 as select v31, v20, v45, v43 from aggJoin4451831318467084308 join aggView6769467470879531685 using(v10);
+create or replace view aggView7074567826516533276 as select v31, MIN(v45) as v45, MIN(v43) as v43, MIN(v20) as v44 from aggJoin5437052595176081712 group by v31;
+create or replace view aggJoin3426810623473459103 as select person_id as v22, note as v5, v45, v43, v44 from cast_info as ci, aggView7074567826516533276 where ci.movie_id=aggView7074567826516533276.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView2684264985885221955 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin3738884123377826862 as select v5, v45, v43, v44 from aggJoin3426810623473459103 join aggView2684264985885221955 using(v22);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin3738884123377826862;

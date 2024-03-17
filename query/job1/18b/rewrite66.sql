@@ -1,0 +1,13 @@
+create or replace view aggView7127238281561092208 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin3582621835726716487 as select movie_id as v31, note as v5 from cast_info as ci, aggView7127238281561092208 where ci.person_id=aggView7127238281561092208.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView4739024331805772328 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin3134273624516208284 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView4739024331805772328 where mi_idx.info_type_id=aggView4739024331805772328.v10 and info>'8.0';
+create or replace view aggView5307633345707349068 as select v31, MIN(v20) as v44 from aggJoin3134273624516208284 group by v31;
+create or replace view aggJoin6540448009999879078 as select v31, v44 from aggJoin3582621835726716487 join aggView5307633345707349068 using(v31);
+create or replace view aggView4792998335605186596 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin2591219041569400643 as select movie_id as v31, info as v15 from movie_info as mi, aggView4792998335605186596 where mi.info_type_id=aggView4792998335605186596.v8 and info IN ('Horror','Thriller');
+create or replace view aggView3982139579128987061 as select v31, MIN(v44) as v44 from aggJoin6540448009999879078 group by v31;
+create or replace view aggJoin4811928897850379234 as select v31, v15, v44 from aggJoin2591219041569400643 join aggView3982139579128987061 using(v31);
+create or replace view aggView1433622474764442100 as select v31, MIN(v44) as v44, MIN(v15) as v43 from aggJoin4811928897850379234 group by v31;
+create or replace view aggJoin402705640700937028 as select title as v32, v44, v43 from title as t, aggView1433622474764442100 where t.id=aggView1433622474764442100.v31 and production_year>=2008 and production_year<=2014;
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v32) as v45 from aggJoin402705640700937028;

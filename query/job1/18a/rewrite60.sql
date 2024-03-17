@@ -1,0 +1,13 @@
+create or replace view aggView4999115157757781016 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin1778177229412588310 as select person_id as v22, movie_id as v31, note as v5, v45 from cast_info as ci, aggView4999115157757781016 where ci.movie_id=aggView4999115157757781016.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView8594205537729393487 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin5452180567015561515 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView8594205537729393487 where mi_idx.info_type_id=aggView8594205537729393487.v10;
+create or replace view aggView960245981284129535 as select v31, MIN(v20) as v44 from aggJoin5452180567015561515 group by v31;
+create or replace view aggJoin1943429774109036100 as select movie_id as v31, info_type_id as v8, info as v15, v44 from movie_info as mi, aggView960245981284129535 where mi.movie_id=aggView960245981284129535.v31;
+create or replace view aggView7530929340672903534 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin4927494737872537070 as select v31, v5, v45 from aggJoin1778177229412588310 join aggView7530929340672903534 using(v22);
+create or replace view aggView6501942529306257356 as select v31, MIN(v45) as v45 from aggJoin4927494737872537070 group by v31;
+create or replace view aggJoin7715977227548357534 as select v8, v15, v44 as v44, v45 from aggJoin1943429774109036100 join aggView6501942529306257356 using(v31);
+create or replace view aggView8657291141768731493 as select v8, MIN(v44) as v44, MIN(v45) as v45, MIN(v15) as v43 from aggJoin7715977227548357534 group by v8;
+create or replace view aggJoin5069057882024974215 as select info as v9, v44, v45, v43 from info_type as it1, aggView8657291141768731493 where it1.id=aggView8657291141768731493.v8 and info= 'budget';
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin5069057882024974215;

@@ -1,0 +1,13 @@
+create or replace view aggView6547657409601123361 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin6357348997474642160 as select person_id as v22, movie_id as v31, note as v5, v45 from cast_info as ci, aggView6547657409601123361 where ci.movie_id=aggView6547657409601123361.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView1553716742951304836 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin3711444542945386842 as select movie_id as v31, info as v15 from movie_info as mi, aggView1553716742951304836 where mi.info_type_id=aggView1553716742951304836.v8;
+create or replace view aggView4951780873732577066 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin3614182514869365004 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView4951780873732577066 where mi_idx.info_type_id=aggView4951780873732577066.v10;
+create or replace view aggView8753023542137338081 as select v31, MIN(v20) as v44 from aggJoin3614182514869365004 group by v31;
+create or replace view aggJoin7164245965555879943 as select v31, v15, v44 from aggJoin3711444542945386842 join aggView8753023542137338081 using(v31);
+create or replace view aggView7417804581801153707 as select v31, MIN(v44) as v44, MIN(v15) as v43 from aggJoin7164245965555879943 group by v31;
+create or replace view aggJoin5763326879580368718 as select v22, v5, v45 as v45, v44, v43 from aggJoin6357348997474642160 join aggView7417804581801153707 using(v31);
+create or replace view aggView5633240988544527525 as select v22, MIN(v45) as v45, MIN(v44) as v44, MIN(v43) as v43 from aggJoin5763326879580368718 group by v22;
+create or replace view aggJoin1980373138372630703 as select name as v23, gender as v26, v45, v44, v43 from name as n, aggView5633240988544527525 where n.id=aggView5633240988544527525.v22 and gender= 'm' and name LIKE '%Tim%';
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin1980373138372630703;

@@ -1,0 +1,13 @@
+create or replace view aggView3601330980571572067 as select id as v31, title as v45 from title as t where production_year>=2008 and production_year<=2014;
+create or replace view aggJoin5502879519595592019 as select person_id as v22, movie_id as v31, note as v5, v45 from cast_info as ci, aggView3601330980571572067 where ci.movie_id=aggView3601330980571572067.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView2831340889440189671 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin7162212741866172010 as select v31, v5, v45 from aggJoin5502879519595592019 join aggView2831340889440189671 using(v22);
+create or replace view aggView1629162898951701133 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin8242604472489936491 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView1629162898951701133 where mi_idx.info_type_id=aggView1629162898951701133.v10 and info>'8.0';
+create or replace view aggView8390745896913054575 as select v31, MIN(v20) as v44 from aggJoin8242604472489936491 group by v31;
+create or replace view aggJoin8052781650135822492 as select movie_id as v31, info_type_id as v8, info as v15, v44 from movie_info as mi, aggView8390745896913054575 where mi.movie_id=aggView8390745896913054575.v31 and info IN ('Horror','Thriller');
+create or replace view aggView3971629004613457069 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin2678966903498151536 as select v31, v15, v44 from aggJoin8052781650135822492 join aggView3971629004613457069 using(v8);
+create or replace view aggView1892462713064975248 as select v31, MIN(v45) as v45 from aggJoin7162212741866172010 group by v31;
+create or replace view aggJoin555203837346693073 as select v15, v44 as v44, v45 from aggJoin2678966903498151536 join aggView1892462713064975248 using(v31);
+select MIN(v15) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin555203837346693073;

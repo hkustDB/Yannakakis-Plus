@@ -1,0 +1,13 @@
+create or replace view aggView8234863318770421175 as select id as v11, title as v52 from title as t where production_year<=2007 and ((title LIKE 'One Piece%') OR (title LIKE 'Dragon Ball Z%')) and production_year>=2006;
+create or replace view aggJoin3850444043604654351 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v52 from cast_info as ci, aggView8234863318770421175 where ci.movie_id=aggView8234863318770421175.v11 and note= '(voice: English version)';
+create or replace view aggView754811614805159166 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin4475526737411904616 as select v2, v11, v13, v52 from aggJoin3850444043604654351 join aggView754811614805159166 using(v15);
+create or replace view aggView8850357901402301562 as select id as v2 from name as n where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin5547695984504249787 as select person_id as v2, name as v3 from aka_name as an, aggView8850357901402301562 where an.person_id=aggView8850357901402301562.v2;
+create or replace view aggView8180480957250624101 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin2187772159427196710 as select movie_id as v11, note as v27 from movie_companies as mc, aggView8180480957250624101 where mc.company_id=aggView8180480957250624101.v25 and ((note LIKE '%(2006)%') OR (note LIKE '%(2007)%')) and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView6359117969782651528 as select v11 from aggJoin2187772159427196710 group by v11;
+create or replace view aggJoin848655695407995242 as select v2, v13, v52 as v52 from aggJoin4475526737411904616 join aggView6359117969782651528 using(v11);
+create or replace view aggView9094519488254019087 as select v2, MIN(v52) as v52 from aggJoin848655695407995242 group by v2;
+create or replace view aggJoin3385296354305239331 as select v3, v52 from aggJoin5547695984504249787 join aggView9094519488254019087 using(v2);
+select MIN(v3) as v51,MIN(v52) as v52 from aggJoin3385296354305239331;

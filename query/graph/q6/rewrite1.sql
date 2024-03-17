@@ -1,0 +1,11 @@
+create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view orderView2342748754441667336 as select v7, v2, v8, row_number() over (partition by v2 order by v8) as rn from g1;
+create or replace view minView2407432550736376199 as select v2, v8 as mfL8347714219124665082 from orderView2342748754441667336 where rn = 1;
+create or replace view joinView1646816187124314539 as select src as v2, dst as v4, mfL8347714219124665082 from Graph AS g2, minView2407432550736376199 where g2.src=minView2407432550736376199.v2;
+create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v10 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create or replace view orderView6568961217299222531 as select v2, v4, mfL8347714219124665082, row_number() over (partition by v4 order by mfL8347714219124665082) as rn from joinView1646816187124314539;
+create or replace view minView8524499903306535553 as select v4, mfL8347714219124665082 as mfL5576955930750938708 from orderView6568961217299222531 where rn = 1;
+create or replace view joinView2446596740113958212 as select v4, v6, v10, mfL5576955930750938708 from g3 join minView8524499903306535553 using(v4) where mfL5576955930750938708<v6;
+create or replace view pkJoin3581608867143022065 as select v6, mfL5576955930750938708, v2, v4, v10, mfL8347714219124665082 from joinView2446596740113958212 join joinView1646816187124314539 using(v4) where mfL8347714219124665082<v6 and rn = 1;
+create or replace view pkJoin4930694487489598364 as select v6, mfL8347714219124665082, v2, v8, v4, v7, v10 from pkJoin3581608867143022065 join g1 using(v2) where v8<v6 and rn = 1;
+select sum(v7+v2+v4+v6+v8+v10) from pkJoin4930694487489598364;

@@ -1,0 +1,13 @@
+create or replace view aggView4286683066099326973 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin3802570788494363625 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView4286683066099326973 where ci.person_id=aggView4286683066099326973.v2 and note= '(voice: English version)';
+create or replace view aggView3592324052352869697 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin5468609744750810796 as select v2, v11, v13, v15, v51, v52 from aggJoin3802570788494363625 join aggView3592324052352869697 using(v11);
+create or replace view aggView1468484545170246823 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin3692348206998748914 as select v11, v13, v15, v51, v52 from aggJoin5468609744750810796 join aggView1468484545170246823 using(v2);
+create or replace view aggView6659031695448554444 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin4062321693874130346 as select v11, v13, v51, v52 from aggJoin3692348206998748914 join aggView6659031695448554444 using(v15);
+create or replace view aggView5948688330495787026 as select v11, MIN(v51) as v51, MIN(v52) as v52 from aggJoin4062321693874130346 group by v11;
+create or replace view aggJoin1428575731064441704 as select company_id as v25, note as v27, v51, v52 from movie_companies as mc, aggView5948688330495787026 where mc.movie_id=aggView5948688330495787026.v11 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView1364008336699510339 as select v25, MIN(v51) as v51, MIN(v52) as v52 from aggJoin1428575731064441704 group by v25;
+create or replace view aggJoin7893959895713233917 as select country_code as v18, v51, v52 from company_name as cn, aggView1364008336699510339 where cn.id=aggView1364008336699510339.v25 and country_code= '[jp]';
+select MIN(v51) as v51,MIN(v52) as v52 from aggJoin7893959895713233917;

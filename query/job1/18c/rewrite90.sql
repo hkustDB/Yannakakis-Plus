@@ -1,0 +1,13 @@
+create or replace view aggView3595498400891255910 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin5745305930811424426 as select person_id as v22, movie_id as v31, note as v5, v45 from cast_info as ci, aggView3595498400891255910 where ci.movie_id=aggView3595498400891255910.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView5519195249904809600 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin5942343828512841912 as select movie_id as v31, info as v15 from movie_info as mi, aggView5519195249904809600 where mi.info_type_id=aggView5519195249904809600.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView7639859083462810697 as select v31, MIN(v15) as v43 from aggJoin5942343828512841912 group by v31;
+create or replace view aggJoin4110858901200255449 as select movie_id as v31, info_type_id as v10, info as v20, v43 from movie_info_idx as mi_idx, aggView7639859083462810697 where mi_idx.movie_id=aggView7639859083462810697.v31;
+create or replace view aggView5716483921901073156 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin3514828088763464016 as select v31, v20, v43 from aggJoin4110858901200255449 join aggView5716483921901073156 using(v10);
+create or replace view aggView1926737304641078327 as select v31, MIN(v43) as v43, MIN(v20) as v44 from aggJoin3514828088763464016 group by v31;
+create or replace view aggJoin3201449713739297486 as select v22, v5, v45 as v45, v43, v44 from aggJoin5745305930811424426 join aggView1926737304641078327 using(v31);
+create or replace view aggView6940718802298772318 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin3095156535683685199 as select v5, v45, v43, v44 from aggJoin3201449713739297486 join aggView6940718802298772318 using(v22);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin3095156535683685199;

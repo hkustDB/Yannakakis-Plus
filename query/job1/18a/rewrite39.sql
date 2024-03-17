@@ -1,0 +1,13 @@
+create or replace view aggView5520557356599802938 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin7974338212636493981 as select movie_id as v31, info as v15 from movie_info as mi, aggView5520557356599802938 where mi.info_type_id=aggView5520557356599802938.v8;
+create or replace view aggView771747229313771535 as select v31, MIN(v15) as v43 from aggJoin7974338212636493981 group by v31;
+create or replace view aggJoin5849019179502738148 as select id as v31, title as v32, v43 from title as t, aggView771747229313771535 where t.id=aggView771747229313771535.v31;
+create or replace view aggView29201925915713454 as select v31, MIN(v43) as v43, MIN(v32) as v45 from aggJoin5849019179502738148 group by v31;
+create or replace view aggJoin5519801397447518649 as select movie_id as v31, info_type_id as v10, info as v20, v43, v45 from movie_info_idx as mi_idx, aggView29201925915713454 where mi_idx.movie_id=aggView29201925915713454.v31;
+create or replace view aggView8016067497696471498 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin6013219660797438826 as select v31, v20, v43, v45 from aggJoin5519801397447518649 join aggView8016067497696471498 using(v10);
+create or replace view aggView112826885170296580 as select v31, MIN(v43) as v43, MIN(v45) as v45, MIN(v20) as v44 from aggJoin6013219660797438826 group by v31;
+create or replace view aggJoin4596217232925255654 as select person_id as v22, note as v5, v43, v45, v44 from cast_info as ci, aggView112826885170296580 where ci.movie_id=aggView112826885170296580.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView9069450026915785932 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin3448781283804661364 as select v5, v43, v45, v44 from aggJoin4596217232925255654 join aggView9069450026915785932 using(v22);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin3448781283804661364;

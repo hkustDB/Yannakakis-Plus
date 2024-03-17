@@ -1,0 +1,13 @@
+create or replace view aggView377067047753098142 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin124714337241982060 as select movie_id as v31, note as v5 from cast_info as ci, aggView377067047753098142 where ci.person_id=aggView377067047753098142.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView714509024186221548 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin5806777952965803700 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView714509024186221548 where mi_idx.info_type_id=aggView714509024186221548.v10 and info>'8.0';
+create or replace view aggView5831474407206786332 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin5316317199097066164 as select movie_id as v31, info as v15 from movie_info as mi, aggView5831474407206786332 where mi.info_type_id=aggView5831474407206786332.v8 and info IN ('Horror','Thriller');
+create or replace view aggView7520475170396211289 as select v31 from aggJoin124714337241982060 group by v31;
+create or replace view aggJoin5247901232123912862 as select id as v31, title as v32 from title as t, aggView7520475170396211289 where t.id=aggView7520475170396211289.v31 and production_year>=2008 and production_year<=2014;
+create or replace view aggView2121396368291629486 as select v31, MIN(v32) as v45 from aggJoin5247901232123912862 group by v31;
+create or replace view aggJoin4532073692673732893 as select v31, v20, v45 from aggJoin5806777952965803700 join aggView2121396368291629486 using(v31);
+create or replace view aggView8884373039640250918 as select v31, MIN(v45) as v45, MIN(v20) as v44 from aggJoin4532073692673732893 group by v31;
+create or replace view aggJoin1771858016633927079 as select v15, v45, v44 from aggJoin5316317199097066164 join aggView8884373039640250918 using(v31);
+select MIN(v15) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin1771858016633927079;

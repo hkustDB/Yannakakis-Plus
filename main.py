@@ -166,6 +166,7 @@ def connect(base: int, mode: int, type: GenType):
     body['query'] = query_file.read()
     query_file.close()
     try:
+        # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50
         response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
@@ -313,7 +314,7 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job2/33a/')
+    globalVar.set_value('BASE_PATH', 'query/extra/6f/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
     

@@ -1,0 +1,13 @@
+create or replace view aggView8444956410969994038 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin5921054541472653626 as select movie_id as v31, info as v15 from movie_info as mi, aggView8444956410969994038 where mi.info_type_id=aggView8444956410969994038.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView4390365036369872271 as select v31, MIN(v15) as v43 from aggJoin5921054541472653626 group by v31;
+create or replace view aggJoin4040446614564248612 as select id as v31, title as v32, v43 from title as t, aggView4390365036369872271 where t.id=aggView4390365036369872271.v31;
+create or replace view aggView3580473302106253073 as select v31, MIN(v43) as v43, MIN(v32) as v45 from aggJoin4040446614564248612 group by v31;
+create or replace view aggJoin1854935605923613813 as select person_id as v22, movie_id as v31, note as v5, v43, v45 from cast_info as ci, aggView3580473302106253073 where ci.movie_id=aggView3580473302106253073.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView8030124928108596585 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin7059811142365561504 as select v31, v5, v43, v45 from aggJoin1854935605923613813 join aggView8030124928108596585 using(v22);
+create or replace view aggView394361315139087699 as select v31, MIN(v43) as v43, MIN(v45) as v45 from aggJoin7059811142365561504 group by v31;
+create or replace view aggJoin6021629333604011633 as select info_type_id as v10, info as v20, v43, v45 from movie_info_idx as mi_idx, aggView394361315139087699 where mi_idx.movie_id=aggView394361315139087699.v31;
+create or replace view aggView1808042364218632267 as select v10, MIN(v43) as v43, MIN(v45) as v45, MIN(v20) as v44 from aggJoin6021629333604011633 group by v10;
+create or replace view aggJoin8691402814602126460 as select info as v11, v43, v45, v44 from info_type as it2, aggView1808042364218632267 where it2.id=aggView1808042364218632267.v10 and info= 'votes';
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin8691402814602126460;

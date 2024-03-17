@@ -1,0 +1,13 @@
+create or replace view aggView7406768543051207943 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin6076402696516180071 as select id as v2, name as v29, v51 from name as n1, aggView7406768543051207943 where n1.id=aggView7406768543051207943.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView4938049111362410234 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin1471180417541544868 as select movie_id as v11, note as v27 from movie_companies as mc, aggView4938049111362410234 where mc.company_id=aggView4938049111362410234.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView5569057003441902131 as select v2, MIN(v51) as v51 from aggJoin6076402696516180071 group by v2;
+create or replace view aggJoin7979285348794510760 as select movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView5569057003441902131 where ci.person_id=aggView5569057003441902131.v2 and note= '(voice: English version)';
+create or replace view aggView464036752190176013 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin8082754046923171045 as select v11, v13, v51 from aggJoin7979285348794510760 join aggView464036752190176013 using(v15);
+create or replace view aggView2152200054326249803 as select v11, MIN(v51) as v51 from aggJoin8082754046923171045 group by v11;
+create or replace view aggJoin4486623996097128845 as select id as v11, title as v40, v51 from title as t, aggView2152200054326249803 where t.id=aggView2152200054326249803.v11;
+create or replace view aggView131789043683281133 as select v11, MIN(v51) as v51, MIN(v40) as v52 from aggJoin4486623996097128845 group by v11;
+create or replace view aggJoin6125810064037241103 as select v27, v51, v52 from aggJoin1471180417541544868 join aggView131789043683281133 using(v11);
+select MIN(v51) as v51,MIN(v52) as v52 from aggJoin6125810064037241103;

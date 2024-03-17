@@ -1,0 +1,13 @@
+create or replace view aggView8400430923168120869 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin8403311714810358982 as select movie_id as v11, note as v27 from movie_companies as mc, aggView8400430923168120869 where mc.company_id=aggView8400430923168120869.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView8076353282913677988 as select v11 from aggJoin8403311714810358982 group by v11;
+create or replace view aggJoin5223913473998037001 as select id as v11, title as v40 from title as t, aggView8076353282913677988 where t.id=aggView8076353282913677988.v11;
+create or replace view aggView1933147145289061172 as select v11, MIN(v40) as v52 from aggJoin5223913473998037001 group by v11;
+create or replace view aggJoin264527477253872069 as select person_id as v2, note as v13, role_id as v15, v52 from cast_info as ci, aggView1933147145289061172 where ci.movie_id=aggView1933147145289061172.v11 and note= '(voice: English version)';
+create or replace view aggView209529293097310025 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin8073997867278918362 as select person_id as v2, name as v3 from aka_name as an1, aggView209529293097310025 where an1.person_id=aggView209529293097310025.v2;
+create or replace view aggView3181022961430456169 as select v2, MIN(v3) as v51 from aggJoin8073997867278918362 group by v2;
+create or replace view aggJoin8545162825986153530 as select v13, v15, v52 as v52, v51 from aggJoin264527477253872069 join aggView3181022961430456169 using(v2);
+create or replace view aggView5406656816010556456 as select v15, MIN(v52) as v52, MIN(v51) as v51 from aggJoin8545162825986153530 group by v15;
+create or replace view aggJoin7268929328997929290 as select role as v38, v52, v51 from role_type as rt, aggView5406656816010556456 where rt.id=aggView5406656816010556456.v15 and role= 'actress';
+select MIN(v51) as v51,MIN(v52) as v52 from aggJoin7268929328997929290;
