@@ -22,7 +22,7 @@ from generateTopKIR import *
 from codegen import *
 from codegenTopK import *
 from topk import *
-# from estimator import *
+from estimator import *
 from enumsType import EdgeType
 import globalVar
 
@@ -313,10 +313,10 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job2/33a/')
+    globalVar.set_value('BASE_PATH', 'query/extra/11a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
-    
+    '''
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -327,7 +327,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    
+    '''
     start = time.time()
     optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
@@ -335,16 +335,17 @@ if __name__ == '__main__':
     IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
+    COST_NAME = globalVar.get_value('COST_NAME')
     # sign for whether process all JT
     optFlag = False
     if optFlag:
-        '''
-        cost_height, cost_fanout, cost_estimate = getEstimation(DDL_NAME.split('.')[0], optJT)
+        
+        cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], optJT)
         costOutName = COST_NAME.split('.')[0] + 'opt' + '.' + COST_NAME.split('.')[1]
         costout = open(BASE_PATH + costOutName, 'w+')
         costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
         costout.close()
-        '''
+        
         if IRmode == IRType.Report:
             reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
             codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
@@ -361,13 +362,13 @@ if __name__ == '__main__':
     else:
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
-            '''
-            cost_height, cost_fanout, cost_estimate = getEstimation(DDL_NAME.split('.')[0], jt)
+            
+            cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
             costOutName = COST_NAME.split('.')[0] + str(index) + '.' + COST_NAME.split('.')[1]
             costout = open(BASE_PATH + costOutName, 'w+')
             costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
             costout.close()
-            '''
+            
             try:
                 '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
