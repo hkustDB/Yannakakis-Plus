@@ -13,4 +13,4 @@ create or replace view aggJoin2904364668976483711 as select link_type_id as v13,
 create or replace view aggView545055268571094735 as select id as v13 from link_type as lt;
 create or replace view aggJoin5306311691788634618 as select v39, v40, v41 from aggJoin2904364668976483711 join aggView545055268571094735 using(v13);
 create or replace view res as select MIN(v39) as v39, MIN(v40) as v40, MIN(v41) as v41 from aggJoin5306311691788634618;
-select sum(v39+v40+v41) from res;
+select v39, v40, v41 from res;

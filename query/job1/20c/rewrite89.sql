@@ -17,4 +17,4 @@ create or replace view aggJoin572586981345938516 as select v5, v52, v53 from agg
 create or replace view aggView2910779881995951079 as select v5, MIN(v52) as v52, MIN(v53) as v53 from aggJoin572586981345938516 group by v5;
 create or replace view aggJoin4696659822219170055 as select v52, v53 from comp_cast_type as cct1, aggView2910779881995951079 where cct1.id=aggView2910779881995951079.v5 and kind= 'cast';
 create or replace view res as select MIN(v52) as v52, MIN(v53) as v53 from aggJoin4696659822219170055;
-select sum(v52+v53) from res;
+select v52, v53 from res;

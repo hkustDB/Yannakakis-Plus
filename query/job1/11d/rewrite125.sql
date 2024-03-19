@@ -13,4 +13,4 @@ create or replace view aggJoin2583947799561665201 as select v24, v19, v39 from a
 create or replace view aggView6799196951742093516 as select v24, MIN(v39) as v39, MIN(v19) as v40 from aggJoin2583947799561665201 group by v24;
 create or replace view aggJoin3119828812985874361 as select title as v28, v39, v40 from title as t, aggView6799196951742093516 where t.id=aggView6799196951742093516.v24 and production_year>1950;
 create or replace view res as select MIN(v39) as v39, MIN(v40) as v40, MIN(v28) as v41 from aggJoin3119828812985874361;
-select sum(v39+v40+v41) from res;
+select v39, v40, v41 from res;

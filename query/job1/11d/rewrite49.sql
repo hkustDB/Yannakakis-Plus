@@ -13,4 +13,4 @@ create or replace view aggJoin5972678305558560149 as select keyword_id as v22, v
 create or replace view aggView1708746837307871354 as select v22, MIN(v39) as v39, MIN(v41) as v41, MIN(v40) as v40 from aggJoin5972678305558560149 group by v22;
 create or replace view aggJoin6947337782827370461 as select keyword as v11, v39, v41, v40 from keyword as k, aggView1708746837307871354 where k.id=aggView1708746837307871354.v22 and keyword IN ('sequel','revenge','based-on-novel');
 create or replace view res as select MIN(v39) as v39, MIN(v40) as v40, MIN(v41) as v41 from aggJoin6947337782827370461;
-select sum(v39+v40+v41) from res;
+select v39, v40, v41 from res;

@@ -13,4 +13,4 @@ create or replace view aggJoin4573227823854543845 as select movie_id as v24 from
 create or replace view aggView8497701509973973569 as select v24 from aggJoin4573227823854543845 group by v24;
 create or replace view aggJoin4780742258439698335 as select v19, v39 as v39, v41 as v41 from aggJoin7863207369538102466 join aggView8497701509973973569 using(v24);
 create or replace view res as select MIN(v39) as v39, MIN(v19) as v40, MIN(v41) as v41 from aggJoin4780742258439698335;
-select sum(v39+v40+v41) from res;
+select v39, v40, v41 from res;

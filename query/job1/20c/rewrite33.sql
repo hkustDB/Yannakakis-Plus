@@ -17,4 +17,4 @@ create or replace view aggJoin3205635178747627791 as select title as v41, kind_i
 create or replace view aggView467026646910388611 as select v26, MIN(v52) as v52, MIN(v41) as v53 from aggJoin3205635178747627791 group by v26;
 create or replace view aggJoin3908378977634115923 as select v52, v53 from kind_type as kt, aggView467026646910388611 where kt.id=aggView467026646910388611.v26 and kind= 'movie';
 create or replace view res as select MIN(v52) as v52, MIN(v53) as v53 from aggJoin3908378977634115923;
-select sum(v52+v53) from res;
+select v52, v53 from res;
