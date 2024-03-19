@@ -11,4 +11,4 @@ create or replace view aggJoin5860397485791246546 as select v15, v43, v44 from a
 create or replace view aggView3862798712628332135 as select v15, MIN(v43) as v43, MIN(v44) as v44 from aggJoin5860397485791246546 group by v15;
 create or replace view aggJoin171399878689268661 as select v43, v44 from company_name as cn, aggView3862798712628332135 where cn.id=aggView3862798712628332135.v15 and country_code= '[us]';
 create or replace view res as select MIN(v43) as v43, MIN(v44) as v44 from aggJoin171399878689268661;
-select sum(v43+v44) from res;
+select v43, v44 from res;

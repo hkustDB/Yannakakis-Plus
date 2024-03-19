@@ -17,4 +17,4 @@ create or replace view aggJoin6043423749603124170 as select v9, v52 as v52, v53 
 create or replace view aggView5338392493375487869 as select v9, MIN(v52) as v52, MIN(v53) as v53 from aggJoin6043423749603124170 group by v9;
 create or replace view aggJoin8723900007322597840 as select v52, v53 from char_name as chn, aggView5338392493375487869 where chn.id=aggView5338392493375487869.v9 and ((name LIKE '%man%') OR (name LIKE '%Man%'));
 create or replace view res as select MIN(v52) as v52, MIN(v53) as v53 from aggJoin8723900007322597840;
-select sum(v52+v53) from res;
+select v52, v53 from res;
