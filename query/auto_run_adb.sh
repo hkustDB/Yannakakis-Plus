@@ -57,9 +57,9 @@ do
                     touch $OUT_FILE
                     if [ $OPT -eq 1 ]
                     then
-                        timeout -s SIGKILL 12h ${mysql} ${mysql1_config} < "${QUERY}" | grep "row in set" >> $OUT_FILE
+                        timeout -s SIGKILL 5m ${mysql} ${mysql1_config} < "${QUERY}" | grep "row in set" >> $OUT_FILE
                     else
-                        timeout -s SIGKILL 12h ${mysql} ${mysql4_config} < "${QUERY}" | grep "row in set" >> $OUT_FILE
+                        timeout -s SIGKILL 5m ${mysql} ${mysql4_config} < "${QUERY}" | grep "row in set" >> $OUT_FILE
                     fi
                     status_code=$?
                     if [[ ${status_code} -eq 137 ]]; then
