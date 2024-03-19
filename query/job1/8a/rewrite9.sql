@@ -11,4 +11,4 @@ create or replace view aggJoin6045877116557907559 as select id as v2, name as v2
 create or replace view aggView804252262825362418 as select v2, MIN(v52) as v52 from aggJoin6045877116557907559 group by v2;
 create or replace view aggJoin6786468736886868109 as select name as v3, v52 from aka_name as an1, aggView804252262825362418 where an1.person_id=aggView804252262825362418.v2;
 create or replace view res as select MIN(v3) as v51, MIN(v52) as v52 from aggJoin6786468736886868109;
-select sum(v51+v52) from res;
+select v51, v52 from res;

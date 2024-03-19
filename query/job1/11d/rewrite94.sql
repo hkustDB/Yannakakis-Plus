@@ -13,4 +13,4 @@ create or replace view aggJoin4000454998930443573 as select v18, v19, v39 as v39
 create or replace view aggView372563121217658708 as select id as v18 from company_type as ct where kind<> 'production companies';
 create or replace view aggJoin3723677539235715425 as select v19, v39, v41 from aggJoin4000454998930443573 join aggView372563121217658708 using(v18);
 create or replace view res as select MIN(v39) as v39, MIN(v19) as v40, MIN(v41) as v41 from aggJoin3723677539235715425;
-select sum(v39+v40+v41) from res;
+select v39, v40, v41 from res;

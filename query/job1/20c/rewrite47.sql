@@ -17,4 +17,4 @@ create or replace view aggJoin6426926271840740469 as select v40, v52, v53 from a
 create or replace view aggView7999753923705282504 as select v40, MIN(v52) as v52, MIN(v53) as v53 from aggJoin6426926271840740469 group by v40;
 create or replace view aggJoin1757627163660062371 as select v52, v53 from aggJoin2593139975359054818 join aggView7999753923705282504 using(v40);
 create or replace view res as select MIN(v52) as v52, MIN(v53) as v53 from aggJoin1757627163660062371;
-select sum(v52+v53) from res;
+select v52, v53 from res;

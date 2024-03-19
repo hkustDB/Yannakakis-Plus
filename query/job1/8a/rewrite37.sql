@@ -11,4 +11,4 @@ create or replace view aggJoin4454857188005485281 as select v13, v15, v51 as v51
 create or replace view aggView8336805194723036819 as select id as v15 from role_type as rt where role= 'actress';
 create or replace view aggJoin2868598325231138650 as select v13, v51, v52 from aggJoin4454857188005485281 join aggView8336805194723036819 using(v15);
 create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin2868598325231138650;
-select sum(v51+v52) from res;
+select v51, v52 from res;

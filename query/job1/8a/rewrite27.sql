@@ -11,4 +11,4 @@ create or replace view aggJoin4618942725415809458 as select person_id as v2, nam
 create or replace view aggView9082728599878126114 as select v2, MIN(v52) as v52, MIN(v3) as v51 from aggJoin4618942725415809458 group by v2;
 create or replace view aggJoin6157474598694339746 as select name as v29, v52, v51 from name as n1, aggView9082728599878126114 where n1.id=aggView9082728599878126114.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
 create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin6157474598694339746;
-select sum(v51+v52) from res;
+select v51, v52 from res;

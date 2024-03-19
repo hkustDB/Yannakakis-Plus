@@ -17,4 +17,4 @@ create or replace view aggJoin5173749716993102078 as select keyword_id as v23, v
 create or replace view aggView6644865820041235579 as select v23, MIN(v52) as v52, MIN(v53) as v53 from aggJoin5173749716993102078 group by v23;
 create or replace view aggJoin1977334564278800284 as select v52, v53 from keyword as k, aggView6644865820041235579 where k.id=aggView6644865820041235579.v23 and keyword IN ('superhero','marvel-comics','based-on-comic','tv-special','fight','violence','magnet','web','claw','laser');
 create or replace view res as select MIN(v52) as v52, MIN(v53) as v53 from aggJoin1977334564278800284;
-select sum(v52+v53) from res;
+select v52, v53 from res;
