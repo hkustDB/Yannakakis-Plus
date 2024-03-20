@@ -167,7 +167,7 @@ def connect(base: int, mode: int, type: GenType):
     query_file.close()
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -314,8 +314,8 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/graph/q9/')
-    globalVar.set_value('DDL_NAME', "graph.ddl")
+    globalVar.set_value('BASE_PATH', 'query/job2/33c/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
     '''
     arguments = docopt(__doc__)
