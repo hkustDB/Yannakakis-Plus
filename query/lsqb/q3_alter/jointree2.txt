@@ -1,0 +1,23 @@
+Relations:
+dict_values([CityA[1,City]: ['v8', 'v2']
+, CityB[2,City]: ['v10', 'v4']
+, CityC[3,City]: ['v12', 'v6']
+, PersonA[4,Person]: ['v13', 'v8']
+, PersonB[5,Person]: ['v14', 'v10']
+, PersonC[6,Person]: ['v16', 'v12']
+, pkp1[7,Person_knows_Person]: ['v13', 'v14']
+, pkp2[8,Person_knows_Person]: ['v14', 'v16']
+, pkp3[9,Person_knows_Person]: ['v16', 'v18']
+])
+Edges:
+dict_values([6->3, 4->1, 8->6, 8->5, 5->7, 5->2, 7->4, 6->9])
+Root:
+8
+isFull:
+True
+isFreeConnex:
+True
+subset:
+[]
+Extra:
+[]
