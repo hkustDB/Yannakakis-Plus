@@ -184,3 +184,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                     aggReduce.aggView.selectAttrs.pop(index)
             aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, Agg=Agg, removeAnnot=removeAnnotFlag)
     return aggReduceList, reduceList, enumerateList
+
+def columnPruneYa(JT: JoinTree, semiUp: list[SemiJoin], semiDown: list[SemiJoin], lastUp: Union[list[AggReducePhase], list[Join2tables]], finalResult: str, outputVariables: set[str], Agg: Aggregation = None, COMP: list[Comparison] = []):
+    # TODO:
+    return semiUp, semiDown, lastUp

@@ -9,6 +9,7 @@ Options:
   -b, --base base   Set level-k log base [default: 32]
   -m, --mode mode   Set topK algorithm mode. 0: level-k, 1: product-k [default: 0]
   -g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
+  -y, --yanna yanna     Set Y for yannakakis generation; N for our rewrite [default: N]
 """
 
 from docopt import docopt
@@ -19,8 +20,10 @@ from aggregation import *
 from generateIR import *
 from generateAggIR import *
 from generateTopKIR import *
+from generateYaIR import *
 from codegen import *
 from codegenTopK import *
+from codegenYan import *
 from topk import *
 from estimator import *
 from enumsType import EdgeType
@@ -313,6 +316,7 @@ if __name__ == '__main__':
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
+    globalVar.set_value('YANNA', False)
     # code debug keep here
     globalVar.set_value('BASE_PATH', 'query/graph/q9/')
     globalVar.set_value('DDL_NAME', "graph.ddl")
@@ -323,6 +327,8 @@ if __name__ == '__main__':
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
     base = int(arguments['--base'])
     mode=int(arguments['--mode'])
+    yanna=True if arguments['--yanna'] == 'Y' else False
+    globalVar.set_value('YANNA', yanna)
     type=GenType.Mysql if arguments['--genType'] == 'M' else GenType.DuckDB
     if type == GenType.Mysql:
         globalVar.set_value('GEN_TYPE', 'Mysql')
@@ -348,11 +354,19 @@ if __name__ == '__main__':
         costout.close()
         
         if IRmode == IRType.Report:
-            reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
-            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
+            if globalVar.get_value('YANNA'):
+                semiUp, semiDown, lastUp, finalResult = yaGenerateIR(optJT, optCOMP, outputVariables, computationList)
+                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
+            else:
+                reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
+                codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
         elif IRmode == IRType.Aggregation:
-            aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
-            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg, genType=type)
+            if globalVar.get_value('YANNA'):
+                semiUp, semiDown, lastUp, finalResult = yaGenerateIR(optJT, optCOMP, outputVariables, computationList, isAgg=True, Agg=Agg)
+                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
+            else:
+                aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
+                codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg, genType=type)
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
@@ -378,12 +392,20 @@ if __name__ == '__main__':
                 '''
                 computationList.reset()
                 if IRmode == IRType.Report:
-                    reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
-                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, genType=type)
+                    if globalVar.get_value('YANNA'):
+                        semiUp, semiDown, lastUp, finalResult = yaGenerateIR(jt, comp, outputVariables, computationList)
+                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outName, genType=type)
+                    else:
+                        reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
+                        codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, genType=type)
                 elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
-                    aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
-                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, genType=type)
+                    if globalVar.get_value('YANNA'):
+                        semiUp, semiDown, lastUp, finalResult = yaGenerateIR(jt, comp, outputVariables, computationList, isAgg=True, Agg=Agg)
+                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outName, genType=type)
+                    else:
+                        aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
+                        codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, genType=type)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
