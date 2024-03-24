@@ -804,7 +804,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
     
     # (D) Semijoin
-    else:   
+    else:
         # NOTE: For semijoin, we only need to support EXTRACT in enumerate phase for tablescan-rel
         viewName = 'semiJoinView' + str(randint(0, maxsize))
         
