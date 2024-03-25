@@ -1560,7 +1560,6 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         enumerateList.append(retEnum)
     
     if not isAgg:
-        finalResult = 'select sum(' + ('distinct ' if not JT.isFull else '')
         selectName = []
         if enumerateList[-1].stageEnd:
             fromTable = enumerateList[-1].stageEnd.viewName
@@ -1573,7 +1572,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 if out in totalName:
                     selectName.append(out)
                 elif out in compKeys:
-                    selectName.append(computations.alias2Comp[out] + ' as ' + out)
+                    if globalVar.get_value('GEN_TYPE') == 'Mysql':
+                        selectName.append(computations.alias2Comp[out] + ' as ' + out)
+                    else:
+                        selectName.append(computations.alias2Comp[out])
         if len(selectName) != len(outputVariables):
             raise RuntimeError("Miss some outputs! ")
 
