@@ -9,9 +9,9 @@ INPUT_DIR="query/$2"
 INPUT_DIR_PATH="${SCRIPT_PATH}/${INPUT_DIR}"
 DDL_NAME=$1
 g=${3:-M}
-b=${4:-2}
-m=${5:-0}
-y=${6:-N}
+y=${4:-N}
+b=${5:-2}
+m=${6:-0}
 
 # Suffix function
 function FileSuffix() {
