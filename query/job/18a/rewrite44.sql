@@ -1,0 +1,14 @@
+create or replace view aggView19241555353060561 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin6885147943179880307 as select movie_id as v31, info_type_id as v8, info as v15, v45 from movie_info as mi, aggView19241555353060561 where mi.movie_id=aggView19241555353060561.v31;
+create or replace view aggView1991750503167220187 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin4771291049819353543 as select v31, v15, v45 from aggJoin6885147943179880307 join aggView1991750503167220187 using(v8);
+create or replace view aggView3495852903166253916 as select v31, MIN(v45) as v45, MIN(v15) as v43 from aggJoin4771291049819353543 group by v31;
+create or replace view aggJoin4782596731881036888 as select person_id as v22, movie_id as v31, note as v5, v45, v43 from cast_info as ci, aggView3495852903166253916 where ci.movie_id=aggView3495852903166253916.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView1755109341235155576 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin8718638037233835152 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView1755109341235155576 where mi_idx.info_type_id=aggView1755109341235155576.v10;
+create or replace view aggView655984398880679418 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin1647796785408064563 as select v31, v5, v45, v43 from aggJoin4782596731881036888 join aggView655984398880679418 using(v22);
+create or replace view aggView8532718545210562799 as select v31, MIN(v45) as v45, MIN(v43) as v43 from aggJoin1647796785408064563 group by v31;
+create or replace view aggJoin3548845072113564927 as select v20, v45, v43 from aggJoin8718638037233835152 join aggView8532718545210562799 using(v31);
+create or replace view res as select MIN(v43) as v43, MIN(v20) as v44, MIN(v45) as v45 from aggJoin3548845072113564927;
+select sum(v43+v44+v45) from res;

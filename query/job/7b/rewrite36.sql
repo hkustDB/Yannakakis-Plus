@@ -1,0 +1,16 @@
+create or replace view aggView2125583825222975556 as select id as v24, name as v50 from name as n where gender= 'm' and name_pcode_cf LIKE 'D%';
+create or replace view aggJoin1440573991713128648 as select person_id as v24, info_type_id as v16, note as v37, v50 from person_info as pi, aggView2125583825222975556 where pi.person_id=aggView2125583825222975556.v24 and note= 'Volker Boehm';
+create or replace view aggView8807830285969765175 as select person_id as v24 from aka_name as an where name LIKE '%a%' group by person_id;
+create or replace view aggJoin2814242100367803758 as select person_id as v24, movie_id as v38 from cast_info as ci, aggView8807830285969765175 where ci.person_id=aggView8807830285969765175.v24;
+create or replace view aggView5520124596018372547 as select id as v16 from info_type as it where info= 'mini biography';
+create or replace view aggJoin4488568438634271854 as select v24, v37, v50 from aggJoin1440573991713128648 join aggView5520124596018372547 using(v16);
+create or replace view aggView1609538671252546894 as select v24, MIN(v50) as v50 from aggJoin4488568438634271854 group by v24;
+create or replace view aggJoin3385716661477644903 as select v38, v50 from aggJoin2814242100367803758 join aggView1609538671252546894 using(v24);
+create or replace view aggView3612196700195300907 as select v38, MIN(v50) as v50 from aggJoin3385716661477644903 group by v38;
+create or replace view aggJoin595129614946220158 as select id as v38, title as v39, v50 from title as t, aggView3612196700195300907 where t.id=aggView3612196700195300907.v38 and production_year<=1984 and production_year>=1980;
+create or replace view aggView2227302253696048415 as select v38, MIN(v50) as v50, MIN(v39) as v51 from aggJoin595129614946220158 group by v38;
+create or replace view aggJoin270002160801739921 as select link_type_id as v18, v50, v51 from movie_link as ml, aggView2227302253696048415 where ml.linked_movie_id=aggView2227302253696048415.v38;
+create or replace view aggView1188575612339287788 as select v18, MIN(v50) as v50, MIN(v51) as v51 from aggJoin270002160801739921 group by v18;
+create or replace view aggJoin2123749148402938456 as select v50, v51 from link_type as lt, aggView1188575612339287788 where lt.id=aggView1188575612339287788.v18 and link= 'features';
+create or replace view res as select MIN(v50) as v50, MIN(v51) as v51 from aggJoin2123749148402938456;
+select sum(v50+v51) from res;

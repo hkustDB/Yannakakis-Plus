@@ -1,0 +1,16 @@
+create or replace view aggView155802846396532950 as select id as v16 from info_type as it where info= 'mini biography';
+create or replace view aggJoin5622704758417362296 as select person_id as v24, info as v36 from person_info as pi, aggView155802846396532950 where pi.info_type_id=aggView155802846396532950.v16;
+create or replace view aggView5588825172987738961 as select v24, MIN(v36) as v51 from aggJoin5622704758417362296 group by v24;
+create or replace view aggJoin5929017277630001457 as select person_id as v24, name as v3, v51 from aka_name as an, aggView5588825172987738961 where an.person_id=aggView5588825172987738961.v24 and ((name LIKE '%a%') OR (name LIKE 'A%'));
+create or replace view aggView1222274127416500466 as select v24, MIN(v51) as v51 from aggJoin5929017277630001457 group by v24;
+create or replace view aggJoin1305635146669238315 as select id as v24, name as v25, v51 from name as n, aggView1222274127416500466 where n.id=aggView1222274127416500466.v24 and name LIKE 'A%' and name_pcode_cf>='A' and name_pcode_cf<='F';
+create or replace view aggView6665926099059216895 as select v24, MIN(v51) as v51, MIN(v25) as v50 from aggJoin1305635146669238315 group by v24;
+create or replace view aggJoin1606209041029564741 as select movie_id as v38, v51, v50 from cast_info as ci, aggView6665926099059216895 where ci.person_id=aggView6665926099059216895.v24;
+create or replace view aggView3952469241089583226 as select v38, MIN(v51) as v51, MIN(v50) as v50 from aggJoin1606209041029564741 group by v38;
+create or replace view aggJoin5410002594790352592 as select id as v38, v51, v50 from title as t, aggView3952469241089583226 where t.id=aggView3952469241089583226.v38 and production_year<=2010 and production_year>=1980;
+create or replace view aggView2642745583830389637 as select v38, MIN(v51) as v51, MIN(v50) as v50 from aggJoin5410002594790352592 group by v38;
+create or replace view aggJoin7531850049217290489 as select link_type_id as v18, v51, v50 from movie_link as ml, aggView2642745583830389637 where ml.linked_movie_id=aggView2642745583830389637.v38;
+create or replace view aggView651583939290385265 as select v18, MIN(v51) as v51, MIN(v50) as v50 from aggJoin7531850049217290489 group by v18;
+create or replace view aggJoin7049876985240272060 as select v51, v50 from link_type as lt, aggView651583939290385265 where lt.id=aggView651583939290385265.v18 and link IN ('references','referenced in','features','featured in');
+create or replace view res as select MIN(v50) as v50, MIN(v51) as v51 from aggJoin7049876985240272060;
+select sum(v50+v51) from res;

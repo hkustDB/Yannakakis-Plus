@@ -1,0 +1,14 @@
+create or replace view aggView2149631447514235693 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin1023329518600964870 as select movie_id as v31, info as v15 from movie_info as mi, aggView2149631447514235693 where mi.info_type_id=aggView2149631447514235693.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView8651731211545429893 as select v31, MIN(v15) as v43 from aggJoin1023329518600964870 group by v31;
+create or replace view aggJoin2025849155802113183 as select id as v31, title as v32, v43 from title as t, aggView8651731211545429893 where t.id=aggView8651731211545429893.v31;
+create or replace view aggView5115407194337905409 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin3880127811070784346 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView5115407194337905409 where mi_idx.info_type_id=aggView5115407194337905409.v10;
+create or replace view aggView604598202246634805 as select v31, MIN(v20) as v44 from aggJoin3880127811070784346 group by v31;
+create or replace view aggJoin8164458816240103194 as select v31, v32, v43 as v43, v44 from aggJoin2025849155802113183 join aggView604598202246634805 using(v31);
+create or replace view aggView4929118009421409272 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin143300391937303993 as select movie_id as v31, note as v5 from cast_info as ci, aggView4929118009421409272 where ci.person_id=aggView4929118009421409272.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView7990410585073005455 as select v31 from aggJoin143300391937303993 group by v31;
+create or replace view aggJoin797575069253551169 as select v32, v43 as v43, v44 as v44 from aggJoin8164458816240103194 join aggView7990410585073005455 using(v31);
+create or replace view res as select MIN(v43) as v43, MIN(v44) as v44, MIN(v32) as v45 from aggJoin797575069253551169;
+select sum(v43+v44+v45) from res;

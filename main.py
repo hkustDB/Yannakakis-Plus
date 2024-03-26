@@ -314,7 +314,7 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job2/33c/')
+    globalVar.set_value('BASE_PATH', 'query/job2/7a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
     '''

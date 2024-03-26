@@ -1,0 +1,16 @@
+create or replace view aggView7046354081714772747 as select id as v22 from keyword as k where keyword IN ('sequel','revenge','based-on-novel');
+create or replace view aggJoin279561637531611681 as select movie_id as v24 from movie_keyword as mk, aggView7046354081714772747 where mk.keyword_id=aggView7046354081714772747.v22;
+create or replace view aggView108219673304757052 as select v24 from aggJoin279561637531611681 group by v24;
+create or replace view aggJoin7398630490490244119 as select id as v24, title as v28 from title as t, aggView108219673304757052 where t.id=aggView108219673304757052.v24 and production_year>1950;
+create or replace view aggView8226777357181741439 as select v24, MIN(v28) as v41 from aggJoin7398630490490244119 group by v24;
+create or replace view aggJoin8438977564219989319 as select movie_id as v24, link_type_id as v13, v41 from movie_link as ml, aggView8226777357181741439 where ml.movie_id=aggView8226777357181741439.v24;
+create or replace view aggView5474350412470413769 as select id as v13 from link_type as lt;
+create or replace view aggJoin6483443495351516318 as select v24, v41 from aggJoin8438977564219989319 join aggView5474350412470413769 using(v13);
+create or replace view aggView8717647179226381269 as select v24, MIN(v41) as v41 from aggJoin6483443495351516318 group by v24;
+create or replace view aggJoin8234254768319779345 as select company_id as v17, company_type_id as v18, note as v19, v41 from movie_companies as mc, aggView8717647179226381269 where mc.movie_id=aggView8717647179226381269.v24;
+create or replace view aggView66197387019352343 as select id as v18 from company_type as ct where kind<> 'production companies';
+create or replace view aggJoin2533818960974052694 as select v17, v19, v41 from aggJoin8234254768319779345 join aggView66197387019352343 using(v18);
+create or replace view aggView1563145037599262357 as select v17, MIN(v41) as v41, MIN(v19) as v40 from aggJoin2533818960974052694 group by v17;
+create or replace view aggJoin712123117116322147 as select name as v2, v41, v40 from company_name as cn, aggView1563145037599262357 where cn.id=aggView1563145037599262357.v17 and country_code<> '[pl]';
+create or replace view res as select MIN(v2) as v39, MIN(v40) as v40, MIN(v41) as v41 from aggJoin712123117116322147;
+select v39, v40, v41 from res;

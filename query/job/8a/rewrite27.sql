@@ -1,0 +1,14 @@
+create or replace view aggView1442274274492156927 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin7411181913449018251 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v52 from cast_info as ci, aggView1442274274492156927 where ci.movie_id=aggView1442274274492156927.v11 and note= '(voice: English version)';
+create or replace view aggView6462990962168115260 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin5574871811003523653 as select movie_id as v11, note as v27 from movie_companies as mc, aggView6462990962168115260 where mc.company_id=aggView6462990962168115260.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView609376864998506617 as select v11 from aggJoin5574871811003523653 group by v11;
+create or replace view aggJoin1513999752408731143 as select v2, v13, v15, v52 as v52 from aggJoin7411181913449018251 join aggView609376864998506617 using(v11);
+create or replace view aggView1817344991131914127 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin6918956017411693167 as select v2, v13, v52 from aggJoin1513999752408731143 join aggView1817344991131914127 using(v15);
+create or replace view aggView548254151507321324 as select v2, MIN(v52) as v52 from aggJoin6918956017411693167 group by v2;
+create or replace view aggJoin4618942725415809458 as select person_id as v2, name as v3, v52 from aka_name as an1, aggView548254151507321324 where an1.person_id=aggView548254151507321324.v2;
+create or replace view aggView9082728599878126114 as select v2, MIN(v52) as v52, MIN(v3) as v51 from aggJoin4618942725415809458 group by v2;
+create or replace view aggJoin6157474598694339746 as select name as v29, v52, v51 from name as n1, aggView9082728599878126114 where n1.id=aggView9082728599878126114.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin6157474598694339746;
+select v51, v52 from res;
