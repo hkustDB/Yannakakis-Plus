@@ -1,0 +1,14 @@
+create or replace view aggView4050312656898348990 as select id as v2 from name as n where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin3914696802711442504 as select person_id as v2, name as v3 from aka_name as an, aggView4050312656898348990 where an.person_id=aggView4050312656898348990.v2;
+create or replace view aggView2821982121181015782 as select v2, MIN(v3) as v51 from aggJoin3914696802711442504 group by v2;
+create or replace view aggJoin6083541689557398340 as select movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView2821982121181015782 where ci.person_id=aggView2821982121181015782.v2 and note= '(voice: English version)';
+create or replace view aggView8534700764540509184 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin2276333725689317178 as select v11, v13, v51 from aggJoin6083541689557398340 join aggView8534700764540509184 using(v15);
+create or replace view aggView6637350978051484834 as select v11, MIN(v51) as v51 from aggJoin2276333725689317178 group by v11;
+create or replace view aggJoin3348095744027194573 as select id as v11, title as v40, v51 from title as t, aggView6637350978051484834 where t.id=aggView6637350978051484834.v11 and production_year<=2007 and ((title LIKE 'One Piece%') OR (title LIKE 'Dragon Ball Z%')) and production_year>=2006;
+create or replace view aggView7921537467344028490 as select v11, MIN(v51) as v51, MIN(v40) as v52 from aggJoin3348095744027194573 group by v11;
+create or replace view aggJoin6824996865282278779 as select company_id as v25, v51, v52 from movie_companies as mc, aggView7921537467344028490 where mc.movie_id=aggView7921537467344028490.v11 and ((note LIKE '%(2006)%') OR (note LIKE '%(2007)%')) and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView7526447037373924008 as select v25, MIN(v51) as v51, MIN(v52) as v52 from aggJoin6824996865282278779 group by v25;
+create or replace view aggJoin7281744601168142211 as select v51, v52 from company_name as cn, aggView7526447037373924008 where cn.id=aggView7526447037373924008.v25 and country_code= '[jp]';
+create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin7281744601168142211;
+select sum(v51+v52) from res;

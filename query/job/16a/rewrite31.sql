@@ -1,0 +1,16 @@
+create or replace view aggView127739046662831816 as select id as v28 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin676046118852430968 as select movie_id as v11 from movie_companies as mc, aggView127739046662831816 where mc.company_id=aggView127739046662831816.v28;
+create or replace view aggView2022444761768331731 as select v11 from aggJoin676046118852430968 group by v11;
+create or replace view aggJoin2685512213518693876 as select id as v11, title as v44 from title as t, aggView2022444761768331731 where t.id=aggView2022444761768331731.v11 and episode_nr>=50 and episode_nr<100;
+create or replace view aggView4419133569462425283 as select v11, MIN(v44) as v56 from aggJoin2685512213518693876 group by v11;
+create or replace view aggJoin2603401954969057439 as select movie_id as v11, keyword_id as v33, v56 from movie_keyword as mk, aggView4419133569462425283 where mk.movie_id=aggView4419133569462425283.v11;
+create or replace view aggView1409593211617741598 as select id as v2 from name as n;
+create or replace view aggJoin938093947888031861 as select person_id as v2, name as v3 from aka_name as an, aggView1409593211617741598 where an.person_id=aggView1409593211617741598.v2;
+create or replace view aggView5254767046798050385 as select v2, MIN(v3) as v55 from aggJoin938093947888031861 group by v2;
+create or replace view aggJoin6291340031849249587 as select movie_id as v11, v55 from cast_info as ci, aggView5254767046798050385 where ci.person_id=aggView5254767046798050385.v2;
+create or replace view aggView8554424214082163184 as select v11, MIN(v55) as v55 from aggJoin6291340031849249587 group by v11;
+create or replace view aggJoin3539247001376079425 as select v33, v56 as v56, v55 from aggJoin2603401954969057439 join aggView8554424214082163184 using(v11);
+create or replace view aggView9038095834365618251 as select v33, MIN(v56) as v56, MIN(v55) as v55 from aggJoin3539247001376079425 group by v33;
+create or replace view aggJoin1002548429212613102 as select v56, v55 from keyword as k, aggView9038095834365618251 where k.id=aggView9038095834365618251.v33 and keyword= 'character-name-in-title';
+create or replace view res as select MIN(v55) as v55, MIN(v56) as v56 from aggJoin1002548429212613102;
+select sum(v55+v56) from res;
