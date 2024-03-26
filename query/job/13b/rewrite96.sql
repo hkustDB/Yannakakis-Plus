@@ -1,0 +1,17 @@
+create or replace view aggView7639096112462865817 as select id as v1, name as v43 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin7350026549828691959 as select movie_id as v22, company_type_id as v8, v43 from movie_companies as mc, aggView7639096112462865817 where mc.company_id=aggView7639096112462865817.v1;
+create or replace view aggView6145289961907116549 as select id as v8 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin3592509036468849104 as select v22, v43 from aggJoin7350026549828691959 join aggView6145289961907116549 using(v8);
+create or replace view aggView8093394219597337513 as select id as v10 from info_type as it where info= 'rating';
+create or replace view aggJoin5992612671488600489 as select movie_id as v22, info as v29 from movie_info_idx as miidx, aggView8093394219597337513 where miidx.info_type_id=aggView8093394219597337513.v10;
+create or replace view aggView1658031618304426687 as select id as v12 from info_type as it2 where info= 'release dates';
+create or replace view aggJoin6010758804903554488 as select movie_id as v22 from movie_info as mi, aggView1658031618304426687 where mi.info_type_id=aggView1658031618304426687.v12;
+create or replace view aggView5230028428946829741 as select id as v14 from kind_type as kt where kind= 'movie';
+create or replace view aggJoin1399564947064589357 as select id as v22, title as v32 from title as t, aggView5230028428946829741 where t.kind_id=aggView5230028428946829741.v14 and title<> '' and ((title LIKE '%Champion%') OR (title LIKE '%Loser%'));
+create or replace view aggView220068040236045518 as select v22, MIN(v32) as v45 from aggJoin1399564947064589357 group by v22;
+create or replace view aggJoin4486282850774490997 as select v22, v43 as v43, v45 from aggJoin3592509036468849104 join aggView220068040236045518 using(v22);
+create or replace view aggView8426717174383402236 as select v22, MIN(v43) as v43, MIN(v45) as v45 from aggJoin4486282850774490997 group by v22;
+create or replace view aggJoin795622632381766154 as select v22, v29, v43, v45 from aggJoin5992612671488600489 join aggView8426717174383402236 using(v22);
+create or replace view aggView5341164959288755713 as select v22, MIN(v43) as v43, MIN(v45) as v45, MIN(v29) as v44 from aggJoin795622632381766154 group by v22;
+create or replace view aggJoin6731159555747411476 as select v43, v45, v44 from aggJoin6010758804903554488 join aggView5341164959288755713 using(v22);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin6731159555747411476;

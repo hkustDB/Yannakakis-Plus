@@ -1,0 +1,13 @@
+create or replace view aggView2951826151775761526 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin7274366867067323390 as select movie_id as v31, info_type_id as v10, info as v20, v45 from movie_info_idx as mi_idx, aggView2951826151775761526 where mi_idx.movie_id=aggView2951826151775761526.v31;
+create or replace view aggView4566365939330560362 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin5439971111497708499 as select movie_id as v31, info as v15 from movie_info as mi, aggView4566365939330560362 where mi.info_type_id=aggView4566365939330560362.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView3644821514325081546 as select v31, MIN(v15) as v43 from aggJoin5439971111497708499 group by v31;
+create or replace view aggJoin3155687274291109627 as select person_id as v22, movie_id as v31, note as v5, v43 from cast_info as ci, aggView3644821514325081546 where ci.movie_id=aggView3644821514325081546.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView2470034270462278687 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin9093962980201238906 as select v31, v20, v45 from aggJoin7274366867067323390 join aggView2470034270462278687 using(v10);
+create or replace view aggView9109161287241790511 as select v31, MIN(v45) as v45, MIN(v20) as v44 from aggJoin9093962980201238906 group by v31;
+create or replace view aggJoin5985662879930565111 as select v22, v5, v43 as v43, v45, v44 from aggJoin3155687274291109627 join aggView9109161287241790511 using(v31);
+create or replace view aggView9021396425032671318 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin2085436501596696487 as select v5, v43, v45, v44 from aggJoin5985662879930565111 join aggView9021396425032671318 using(v22);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin2085436501596696487;

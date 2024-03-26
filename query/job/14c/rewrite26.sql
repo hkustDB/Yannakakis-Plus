@@ -1,0 +1,15 @@
+create or replace view aggView2160152797328800823 as select id as v8 from kind_type as kt where kind IN ('movie','episode');
+create or replace view aggJoin2816338047904202364 as select id as v23, title as v24 from title as t, aggView2160152797328800823 where t.kind_id=aggView2160152797328800823.v8 and production_year>2005;
+create or replace view aggView7106191682306794754 as select v23, MIN(v24) as v36 from aggJoin2816338047904202364 group by v23;
+create or replace view aggJoin3909866534103087183 as select movie_id as v23, keyword_id as v5, v36 from movie_keyword as mk, aggView7106191682306794754 where mk.movie_id=aggView7106191682306794754.v23;
+create or replace view aggView9032624360225333538 as select id as v3 from info_type as it2 where info= 'rating';
+create or replace view aggJoin7969270221914865180 as select movie_id as v23, info as v18 from movie_info_idx as mi_idx, aggView9032624360225333538 where mi_idx.info_type_id=aggView9032624360225333538.v3 and info<'8.5';
+create or replace view aggView2899716017068584347 as select id as v1 from info_type as it1 where info= 'countries';
+create or replace view aggJoin7979678444724632865 as select movie_id as v23 from movie_info as mi, aggView2899716017068584347 where mi.info_type_id=aggView2899716017068584347.v1 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Danish','Norwegian','German','USA','American');
+create or replace view aggView3400689849162296584 as select v23 from aggJoin7979678444724632865 group by v23;
+create or replace view aggJoin8490673895549104708 as select v23, v18 from aggJoin7969270221914865180 join aggView3400689849162296584 using(v23);
+create or replace view aggView9065020539883449683 as select v23, MIN(v18) as v35 from aggJoin8490673895549104708 group by v23;
+create or replace view aggJoin5941151470046347103 as select v5, v36 as v36, v35 from aggJoin3909866534103087183 join aggView9065020539883449683 using(v23);
+create or replace view aggView616731867719004198 as select v5, MIN(v36) as v36, MIN(v35) as v35 from aggJoin5941151470046347103 group by v5;
+create or replace view aggJoin9049784763257094394 as select v36, v35 from keyword as k, aggView616731867719004198 where k.id=aggView616731867719004198.v5 and keyword IN ('murder','murder-in-title','blood','violence');
+select MIN(v35) as v35,MIN(v36) as v36 from aggJoin9049784763257094394;

@@ -1,0 +1,13 @@
+create or replace view aggView7794898426389201682 as select id as v31, title as v45 from title as t where production_year>=2008 and production_year<=2014;
+create or replace view aggJoin5685402279230441994 as select movie_id as v31, info_type_id as v10, info as v20, v45 from movie_info_idx as mi_idx, aggView7794898426389201682 where mi_idx.movie_id=aggView7794898426389201682.v31 and info>'8.0';
+create or replace view aggView8290279278510119283 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin93743633797294365 as select movie_id as v31 from cast_info as ci, aggView8290279278510119283 where ci.person_id=aggView8290279278510119283.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView7768809420664949281 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin5484167608684690778 as select v31, v20, v45 from aggJoin5685402279230441994 join aggView7768809420664949281 using(v10);
+create or replace view aggView5662324930151482136 as select v31, MIN(v45) as v45, MIN(v20) as v44 from aggJoin5484167608684690778 group by v31;
+create or replace view aggJoin3195210866591242531 as select v31, v45, v44 from aggJoin93743633797294365 join aggView5662324930151482136 using(v31);
+create or replace view aggView7960282814782403721 as select v31, MIN(v45) as v45, MIN(v44) as v44 from aggJoin3195210866591242531 group by v31;
+create or replace view aggJoin8786059497761317820 as select info_type_id as v8, info as v15, v45, v44 from movie_info as mi, aggView7960282814782403721 where mi.movie_id=aggView7960282814782403721.v31 and info IN ('Horror','Thriller');
+create or replace view aggView3726538857749884872 as select v8, MIN(v45) as v45, MIN(v44) as v44, MIN(v15) as v43 from aggJoin8786059497761317820 group by v8;
+create or replace view aggJoin4134972205626517162 as select v45, v44, v43 from info_type as it1, aggView3726538857749884872 where it1.id=aggView3726538857749884872.v8 and info= 'genres';
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin4134972205626517162;

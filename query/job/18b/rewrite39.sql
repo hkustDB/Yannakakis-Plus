@@ -1,0 +1,13 @@
+create or replace view aggView2182862021422411048 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin7286968993325832048 as select movie_id as v31, note as v5 from cast_info as ci, aggView2182862021422411048 where ci.person_id=aggView2182862021422411048.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView3747105590412198580 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin7728985765742843702 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView3747105590412198580 where mi_idx.info_type_id=aggView3747105590412198580.v10 and info>'8.0';
+create or replace view aggView5986869057620449162 as select v31, MIN(v20) as v44 from aggJoin7728985765742843702 group by v31;
+create or replace view aggJoin1031374696708707544 as select id as v31, title as v32, v44 from title as t, aggView5986869057620449162 where t.id=aggView5986869057620449162.v31 and production_year>=2008 and production_year<=2014;
+create or replace view aggView6794851654621377203 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin9154250317655294202 as select movie_id as v31, info as v15 from movie_info as mi, aggView6794851654621377203 where mi.info_type_id=aggView6794851654621377203.v8 and info IN ('Horror','Thriller');
+create or replace view aggView3182628558268014458 as select v31 from aggJoin7286968993325832048 group by v31;
+create or replace view aggJoin8341838101338102498 as select v31, v15 from aggJoin9154250317655294202 join aggView3182628558268014458 using(v31);
+create or replace view aggView6597434962139614942 as select v31, MIN(v15) as v43 from aggJoin8341838101338102498 group by v31;
+create or replace view aggJoin6586094128073143081 as select v32, v44 as v44, v43 from aggJoin1031374696708707544 join aggView6597434962139614942 using(v31);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v32) as v45 from aggJoin6586094128073143081;

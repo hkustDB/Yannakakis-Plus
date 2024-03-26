@@ -1,0 +1,11 @@
+create or replace view aggView7001076220527093614 as select id as v4, link as v37 from link_type as lt;
+create or replace view aggJoin6859898304503202516 as select movie_id as v13, linked_movie_id as v11, v37 from movie_link as ml, aggView7001076220527093614 where ml.link_type_id=aggView7001076220527093614.v4;
+create or replace view aggView5335577918046990918 as select id as v11, title as v39 from title as t2;
+create or replace view aggJoin5421434281563058676 as select v13, v37, v39 from aggJoin6859898304503202516 join aggView5335577918046990918 using(v11);
+create or replace view aggView5492485593617431589 as select id as v8 from keyword as k where keyword= '10,000-mile-club';
+create or replace view aggJoin7189232500860989189 as select movie_id as v13 from movie_keyword as mk, aggView5492485593617431589 where mk.keyword_id=aggView5492485593617431589.v8;
+create or replace view aggView6506304723038335989 as select v13 from aggJoin7189232500860989189 group by v13;
+create or replace view aggJoin1898455979456256433 as select id as v13, title as v14 from title as t1, aggView6506304723038335989 where t1.id=aggView6506304723038335989.v13;
+create or replace view aggView7635784800382714954 as select v13, MIN(v14) as v38 from aggJoin1898455979456256433 group by v13;
+create or replace view aggJoin5423367042830001619 as select v37 as v37, v39 as v39, v38 from aggJoin5421434281563058676 join aggView7635784800382714954 using(v13);
+select MIN(v37) as v37,MIN(v38) as v38,MIN(v39) as v39 from aggJoin5423367042830001619;

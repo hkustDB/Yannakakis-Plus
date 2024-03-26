@@ -1,0 +1,13 @@
+create or replace view aggView2727935007769759486 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin1435101252937460221 as select movie_id as v31, info as v15 from movie_info as mi, aggView2727935007769759486 where mi.info_type_id=aggView2727935007769759486.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView4369147052962402969 as select v31, MIN(v15) as v43 from aggJoin1435101252937460221 group by v31;
+create or replace view aggJoin4580289199857072769 as select person_id as v22, movie_id as v31, note as v5, v43 from cast_info as ci, aggView4369147052962402969 where ci.movie_id=aggView4369147052962402969.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView2285666086725261408 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin6995741115293564456 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView2285666086725261408 where mi_idx.info_type_id=aggView2285666086725261408.v10;
+create or replace view aggView6366380422546180651 as select v31, MIN(v20) as v44 from aggJoin6995741115293564456 group by v31;
+create or replace view aggJoin6543542577890403258 as select id as v31, title as v32, v44 from title as t, aggView6366380422546180651 where t.id=aggView6366380422546180651.v31;
+create or replace view aggView7349607224575180767 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin2096234093826138431 as select v31, v5, v43 from aggJoin4580289199857072769 join aggView7349607224575180767 using(v22);
+create or replace view aggView6669540230808212826 as select v31, MIN(v43) as v43 from aggJoin2096234093826138431 group by v31;
+create or replace view aggJoin8864475283444595131 as select v32, v44 as v44, v43 from aggJoin6543542577890403258 join aggView6669540230808212826 using(v31);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v32) as v45 from aggJoin8864475283444595131;

@@ -1,0 +1,13 @@
+create or replace view aggView7927947898893064312 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin4426996040352660545 as select movie_id as v11, company_id as v25, note as v27, v52 from movie_companies as mc, aggView7927947898893064312 where mc.movie_id=aggView7927947898893064312.v11 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView7758314899223306978 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin357564883187371134 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView7758314899223306978 where ci.person_id=aggView7758314899223306978.v2 and note= '(voice: English version)';
+create or replace view aggView6172514616001315583 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin6393715132414546334 as select v11, v27, v52 from aggJoin4426996040352660545 join aggView6172514616001315583 using(v25);
+create or replace view aggView3727021380430762124 as select v11, MIN(v52) as v52 from aggJoin6393715132414546334 group by v11;
+create or replace view aggJoin3250042611998643000 as select v2, v13, v15, v51 as v51, v52 from aggJoin357564883187371134 join aggView3727021380430762124 using(v11);
+create or replace view aggView2707527888468497185 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin1875465572182284772 as select v13, v15, v51, v52 from aggJoin3250042611998643000 join aggView2707527888468497185 using(v2);
+create or replace view aggView2457437832802282782 as select v15, MIN(v51) as v51, MIN(v52) as v52 from aggJoin1875465572182284772 group by v15;
+create or replace view aggJoin3663979707500736113 as select role as v38, v51, v52 from role_type as rt, aggView2457437832802282782 where rt.id=aggView2457437832802282782.v15 and role= 'actress';
+select MIN(v51) as v51,MIN(v52) as v52 from aggJoin3663979707500736113;

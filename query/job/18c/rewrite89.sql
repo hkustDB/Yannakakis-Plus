@@ -1,0 +1,13 @@
+create or replace view aggView7092107829794475194 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin8924276902933781338 as select movie_id as v31, info as v15 from movie_info as mi, aggView7092107829794475194 where mi.info_type_id=aggView7092107829794475194.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView469034080729292109 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin729194028189607436 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView469034080729292109 where mi_idx.info_type_id=aggView469034080729292109.v10;
+create or replace view aggView8149976059329593923 as select v31, MIN(v20) as v44 from aggJoin729194028189607436 group by v31;
+create or replace view aggJoin8807084505819383956 as select id as v31, title as v32, v44 from title as t, aggView8149976059329593923 where t.id=aggView8149976059329593923.v31;
+create or replace view aggView3925462489768568743 as select v31, MIN(v44) as v44, MIN(v32) as v45 from aggJoin8807084505819383956 group by v31;
+create or replace view aggJoin2096422777228962821 as select v31, v15, v44, v45 from aggJoin8924276902933781338 join aggView3925462489768568743 using(v31);
+create or replace view aggView6413119669407017076 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin1144095787400506004 as select movie_id as v31, note as v5 from cast_info as ci, aggView6413119669407017076 where ci.person_id=aggView6413119669407017076.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView4021949809675012323 as select v31 from aggJoin1144095787400506004 group by v31;
+create or replace view aggJoin2431191945190798079 as select v15, v44 as v44, v45 as v45 from aggJoin2096422777228962821 join aggView4021949809675012323 using(v31);
+select MIN(v15) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin2431191945190798079;
