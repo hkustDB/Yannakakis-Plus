@@ -1,0 +1,16 @@
+create or replace view aggView3857631346070547499 as select id as v17, name as v39 from company_name as cn where country_code<> '[pl]';
+create or replace view aggJoin6198498756140030823 as select movie_id as v24, company_type_id as v18, note as v19, v39 from movie_companies as mc, aggView3857631346070547499 where mc.company_id=aggView3857631346070547499.v17;
+create or replace view aggView6019826713572908311 as select id as v13 from link_type as lt;
+create or replace view aggJoin8154771854050022390 as select movie_id as v24 from movie_link as ml, aggView6019826713572908311 where ml.link_type_id=aggView6019826713572908311.v13;
+create or replace view aggView8792245591032539540 as select v24 from aggJoin8154771854050022390 group by v24;
+create or replace view aggJoin7810124423237137791 as select id as v24, title as v28 from title as t, aggView8792245591032539540 where t.id=aggView8792245591032539540.v24 and production_year>1950;
+create or replace view aggView924025044780879135 as select v24, MIN(v28) as v41 from aggJoin7810124423237137791 group by v24;
+create or replace view aggJoin2970025658361829151 as select v24, v18, v19, v39 as v39, v41 from aggJoin6198498756140030823 join aggView924025044780879135 using(v24);
+create or replace view aggView6535554820204698634 as select id as v18 from company_type as ct where kind<> 'production companies';
+create or replace view aggJoin4251178892625645243 as select v24, v19, v39, v41 from aggJoin2970025658361829151 join aggView6535554820204698634 using(v18);
+create or replace view aggView8812950575212221693 as select v24, MIN(v39) as v39, MIN(v41) as v41, MIN(v19) as v40 from aggJoin4251178892625645243 group by v24;
+create or replace view aggJoin2302475401199490481 as select keyword_id as v22, v39, v41, v40 from movie_keyword as mk, aggView8812950575212221693 where mk.movie_id=aggView8812950575212221693.v24;
+create or replace view aggView1323999774756626171 as select v22, MIN(v39) as v39, MIN(v41) as v41, MIN(v40) as v40 from aggJoin2302475401199490481 group by v22;
+create or replace view aggJoin8286799372529992726 as select v39, v41, v40 from keyword as k, aggView1323999774756626171 where k.id=aggView1323999774756626171.v22 and keyword IN ('sequel','revenge','based-on-novel');
+create or replace view res as select MIN(v39) as v39, MIN(v40) as v40, MIN(v41) as v41 from aggJoin8286799372529992726;
+select v39, v40, v41 from res;

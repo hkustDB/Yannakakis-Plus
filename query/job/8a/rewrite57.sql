@@ -1,0 +1,14 @@
+create or replace view aggView1395438773329136801 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin2958617944539489332 as select person_id as v2, movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView1395438773329136801 where ci.person_id=aggView1395438773329136801.v2 and note= '(voice: English version)';
+create or replace view aggView1691273366445300679 as select id as v11, title as v52 from title as t;
+create or replace view aggJoin4450807317326220144 as select v2, v11, v13, v15, v51, v52 from aggJoin2958617944539489332 join aggView1691273366445300679 using(v11);
+create or replace view aggView5457190165112891545 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin2089545552994850267 as select movie_id as v11, note as v27 from movie_companies as mc, aggView5457190165112891545 where mc.company_id=aggView5457190165112891545.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView7890062433598537434 as select v11 from aggJoin2089545552994850267 group by v11;
+create or replace view aggJoin1333502234059431785 as select v2, v13, v15, v51 as v51, v52 as v52 from aggJoin4450807317326220144 join aggView7890062433598537434 using(v11);
+create or replace view aggView2900294007392950795 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin8007956789686479422 as select v2, v13, v51, v52 from aggJoin1333502234059431785 join aggView2900294007392950795 using(v15);
+create or replace view aggView3840561301732245715 as select v2, MIN(v51) as v51, MIN(v52) as v52 from aggJoin8007956789686479422 group by v2;
+create or replace view aggJoin4856904265223236464 as select name as v29, v51, v52 from name as n1, aggView3840561301732245715 where n1.id=aggView3840561301732245715.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view res as select MIN(v51) as v51, MIN(v52) as v52 from aggJoin4856904265223236464;
+select v51, v52 from res;

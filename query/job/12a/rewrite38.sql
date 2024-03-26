@@ -1,0 +1,16 @@
+create or replace view aggView7030230015188959418 as select id as v1, name as v41 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin4552109974283612780 as select movie_id as v29, company_type_id as v8, v41 from movie_companies as mc, aggView7030230015188959418 where mc.company_id=aggView7030230015188959418.v1;
+create or replace view aggView1884775120732744015 as select id as v26 from info_type as it2 where info= 'rating';
+create or replace view aggJoin502874726632582289 as select movie_id as v29, info as v27 from movie_info_idx as mi_idx, aggView1884775120732744015 where mi_idx.info_type_id=aggView1884775120732744015.v26 and info>'8.0';
+create or replace view aggView7150659584692718661 as select v29, MIN(v27) as v42 from aggJoin502874726632582289 group by v29;
+create or replace view aggJoin4156629278349405689 as select id as v29, title as v30, v42 from title as t, aggView7150659584692718661 where t.id=aggView7150659584692718661.v29 and production_year<=2008 and production_year>=2005;
+create or replace view aggView4056123926909261500 as select id as v8 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin995153698038277723 as select v29, v41 from aggJoin4552109974283612780 join aggView4056123926909261500 using(v8);
+create or replace view aggView1237838929945364587 as select v29, MIN(v41) as v41 from aggJoin995153698038277723 group by v29;
+create or replace view aggJoin4706809322798798550 as select v29, v30, v42 as v42, v41 from aggJoin4156629278349405689 join aggView1237838929945364587 using(v29);
+create or replace view aggView1430649754935331322 as select v29, MIN(v42) as v42, MIN(v41) as v41, MIN(v30) as v43 from aggJoin4706809322798798550 group by v29;
+create or replace view aggJoin6128414520645954381 as select info_type_id as v21, v42, v41, v43 from movie_info as mi, aggView1430649754935331322 where mi.movie_id=aggView1430649754935331322.v29 and info IN ('Drama','Horror');
+create or replace view aggView6623860955177704256 as select v21, MIN(v42) as v42, MIN(v41) as v41, MIN(v43) as v43 from aggJoin6128414520645954381 group by v21;
+create or replace view aggJoin337793597924214268 as select v42, v41, v43 from info_type as it1, aggView6623860955177704256 where it1.id=aggView6623860955177704256.v21 and info= 'genres';
+create or replace view res as select MIN(v41) as v41, MIN(v42) as v42, MIN(v43) as v43 from aggJoin337793597924214268;
+select sum(v41+v42+v43) from res;

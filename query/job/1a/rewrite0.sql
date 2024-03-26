@@ -1,0 +1,10 @@
+create or replace view aggView1968208944713762679 as select id as v1 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin932024771548140345 as select movie_id as v15, note as v9 from movie_companies as mc, aggView1968208944713762679 where mc.company_type_id=aggView1968208944713762679.v1 and note NOT LIKE '%(as Metro-Goldwyn-Mayer Pictures)%' and ((note LIKE '%(co-production)%') OR (note LIKE '%(presents)%'));
+create or replace view aggView3768850139216222037 as select v15, MIN(v9) as v27 from aggJoin932024771548140345 group by v15;
+create or replace view aggJoin80648943608190016 as select id as v15, title as v16, production_year as v19, v27 from title as t, aggView3768850139216222037 where t.id=aggView3768850139216222037.v15;
+create or replace view aggView8593822880194487731 as select v15, MIN(v27) as v27, MIN(v16) as v28, MIN(v19) as v29 from aggJoin80648943608190016 group by v15;
+create or replace view aggJoin3633320740698823157 as select info_type_id as v3, v27, v28, v29 from movie_info_idx as mi_idx, aggView8593822880194487731 where mi_idx.movie_id=aggView8593822880194487731.v15;
+create or replace view aggView2800917160120266778 as select v3, MIN(v27) as v27, MIN(v28) as v28, MIN(v29) as v29 from aggJoin3633320740698823157 group by v3;
+create or replace view aggJoin886168027296355099 as select info as v4, v27, v28, v29 from info_type as it, aggView2800917160120266778 where it.id=aggView2800917160120266778.v3 and info= 'top 250 rank';
+create or replace view res as select MIN(v27) as v27, MIN(v28) as v28, MIN(v29) as v29 from aggJoin886168027296355099;
+select sum(v27+v28+v29) from res;

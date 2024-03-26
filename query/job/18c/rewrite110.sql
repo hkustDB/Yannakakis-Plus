@@ -1,0 +1,14 @@
+create or replace view aggView7544329611454922796 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin6088829231622147599 as select movie_id as v31, info_type_id as v8, info as v15, v45 from movie_info as mi, aggView7544329611454922796 where mi.movie_id=aggView7544329611454922796.v31 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView1445624110188435998 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin4157416797935126357 as select v31, v15, v45 from aggJoin6088829231622147599 join aggView1445624110188435998 using(v8);
+create or replace view aggView3804390751372299732 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin3010319881346233133 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView3804390751372299732 where mi_idx.info_type_id=aggView3804390751372299732.v10;
+create or replace view aggView10434994846312327 as select v31, MIN(v20) as v44 from aggJoin3010319881346233133 group by v31;
+create or replace view aggJoin2194047266892107130 as select v31, v15, v45 as v45, v44 from aggJoin4157416797935126357 join aggView10434994846312327 using(v31);
+create or replace view aggView7987668721175979673 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin4911462787726147170 as select movie_id as v31, note as v5 from cast_info as ci, aggView7987668721175979673 where ci.person_id=aggView7987668721175979673.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView2861179246500558108 as select v31 from aggJoin4911462787726147170 group by v31;
+create or replace view aggJoin5657976446691772123 as select v15, v45 as v45, v44 as v44 from aggJoin2194047266892107130 join aggView2861179246500558108 using(v31);
+create or replace view res as select MIN(v15) as v43, MIN(v44) as v44, MIN(v45) as v45 from aggJoin5657976446691772123;
+select sum(v43+v44+v45) from res;
