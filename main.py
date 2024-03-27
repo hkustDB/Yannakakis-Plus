@@ -314,11 +314,12 @@ if __name__ == '__main__':
     globalVar._init()
     globalVar.set_value('QUERY_NAME', 'query.sql')
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
+    globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'DuckDB')
-    globalVar.set_value('YANNA', True)
+    globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/tpch/q3/')
+    globalVar.set_value('BASE_PATH', 'query/tpch/q12/')
     globalVar.set_value('DDL_NAME', "tpch.ddl")
     # auto-rewrite keep here
     '''
@@ -342,6 +343,7 @@ if __name__ == '__main__':
     IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
+    OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
     COST_NAME = globalVar.get_value('COST_NAME')
     # sign for whether process all JT
     optFlag = False
@@ -356,14 +358,14 @@ if __name__ == '__main__':
         if IRmode == IRType.Report:
             if globalVar.get_value('YANNA'):
                 semiUp, semiDown, lastUp, finalResult = yaGenerateIR(optJT, optCOMP, outputVariables, computationList)
-                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type, isAgg=False)
+                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_YA_NAME, genType=type, isAgg=False)
             else:
                 reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
                 codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
         elif IRmode == IRType.Aggregation:
             if globalVar.get_value('YANNA'):
                 semiUp, semiDown, lastUp, finalResult = yaGenerateIR(optJT, optCOMP, outputVariables, computationList, isAgg=True, Agg=Agg)
-                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type, isAgg=True)
+                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_YA_NAME, genType=type, isAgg=True)
             else:
                 aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
                 codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg, genType=type)
@@ -377,6 +379,7 @@ if __name__ == '__main__':
     else:
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
+            outYaName = OUT_YA_NAME.split('.')[0] + str(index) + '.' + OUT_YA_NAME.split('.')[1]
             
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
             costOutName = COST_NAME.split('.')[0] + str(index) + '.' + COST_NAME.split('.')[1]
@@ -394,7 +397,7 @@ if __name__ == '__main__':
                 if IRmode == IRType.Report:
                     if globalVar.get_value('YANNA'):
                         semiUp, semiDown, lastUp, finalResult = yaGenerateIR(jt, comp, outputVariables, computationList)
-                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outName, genType=type, isAgg=False)
+                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outYaName, genType=type, isAgg=False)
                     else:
                         reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
                         codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, genType=type)
@@ -402,7 +405,7 @@ if __name__ == '__main__':
                     Agg.initDoneFlag()
                     if globalVar.get_value('YANNA'):
                         semiUp, semiDown, lastUp, finalResult = yaGenerateIR(jt, comp, outputVariables, computationList, isAgg=True, Agg=Agg)
-                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outName, genType=type, isAgg=True)
+                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outYaName, genType=type, isAgg=True)
                     else:
                         aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
                         codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, genType=type)
