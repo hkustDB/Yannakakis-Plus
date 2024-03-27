@@ -182,11 +182,12 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                             if invar in childNode.cols and invar not in selectAttrAlias:
                                 index = childNode.cols.index(invar)
                                 sourceName = childNode.col2vars[1][index]
-                                # NOTE: add aggregate attribute
+                                if not len(selectAttr):
+                                    selectAttr = [''] * len(selectAttrAlias)
                                 if not pkFlag:
                                     selectAttr.append('SUM(' + sourceName + ')/COUNT(*)')
                                 else:
-                                    selectAttr.append('SUM(' + sourceName + ')')
+                                    selectAttr.append(sourceName)
                                 selectAttrAlias.append(invar)
                                 aggPass2Join.append(invar)
             if passAggAlias:
@@ -279,6 +280,8 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                                 selectAttr.append(agg.formular)
                             else:
                                 selectAttr.append(agg.formular + ' * annot')
+                        else:
+                            selectAttr.append(agg.formular)
 
                     Agg.alias2AggFunc[agg.alias].doneFlag = True
                     agg.doneFlag = True 
@@ -420,9 +423,13 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
                             # pass agg vars may have duplicates
                             if invar in findInVars and invar not in selectAttrAlias:
                                 if not pkFlag:
+                                    if not len(selectAttr):
+                                        selectAttr = [''] * len(selectAttrAlias)
                                     selectAttr.append('SUM(' + invar + ')/COUNT(*)')
+                                    
                                 else:
-                                    selectAttr.append('SUM(' + invar + ')')
+                                    if len(selectAttr):
+                                        selectAttr.append('')
                                 selectAttrAlias.append(invar)
                                 aggPass2Join.append(invar)
             
@@ -466,16 +473,24 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, aggFunc
     # NOTE: Extra optimization foe job benchmark
     if globalVar.get_value('DDL_NAME') != 'job.ddl':
         if childFlag and not pkFlag:
+            if not len(selectAttr):
+                selectAttr = [''] * len(selectAttrAlias)
             selectAttr.append('COUNT(*)')
             selectAttrAlias.append('annot')
         elif childNode.JoinResView:
             if not 'annot' in childNode.JoinResView.selectAttrAlias and not pkFlag:
+                if not len(selectAttr):
+                    selectAttr = [''] * len(selectAttrAlias)
                 selectAttr.append('COUNT(*)')
                 selectAttrAlias.append('annot')
             elif not pkFlag:
+                if not len(selectAttr):
+                    selectAttr = [''] * len(selectAttrAlias)
                 selectAttr.append('SUM(annot)')
                 selectAttrAlias.append('annot')
         elif childNode.relationType != RelationType.TableScanRelation and not pkFlag:
+            if not len(selectAttr):
+                selectAttr = [''] * len(selectAttrAlias)
             selectAttr.append('COUNT(*)')
             selectAttrAlias.append('annot')
     
