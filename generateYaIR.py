@@ -253,6 +253,8 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: lis
                             selectAttr.append(agg.formular)
                         else:
                             selectAttr.append(agg.formular + ' * annot')
+                    elif childNode.JoinResView:
+                        selectAttr.append(agg.formular)
 
                 Agg.alias2AggFunc[agg.alias].doneFlag = True
                 agg.doneFlag = True 
@@ -391,9 +393,12 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: lis
                         # pass agg vars may have duplicates
                         if invar in findInVars and invar not in selectAttrAlias:
                             if not pkFlag:
+                                if not len(selectAttr):
+                                    selectAttr = [''] * len(selectAttrAlias)
                                 selectAttr.append('SUM(' + invar + ')/COUNT(*)')
                             else:
-                                selectAttr.append('SUM(' + invar + ')')
+                                if len(selectAttr):
+                                    selectAttr.append('')
                             selectAttrAlias.append(invar)
                             aggPass2Join.append(invar)
 
@@ -415,15 +420,29 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: lis
     elif len(extraEqualCond) != 0:
         raise NotImplementedError("Multiple extraEqualCond! ")
     
-    # FIXME: Fix subset > 1 free connex case, add extra group by attribute?
+    # Pass extra group by
+    for var in childNode.JoinResView.selectAttrAlias:
+        if var in Agg.groupByVars:
+            if var not in groupBy and not pkFlag:
+                groupBy.append(var)
+            if var not in selectAttrAlias:
+                if len(selectAttr):
+                    selectAttr.append('')
+                selectAttrAlias.append(var)
+            if var not in aggPass2Join:
+                aggPass2Join.append(var)
     
     ## d. append annot
     # NOTE: Extra optimization foe job benchmark
     if globalVar.get_value('DDL_NAME') != 'job.ddl':
         if not 'annot' in childNode.JoinResView.selectAttrAlias and not pkFlag:
+            if not len(selectAttr):
+                selectAttr = [''] * len(selectAttrAlias)
             selectAttr.append('COUNT(*)')
             selectAttrAlias.append('annot')
         elif not pkFlag:
+            if not len(selectAttr):
+                selectAttr = [''] * len(selectAttrAlias)
             selectAttr.append('SUM(annot)')
             selectAttrAlias.append('annot')
     # Add caseCond, caseRes in groupBy
@@ -605,12 +624,14 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
         if not Agg:
             return []
         aggs = []
+        statisKeys = set(node.cols) if not node.JoinResView else set(node.JoinResView.selectAttrAlias)
         for aggF in Agg.aggFunc:
             if aggF.doneFlag:
                 continue
-            if len(aggF.inVars) != 0 and set(aggF.inVars).issubset(node.cols): # no input vars case
+            if len(aggF.inVars) != 0 and set(aggF.inVars).issubset(statisKeys): # no input vars case
                 aggs.append(aggF)
-                # aggF.doneFlag = True
+            elif len(aggF.inVars) > 1 and len(set(aggF.inVars) & set(statisKeys)) != 0:
+                aggs.append(aggF)
         
         aggs.sort(key=lambda agg: agg.funcName.value)
         return aggs
@@ -755,7 +776,7 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
     finalResult = ''
     
     if isAgg:
-        lastView = lastUp[-1].aggJoin if lastUp[-1].aggJoin else lastUp[-1].aggView
+        lastView = lastUp[-1].aggJoin if 'Join' in lastUp[-1].aggJoin.viewName else lastUp[-1].aggView
         fromTable = lastView.viewName
         finalAnnotFlag = True if 'annot' in lastView.selectAttrAlias else False
         for out in outputVariables:
@@ -980,13 +1001,13 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
                     raise NotImplementedError("Other output variables exists! ")
                 
         if globalVar.get_value('GEN_TYPE') == 'Mysql':
-            finalResult = 'create or replace view res as select ' + ', '.join(selectName) + ' from ' + fromTable + ';\n'
+            finalResult = 'create or replace view res as select ' + ', '.join(selectName) + ' from ' + fromTable + (' group by ' + ', '.join(Agg.groupByVars) if len(JT.subset) > 1 else '') + ';\n'
             for id, alias in enumerate(selectName):
                 if 'as' in alias:
                     selectName[id] = alias.split(' as ')[1]
             finalResult += 'select sum(' + '+'.join(selectName) +') from res;\n'
         else:
-            finalResult = 'select ' + ','.join(selectName) + ' from ' + fromTable + ';\n'
+            finalResult = 'select ' + ','.join(selectName) + ' from ' + fromTable + (' group by ' + ', '.join(Agg.groupByVars) if len(JT.subset) > 1 else '') + ';\n'
     else:
         fromTable = lastUp[-1].viewName
         totalName = lastUp[-1].selectAttrAlias
