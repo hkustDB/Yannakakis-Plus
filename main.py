@@ -315,11 +315,11 @@ if __name__ == '__main__':
     globalVar.set_value('QUERY_NAME', 'query.sql')
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
     globalVar.set_value('COST_NAME', 'cost.txt')
-    globalVar.set_value('GEN_TYPE', 'Mysql')
-    globalVar.set_value('YANNA', False)
+    globalVar.set_value('GEN_TYPE', 'DuckDB')
+    globalVar.set_value('YANNA', True)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/graph/q9/')
-    globalVar.set_value('DDL_NAME', "graph.ddl")
+    globalVar.set_value('BASE_PATH', 'query/tpch/q3/')
+    globalVar.set_value('DDL_NAME', "tpch.ddl")
     # auto-rewrite keep here
     '''
     arguments = docopt(__doc__)

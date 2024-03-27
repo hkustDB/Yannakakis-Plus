@@ -38,17 +38,17 @@ def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union
             outFile.write(line)
 
     for semi in semiDown:
-        if semi is not None and not 'Aux' in semi.viewName:
-            # outFile.write('# +. SemiJoin\n')
-            # TODO: Add change for auxNode creation
-            line = BEGIN + semi.viewName + ' as select ' + transSelectData(semi.selectAttrs, semi.selectAttrAlias) + ' from ' + semi.fromTable + ' where (' + ', '.join(semi.inLeft) + ') in (select ' + '(' * (True if globalVar.get_value('GEN_TYPE') == 'DuckDB' else False)
-            line += ', '.join(semi.inRight) + ')' * (True if globalVar.get_value('GEN_TYPE') == 'DuckDB' else False)
-            line += ' from ' + semi.joinTable
-            line += ' where ' if len(semi.whereCondList) != 0 else ''
-            line += ' and '.join(semi.whereCondList) + ')' 
-            line += ' and ' if len(semi.outerWhereCondList) else ''
-            line += ' and '.join(semi.outerWhereCondList) + END
-            outFile.write(line)
+        # outFile.write('# +. SemiJoin\n')
+        # TODO: Add change for auxNode creation
+        line = BEGIN + semi.viewName + ' as select ' + transSelectData(semi.selectAttrs, semi.selectAttrAlias) + ' from ' + semi.fromTable + ' where (' + ', '.join(semi.inLeft) + ') in (select ' + '(' * (True if globalVar.get_value('GEN_TYPE') == 'DuckDB' else False)
+        line += ', '.join(semi.inRight) + ')' * (True if globalVar.get_value('GEN_TYPE') == 'DuckDB' else False)
+        line += ' from ' + semi.joinTable
+        line += ' where ' if len(semi.whereCondList) != 0 else ''
+        line += ' and '.join(semi.whereCondList) + ')' 
+        line += ' and ' if len(semi.outerWhereCondList) else ''
+        line += ' and '.join(semi.outerWhereCondList) + END
+        outFile.write(line)
+
 
     for last in lastUp:
         if isAgg:

@@ -52,8 +52,13 @@ def buildSemiUp(reduceRel: Edge, JT: JoinTree, selfComp: list[Comparison], compE
         if ret != []: prepareView.extend(ret)
 
     # 2. SemiJoin
+    ## Special case: parent is aux
+    
     viewName = 'semiUp' + str(randint(0, maxsize))
-            
+    if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
+        semiUp = SemiUpPhase(prepareView, prepareView[-1])
+        return semiUp
+    
     selectAttributes, selectAttributesAs = [], []
     fromTable = ''
     if parentNode.JoinResView is not None: # already has alias
@@ -129,7 +134,7 @@ def buildSemiDown(JT: JoinTree, childNode: TreeNode, parentNode: TreeNode, selfC
         childSelfComp, childExtract = [], []
     childFlag = childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation
     
-    viewName = 'semiDown' + str(randint(0, maxsize))        
+    viewName = 'semiDown' + str(randint(0, maxsize))
     selectAttributes, selectAttributesAs = [], []
     fromTable = ''
     if childNode.JoinResView is not None:
@@ -172,10 +177,10 @@ def buildSemiDown(JT: JoinTree, childNode: TreeNode, parentNode: TreeNode, selfC
         inRight.extend(joinKey)
 
     if len(childSelfComp):
-        whereCondList = makeSelfComp(childSelfComp, childNode)
-        semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight, whereCondList)
+        outerWhereCondList = makeSelfComp(childSelfComp, childNode)
+        semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight, outerWhereCondList=outerWhereCondList)
     else:
-        semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight, [])
+        semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight)
     return semiView
 
 def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: list[AggFunc] = [], extraEqualCond: list[str] = []):
@@ -434,10 +439,10 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: lis
     # Step3: aggJoin
     ## a. name, fromTable
     viewName = 'aggJoin' + str(randint(0, maxsize))
-    if parentNode.relationType != RelationType.AuxiliaryRelation or parentNode.JoinResView:
-        fromTable = parentNode.JoinResView.viewName
-    else:
+    if parentNode.relationType == RelationType.AuxiliaryRelation and parentNode.supRelationId == childNode.id:
         fromTable = ''
+    else:
+        fromTable = parentNode.JoinResView.viewName
     
     ## b. joinTable
     joinTable = aggView.viewName
@@ -512,8 +517,7 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: lis
         selectAttrAlias.extend(aggPass2Join)
     
     ## d.joinCond
-    joinCondList, usingJoinKey = [], []
-    usingJoinKey.extend(joinKey)
+    usingJoinKey = joinKey.copy()
     
     ## g. addExtraEqualCond process:
     extraEqualWhere = []
@@ -535,7 +539,7 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: lis
         print(selectAttr)
         print(selectAttrAlias)
         raise RuntimeError("Error aggJOin! ")
-    aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + extraEqualWhere)
+    aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, extraEqualWhere)
     if fromTable == '' and len(aggJoin.whereCondList) == 0:
         aggJoin.viewName = aggView.viewName
     aggReduce = AggReducePhase(None, aggView, aggJoin, reduceRel.dst.id)
@@ -702,7 +706,7 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
         
         jointree.removeEdge(rel)
         remainRelations = jointree.getRelations().values()
-        updateSelfComparison(selfComp)
+        # updateSelfComparison(selfComp)
         JT.getNode(rel.src.id).JoinResView = retSemiUp.semiView
         semiUp.append(retSemiUp)
     
@@ -715,10 +719,7 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
             childNode = JT.getNode(child.id)
             JTqueue.put(childNode)
             # need selfcomp for leaf & tablescan
-            if not len(childNode.children) and childNode.relationType == RelationType.TableScanRelation:
-                selfComp = getNodeSelfComp(childNode)
-            else:
-                selfComp = []
+            selfComp = getNodeSelfComp(childNode)
             compExtract = getNodeCompExtract(childNode)
             retSemiDown = buildSemiDown(JT, childNode, node, selfComp, compExtract)
             JT.getNode(child.id).JoinResView = retSemiDown
@@ -734,14 +735,18 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
             rel = choice(leafRelation)
         else:
             rel = choice(supportRelation)
-        aggs = getAggRelation(JT.getNode(rel.src.id))
+        aggs = getAggRelation(JT.getNode(rel.dst.id))
         if isAgg:
             retAggUp = buildAggUp(JT, rel, Agg, aggs)
+            if not 'Join' in retAggUp.aggJoin.viewName:
+                JT.getNode(rel.src.id).JoinResView = retAggUp.aggView
+            else:
+                JT.getNode(rel.src.id).JoinResView = retAggUp.aggJoin
         else:
             retAggUp = buildNonAggUp(JT, rel)
+            JT.getNode(rel.src.id).JoinResView = retAggUp
         jointree.removeEdge(rel)
         remainRelations = jointree.getRelations().values()
-        JT.getNode(rel.src.id).JoinResView = retAggUp
         lastUp.append(retAggUp)
 
     '''Step4: FinalResult'''
