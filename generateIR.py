@@ -809,7 +809,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         viewName = 'semiJoinView' + str(randint(0, maxsize))
         
         # NOTE: Optimize, Replace semiJoinView with auxiliary parentNode
-        if parentNode.relationType == RelationType.AuxiliaryRelation:
+        if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
             viewName = parentNode.JoinResView.viewName
             
         selectAttributes, selectAttributesAs = [], []

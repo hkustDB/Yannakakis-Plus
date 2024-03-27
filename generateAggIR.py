@@ -884,7 +884,10 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         updateSelfComparison(selfComp)
         # attach to node
         jointree.getNode(rel.dst.id).reducePhase = aggReduce
-        jointree.getNode(rel.src.id).JoinResView = aggReduce.aggJoin
+        if not 'Join' in aggReduce.aggJoin.viewName:
+            jointree.getNode(rel.src.id).JoinResView = aggReduce.aggView
+        else:
+            jointree.getNode(rel.src.id).JoinResView = aggReduce.aggJoin
         # append
         aggReduceList.append(aggReduce)
     

@@ -191,22 +191,24 @@ def columnPruneYa(JT: JoinTree, semiUp: list[SemiUpPhase], semiDown: list[SemiJo
     compKeepSet = getCompSet(COMP)
     extraEqualSet = JT.extraEqualSet
 
-    requireVariables = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
-
     joinKeyEnum: dict[int, set[str]] = dict()
+    allJoinKeys: set[str] = set()
     totalLen = len(lastUp)
     # cal joinkey enum
     for idx, last in enumerate(lastUp[::-1]):
+        joinKeyEnum[totalLen-idx-1] = allJoinKeys.copy()
         if Agg:
-            if idx == 0:
-                joinKeyEnum[totalLen-idx-1] = set(last.aggJoin.joinKey)
-            else:
-                joinKeyEnum[totalLen-idx-1] = joinKeyEnum[totalLen-idx] | set(last.aggJoin.joinKey)
+            allJoinKeys |= set(last.aggJoin.joinKey)
         else:
-            if idx == 0:
-                joinKeyEnum[totalLen-idx-1] = set(last.joinKey)
-            else:
-                joinKeyEnum[totalLen-idx-1] = joinKeyEnum[totalLen-idx] | set(last.joinKey)
+            allJoinKeys |= set(last.joinKey)
+
+    requireVariables = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
+
+    for semi in semiUp:
+        semi.semiView.selectAttrs, semi.semiView.selectAttrAlias = removeAttrAlias(semi.semiView.selectAttrs, semi.semiView.selectAttrAlias, requireVariables | allJoinKeys)
+
+    for semi in semiDown:
+        semi.selectAttrs, semi.selectAttrAlias = removeAttrAlias(semi.selectAttrs, semi.selectAttrAlias, requireVariables | allJoinKeys)
 
     for idx, last in enumerate(lastUp):
         if Agg:
