@@ -1001,13 +1001,13 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
                     raise NotImplementedError("Other output variables exists! ")
                 
         if globalVar.get_value('GEN_TYPE') == 'Mysql':
-            finalResult = 'create or replace view res as select ' + ', '.join(selectName) + ' from ' + fromTable + (' group by ' + ', '.join(Agg.groupByVars) if len(JT.subset) > 1 else '') + ';\n'
+            finalResult = 'create or replace view res as select ' + ', '.join(selectName) + ' from ' + fromTable + (' group by ' + ', '.join(Agg.groupByVars) if not JT.isFreeConnex else '') + ';\n'
             for id, alias in enumerate(selectName):
                 if 'as' in alias:
                     selectName[id] = alias.split(' as ')[1]
             finalResult += 'select sum(' + '+'.join(selectName) +') from res;\n'
         else:
-            finalResult = 'select ' + ','.join(selectName) + ' from ' + fromTable + (' group by ' + ', '.join(Agg.groupByVars) if len(JT.subset) > 1 else '') + ';\n'
+            finalResult = 'select ' + ','.join(selectName) + ' from ' + fromTable + (' group by ' + ', '.join(Agg.groupByVars) if not JT.isFreeConnex else '') + ';\n'
     else:
         fromTable = lastUp[-1].viewName
         totalName = lastUp[-1].selectAttrAlias
