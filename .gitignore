@@ -8,7 +8,7 @@ query/job1/[1-9]*/rewrite*
 query/debug/q*/rewrite*
 
 query/extra*
-
+!query/extract_runtime.py
 graph_db*
 tpch_db*
 lsqb_db*

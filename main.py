@@ -28,6 +28,7 @@ from topk import *
 from estimator import *
 from enumsType import EdgeType
 import globalVar
+import csv
 
 from random import randint
 import os
@@ -319,8 +320,8 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/tpch/q12/')
-    globalVar.set_value('DDL_NAME', "tpch.ddl")
+    globalVar.set_value('BASE_PATH', 'query/lsqb/q1/')
+    globalVar.set_value('DDL_NAME', "lsqb.ddl")
     # auto-rewrite keep here
     '''
     arguments = docopt(__doc__)
@@ -377,16 +378,13 @@ if __name__ == '__main__':
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Product_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
             codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=topK.genType)  
     else:
+        fields = ['index', 'hight', 'width', 'estimate'] 
+        cost_stat = []
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
             outYaName = OUT_YA_NAME.split('.')[0] + str(index) + '.' + OUT_YA_NAME.split('.')[1]
-            
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
-            costOutName = COST_NAME.split('.')[0] + str(index) + '.' + COST_NAME.split('.')[1]
-            costout = open(BASE_PATH + costOutName, 'w+')
-            costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
-            costout.close()
-            
+            cost_stat.append([index, cost_height, cost_fanout, cost_estimate])
             try:
                 '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
@@ -420,6 +418,10 @@ if __name__ == '__main__':
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + str(index))
+        with open(BASE_PATH + COST_NAME, 'w+') as f:
+            write = csv.writer(f)
+            write.writerow(fields)
+            write.writerows(cost_stat)
+
     end = time.time()
-    # oriQuerySum(optJT.node, table2vars, BASE_PATH + 'querySum.sql', isFull=optJT.isFull)
     print('Rewrite time(s): ' + str(end-start) + '\n')
