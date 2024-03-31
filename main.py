@@ -167,7 +167,7 @@ def connect(base: int, mode: int, type: GenType):
     query_file.close()
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -314,10 +314,10 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'Mysql')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job2/7a/')
+    globalVar.set_value('BASE_PATH', 'query/job/1c/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
-    '''
+    
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -328,7 +328,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    '''
+    
     start = time.time()
     optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
