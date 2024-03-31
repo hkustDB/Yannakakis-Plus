@@ -9,6 +9,7 @@ Options:
   -b, --base base   Set level-k log base [default: 32]
   -m, --mode mode   Set topK algorithm mode. 0: level-k, 1: product-k [default: 0]
   -g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
+  -y, --yanna yanna     Set Y for yannakakis generation; N for our rewrite [default: N]
 """
 
 from docopt import docopt
@@ -19,12 +20,15 @@ from aggregation import *
 from generateIR import *
 from generateAggIR import *
 from generateTopKIR import *
+from generateYaIR import *
 from codegen import *
 from codegenTopK import *
+from codegenYan import *
 from topk import *
-# from estimator import *
+from estimator import *
 from enumsType import EdgeType
 import globalVar
+import csv
 
 from random import randint
 import os
@@ -311,11 +315,13 @@ if __name__ == '__main__':
     globalVar._init()
     globalVar.set_value('QUERY_NAME', 'query.sql')
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
+    globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.txt')
-    globalVar.set_value('GEN_TYPE', 'Mysql')
+    globalVar.set_value('GEN_TYPE', 'DuckDB')
+    globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job/1c/')
-    globalVar.set_value('DDL_NAME', "job.ddl")
+    globalVar.set_value('BASE_PATH', 'query/lsqb/q1/')
+    globalVar.set_value('DDL_NAME', "lsqb.ddl")
     # auto-rewrite keep here
     
     arguments = docopt(__doc__)
@@ -323,6 +329,8 @@ if __name__ == '__main__':
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
     base = int(arguments['--base'])
     mode=int(arguments['--mode'])
+    yanna=True if arguments['--yanna'] == 'Y' else False
+    globalVar.set_value('YANNA', yanna)
     type=GenType.Mysql if arguments['--genType'] == 'M' else GenType.DuckDB
     if type == GenType.Mysql:
         globalVar.set_value('GEN_TYPE', 'Mysql')
@@ -336,22 +344,32 @@ if __name__ == '__main__':
     IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
+    OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
+    COST_NAME = globalVar.get_value('COST_NAME')
     # sign for whether process all JT
     optFlag = False
     if optFlag:
-        '''
-        cost_height, cost_fanout, cost_estimate = getEstimation(DDL_NAME.split('.')[0], optJT)
+        
+        cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], optJT)
         costOutName = COST_NAME.split('.')[0] + 'opt' + '.' + COST_NAME.split('.')[1]
         costout = open(BASE_PATH + costOutName, 'w+')
         costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
         costout.close()
-        '''
+        
         if IRmode == IRType.Report:
-            reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
-            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
+            if globalVar.get_value('YANNA'):
+                semiUp, semiDown, lastUp, finalResult = yaGenerateIR(optJT, optCOMP, outputVariables, computationList)
+                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_YA_NAME, genType=type, isAgg=False)
+            else:
+                reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
+                codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, genType=type)
         elif IRmode == IRType.Aggregation:
-            aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
-            codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg, genType=type)
+            if globalVar.get_value('YANNA'):
+                semiUp, semiDown, lastUp, finalResult = yaGenerateIR(optJT, optCOMP, outputVariables, computationList, isAgg=True, Agg=Agg)
+                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_YA_NAME, genType=type, isAgg=True)
+            else:
+                aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
+                codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg, genType=type)
         # NOTE: No comparison for TopK yet
         elif IRmode == IRType.Level_K:
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
@@ -360,15 +378,13 @@ if __name__ == '__main__':
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Product_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
             codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=topK.genType)  
     else:
+        fields = ['index', 'hight', 'width', 'estimate'] 
+        cost_stat = []
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
-            '''
-            cost_height, cost_fanout, cost_estimate = getEstimation(DDL_NAME.split('.')[0], jt)
-            costOutName = COST_NAME.split('.')[0] + str(index) + '.' + COST_NAME.split('.')[1]
-            costout = open(BASE_PATH + costOutName, 'w+')
-            costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
-            costout.close()
-            '''
+            outYaName = OUT_YA_NAME.split('.')[0] + str(index) + '.' + OUT_YA_NAME.split('.')[1]
+            cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
+            cost_stat.append([index, cost_height, cost_fanout, cost_estimate])
             try:
                 '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
@@ -377,12 +393,20 @@ if __name__ == '__main__':
                 '''
                 computationList.reset()
                 if IRmode == IRType.Report:
-                    reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
-                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, genType=type)
+                    if globalVar.get_value('YANNA'):
+                        semiUp, semiDown, lastUp, finalResult = yaGenerateIR(jt, comp, outputVariables, computationList)
+                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outYaName, genType=type, isAgg=False)
+                    else:
+                        reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
+                        codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, genType=type)
                 elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
-                    aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
-                    codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, genType=type)
+                    if globalVar.get_value('YANNA'):
+                        semiUp, semiDown, lastUp, finalResult = yaGenerateIR(jt, comp, outputVariables, computationList, isAgg=True, Agg=Agg)
+                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outYaName, genType=type, isAgg=True)
+                    else:
+                        aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
+                        codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, genType=type)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
@@ -394,6 +418,10 @@ if __name__ == '__main__':
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + str(index))
+        with open(BASE_PATH + COST_NAME, 'w+') as f:
+            write = csv.writer(f)
+            write.writerow(fields)
+            write.writerows(cost_stat)
+
     end = time.time()
-    # oriQuerySum(optJT.node, table2vars, BASE_PATH + 'querySum.sql', isFull=optJT.isFull)
     print('Rewrite time(s): ' + str(end-start) + '\n')

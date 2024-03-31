@@ -184,3 +184,37 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                     aggReduce.aggView.selectAttrs.pop(index)
             aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, Agg=Agg, removeAnnot=removeAnnotFlag)
     return aggReduceList, reduceList, enumerateList
+
+
+def columnPruneYa(JT: JoinTree, semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union[list[AggReducePhase], list[Join2tables]], finalResult: str, outputVariables: set[str], Agg: Aggregation = None, COMP: list[Comparison] = []):
+    aggKeepSet = getAggSet(Agg, isAll=True) 
+    compKeepSet = getCompSet(COMP)
+    extraEqualSet = JT.extraEqualSet
+
+    joinKeyEnum: dict[int, set[str]] = dict()
+    allJoinKeys: set[str] = set()
+    totalLen = len(lastUp)
+    # cal joinkey enum
+    for idx, last in enumerate(lastUp[::-1]):
+        joinKeyEnum[totalLen-idx-1] = allJoinKeys.copy()
+        if Agg:
+            allJoinKeys |= set(last.aggJoin.joinKey)
+        else:
+            allJoinKeys |= set(last.joinKey)
+
+    requireVariables = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
+
+    for semi in semiUp:
+        semi.semiView.selectAttrs, semi.semiView.selectAttrAlias = removeAttrAlias(semi.semiView.selectAttrs, semi.semiView.selectAttrAlias, requireVariables | allJoinKeys)
+
+    for semi in semiDown:
+        semi.selectAttrs, semi.selectAttrAlias = removeAttrAlias(semi.selectAttrs, semi.selectAttrAlias, requireVariables | allJoinKeys)
+
+    for idx, last in enumerate(lastUp):
+        if Agg:
+            removeAnnotFlag = idx == len(lastUp)-1 and (not 'annot' in finalResult)
+            last.aggJoin.selectAttrs, last.aggJoin.selectAttrAlias = removeAttrAlias(last.aggJoin.selectAttrs, last.aggJoin.selectAttrAlias, requireVariables | joinKeyEnum[idx], Agg=Agg, removeAnnot=removeAnnotFlag)
+        else:
+            last.selectAttrs, last.selectAttrAlias = removeAttrAlias(last.selectAttrs, last.selectAttrAlias, requireVariables | joinKeyEnum[idx])
+
+    return semiUp, semiDown, lastUp

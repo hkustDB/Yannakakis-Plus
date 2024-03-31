@@ -804,12 +804,12 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         return retReducePhase
     
     # (D) Semijoin
-    else:   
+    else:
         # NOTE: For semijoin, we only need to support EXTRACT in enumerate phase for tablescan-rel
         viewName = 'semiJoinView' + str(randint(0, maxsize))
         
         # NOTE: Optimize, Replace semiJoinView with auxiliary parentNode
-        if parentNode.relationType == RelationType.AuxiliaryRelation:
+        if parentNode.relationType == RelationType.AuxiliaryRelation and childNode.id == parentNode.supRelationId:
             viewName = parentNode.JoinResView.viewName
             
         selectAttributes, selectAttributesAs = [], []
@@ -1560,7 +1560,6 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
         enumerateList.append(retEnum)
     
     if not isAgg:
-        finalResult = 'select sum(' + ('distinct ' if not JT.isFull else '')
         selectName = []
         if enumerateList[-1].stageEnd:
             fromTable = enumerateList[-1].stageEnd.viewName
@@ -1573,7 +1572,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
                 if out in totalName:
                     selectName.append(out)
                 elif out in compKeys:
-                    selectName.append(computations.alias2Comp[out] + ' as ' + out)
+                    if globalVar.get_value('GEN_TYPE') == 'Mysql':
+                        selectName.append(computations.alias2Comp[out] + ' as ' + out)
+                    else:
+                        selectName.append(computations.alias2Comp[out])
         if len(selectName) != len(outputVariables):
             raise RuntimeError("Miss some outputs! ")
 

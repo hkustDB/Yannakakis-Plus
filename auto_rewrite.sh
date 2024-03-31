@@ -9,8 +9,9 @@ INPUT_DIR="query/$2"
 INPUT_DIR_PATH="${SCRIPT_PATH}/${INPUT_DIR}"
 DDL_NAME=$1
 g=${3:-M}
-b=${4:-2}
-m=${5:-0}
+y=${4:-N}
+b=${5:-2}
+m=${6:-0}
 
 # Suffix function
 function FileSuffix() {
@@ -44,7 +45,7 @@ do
             ret=$?
             if [ $ret -eq 0 ] && [ ${filename} = "query" ]
             then
-                $python main.py "${CUR_PATH}" "${DDL_NAME}" -b "$b" -m "$m" -g "$g" | grep "Rewrite time(s)" >> ${LOG_FILE}
+                $python main.py "${CUR_PATH}" "${DDL_NAME}" -b "$b" -m "$m" -g "$g" -y "$y" | grep "Rewrite time(s)" >> ${LOG_FILE}
             fi
         done
     fi
