@@ -145,3 +145,8 @@ class ReducePhase:
         
     def __repr__(self) -> str:
         '[' + self.orderView.viewName + ', ' + self.minView.viewName + ', ' + self.joinView + ']'
+
+class SemiUpPhase:
+    def __init__(self, prepareView: list[Action], semiView: SemiJoin) -> None:
+        self.prepareView = prepareView
+        self.semiView = semiView
