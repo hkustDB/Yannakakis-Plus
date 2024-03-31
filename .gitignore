@@ -7,7 +7,7 @@ querySum.sql
 # query/job2/[1-9]*/rewrite*.sql
 
 query/extra*
-
+!query/extract_runtime.py
 graph_db*
 tpch_db*
 lsqb_db*
