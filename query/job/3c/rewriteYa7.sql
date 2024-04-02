@@ -1,0 +1,13 @@
+create or replace view semiUp5037989058336507051 as select movie_id as v12, keyword_id as v1 from movie_keyword AS mk where (movie_id) in (select (id) from title AS t where production_year>1990);
+create or replace view semiUp2668847326074918813 as select v12, v1 from semiUp5037989058336507051 where (v1) in (select (id) from keyword AS k where keyword LIKE '%sequel%');
+create or replace view semiUp8993333270724595177 as select movie_id as v12 from movie_info AS mi where (movie_id) in (select (v12) from semiUp2668847326074918813) and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American');
+create or replace view semiDown7796327417739829541 as select v12, v1 from semiUp2668847326074918813 where (v12) in (select (v12) from semiUp8993333270724595177);
+create or replace view semiDown4115959045449708043 as select id as v1 from keyword AS k where (id) in (select (v1) from semiDown7796327417739829541) and keyword LIKE '%sequel%';
+create or replace view semiDown4554321652393547927 as select id as v12, title as v13 from title AS t where (id) in (select (v12) from semiDown7796327417739829541) and production_year>1990;
+create or replace view aggView4373871690523386460 as select v1 from semiDown4115959045449708043;
+create or replace view aggJoin8693631253518308657 as select v12 from semiDown7796327417739829541 join aggView4373871690523386460 using(v1);
+create or replace view aggView5906289995651435703 as select v12, v13 as v24 from semiDown4554321652393547927;
+create or replace view aggJoin2573098343333782822 as select v12, v24 from aggJoin8693631253518308657 join aggView5906289995651435703 using(v12);
+create or replace view aggView5187701653523482770 as select v12, MIN(v24) as v24 from aggJoin2573098343333782822 group by v12;
+create or replace view aggJoin1655615845811975597 as select v24 from semiUp8993333270724595177 join aggView5187701653523482770 using(v12);
+select MIN(v24) as v24 from aggJoin1655615845811975597;

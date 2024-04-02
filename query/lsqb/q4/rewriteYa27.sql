@@ -1,0 +1,13 @@
+create or replace view semiUp7914644798435198585 as select MessageId as v1 from Person_likes_Message AS Person_likes_Message where (MessageId) in (select (ParentMessageId) from Comment_replyOf_Message AS Comment_replyOf_Message);
+create or replace view semiUp8284086406939732868 as select MessageId as v1 from Message_hasCreator_Person AS Message_hasCreator_Person where (MessageId) in (select (MessageId) from Message_hasTag_Tag AS Message_hasTag_Tag);
+create or replace view semiUp7195514866119905808 as select v1 from semiUp8284086406939732868 where (v1) in (select (v1) from semiUp7914644798435198585);
+create or replace view semiDown5601691558303233713 as select MessageId as v1 from Message_hasTag_Tag AS Message_hasTag_Tag where (MessageId) in (select (v1) from semiUp7195514866119905808);
+create or replace view semiDown1290911227923766061 as select v1 from semiUp7914644798435198585 where (v1) in (select (v1) from semiUp7195514866119905808);
+create or replace view semiDown1411134997814809019 as select ParentMessageId as v1 from Comment_replyOf_Message AS Comment_replyOf_Message where (ParentMessageId) in (select (v1) from semiDown1290911227923766061);
+create or replace view aggView2090050726559017529 as select v1, COUNT(*) as annot from semiDown5601691558303233713 group by v1;
+create or replace view aggJoin8219785096159379979 as select v1, annot from semiUp7195514866119905808 join aggView2090050726559017529 using(v1);
+create or replace view aggView8838506493298689232 as select v1, COUNT(*) as annot from semiDown1411134997814809019 group by v1;
+create or replace view aggJoin8862803123093485055 as select v1, annot from semiDown1290911227923766061 join aggView8838506493298689232 using(v1);
+create or replace view aggView4135924376540823854 as select v1, SUM(annot) as annot from aggJoin8862803123093485055 group by v1;
+create or replace view aggJoin3281872646268557413 as select aggJoin8219785096159379979.annot * aggView4135924376540823854.annot as annot from aggJoin8219785096159379979 join aggView4135924376540823854 using(v1);
+select SUM(annot) as v9 from aggJoin3281872646268557413;

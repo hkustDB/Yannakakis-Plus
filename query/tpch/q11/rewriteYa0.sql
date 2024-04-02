@@ -1,0 +1,12 @@
+create or replace view semiUp8216607675714323316 as select s_suppkey as v2, s_nationkey as v9 from supplier AS supplier where (s_nationkey) in (select (n_nationkey) from nation AS nation where n_name= 'GERMANY');
+create or replace view semiUp8395025513820699402 as select ps_partkey as v1, ps_suppkey as v2, ps_availqty as v3, ps_supplycost as v4 from partsupp AS partsupp where (ps_suppkey) in (select (v2) from semiUp8216607675714323316);
+create or replace view partsuppAux84 as select v1 from semiUp8395025513820699402;
+create or replace view semiDown2159279800742150940 as select v1, v2, v3, v4 from semiUp8395025513820699402 where (v1) in (select (v1) from partsuppAux84);
+create or replace view semiDown8662118448473890144 as select v2, v9 from semiUp8216607675714323316 where (v2) in (select (v2) from semiDown2159279800742150940);
+create or replace view semiDown2826035387836361491 as select n_nationkey as v9 from nation AS nation where (n_nationkey) in (select (v9) from semiDown8662118448473890144) and n_name= 'GERMANY';
+create or replace view aggView3813876821763711403 as select v9 from semiDown2826035387836361491;
+create or replace view aggJoin6095393403559277810 as select v2 from semiDown8662118448473890144 join aggView3813876821763711403 using(v9);
+create or replace view aggView5191994742007801204 as select v2, COUNT(*) as annot from aggJoin6095393403559277810 group by v2;
+create or replace view aggJoin7702030977650643527 as select v1, v3, v4, annot from semiDown2159279800742150940 join aggView5191994742007801204 using(v2);
+create or replace view aggView1276529232772193386 as select v1, SUM((v4 * v3) * annot) as v18, SUM(annot) as annot from aggJoin7702030977650643527 group by v1;
+select v1,v18 from aggView1276529232772193386;

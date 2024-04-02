@@ -1,0 +1,12 @@
+create or replace view semiUp7490018925260040984 as select o_orderkey as v18, o_custkey as v1, o_orderdate as v13, o_shippriority as v16 from orders AS orders where (o_custkey) in (select (c_custkey) from customer AS customer where c_mktsegment= 'BUILDING') and o_orderdate<DATE '1995-03-15';
+create or replace view ordersAux8 as select v18, v13, v16 from semiUp7490018925260040984;
+create or replace view semiUp8263573571437771368 as select v18, v13, v16 from ordersAux8 where (v18) in (select (l_orderkey) from lineitem AS lineitem where l_shipdate>DATE '1995-03-15');
+create or replace view semiDown5494800854541690062 as select v18, v1, v13, v16 from semiUp7490018925260040984 where (v16, v13, v18) in (select (v16, v13, v18) from semiUp8263573571437771368);
+create or replace view semiDown2587988626236943206 as select l_orderkey as v18, l_extendedprice as v23, l_discount as v24 from lineitem AS lineitem where (l_orderkey) in (select (v18) from semiUp8263573571437771368) and l_shipdate>DATE '1995-03-15';
+create or replace view semiDown8261093133438135960 as select c_custkey as v1 from customer AS customer where (c_custkey) in (select (v1) from semiDown5494800854541690062) and c_mktsegment= 'BUILDING';
+create or replace view aggView7583825248654986300 as select v1 from semiDown8261093133438135960;
+create or replace view aggJoin4592736936129245893 as select v18, v13, v16 from semiDown5494800854541690062 join aggView7583825248654986300 using(v1);
+create or replace view aggView6955050558225266699 as select v16, v13, v18, COUNT(*) as annot from aggJoin4592736936129245893 group by v16,v13,v18;
+create or replace view aggView847693133040272686 as select v18, SUM(v23 * (1 - v24)) as v35, COUNT(*) as annot from semiDown2587988626236943206 group by v18;
+create or replace view aggJoin1353760125206872287 as select v16, v13, v18, v35 * aggView6955050558225266699.annot as v35 from aggView6955050558225266699 join aggView847693133040272686 using(v18);
+select v18,v35,v13,v16 from aggJoin1353760125206872287;

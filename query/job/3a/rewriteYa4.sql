@@ -1,0 +1,13 @@
+create or replace view semiUp2000217173618570012 as select id as v12, title as v13 from title AS t where (id) in (select (movie_id) from movie_info AS mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German')) and production_year>2005;
+create or replace view semiUp5048443136896708419 as select movie_id as v12, keyword_id as v1 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword LIKE '%sequel%');
+create or replace view semiUp5901990021205214413 as select v12, v13 from semiUp2000217173618570012 where (v12) in (select (v12) from semiUp5048443136896708419);
+create or replace view semiDown4192749589728801301 as select movie_id as v12 from movie_info AS mi where (movie_id) in (select (v12) from semiUp5901990021205214413) and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
+create or replace view semiDown8426284659321132870 as select v12, v1 from semiUp5048443136896708419 where (v12) in (select (v12) from semiUp5901990021205214413);
+create or replace view semiDown7813468001848938755 as select id as v1 from keyword AS k where (id) in (select (v1) from semiDown8426284659321132870) and keyword LIKE '%sequel%';
+create or replace view aggView1214705283503639169 as select v12 from semiDown4192749589728801301 group by v12;
+create or replace view aggJoin8726271444898235774 as select v12, v13 from semiUp5901990021205214413 join aggView1214705283503639169 using(v12);
+create or replace view aggView3456860089684130243 as select v1 from semiDown7813468001848938755;
+create or replace view aggJoin7127034465856517766 as select v12 from semiDown8426284659321132870 join aggView3456860089684130243 using(v1);
+create or replace view aggView4838919004976333663 as select v12 from aggJoin7127034465856517766 group by v12;
+create or replace view aggJoin6953975100215076662 as select v13 from aggJoin8726271444898235774 join aggView4838919004976333663 using(v12);
+select MIN(v13) as v24 from aggJoin6953975100215076662;

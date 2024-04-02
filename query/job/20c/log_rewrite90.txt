@@ -1,4 +1,0 @@
-1 row in set (9.65 sec)
-1 row in set (9.82 sec)
-mysql task failed.
-======================
