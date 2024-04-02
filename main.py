@@ -318,10 +318,10 @@ if __name__ == '__main__':
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.txt')
     globalVar.set_value('GEN_TYPE', 'DuckDB')
-    globalVar.set_value('YANNA', False)
+    globalVar.set_value('YANNA', True)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/lsqb/q1/')
-    globalVar.set_value('DDL_NAME', "lsqb.ddl")
+    globalVar.set_value('BASE_PATH', 'query/job/33c/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
     
     arguments = docopt(__doc__)
@@ -424,4 +424,5 @@ if __name__ == '__main__':
             write.writerows(cost_stat)
 
     end = time.time()
+    # TODO: Change here to write file rewrite_time.txt
     print('Rewrite time(s): ' + str(end-start) + '\n')

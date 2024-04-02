@@ -1,0 +1,13 @@
+create or replace view semiUp2198974706419851440 as select MessageId as v1 from Person_likes_Message AS Person_likes_Message where (MessageId) in (select (MessageId) from Message_hasTag_Tag AS Message_hasTag_Tag);
+create or replace view semiUp4030780683973003824 as select ParentMessageId as v1 from Comment_replyOf_Message AS Comment_replyOf_Message where (ParentMessageId) in (select (v1) from semiUp2198974706419851440);
+create or replace view semiUp2803343276582715427 as select MessageId as v1 from Message_hasCreator_Person AS Message_hasCreator_Person where (MessageId) in (select (v1) from semiUp4030780683973003824);
+create or replace view semiDown3129442611497209892 as select v1 from semiUp4030780683973003824 where (v1) in (select (v1) from semiUp2803343276582715427);
+create or replace view semiDown1057817587875306384 as select v1 from semiUp2198974706419851440 where (v1) in (select (v1) from semiDown3129442611497209892);
+create or replace view semiDown843073329200756710 as select MessageId as v1 from Message_hasTag_Tag AS Message_hasTag_Tag where (MessageId) in (select (v1) from semiDown1057817587875306384);
+create or replace view aggView2697126742667635428 as select v1, COUNT(*) as annot from semiDown843073329200756710 group by v1;
+create or replace view aggJoin6964448076027034798 as select v1, annot from semiDown1057817587875306384 join aggView2697126742667635428 using(v1);
+create or replace view aggView6552738537400446631 as select v1, SUM(annot) as annot from aggJoin6964448076027034798 group by v1;
+create or replace view aggJoin4898084893895991546 as select v1, annot from semiDown3129442611497209892 join aggView6552738537400446631 using(v1);
+create or replace view aggView4731394160236174265 as select v1, SUM(annot) as annot from aggJoin4898084893895991546 group by v1;
+create or replace view aggJoin231683789490782041 as select annot from semiUp2803343276582715427 join aggView4731394160236174265 using(v1);
+select SUM(annot) as v9 from aggJoin231683789490782041;

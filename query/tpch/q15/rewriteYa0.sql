@@ -1,0 +1,10 @@
+create or replace view supplierAux36 as select s_suppkey as v1, s_name as v2, s_address as v3, s_phone as v5 from supplier;
+create or replace view semiUp5807594104033119751 as select supplier_no as v1, total_revenue as v9 from revenue0 AS revenue0 where (total_revenue) in (select (max_tr) from q15_inner AS q15_inner);
+create or replace view semiUp7183318027818012136 as select v1, v2, v3, v5 from supplierAux36 where (v1) in (select (v1) from semiUp5807594104033119751);
+create or replace view semiDown4519464810821004486 as select s_suppkey as v1, s_name as v2, s_address as v3, s_phone as v5 from supplier AS supplier where (s_name, s_address, s_phone, s_suppkey) in (select (v2, v3, v5, v1) from semiUp7183318027818012136);
+create or replace view semiDown8029493180139321914 as select v1, v9 from semiUp5807594104033119751 where (v1) in (select (v1) from semiUp7183318027818012136);
+create or replace view semiDown6413254962604948001 as select max_tr as v9 from q15_inner AS q15_inner where (max_tr) in (select (v9) from semiDown8029493180139321914);
+create or replace view joinView2866924489164716975 as select v1, v2, v3, v5 from semiUp7183318027818012136 join semiDown4519464810821004486 using(v2, v3, v5, v1);
+create or replace view joinView3347889361405995440 as select v1, v9 from semiDown8029493180139321914 join semiDown6413254962604948001 using(v9);
+create or replace view joinView2449132155785148173 as select v1, v2, v3, v5, v9 from joinView2866924489164716975 join joinView3347889361405995440 using(v1);
+select distinct v1, v2, v3, v5, v9 from joinView2449132155785148173;

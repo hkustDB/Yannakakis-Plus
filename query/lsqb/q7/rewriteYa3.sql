@@ -1,0 +1,13 @@
+create or replace view semiUp4998608122519238105 as select MessageId as v1 from Message_hasTag_Tag AS Message_hasTag_Tag where (MessageId) in (select (ParentMessageId) from Comment_replyOf_Message AS Comment_replyOf_Message);
+create or replace view semiUp3706589803875889560 as select MessageId as v1 from Message_hasCreator_Person AS Message_hasCreator_Person where (MessageId) in (select (v1) from semiUp4998608122519238105);
+create or replace view semiUp8774564508804035493 as select MessageId as v1 from Person_likes_Message AS Person_likes_Message where (MessageId) in (select (v1) from semiUp3706589803875889560);
+create or replace view semiDown4565048834592560489 as select v1 from semiUp3706589803875889560 where (v1) in (select (v1) from semiUp8774564508804035493);
+create or replace view semiDown5224181477157971733 as select v1 from semiUp4998608122519238105 where (v1) in (select (v1) from semiDown4565048834592560489);
+create or replace view semiDown2372895495000951039 as select ParentMessageId as v1 from Comment_replyOf_Message AS Comment_replyOf_Message where (ParentMessageId) in (select (v1) from semiDown5224181477157971733);
+create or replace view aggView6156967875660687457 as select v1, COUNT(*) as annot from semiDown2372895495000951039 group by v1;
+create or replace view aggJoin1106703387282458201 as select v1, annot from semiDown5224181477157971733 join aggView6156967875660687457 using(v1);
+create or replace view aggView526338029355517907 as select v1, SUM(annot) as annot from aggJoin1106703387282458201 group by v1;
+create or replace view aggJoin8576399458233771819 as select v1, annot from semiDown4565048834592560489 join aggView526338029355517907 using(v1);
+create or replace view aggView7856737767193427371 as select v1, SUM(annot) as annot from aggJoin8576399458233771819 group by v1;
+create or replace view aggJoin6273706451912404852 as select annot from semiUp8774564508804035493 join aggView7856737767193427371 using(v1);
+select SUM(annot) as v9 from aggJoin6273706451912404852;

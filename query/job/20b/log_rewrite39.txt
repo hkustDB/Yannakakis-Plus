@@ -1,4 +1,0 @@
-1 row in set (8.40 sec)
-1 row in set (7.07 sec)
-1 row in set (7.93 sec)
-======================

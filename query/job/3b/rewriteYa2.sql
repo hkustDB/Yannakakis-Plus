@@ -1,0 +1,13 @@
+create or replace view semiUp4327283828158795871 as select movie_id as v12 from movie_info AS mi where (movie_id) in (select (id) from title AS t where production_year>2010) and info= 'Bulgaria';
+create or replace view semiUp1394057538329187764 as select movie_id as v12, keyword_id as v1 from movie_keyword AS mk where (movie_id) in (select (v12) from semiUp4327283828158795871);
+create or replace view semiUp5951380235983052911 as select id as v1 from keyword AS k where (id) in (select (v1) from semiUp1394057538329187764) and keyword LIKE '%sequel%';
+create or replace view semiDown5058588931683386470 as select v12, v1 from semiUp1394057538329187764 where (v1) in (select (v1) from semiUp5951380235983052911);
+create or replace view semiDown2772254069705047828 as select v12 from semiUp4327283828158795871 where (v12) in (select (v12) from semiDown5058588931683386470);
+create or replace view semiDown7901503276793103888 as select id as v12, title as v13 from title AS t where (id) in (select (v12) from semiDown2772254069705047828) and production_year>2010;
+create or replace view aggView4206456496939511782 as select v12, v13 as v24 from semiDown7901503276793103888;
+create or replace view aggJoin5977414077610554407 as select v12, v24 from semiDown2772254069705047828 join aggView4206456496939511782 using(v12);
+create or replace view aggView466561404919645325 as select v12, MIN(v24) as v24 from aggJoin5977414077610554407 group by v12;
+create or replace view aggJoin6649647717327285718 as select v1, v24 from semiDown5058588931683386470 join aggView466561404919645325 using(v12);
+create or replace view aggView8540533368776454057 as select v1, MIN(v24) as v24 from aggJoin6649647717327285718 group by v1;
+create or replace view aggJoin5535630978693465090 as select v24 from semiUp5951380235983052911 join aggView8540533368776454057 using(v1);
+select MIN(v24) as v24 from aggJoin5535630978693465090;

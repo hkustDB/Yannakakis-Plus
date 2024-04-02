@@ -1,10 +1,12 @@
-# *.txt
+*.txt
+*.pyc
 
 .DS_Store
 rewrite_and_run.result
 
 querySum.sql
-# query/job2/[1-9]*/rewrite*.sql
+# query/*/*/rewrite*.sql
+# query/job*/[1-9]*/rewrite*.sql
 
 query/extra*
 !query/extract_runtime.py

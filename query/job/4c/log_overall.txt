@@ -1,6 +1,0 @@
-mean: 3.0225
-min: 1.46
-max: 4.51
-variance: 2.627558333333333
-median: 3.06
-original_time: [4.33, 4.51, 1.79, 1.46]

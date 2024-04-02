@@ -1,0 +1,13 @@
+create or replace view semiUp2840954936991537701 as select MessageId as v1 from Person_likes_Message AS Person_likes_Message where (MessageId) in (select (ParentMessageId) from Comment_replyOf_Message AS Comment_replyOf_Message);
+create or replace view semiUp1411210019875466442 as select MessageId as v1 from Message_hasTag_Tag AS Message_hasTag_Tag where (MessageId) in (select (v1) from semiUp2840954936991537701);
+create or replace view semiUp1295348084183614578 as select MessageId as v1 from Message_hasCreator_Person AS Message_hasCreator_Person where (MessageId) in (select (v1) from semiUp1411210019875466442);
+create or replace view semiDown1586983844624023634 as select v1 from semiUp1411210019875466442 where (v1) in (select (v1) from semiUp1295348084183614578);
+create or replace view semiDown7615866381688649212 as select v1 from semiUp2840954936991537701 where (v1) in (select (v1) from semiDown1586983844624023634);
+create or replace view semiDown8931779315616830720 as select ParentMessageId as v1 from Comment_replyOf_Message AS Comment_replyOf_Message where (ParentMessageId) in (select (v1) from semiDown7615866381688649212);
+create or replace view aggView7342320183396145200 as select v1, COUNT(*) as annot from semiDown8931779315616830720 group by v1;
+create or replace view aggJoin4662589412373362435 as select v1, annot from semiDown7615866381688649212 join aggView7342320183396145200 using(v1);
+create or replace view aggView4818306153689388989 as select v1, SUM(annot) as annot from aggJoin4662589412373362435 group by v1;
+create or replace view aggJoin1801666277457007787 as select v1, annot from semiDown1586983844624023634 join aggView4818306153689388989 using(v1);
+create or replace view aggView2021796312407249601 as select v1, SUM(annot) as annot from aggJoin1801666277457007787 group by v1;
+create or replace view aggJoin7914670669703739231 as select annot from semiUp1295348084183614578 join aggView2021796312407249601 using(v1);
+select SUM(annot) as v9 from aggJoin7914670669703739231;

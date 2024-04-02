@@ -1,0 +1,13 @@
+create or replace view semiUp3513427086654679481 as select movie_id as v12, keyword_id as v1 from movie_keyword AS mk where (movie_id) in (select (movie_id) from movie_info AS mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German'));
+create or replace view semiUp4789273923093440628 as select v12, v1 from semiUp3513427086654679481 where (v12) in (select (id) from title AS t where production_year>2005);
+create or replace view semiUp7893542202287596325 as select v12, v1 from semiUp4789273923093440628 where (v1) in (select (id) from keyword AS k where keyword LIKE '%sequel%');
+create or replace view semiDown3864697433998629012 as select id as v1 from keyword AS k where (id) in (select (v1) from semiUp7893542202287596325) and keyword LIKE '%sequel%';
+create or replace view semiDown2180543988431980224 as select movie_id as v12 from movie_info AS mi where (movie_id) in (select (v12) from semiUp7893542202287596325) and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
+create or replace view semiDown7874599844297975378 as select id as v12, title as v13 from title AS t where (id) in (select (v12) from semiUp7893542202287596325) and production_year>2005;
+create or replace view aggView2314413146246328010 as select v12 from semiDown2180543988431980224 group by v12;
+create or replace view aggJoin701490556308276942 as select v12, v1 from semiUp7893542202287596325 join aggView2314413146246328010 using(v12);
+create or replace view aggView7032774482563947896 as select v1 from semiDown3864697433998629012;
+create or replace view aggJoin2543955010390254133 as select v12 from aggJoin701490556308276942 join aggView7032774482563947896 using(v1);
+create or replace view aggView9081242836067230776 as select v12, v13 as v24 from semiDown7874599844297975378;
+create or replace view aggJoin907903085044122030 as select v24 from aggJoin2543955010390254133 join aggView9081242836067230776 using(v12);
+select MIN(v24) as v24 from aggJoin907903085044122030;
