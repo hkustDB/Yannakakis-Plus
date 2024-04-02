@@ -1,0 +1,13 @@
+create or replace view semiUp7762912715535226316 as select MessageId as v1 from Person_likes_Message AS Person_likes_Message where (MessageId) in (select (ParentMessageId) from Comment_replyOf_Message AS Comment_replyOf_Message);
+create or replace view semiUp2186051205689095050 as select v1 from semiUp7762912715535226316 where (v1) in (select (MessageId) from Message_hasCreator_Person AS Message_hasCreator_Person);
+create or replace view semiUp1023015452069315428 as select MessageId as v1 from Message_hasTag_Tag AS Message_hasTag_Tag where (MessageId) in (select (v1) from semiUp2186051205689095050);
+create or replace view semiDown5393540922916246881 as select v1 from semiUp2186051205689095050 where (v1) in (select (v1) from semiUp1023015452069315428);
+create or replace view semiDown3296640845258756301 as select MessageId as v1 from Message_hasCreator_Person AS Message_hasCreator_Person where (MessageId) in (select (v1) from semiDown5393540922916246881);
+create or replace view semiDown8129734538749573709 as select ParentMessageId as v1 from Comment_replyOf_Message AS Comment_replyOf_Message where (ParentMessageId) in (select (v1) from semiDown5393540922916246881);
+create or replace view aggView2010957799570840295 as select v1, COUNT(*) as annot from semiDown8129734538749573709 group by v1;
+create or replace view aggJoin6671395439185113772 as select v1, annot from semiDown5393540922916246881 join aggView2010957799570840295 using(v1);
+create or replace view aggView3481183289237872869 as select v1 from semiDown3296640845258756301;
+create or replace view aggJoin3692464516132470359 as select v1, annot from aggJoin6671395439185113772 join aggView3481183289237872869 using(v1);
+create or replace view aggView8844574694966676892 as select v1, SUM(annot) as annot from aggJoin3692464516132470359 group by v1;
+create or replace view aggJoin2455301870418797426 as select annot from semiUp1023015452069315428 join aggView8844574694966676892 using(v1);
+select SUM(annot) as v9 from aggJoin2455301870418797426;

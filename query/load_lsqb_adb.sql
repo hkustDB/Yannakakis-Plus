@@ -107,27 +107,27 @@ CREATE TABLE IF NOT EXISTS Person_knows_Person      (
 	Person2Id    bigint
 ) DISTRIBUTED BY HASH (Person1Id);
 
-submit job insert overwrite into Company select * from oss_Company_30;
-submit job insert overwrite into University select * from oss_University_30;
-submit job insert overwrite into Continent select * from oss_Continent_30;
-submit job insert overwrite into Country select * from oss_Country_30;
-submit job insert overwrite into City select * from oss_City_30;
-submit job insert overwrite into Tag select * from oss_Tag_30;
-submit job insert overwrite into TagClass select * from oss_TagClass_30;
-submit job insert overwrite into Forum select * from oss_Forum_30;
-submit job insert overwrite into `Comment` select * from oss_Comment_30;
-submit job insert overwrite into Post select * from oss_Post_30;
-submit job insert overwrite into Person select * from oss_Person_30;
-submit job insert overwrite into Comment_hasTag_Tag select * from oss_Comment_hasTag_Tag_30;
-submit job insert overwrite into Post_hasTag_Tag select * from oss_Post_hasTag_Tag_30;
-submit job insert overwrite into Forum_hasMember_Person select * from oss_Forum_hasMember_Person_30;
-submit job insert overwrite into Person_hasInterest_Tag select * from oss_Person_hasInterest_Tag_30;
-submit job insert overwrite into Person_likes_Comment select * from oss_Person_likes_Comment_30;
-submit job insert overwrite into Person_likes_Post select * from oss_Person_likes_Post_30;
-submit job insert overwrite into Person_studyAt_University select * from oss_Person_studyAt_University_30;
-submit job insert overwrite into Person_workAt_Company select * from oss_Person_workAt_Company_30;
-submit job insert overwrite into Person_knows_Person select * from oss_Person_knows_Person_30;
-submit job insert into Person_knows_Person select Person2Id, Person1Id from oss_Person_knows_Person_30;
+submit job insert overwrite into Company select * from oss_Company_10;
+submit job insert overwrite into University select * from oss_University_10;
+submit job insert overwrite into Continent select * from oss_Continent_10;
+submit job insert overwrite into Country select * from oss_Country_10;
+submit job insert overwrite into City select * from oss_City_10;
+submit job insert overwrite into Tag select * from oss_Tag_10;
+submit job insert overwrite into TagClass select * from oss_TagClass_10;
+submit job insert overwrite into Forum select * from oss_Forum_10;
+submit job insert overwrite into `Comment` select * from oss_Comment_10;
+submit job insert overwrite into Post select * from oss_Post_10;
+submit job insert overwrite into Person select * from oss_Person_10;
+submit job insert overwrite into Comment_hasTag_Tag select * from oss_Comment_hasTag_Tag_10;
+submit job insert overwrite into Post_hasTag_Tag select * from oss_Post_hasTag_Tag_10;
+submit job insert overwrite into Forum_hasMember_Person select * from oss_Forum_hasMember_Person_10;
+submit job insert overwrite into Person_hasInterest_Tag select * from oss_Person_hasInterest_Tag_10;
+submit job insert overwrite into Person_likes_Comment select * from oss_Person_likes_Comment_10;
+submit job insert overwrite into Person_likes_Post select * from oss_Person_likes_Post_10;
+submit job insert overwrite into Person_studyAt_University select * from oss_Person_studyAt_University_10;
+submit job insert overwrite into Person_workAt_Company select * from oss_Person_workAt_Company_10;
+submit job insert overwrite into Person_knows_Person select * from oss_Person_knows_Person_10;
+submit job insert into Person_knows_Person select Person2Id, Person1Id from oss_Person_knows_Person_10;
 
 analyze table Company UPDATE HISTOGRAM;
 analyze table University UPDATE HISTOGRAM;
