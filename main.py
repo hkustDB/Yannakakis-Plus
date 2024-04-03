@@ -316,12 +316,12 @@ if __name__ == '__main__':
     globalVar.set_value('QUERY_NAME', 'query.sql')
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
-    globalVar.set_value('COST_NAME', 'cost.txt')
+    globalVar.set_value('COST_NAME', 'cost.csv')
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/lsqb/q1/')
-    globalVar.set_value('DDL_NAME', "lsqb.ddl")
+    globalVar.set_value('BASE_PATH', 'query/extra/8a/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
     '''
     arguments = docopt(__doc__)
@@ -386,11 +386,11 @@ if __name__ == '__main__':
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
             cost_stat.append([index, cost_height, cost_fanout, cost_estimate])
             try:
-                '''
+                
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
-                '''
+                
                 computationList.reset()
                 if IRmode == IRType.Report:
                     if globalVar.get_value('YANNA'):
@@ -422,6 +422,8 @@ if __name__ == '__main__':
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(cost_stat)
+            best = selectBest(cost_stat)
+            write.writerow(best)
 
     end = time.time()
     print('Rewrite time(s): ' + str(end-start) + '\n')
