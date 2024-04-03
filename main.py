@@ -319,7 +319,7 @@ if __name__ == '__main__':
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.csv')
     globalVar.set_value('GEN_TYPE', 'DuckDB')
-    globalVar.set_value('YANNA', False)
+    globalVar.set_value('YANNA', True)
     # code debug keep here
     globalVar.set_value('BASE_PATH', 'query/tpch/q5/')
     globalVar.set_value('DDL_NAME', "tpch.ddl")
@@ -387,11 +387,11 @@ if __name__ == '__main__':
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
             cost_stat.append([index, cost_height, cost_fanout, cost_estimate])
             try:
-                
+                '''
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
-                
+                '''
                 computationList.reset()
                 if IRmode == IRType.Report:
                     if globalVar.get_value('YANNA'):
