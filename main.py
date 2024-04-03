@@ -171,7 +171,7 @@ def connect(base: int, mode: int, type: GenType):
     query_file.close()
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -187,13 +187,14 @@ def connect(base: int, mode: int, type: GenType):
     for index, jt in enumerate(joinTrees):
         allNodes = dict()
         supId = set()
-        nodes, edges, root, subset, comparisons, extraEqualConditions = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraConditions']
+        nodes, edges, root, subset, comparisons, extraConditions, fixRoot = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraConditions'], jt['fixRoot']
         # a. parse relations
         for node in nodes:
             parseRel(node, allNodes, supId)
         # b. parse edge
         allNodes = parse_col2var(allNodes, table2vars)
-        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset, extraEqualConditions)
+        extraConds = ExtraCondList(extraConditions)
+        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset, extraConds, fixRoot)
         JT.setRootById(root)
         CompareMap: dict[int, Comparison] = dict()
         for edge_data in edges:
@@ -320,7 +321,7 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/tpch/q2/')
+    globalVar.set_value('BASE_PATH', 'query/tpch/q5/')
     globalVar.set_value('DDL_NAME', "tpch.ddl")
     # auto-rewrite keep here
     '''

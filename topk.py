@@ -37,4 +37,22 @@ class CompList:
     def reset(self):
         for alias in self.alias2Comp.keys():
             self.alias2Comp[alias].isDone = False
-        return 
+        return
+    
+class ExtraCond:
+    def __init__(self, cond: str) -> None:
+        self.cond = cond
+        self.vars = self.getAlias()
+        self.done = False
+        
+    def getAlias(self):
+        pattern = re.compile('v[0-9]+')
+        vars = pattern.findall(self.cond)
+        return vars
+    
+class ExtraCondList:
+    def __init__(self, extraConditions: list[str]) -> None:
+        self.condList: list[ExtraCond] = [ExtraCond(cond) for cond in extraConditions]
+        self.allAlias: set[str] = set()
+        for cond in self.condList:
+            self.allAlias.update(cond.vars)
