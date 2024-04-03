@@ -1,21 +1,27 @@
 import pandas as pd
 import math
 import queue
+import traceback
 
 from jointree import Edge, JoinTree
 from treenode import *
 from sys import maxsize
+from random import choice
 
 STATIS_PATH="/Users/cbn/Desktop/SQLRewriter/query/"
 
 def input_car_ndv():
     try:
+        s = STATIS_PATH + 'tpch.xlsx'
         data_tpch = pd.read_excel(STATIS_PATH + 'tpch.xlsx', header=None, keep_default_na=False)
         data_lsqb = pd.read_excel(STATIS_PATH + 'lsqb.xlsx', header=None, keep_default_na=False)
+        data_job = pd.read_excel(STATIS_PATH + 'job.xlsx', header=None, keep_default_na=False)
         tpch = data_tpch.values.tolist()
         lsqb = data_lsqb.values.tolist()
+        job = data_job.values.tolist()
         sta_tpch = dict()
         sta_lsqb = dict()
+        sta_job = dict()
         for table in tpch:
             name = table[0]
             col_sta = []
@@ -32,10 +38,19 @@ def input_car_ndv():
                     cardinality, ndv = int(col.split(';')[0]), int(col.split(';')[1])
                     col_sta.append([cardinality, ndv])
             sta_lsqb[name] = col_sta
+        for table in job:
+            name = table[0]
+            col_sta = []
+            for col in table[1:]:
+                if col != '':
+                    cardinality, ndv = int(col.split(';')[0]), int(col.split(';')[1])
+                    col_sta.append([cardinality, ndv])
+            sta_job[name] = col_sta
     
-        return sta_tpch, sta_lsqb
+        return sta_tpch, sta_lsqb, sta_job
     except:
-        return None, None
+        traceback.print_exc()
+        return None, None, None
 
 def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
     cost_height = jt.root.depth
@@ -107,10 +122,31 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
 
 
 def getEstimation(DDL_NAME: str, jt: JoinTree):
-    sta_tpch, sta_lsqb = input_car_ndv()
+    sta_tpch, sta_lsqb, sta_job = input_car_ndv()
     if DDL_NAME == 'tpch':
         return cal_cost(sta_tpch, jt)
     elif DDL_NAME == 'lsqb':
         return cal_cost(sta_lsqb, jt)
+    elif DDL_NAME == 'job':
+        return cal_cost(sta_job, jt)
     else:
         return cal_cost(None, jt)
+
+def selectBest(cost_stat: list[list[int]]) -> int:
+    # index, cost_height, cost_fanout, cost_estimate
+    group: dict[str, list[int]] = {}
+    for cost in cost_stat:
+        estimate = cost[-1]
+        if estimate in group:
+            group[estimate].append(cost)
+        else:
+            group[estimate] = [cost]
+    target_index: list[int] = list()
+    for estimate in group:
+        sorted(group[estimate], key=lambda x: (x[2], x[1], x[0]))
+        if len(group[estimate]) > 1 and group[estimate][0][1] != group[estimate][1][1] and group[estimate][0][2] != group[estimate][1][2]:
+            target_index.append(group[estimate][1])
+    if len(target_index) == 0:
+        return list(group.values())[0][0]
+    else:
+        return choice(target_index)
