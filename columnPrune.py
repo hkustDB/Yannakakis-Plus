@@ -82,7 +82,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
     # FIXME: No intermediate variable in agg, all trans happens at one node
     aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
-    extraEqualSet = JT.extraEqualSet
+    extraEqualSet = JT.extraCondList.allAlias
     
     joinKeyParent: dict[int, set[str]] = dict()     # NodeId -> joinKeys with parent -> reduce
     joinKeyEnum: dict[int, set[str]] = dict()
@@ -172,9 +172,13 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 if '<' in lastCond or '<=' in lastCond or '>' in lastCond or '>=' in lastCond:
                     requireVariables = outputVariables
                 
-            curRequireSet = requireVariables | jkp | aggKeepSet | extraEqualSet
+            if index == len(aggReduceList)-1 and len(JT.subset) == 1:
+                curRequireSet = requireVariables | jkp | aggKeepSet
+                removeAnnotFlag = not 'annot' in finalResult
+            else:
+                curRequireSet = requireVariables | jkp | aggKeepSet | extraEqualSet
+                removeAnnotFlag = False
             
-            removeAnnotFlag = len(JT.subset) == 1 and index == len(aggReduceList)-1 and (not 'annot' in finalResult)
             if removeAnnotFlag and 'annot' in aggReduce.aggView.selectAttrAlias:
                 if not len(aggReduce.aggView.selectAttrs):
                     aggReduce.aggView.selectAttrAlias.remove('annot')
