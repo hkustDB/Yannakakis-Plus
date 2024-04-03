@@ -41,7 +41,7 @@ class JoinTree:
         self.subset: list[int] = subset
         self.extraCondList = extraCondList
         self.fixRoot = fixRoot
-        
+    
     def __repr__(self) -> str:
         return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset) + "\n"
     
@@ -75,6 +75,9 @@ class JoinTree:
         
     def setRootById(self, rootId: int):
         self.root = self.node[rootId]
+        if self.fixRoot:
+            self.subset = [self.root.id]
+            self.isFreeConnex = False
         
     def addNode(self, node: TreeNode):
         self.node[node.id] = node
