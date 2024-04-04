@@ -171,7 +171,7 @@ def connect(base: int, mode: int, type: GenType):
     query_file.close()
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30&fixRootEnable=true", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -319,10 +319,10 @@ if __name__ == '__main__':
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.csv')
     globalVar.set_value('GEN_TYPE', 'DuckDB')
-    globalVar.set_value('YANNA', True)
+    globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/tpch/q5/')
-    globalVar.set_value('DDL_NAME', "tpch.ddl")
+    globalVar.set_value('BASE_PATH', 'query/extra/16a/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
     '''
     arguments = docopt(__doc__)
@@ -387,11 +387,11 @@ if __name__ == '__main__':
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
             cost_stat.append([index, cost_height, cost_fanout, cost_estimate])
             try:
-                '''
+                
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
-                '''
+                
                 computationList.reset()
                 if IRmode == IRType.Report:
                     if globalVar.get_value('YANNA'):
