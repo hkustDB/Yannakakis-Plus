@@ -1180,28 +1180,65 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                                     else:
                                         newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
                         else:
-                            if func.doneFlag:
-                                if func.funcName == AggFuncType.AVG:
-                                    newForm = newForm.replace(var, 'SUM(' + out + '/annot' * finalAnnotFlag + ') as ')
-                                elif func.funcName == AggFuncType.COUNT:
-                                    if finalAnnotFlag:
-                                        newForm = newForm.replace(var, 'SUM(annot) as ' + out)
+                            if 'CASE' in func.formular:
+                                _, caseCond, caseRes1, caseRes2 = re.split(' WHEN | THEN | ELSE | END', func.originForm)[:-1]
+                                caseCond = caseCond[1:-1]
+                                caseRes1 = caseRes1[1:-1]
+                                if 'caseCond' in lastView.selectAttrAlias:
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + '/ annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        newForm = newForm.replace(var, 'SUM((CASE WHEN caseCond = 1 THEN 1 ELSE 0.0 END)' + '*annot' * finalAnnotFlag + ')')
+                                    elif func.funcName == AggFuncType.SUM:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
                                     else:
-                                        newForm = newForm.replace(var, 'COUNT(*) as ')
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN caseCond = 1 THEN ' + caseRes1 + ' ELSE 0.0 END)')
+                                elif 'caseRes' in lastView.selectAttrAlias:
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + '/ annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                                    elif func.funcName == AggFuncType.SUM:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ' + '* annot' * finalAnnotFlag + ' ELSE 0.0 END)')
+                                    else:
+                                        newForm = newForm.replace(var, func.funcName.name + '( CASE WHEN ' + caseCond + ' THEN caseRes ELSE 0.0 END)')
                                 else:
-                                    newForm = newForm.replace(var, func.funcName.name + '(' + out + ') as ')
+                                    if func.doneFlag:
+                                        continue
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        if finalAnnotFlag:
+                                            newForm = newForm.replace(var, 'SUM(' + '(' + func.originForm + ') * annot' + ')')
+                                        else:
+                                            newForm = newForm.replace(var, 'COUNT(' + func.originForm + ')')
+                                    elif func.funcName == AggFuncType.SUM:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + '* annot' * finalAnnotFlag + ')')
+                                    else:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
                             else:
-                                if func.funcName == AggFuncType.AVG:
-                                    newForm = newForm.replace(var, 'SUM(' + '(' + func.originForm + ')' + '/annot' * finalAnnotFlag + ') as ' + out)
-                                elif func.funcName == AggFuncType.COUNT:
-                                    if finalAnnotFlag:
-                                        newForm = newForm.replace(var, 'SUM(annot) as ' + out)
+                                if func.doneFlag:
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, 'SUM(' + out + '/annot' * finalAnnotFlag + ')')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        if finalAnnotFlag:
+                                            newForm = newForm.replace(var, 'SUM(annot)')
+                                        else:
+                                            newForm = newForm.replace(var, 'COUNT(*)')
                                     else:
-                                        newForm = newForm.replace(var, 'COUNT(*) as ' + out)
-                                elif func.funcName == AggFuncType.MIN and func.funcName == AggFuncType.MAX:
-                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ') as ' + out)
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + out + ')')
                                 else:
-                                    newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + '*annot' * finalAnnotFlag + ') as ' + out)
+                                    if func.funcName == AggFuncType.AVG:
+                                        newForm = newForm.replace(var, 'SUM(' + '(' + func.originForm + ')' + '/annot' * finalAnnotFlag + ')')
+                                    elif func.funcName == AggFuncType.COUNT:
+                                        if finalAnnotFlag:
+                                            newForm = newForm.replace(var, 'SUM(annot)')
+                                        else:
+                                            newForm = newForm.replace(var, 'COUNT(*)')
+                                    elif func.funcName == AggFuncType.MIN and func.funcName == AggFuncType.MAX:
+                                            newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + ')')
+                                    else:
+                                        newForm = newForm.replace(var, func.funcName.name + '(' + func.originForm + '*annot' * finalAnnotFlag + ')')
                 selectName.append(newForm + ' as ' + out)
             else:
                 raise NotImplementedError("Other output variables exists! ")

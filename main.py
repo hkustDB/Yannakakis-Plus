@@ -321,8 +321,8 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/extra/16a/')
-    globalVar.set_value('DDL_NAME', "job.ddl")
+    globalVar.set_value('BASE_PATH', 'query/tpch/q8/')
+    globalVar.set_value('DDL_NAME', "tpch.ddl")
     # auto-rewrite keep here
     '''
     arguments = docopt(__doc__)
