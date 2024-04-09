@@ -1252,7 +1252,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     if len(jointree.subset) <= 1:
         aggReduceList, _, _ = columnPrune(JT, aggReduceList, [], [], finalResult, set(outputVariables), Agg, list(COMP.values()))
         finalResult += aggReduceList[-1].aggJoin.viewName
-        if not JT.isFreeConnex:
+        if not JT.isFreeConnex and len(Agg.groupByVars):
             finalResult += ' group by ' + ', '.join(Agg.groupByVars)
         finalResult += ';\n'
         if globalVar.get_value('GEN_TYPE') == 'Mysql':
