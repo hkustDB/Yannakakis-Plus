@@ -143,9 +143,9 @@ def selectBest(cost_stat: list[list[int]]) -> int:
             group[estimate] = [cost]
     target_index: list[int] = list()
     for estimate in group:
-        sorted(group[estimate], key=lambda x: (x[2], x[1], x[0]))
-        if len(group[estimate]) > 1 and group[estimate][0][1] != group[estimate][1][1] and group[estimate][0][2] != group[estimate][1][2]:
-            target_index.append(group[estimate][1])
+        sorted(group[estimate], key=lambda x: (x[2], -x[1], x[0]))
+        if len(group[estimate]):
+            target_index.append(group[estimate][0])
     if len(target_index) == 0:
         return list(group.values())[0][0]
     else:
