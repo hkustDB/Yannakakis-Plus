@@ -170,8 +170,8 @@ def connect(base: int, mode: int, type: GenType):
     body['query'] = query_file.read()
     query_file.close()
     try:
-        # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30", headers=headers, json=body).json()['data']
+        # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -187,13 +187,14 @@ def connect(base: int, mode: int, type: GenType):
     for index, jt in enumerate(joinTrees):
         allNodes = dict()
         supId = set()
-        nodes, edges, root, subset, comparisons, extraEqualConditions = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraConditions']
+        nodes, edges, root, subset, comparisons, extraConditions, fixRoot = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraConditions'], jt['fixRoot']
         # a. parse relations
         for node in nodes:
             parseRel(node, allNodes, supId)
         # b. parse edge
         allNodes = parse_col2var(allNodes, table2vars)
-        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset, extraEqualConditions)
+        extraConds = ExtraCondList(extraConditions)
+        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset, extraConds, fixRoot)
         JT.setRootById(root)
         CompareMap: dict[int, Comparison] = dict()
         for edge_data in edges:
@@ -316,12 +317,12 @@ if __name__ == '__main__':
     globalVar.set_value('QUERY_NAME', 'query.sql')
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
-    globalVar.set_value('COST_NAME', 'cost.txt')
-    globalVar.set_value('GEN_TYPE', 'Mysql')
+    globalVar.set_value('COST_NAME', 'cost.csv')
+    globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/tpch/q9/')
-    globalVar.set_value('DDL_NAME', "tpch.ddl")
+    globalVar.set_value('BASE_PATH', 'query/job1/1a/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
     # auto-rewrite keep here
     '''
     arguments = docopt(__doc__)
@@ -386,11 +387,11 @@ if __name__ == '__main__':
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
             cost_stat.append([index, cost_height, cost_fanout, cost_estimate])
             try:
-                '''
+                
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
-                '''
+                
                 computationList.reset()
                 if IRmode == IRType.Report:
                     if globalVar.get_value('YANNA'):
@@ -422,6 +423,8 @@ if __name__ == '__main__':
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(cost_stat)
+            best = selectBest(cost_stat)
+            write.writerow(best)
 
     end = time.time()
     # TODO: Change here to write file rewrite_time.txt

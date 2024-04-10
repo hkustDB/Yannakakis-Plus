@@ -82,7 +82,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
     # FIXME: No intermediate variable in agg, all trans happens at one node
     aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
-    extraEqualSet = JT.extraEqualSet
+    extraEqualSet = JT.extraCondList.allAlias
     
     joinKeyParent: dict[int, set[str]] = dict()     # NodeId -> joinKeys with parent -> reduce
     joinKeyEnum: dict[int, set[str]] = dict()
@@ -153,7 +153,6 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 
     # step3: prune aggReduce (bottom up)
     if Agg:
-        requireVariables = outputVariables | compKeepSet | extraEqualSet
         for index, aggReduce in enumerate(aggReduceList):
             corNode = JT.getNode(aggReduce.corresId)
             jkp = set()
@@ -172,9 +171,13 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 if '<' in lastCond or '<=' in lastCond or '>' in lastCond or '>=' in lastCond:
                     requireVariables = outputVariables
                 
-            curRequireSet = requireVariables | jkp | aggKeepSet | extraEqualSet
+            if index == len(aggReduceList)-1 and len(JT.subset) == 1:
+                curRequireSet = outputVariables | jkp | aggKeepSet
+                removeAnnotFlag = not 'annot' in finalResult
+            else:
+                curRequireSet = outputVariables | compKeepSet | extraEqualSet | aggKeepSet | jkp
+                removeAnnotFlag = False
             
-            removeAnnotFlag = len(JT.subset) == 1 and index == len(aggReduceList)-1 and (not 'annot' in finalResult)
             if removeAnnotFlag and 'annot' in aggReduce.aggView.selectAttrAlias:
                 if not len(aggReduce.aggView.selectAttrs):
                     aggReduce.aggView.selectAttrAlias.remove('annot')
@@ -189,7 +192,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
 def columnPruneYa(JT: JoinTree, semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union[list[AggReducePhase], list[Join2tables]], finalResult: str, outputVariables: set[str], Agg: Aggregation = None, COMP: list[Comparison] = []):
     aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
-    extraEqualSet = JT.extraEqualSet
+    extraEqualSet = JT.extraCondList.allAlias
 
     joinKeyEnum: dict[int, set[str]] = dict()
     allJoinKeys: set[str] = set()
@@ -212,7 +215,13 @@ def columnPruneYa(JT: JoinTree, semiUp: list[SemiUpPhase], semiDown: list[SemiJo
 
     for idx, last in enumerate(lastUp):
         if Agg:
-            removeAnnotFlag = idx == len(lastUp)-1 and (not 'annot' in finalResult)
+            if idx == len(lastUp)-1:
+                requireVariables = outputVariables | aggKeepSet
+                removeAnnotFlag =  not 'annot' in finalResult
+            else:
+                requireVariables = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
+                removeAnnotFlag = False
+            
             last.aggJoin.selectAttrs, last.aggJoin.selectAttrAlias = removeAttrAlias(last.aggJoin.selectAttrs, last.aggJoin.selectAttrAlias, requireVariables | joinKeyEnum[idx], Agg=Agg, removeAnnot=removeAnnotFlag)
         else:
             last.selectAttrs, last.selectAttrAlias = removeAttrAlias(last.selectAttrs, last.selectAttrAlias, requireVariables | joinKeyEnum[idx])
