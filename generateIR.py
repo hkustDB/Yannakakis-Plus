@@ -943,6 +943,10 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                     raise NotImplementedError("Only support EXTRACT function in groupBy & appear in output attrs! ")
             
             joinKey = list(set(origiNode.cols) & set(previousView.selectAttrAlias))
+            for eachKey in joinKey:
+                cond = origiNode.alias + '.' + origiNode.col2vars[1][origiNode.cols.index(eachKey)] + '=' + previousView.viewName + '.' + eachKey
+                joinCondList.append(cond)
+            joinKey = []
         
         elif origiNode.JoinResView is not None:
             joinTable = origiNode.JoinResView.viewName

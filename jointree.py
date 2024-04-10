@@ -1,5 +1,6 @@
 from treenode import *
 from enumsType import *
+from topk import *
 
 class Edge:
     _id = 0
@@ -30,23 +31,22 @@ class Edge:
         return str(self.src.id) + str('->') + str(self.dst.id)
     
 class JoinTree:
-    def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int], extraEqualConditions: list[list[str, str]]) -> None:
+    def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int], extraCondList: ExtraCondList, fixRoot: bool) -> None:
         self.node: dict[int, TreeNode] = node   # id -> TreeNode
         self.edge: dict[int, Edge] = dict()     # id -> (TreeNode1, TreeNode2)
         self.root: TreeNode = None
         self.isFull: bool = isFull
         self.isFreeConnex: bool = isFreeConnex
-        self.subset: list[int] = subset
         self.supId = supId
-        self.extraEqualConditions = extraEqualConditions
-        self.extraEqualDoneFlag = [False] * len(self.extraEqualConditions)
-        self.extraEqualSet = self.getExtraEqualSet()
-        
+        self.subset: list[int] = subset
+        self.extraCondList = extraCondList
+        self.fixRoot = fixRoot
+    
     def __repr__(self) -> str:
-        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset) + "\nExtra:\n" + str(self.extraEqualConditions)
-        
+        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset) + "\nfixroot:\n" + str(self.fixRoot) + "\n"
+    
     def __str__(self) -> str:
-        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset) + "\nExtra:\n" + str(self.extraEqualConditions)
+        return "Relations:\n" + str(self.node.values()) + "\nEdges:\n" + str(self.edge.values()) + "\nRoot:\n" + str(self.root.id) + "\nisFull:\n" + str(self.isFull) + "\nisFreeConnex:\n" + str(self.isFreeConnex) + "\nsubset:\n" + str(self.subset) + "\nfixroot:\n" + str(self.fixRoot) + "\n"
     
     @property
     def getRoot(self): return self.root
@@ -65,12 +65,6 @@ class JoinTree:
     def getRelations(self) -> dict[int, Edge]:
         return self.edge
     
-    def getExtraEqualSet(self):
-        extraEqualSet = set()
-        for cond in self.extraEqualConditions:
-            extraEqualSet.update(cond)
-        return extraEqualSet
-    
     def findNode(self, id: int):            # test whether already added, nodeId set
         if self.node.get(id, False):
             return True
@@ -81,6 +75,9 @@ class JoinTree:
         
     def setRootById(self, rootId: int):
         self.root = self.node[rootId]
+        if self.fixRoot:
+            self.subset = [self.root.id]
+            self.isFreeConnex = False
         
     def addNode(self, node: TreeNode):
         self.node[node.id] = node

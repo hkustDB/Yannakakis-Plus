@@ -183,7 +183,7 @@ def buildSemiDown(JT: JoinTree, childNode: TreeNode, parentNode: TreeNode, selfC
         semiView = SemiJoin(viewName, selectAttributes, selectAttributesAs, fromTable, joinTable, inLeft, inRight)
     return semiView
 
-def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: list[AggFunc] = [], extraEqualCond: list[str] = []):
+def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, outputVariables: list[str], aggFuncList: list[AggFunc] = [], lastRel: bool = False):
     childNode = JT.getNode(reduceRel.dst.id)
     parentNode = JT.getNode(reduceRel.src.id)
     childFlag = childNode.isLeaf and childNode.relationType == RelationType.TableScanRelation
@@ -406,19 +406,22 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: lis
             aggPass2Join.append(agg.alias)
                 
     # FIXME: extraCond
-    if len(extraEqualCond) == 1:
-        eq1, eq2 = extraEqualCond[0][0], extraEqualCond[0][1]
-        if eq1 in childNode.JoinResView.selectAttrAlias:
-            appData = eq1
-        else:
-            appData = eq2
-        if appData not in selectAttrAlias:
-            selectAttr.append('')
-            selectAttrAlias.append(appData)
-        if appData not in aggPass2Join: aggPass2Join.append(appData)
-        if appData not in groupBy: groupBy.append(appData)
-    elif len(extraEqualCond) != 0:
-        raise NotImplementedError("Multiple extraEqualCond! ")
+    setExtraCond: set[str] = set(childNode.JoinResView.selectAttrAlias) & JT.extraCondList.allAlias
+    if len(setExtraCond):
+        for alias in setExtraCond:
+            if alias not in selectAttrAlias:
+                selectAttr.append('')
+                selectAttrAlias.append(alias)
+            if alias not in aggPass2Join: aggPass2Join.append(alias)
+            if alias not in groupBy: groupBy.append(alias)
+    setOutVars = set(childNode.JoinResView.selectAttrAlias) & set(outputVariables)
+    if len(setOutVars):
+        for alias in setOutVars:
+            if alias not in selectAttrAlias:
+                selectAttr.append('')
+                selectAttrAlias.append(alias)
+            if alias not in aggPass2Join: aggPass2Join.append(alias)
+            if alias not in groupBy: groupBy.append(alias)
     
     # Pass extra group by
     for var in childNode.JoinResView.selectAttrAlias:
@@ -540,24 +543,24 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, aggFuncList: lis
     
     ## g. addExtraEqualCond process:
     extraEqualWhere = []
-    if len(extraEqualCond) == 1:
-        extraSet = set(extraEqualCond[0])
-        if extraSet.issubset(selectAttrAlias):
-            if not parentNode.JoinResView and parentNode.relationType == RelationType.TableScanRelation:
-                if extraEqualCond[0][0] in parentNode.cols:
-                    oriVar = parentNode.col2vars[1][parentNode.cols.index(extraEqualCond[0][0])]
-                    extraEqualWhere.append(oriVar + '=' + extraEqualCond[0][1])
+    if lastRel:
+        if not parentNode.JoinResView and parentNode.relationType == RelationType.TableScanRelation:
+            for eachExtra in JT.extraCondList.condList:
+                if '=' in eachExtra.cond and len(eachExtra.vars) == 2:
+                    left, right = eachExtra.cond.split('=')
+                    if left in parentNode.cols:
+                        extraEqualWhere.append(parentNode.col2vars[1][parentNode.cols.index(left)] + '=' + right)
+                    elif right in parentNode.cols:
+                        extraEqualWhere.append(left + '=' + parentNode.col2vars[1][parentNode.cols.index(right)])
                 else:
-                    oriVar = parentNode.col2vars[1][parentNode.cols.index(extraEqualCond[0][1])]
-                    extraEqualWhere.append(extraEqualCond[0][0] + '=' + oriVar)
-            else:
-                extraEqualWhere.append(extraEqualCond[0][0] + '=' + extraEqualCond[0][1])
-    elif len(extraEqualCond) != 0:
-        raise NotImplementedError("Multiple extraEqualCond! ")
-    if len(selectAttr) and len(selectAttr) != len(selectAttrAlias):
-        print(selectAttr)
-        print(selectAttrAlias)
-        raise RuntimeError("Error aggJOin! ")
+                    raise NotImplementedError("ExtraEqualCond not in 'a=b' case! ")  
+        else:
+            for eachExtra in JT.extraCondList.condList:
+                if '=' in eachExtra.cond and len(eachExtra.vars) == 2:
+                    extraEqualWhere.append(eachExtra.cond)
+                else:
+                    raise NotImplementedError("ExtraEqualCond not in 'a=b' case! ")
+
     aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, extraEqualWhere)
     if fromTable == '' and len(aggJoin.whereCondList) == 0:
         aggJoin.viewName = aggView.viewName
@@ -758,7 +761,7 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
             rel = choice(supportRelation)
         aggs = getAggRelation(JT.getNode(rel.dst.id))
         if isAgg:
-            retAggUp = buildAggUp(JT, rel, Agg, aggs)
+            retAggUp = buildAggUp(JT, rel, Agg, outputVariables, aggs, lastRel=len(jointree.edge)==1)
             if not 'Join' in retAggUp.aggJoin.viewName:
                 JT.getNode(rel.src.id).JoinResView = retAggUp.aggView
             else:
