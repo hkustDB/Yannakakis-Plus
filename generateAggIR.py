@@ -1268,7 +1268,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     elif not len(reduceList):
         fromTable = aggReduceList[-1].aggJoin.viewName
     # oreder by & limit used for checking answer
-    if not JT.isFreeConnex:
+    if not JT.isFreeConnex and len(Agg.groupByVars):
         finalResult += fromTable + ' group by ' + ', '.join(Agg.groupByVars) + ';\n'
     else:
         finalResult += fromTable + ';\n'
