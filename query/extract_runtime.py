@@ -66,4 +66,3 @@ if __name__ == "__main__":
                 runtime_staistics.write('original_time: ' + str(original_time) + '\n')
             
             runtime_staistics.close()
-
