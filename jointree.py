@@ -31,14 +31,14 @@ class Edge:
         return str(self.src.id) + str('->') + str(self.dst.id)
     
 class JoinTree:
-    def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int], extraCondList: ExtraCondList, fixRoot: bool) -> None:
+    def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int], extraCondList: ExtraCondList, fixRoot: bool, setSubset0: bool) -> None:
         self.node: dict[int, TreeNode] = node   # id -> TreeNode
         self.edge: dict[int, Edge] = dict()     # id -> (TreeNode1, TreeNode2)
         self.root: TreeNode = None
         self.isFull: bool = isFull
         self.isFreeConnex: bool = isFreeConnex
         self.supId = supId
-        self.subset: list[int] = subset
+        self.subset: list[int] = subset if not setSubset0 else []
         self.extraCondList = extraCondList
         self.fixRoot = fixRoot
     

@@ -177,6 +177,12 @@ def connect(base: int, mode: int, type: GenType):
         print("Error query: " + QUERY_NAME)
     # 1. 
     table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
+    # 3. parse outputVariables
+    outputVariables = response['outputVariables']
+    groupBy = response['groupByVariables']
+    setSubset0 = False
+    if not len(groupBy):
+        setSubset0 = True
     # 2. parse jointree
     joinTrees = response['joinTrees']
     isFreeConnex = response['freeConnex']
@@ -194,7 +200,7 @@ def connect(base: int, mode: int, type: GenType):
         # b. parse edge
         allNodes = parse_col2var(allNodes, table2vars)
         extraConds = ExtraCondList(extraConditions)
-        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset, extraConds, fixRoot)
+        JT = JoinTree(allNodes, isFull, isFreeConnex, supId, subset, extraConds, fixRoot, setSubset0)
         JT.setRootById(root)
         CompareMap: dict[int, Comparison] = dict()
         for edge_data in edges:
@@ -218,9 +224,6 @@ def connect(base: int, mode: int, type: GenType):
         elif optJT is None:
             optJT, optCOMP = JT, CompareMap
         allRes.append([JT, CompareMap, index])  
-    # 3. parse outputVariables
-    outputVariables = response['outputVariables']
-    groupBy = response['groupByVariables']
     # 4. aggregation
     aggregations = response['aggregations']
     Agg = None
@@ -321,8 +324,9 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job1/1a/')
+    globalVar.set_value('BASE_PATH', 'query/job1/2a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
+    globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
     '''
     arguments = docopt(__doc__)
@@ -338,15 +342,20 @@ if __name__ == '__main__':
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
     '''
-    start = time.time()
-    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
-    IRmode = IRType.Report if not Agg else IRType.Aggregation
-    IRmode = IRType.Level_K if topK and topK.mode == 0 else IRmode
-    IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
     OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
     COST_NAME = globalVar.get_value('COST_NAME')
+    REWRITE_TIME = globalVar.get_value('REWRITE_TIME')
+    start = time.time()
+    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
+    end = time.time()
+    with open(BASE_PATH + REWRITE_TIME, 'w+') as f:
+        print('Parser time(s): ', end-start)
+        f.write('Parser time(s): ' + str(end-start) + '\n')
+    IRmode = IRType.Report if not Agg else IRType.Aggregation
+    IRmode = IRType.Level_K if topK and topK.mode == 0 else IRmode
+    IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
     # sign for whether process all JT
     optFlag = False
     if optFlag:
@@ -379,13 +388,13 @@ if __name__ == '__main__':
             reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Product_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
             codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=topK.genType)  
     else:
-        fields = ['index', 'hight', 'width', 'estimate'] 
+        fields = ['index', 'hight', 'width', 'estimate', 'root_children'] 
         cost_stat = []
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
             outYaName = OUT_YA_NAME.split('.')[0] + str(index) + '.' + OUT_YA_NAME.split('.')[1]
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
-            cost_stat.append([index, cost_height, cost_fanout, cost_estimate])
+            cost_stat.append([index, cost_height, cost_fanout, cost_estimate, len(jt.root.children)])
             try:
                 
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
@@ -426,6 +435,8 @@ if __name__ == '__main__':
             best = selectBest(cost_stat)
             write.writerow(best)
 
-    end = time.time()
-    # TODO: Change here to write file rewrite_time.txt
-    print('Rewrite time(s): ' + str(end-start) + '\n')
+    end2 = time.time()
+    with open(BASE_PATH + REWRITE_TIME, 'a+') as f:
+        print("Rewrite time(s): " + str(end2-end))
+        f.write("Rewrite time(s): " + str(end2-end) + '\n')
+    

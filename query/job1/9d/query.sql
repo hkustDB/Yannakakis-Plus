@@ -1,5 +1,5 @@
 SELECT MIN(an.name) AS alternative_name,
-       MIN(chn.name) AS voiced_char_name,
+       MIN(chn.name) AS voiced_character_name,
        MIN(n.name) AS voicing_actress,
        MIN(t.title) AS american_movie
 FROM aka_name AS an,
@@ -16,6 +16,7 @@ WHERE ci.note IN ('(voice)',
                   '(voice: English version)')
   AND cn.country_code ='[us]'
   AND n.gender ='f'
+  AND n.name LIKE '%An%'
   AND rt.role ='actress'
   AND ci.movie_id = t.id
   AND t.id = mc.movie_id
