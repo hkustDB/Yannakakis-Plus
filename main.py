@@ -317,13 +317,13 @@ if __name__ == '__main__':
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.txt')
-    globalVar.set_value('GEN_TYPE', 'DuckDB')
-    globalVar.set_value('YANNA', True)
+    globalVar.set_value('GEN_TYPE', 'Mysql')
+    globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job/33c/')
-    globalVar.set_value('DDL_NAME', "job.ddl")
+    globalVar.set_value('BASE_PATH', 'query/tpch/q9/')
+    globalVar.set_value('DDL_NAME', "tpch.ddl")
     # auto-rewrite keep here
-    
+    '''
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -336,7 +336,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    
+    '''
     start = time.time()
     optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
     IRmode = IRType.Report if not Agg else IRType.Aggregation
