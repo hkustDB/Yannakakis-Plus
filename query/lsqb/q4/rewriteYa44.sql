@@ -1,0 +1,13 @@
+create or replace view semiUp5505233185007488103 as select MessageId as v1 from Person_likes_Message AS Person_likes_Message where (MessageId) in (select (MessageId) from Message_hasCreator_Person AS Message_hasCreator_Person);
+create or replace view semiUp8614735939444396365 as select ParentMessageId as v1 from Comment_replyOf_Message AS Comment_replyOf_Message where (ParentMessageId) in (select (v1) from semiUp5505233185007488103);
+create or replace view semiUp2185953661828714377 as select v1 from semiUp8614735939444396365 where (v1) in (select (MessageId) from Message_hasTag_Tag AS Message_hasTag_Tag);
+create or replace view semiDown5071125503110059707 as select MessageId as v1 from Message_hasTag_Tag AS Message_hasTag_Tag where (MessageId) in (select (v1) from semiUp2185953661828714377);
+create or replace view semiDown85320583684869938 as select v1 from semiUp5505233185007488103 where (v1) in (select (v1) from semiUp2185953661828714377);
+create or replace view semiDown6723570137220285142 as select MessageId as v1 from Message_hasCreator_Person AS Message_hasCreator_Person where (MessageId) in (select (v1) from semiDown85320583684869938);
+create or replace view aggView2094086326839334146 as select v1, COUNT(*) as annot from semiDown5071125503110059707 group by v1;
+create or replace view aggJoin3636161500325255138 as select v1, annot from semiUp2185953661828714377 join aggView2094086326839334146 using(v1);
+create or replace view aggView9132551988838257955 as select v1 from semiDown6723570137220285142;
+create or replace view aggJoin207616814856343981 as select v1 from semiDown85320583684869938 join aggView9132551988838257955 using(v1);
+create or replace view aggView2159762321228161114 as select v1, COUNT(*) as annot from aggJoin207616814856343981 group by v1;
+create or replace view aggJoin437719545815870150 as select aggJoin3636161500325255138.annot * aggView2159762321228161114.annot as annot from aggJoin3636161500325255138 join aggView2159762321228161114 using(v1);
+select SUM(annot) as v9 from aggJoin437719545815870150;

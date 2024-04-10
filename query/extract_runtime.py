@@ -3,7 +3,7 @@ import statistics
 
 
 if __name__ == "__main__":
-    paths = os.walk('/Users/cbn/Desktop/test/SQLRewriter/query/extra')
+    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/job')
 
     for path, dir_lst, file_lst in paths:
         for dir_name in dir_lst:
@@ -18,7 +18,12 @@ if __name__ == "__main__":
                         base_time_list = []
                         for line in lines:
                             if line.startswith('1 row'):
-                                base_time_list.append(float(line.split(' ')[4][1:]))
+                                if 'min' in line:
+                                    base_time_list.append(int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6][1:]))
+                                else:
+                                    base_time_list.append(float(line.split(' ')[4][1:]))
+                            elif line.startswith('Exec time'):
+                                base_time_list.append(float(line.split(' ')[2]))
                         base_time_list.sort()
                         if len(base_time_list) >= 2:
                             base_time = base_time_list[1]
@@ -31,7 +36,12 @@ if __name__ == "__main__":
                         rewrite_time_list = []
                         for line in lines[:-1]:
                             if line.startswith('1 row'):
-                                rewrite_time.append(float(line.split(' ')[4][1:]))
+                                if 'min' in line:
+                                    rewrite_time_list.append(int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6][1:]))
+                                else:
+                                    rewrite_time_list.append(float(line.split(' ')[4][1:]))
+                            elif line.startswith('Exec time'):
+                                rewrite_time_list.append(float(line.split(' ')[2]))
                         rewrite_time_list.sort()
                         if len(rewrite_time_list) >= 2:
                             rewrite_time.append(rewrite_time_list[1])
@@ -40,19 +50,19 @@ if __name__ == "__main__":
                         rewrite_file.close()
             original_time = rewrite_time.copy()
             rewrite_time.sort()
-            runtime_staistics = open(os.path.join(sub_path, 'runtime_statistics.txt'), 'w')
+            runtime_staistics = open(os.path.join(sub_path, 'log_overall.txt'), 'w')
             if base_time != -1:
                 runtime_staistics.write('base_time: ' + str(base_time) + '\n')
             if len(rewrite_time) != 0:
                 mean = statistics.mean(rewrite_time)
                 min, max = rewrite_time[0], rewrite_time[-1]
-                variance = statistics.variance(rewrite_time)
+                try:
+                    variance = statistics.variance(rewrite_time)
+                except:
+                    variance = -1
                 median = statistics.median(rewrite_time)
-                runtime_staistics.write('mean: ' + str(mean) + '\n')
-                runtime_staistics.write('min: ' + str(min) + '\n')
-                runtime_staistics.write('max: ' + str(max) + '\n')
-                runtime_staistics.write('variance: ' + str(variance) + '\n')
-                runtime_staistics.write('median: ' + str(median) + '\n')
+                runtime_staistics.write('min max mean variance\n')
+                runtime_staistics.write(str(min) + ' ' + str(max) + ' ' + str(round(mean, 2)) + ' ' + str(round(variance, 2)) + '\n')
                 runtime_staistics.write('original_time: ' + str(original_time) + '\n')
             
             runtime_staistics.close()
