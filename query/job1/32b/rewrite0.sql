@@ -1,0 +1,13 @@
+create or replace view aggView5816464939965930107 as select title as v26, id as v11 from title as t2;
+create or replace view aggView8592614307748823908 as select id as v8 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin4499804086970681597 as select movie_id as v13 from movie_keyword as mk, aggView8592614307748823908 where mk.keyword_id=aggView8592614307748823908.v8;
+create or replace view aggView8100629594100032058 as select v13 from aggJoin4499804086970681597 group by v13;
+create or replace view aggJoin3570610820097869161 as select id as v13, title as v14 from title as t1, aggView8100629594100032058 where t1.id=aggView8100629594100032058.v13;
+create or replace view aggView6201082509068554438 as select v14, v13 from aggJoin3570610820097869161 group by v14,v13;
+create or replace view semiJoinView4663988221483418778 as select movie_id as v13, linked_movie_id as v11, link_type_id as v4 from movie_link AS ml where (movie_id) in (select (v13) from aggView6201082509068554438);
+create or replace view semiJoinView8766004072377013938 as select v13, v11, v4 from semiJoinView4663988221483418778 where (v11) in (select (v11) from aggView5816464939965930107);
+create or replace view semiJoinView8936242766785442049 as select id as v4, link as v37 from link_type AS lt where (id) in (select (v4) from semiJoinView8766004072377013938);
+create or replace view semiEnum3492315529892671510 as select v11, v37, v13 from semiJoinView8936242766785442049 join semiJoinView8766004072377013938 using(v4);
+create or replace view semiEnum5535283450992575095 as select v26, v37, v13 from semiEnum3492315529892671510 join aggView5816464939965930107 using(v11);
+create or replace view semiEnum3639923884127445237 as select v26, v14, v37 from semiEnum5535283450992575095 join aggView6201082509068554438 using(v13);
+select MIN(v37) as v37,MIN(v14) as v38,MIN(v26) as v39 from semiEnum3639923884127445237;

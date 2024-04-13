@@ -1,0 +1,18 @@
+create or replace view aggView5035110074154752329 as select title as v30, id as v29 from title as t where production_year<=2008 and production_year>=2005;
+create or replace view aggView1844736101395542820 as select name as v2, id as v1 from company_name as cn where country_code= '[us]';
+create or replace view aggView87386284880411337 as select id as v26 from info_type as it2 where info= 'rating';
+create or replace view aggJoin4503986102315418058 as select movie_id as v29, info as v27 from movie_info_idx as mi_idx, aggView87386284880411337 where mi_idx.info_type_id=aggView87386284880411337.v26 and info>'8.0';
+create or replace view aggView5400161627652604940 as select id as v21 from info_type as it1 where info= 'genres';
+create or replace view aggJoin1294339095890877718 as select movie_id as v29, info as v22 from movie_info as mi, aggView5400161627652604940 where mi.info_type_id=aggView5400161627652604940.v21 and info IN ('Drama','Horror');
+create or replace view aggView1003112190068609122 as select v29 from aggJoin1294339095890877718 group by v29;
+create or replace view aggJoin2628595759884927671 as select v29, v27 from aggJoin4503986102315418058 join aggView1003112190068609122 using(v29);
+create or replace view aggView8486014079373828964 as select v27, v29 from aggJoin2628595759884927671 group by v27,v29;
+create or replace view aggView6948262778312931920 as select id as v8 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin2429995180044314942 as select movie_id as v29, company_id as v1 from movie_companies as mc, aggView6948262778312931920 where mc.company_type_id=aggView6948262778312931920.v8;
+create or replace view semiJoinView9058506114707821219 as select v29, v1 from aggJoin2429995180044314942 where (v29) in (select (v29) from aggView5035110074154752329);
+create or replace view semiJoinView40481151432585645 as select v29, v1 from semiJoinView9058506114707821219 where (v29) in (select (v29) from aggView8486014079373828964);
+create or replace view semiJoinView4197545170710974077 as select v1, v2 as v41 from aggView1844736101395542820 where (v1) in (select (v1) from semiJoinView40481151432585645);
+create or replace view semiEnum2354137686697685431 as select v29, v41 from semiJoinView4197545170710974077 join semiJoinView40481151432585645 using(v1);
+create or replace view semiEnum751664255374572871 as select v29, v27, v41 from semiEnum2354137686697685431 join aggView8486014079373828964 using(v29);
+create or replace view semiEnum4215040827128620846 as select v30, v27, v41 from semiEnum751664255374572871 join aggView5035110074154752329 using(v29);
+select MIN(v41) as v41,MIN(v27) as v42,MIN(v30) as v43 from semiEnum4215040827128620846;

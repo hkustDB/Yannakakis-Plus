@@ -1,0 +1,12 @@
+create or replace view aggView3197333205905723781 as select name as v15, id as v14 from name as n;
+create or replace view aggView7191945747921153826 as select title as v24, id as v23 from title as t where production_year>2000;
+create or replace view aggView3420050075317654622 as select keyword as v9, id as v8 from keyword as k where keyword IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence');
+create or replace view semiJoinView5790811797459587839 as select person_id as v14, movie_id as v23 from cast_info AS ci where (person_id) in (select (v14) from aggView3197333205905723781);
+create or replace view semiJoinView4384587574321452203 as select v14, v23 from semiJoinView5790811797459587839 where (v23) in (select (v23) from aggView7191945747921153826);
+create or replace view semiJoinView3153400590570407199 as select movie_id as v23, keyword_id as v8 from movie_keyword AS mk where (movie_id) in (select (v23) from semiJoinView4384587574321452203);
+create or replace view semiJoinView5970400528134269214 as select v8, v9 as v35 from aggView3420050075317654622 where (v8) in (select (v8) from semiJoinView3153400590570407199);
+create or replace view semiEnum476962303804230743 as select v35, v23 from semiJoinView5970400528134269214 join semiJoinView3153400590570407199 using(v8);
+create or replace view semiEnum7849867781307895429 as select v14, v23, v35 from semiEnum476962303804230743 join semiJoinView4384587574321452203 using(v23);
+create or replace view semiEnum2359576305824153197 as select v14, v35, v24 from semiEnum7849867781307895429 join aggView7191945747921153826 using(v23);
+create or replace view semiEnum1053681320962000761 as select v15, v35, v24 from semiEnum2359576305824153197 join aggView3197333205905723781 using(v14);
+select MIN(v35) as v35,MIN(v15) as v36,MIN(v24) as v37 from semiEnum1053681320962000761;

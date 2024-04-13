@@ -1,4 +1,5 @@
 *.txt
+!query/*/*/jointree*.txt
 *.pyc
 *.csv
 
@@ -6,7 +7,7 @@
 rewrite_and_run.result
 
 querySum.sql
-query/*/*/rewrite*.sql
+# query/*/*/rewrite*.sql
 # query/job*/[1-9]*/rewrite*.sql
 query/extra/*
 

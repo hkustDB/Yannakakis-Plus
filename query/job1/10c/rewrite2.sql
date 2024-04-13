@@ -1,0 +1,15 @@
+create or replace view aggView5829813098115822779 as select id as v1, name as v2 from char_name as chn;
+create or replace view aggView2360620389566568522 as select id as v31, title as v32 from title as t where production_year>1990;
+create or replace view aggView9188995920538465322 as select id as v29 from role_type as rt;
+create or replace view aggJoin834718863112564732 as select movie_id as v31, person_role_id as v1, note as v12 from cast_info as ci, aggView9188995920538465322 where ci.role_id=aggView9188995920538465322.v29 and note LIKE '%(producer)%';
+create or replace view aggView3261013687297017769 as select id as v15 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin7506392590064353081 as select movie_id as v31, company_type_id as v22 from movie_companies as mc, aggView3261013687297017769 where mc.company_id=aggView3261013687297017769.v15;
+create or replace view aggView2486247523331536368 as select id as v22 from company_type as ct;
+create or replace view aggJoin6730455905582450222 as select v31 from aggJoin7506392590064353081 join aggView2486247523331536368 using(v22);
+create or replace view aggView7244259071997588752 as select v31 from aggJoin6730455905582450222 group by v31;
+create or replace view aggJoin1429779780921820501 as select v31, v1, v12 from aggJoin834718863112564732 join aggView7244259071997588752 using(v31);
+create or replace view semiJoinView6288955651052263347 as select v31, v1, v12 from aggJoin1429779780921820501 where (v1) in (select (v1) from aggView5829813098115822779);
+create or replace view semiJoinView7813531809013539305 as select v31, v32 as v44 from aggView2360620389566568522 where (v31) in (select (v31) from semiJoinView6288955651052263347);
+create or replace view semiEnum1357751128852644804 as select v44, v12, v1 from semiJoinView7813531809013539305 join semiJoinView6288955651052263347 using(v31);
+create or replace view semiEnum8104263336149811468 as select v2, v44 from semiEnum1357751128852644804 join aggView5829813098115822779 using(v1);
+select MIN(v2) as v43,MIN(v44) as v44 from semiEnum8104263336149811468;

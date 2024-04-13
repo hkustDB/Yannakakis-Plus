@@ -1,0 +1,15 @@
+create or replace view aggView1951566606394408313 as select name as v3, person_id as v2 from aka_name as a1 group by name,person_id;
+create or replace view aggView747274088392032564 as select id as v11, title as v40 from title as t;
+create or replace view aggView6219571942175188794 as select id as v15 from role_type as rt where role= 'writer';
+create or replace view aggJoin8234038684633265065 as select person_id as v2, movie_id as v11 from cast_info as ci, aggView6219571942175188794 where ci.role_id=aggView6219571942175188794.v15;
+create or replace view aggView2089335866888078792 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin3006852063956354111 as select movie_id as v11 from movie_companies as mc, aggView2089335866888078792 where mc.company_id=aggView2089335866888078792.v25;
+create or replace view aggView771877499612301705 as select id as v2 from name as n1;
+create or replace view aggJoin4514320138741577196 as select v2, v11 from aggJoin8234038684633265065 join aggView771877499612301705 using(v2);
+create or replace view aggView1587980572338714482 as select v11 from aggJoin3006852063956354111 group by v11;
+create or replace view aggJoin8704318377923192184 as select v2, v11 from aggJoin4514320138741577196 join aggView1587980572338714482 using(v11);
+create or replace view semiJoinView4924190249164733899 as select v2, v11 from aggJoin8704318377923192184 where (v11) in (select (v11) from aggView747274088392032564);
+create or replace view semiJoinView7622621452811411826 as select v2, v3 as v51 from aggView1951566606394408313 where (v2) in (select (v2) from semiJoinView4924190249164733899);
+create or replace view semiEnum2384314091040961830 as select v11, v51 from semiJoinView7622621452811411826 join semiJoinView4924190249164733899 using(v2);
+create or replace view semiEnum189822035263799167 as select v40, v51 from semiEnum2384314091040961830 join aggView747274088392032564 using(v11);
+select MIN(v51) as v51,MIN(v40) as v52 from semiEnum189822035263799167;

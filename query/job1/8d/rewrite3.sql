@@ -1,0 +1,15 @@
+create or replace view aggView5371950501324721414 as select name as v3, person_id as v2 from aka_name as an1 group by name,person_id;
+create or replace view aggView8234659646469861923 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin3824992568306636469 as select movie_id as v11 from movie_companies as mc, aggView8234659646469861923 where mc.company_id=aggView8234659646469861923.v25;
+create or replace view aggView364594728556610594 as select v11 from aggJoin3824992568306636469 group by v11;
+create or replace view aggJoin332518182862747086 as select id as v11, title as v40 from title as t, aggView364594728556610594 where t.id=aggView364594728556610594.v11;
+create or replace view aggView7724410653403875241 as select v11, v40 from aggJoin332518182862747086 group by v11,v40;
+create or replace view aggView3667083549201403784 as select id as v15 from role_type as rt where role= 'costume designer';
+create or replace view aggJoin7328723945173882395 as select person_id as v2, movie_id as v11 from cast_info as ci, aggView3667083549201403784 where ci.role_id=aggView3667083549201403784.v15;
+create or replace view aggView2392228496011234500 as select id as v2 from name as n1;
+create or replace view aggJoin4296968648188146538 as select v2, v11 from aggJoin7328723945173882395 join aggView2392228496011234500 using(v2);
+create or replace view semiJoinView5800656418318957288 as select v2, v11 from aggJoin4296968648188146538 where (v2) in (select (v2) from aggView5371950501324721414);
+create or replace view semiJoinView7734065169528619998 as select v11, v40 as v52 from aggView7724410653403875241 where (v11) in (select (v11) from semiJoinView5800656418318957288);
+create or replace view semiEnum1823456348296262487 as select v2, v52 from semiJoinView7734065169528619998 join semiJoinView5800656418318957288 using(v11);
+create or replace view semiEnum8772873189234325239 as select v3, v52 from semiEnum1823456348296262487 join aggView5371950501324721414 using(v2);
+select MIN(v3) as v51,MIN(v52) as v52 from semiEnum8772873189234325239;

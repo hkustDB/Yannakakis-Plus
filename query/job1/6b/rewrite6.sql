@@ -1,0 +1,13 @@
+create or replace view aggView5430584544615685879 as select keyword as v9, id as v8 from keyword as k;
+create or replace view aggJoin2991931924426997913 as select v8, v9 from aggView5430584544615685879 where v9 IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence');
+create or replace view aggView5242113428725155763 as select id as v23, title as v24 from title as t where production_year>2014;
+create or replace view aggView1249142206515316239 as select name as v15, id as v14 from name as n where name LIKE '%Downey%Robert%';
+create or replace view semiJoinView264309025237901941 as select person_id as v14, movie_id as v23 from cast_info AS ci where (person_id) in (select (v14) from aggView1249142206515316239);
+create or replace view semiJoinView8131966522284462766 as select v23, v24 as v37 from aggView5242113428725155763 where (v23) in (select (v23) from semiJoinView264309025237901941);
+create or replace view semiJoinView3738315892812949104 as select movie_id as v23, keyword_id as v8 from movie_keyword AS mk where (movie_id) in (select (v23) from semiJoinView8131966522284462766);
+create or replace view semiJoinView2624608497957798072 as select v8, v9 as v35 from aggJoin2991931924426997913 where (v8) in (select (v8) from semiJoinView3738315892812949104);
+create or replace view semiEnum1918042996827496120 as select v35, v23 from semiJoinView2624608497957798072 join semiJoinView3738315892812949104 using(v8);
+create or replace view semiEnum6084658938454260499 as select v37, v35, v23 from semiEnum1918042996827496120 join semiJoinView8131966522284462766 using(v23);
+create or replace view semiEnum2566982063130450234 as select v37, v35, v14 from semiEnum6084658938454260499 join semiJoinView264309025237901941 using(v23);
+create or replace view semiEnum2488647512942771155 as select v15, v37, v35 from semiEnum2566982063130450234 join aggView1249142206515316239 using(v14);
+select MIN(v35) as v35,MIN(v15) as v36,MIN(v37) as v37 from semiEnum2488647512942771155;
