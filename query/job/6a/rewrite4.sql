@@ -1,0 +1,13 @@
+create or replace view aggView7460156961703992587 as select id as v8, keyword as v9 from keyword as k where keyword= 'marvel-cinematic-universe';
+create or replace view aggView2115017871624232407 as select id as v14, name as v15 from name as n;
+create or replace view aggJoin3211451666472902439 as select v14, v15 from aggView2115017871624232407 where v15 LIKE '%Downey%Robert%';
+create or replace view aggView5045377726862911232 as select id as v23, title as v24 from title as t where production_year>2010;
+create or replace view semiJoinView6698508228996547775 as select movie_id as v23, keyword_id as v8 from movie_keyword AS mk where (keyword_id) in (select (v8) from aggView7460156961703992587);
+create or replace view semiJoinView7973460568436103483 as select v23, v24 as v37 from aggView5045377726862911232 where (v23) in (select (v23) from semiJoinView6698508228996547775);
+create or replace view semiJoinView534278336004988952 as select person_id as v14, movie_id as v23 from cast_info AS ci where (movie_id) in (select (v23) from semiJoinView7973460568436103483);
+create or replace view semiJoinView8149220193804112373 as select v14, v15 as v36 from aggJoin3211451666472902439 where (v14) in (select (v14) from semiJoinView534278336004988952);
+create or replace view semiEnum6203229951057488961 as select v23, v36 from semiJoinView8149220193804112373 join semiJoinView534278336004988952 using(v14);
+create or replace view semiEnum2834308042293043506 as select v23, v37, v36 from semiEnum6203229951057488961 join semiJoinView7973460568436103483 using(v23);
+create or replace view semiEnum8232813026813002411 as select v37, v8, v36 from semiEnum2834308042293043506 join semiJoinView6698508228996547775 using(v23);
+create or replace view semiEnum285169724382824386 as select v9, v37, v36 from semiEnum8232813026813002411 join aggView7460156961703992587 using(v8);
+select MIN(v9) as v35,MIN(v36) as v36,MIN(v37) as v37 from semiEnum285169724382824386;

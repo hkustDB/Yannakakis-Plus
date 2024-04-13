@@ -1,0 +1,13 @@
+create or replace view aggView7465054677865419896 as select id as v31, title as v45 from title as t where production_year>=2008 and production_year<=2014;
+create or replace view aggJoin7223903495513940810 as select person_id as v22, movie_id as v31, note as v5, v45 from cast_info as ci, aggView7465054677865419896 where ci.movie_id=aggView7465054677865419896.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView8990558867772711182 as select id as v22 from name as n where gender= 'f';
+create or replace view aggJoin624828107076624128 as select v31, v5, v45 from aggJoin7223903495513940810 join aggView8990558867772711182 using(v22);
+create or replace view aggView8163186752167339632 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin778632093705606934 as select movie_id as v31, info as v15 from movie_info as mi, aggView8163186752167339632 where mi.info_type_id=aggView8163186752167339632.v8 and info IN ('Horror','Thriller');
+create or replace view aggView7749690092245502433 as select id as v10 from info_type as it2 where info= 'rating';
+create or replace view aggJoin2778824367392430168 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView7749690092245502433 where mi_idx.info_type_id=aggView7749690092245502433.v10 and info>'8.0';
+create or replace view aggView7649449422932125274 as select v31, MIN(v20) as v44 from aggJoin2778824367392430168 group by v31;
+create or replace view aggJoin2319721434768258698 as select v31, v15, v44 from aggJoin778632093705606934 join aggView7649449422932125274 using(v31);
+create or replace view aggView1518469548005745376 as select v31, MIN(v44) as v44, MIN(v15) as v43 from aggJoin2319721434768258698 group by v31,v44;
+create or replace view aggJoin9152115931708130743 as select v45 as v45, v44, v43 from aggJoin624828107076624128 join aggView1518469548005745376 using(v31);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin9152115931708130743;

@@ -1,0 +1,15 @@
+create or replace view aggView1034722194300671876 as select id as v11, title as v40 from title as t where production_year<=2007 and ((title LIKE 'One Piece%') OR (title LIKE 'Dragon Ball Z%')) and production_year>=2006;
+create or replace view aggView7772594578044685273 as select person_id as v2, name as v3 from aka_name as an group by person_id,name;
+create or replace view aggView6288546195941509508 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin7019211798647514287 as select person_id as v2, movie_id as v11, note as v13 from cast_info as ci, aggView6288546195941509508 where ci.role_id=aggView6288546195941509508.v15 and note= '(voice: English version)';
+create or replace view aggView2167101335784568800 as select id as v2 from name as n where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin4675125177455054210 as select v2, v11, v13 from aggJoin7019211798647514287 join aggView2167101335784568800 using(v2);
+create or replace view aggView803843862863350704 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin2357577527067625665 as select movie_id as v11, note as v27 from movie_companies as mc, aggView803843862863350704 where mc.company_id=aggView803843862863350704.v25 and ((note LIKE '%(2006)%') OR (note LIKE '%(2007)%')) and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView2675470093285151470 as select v11 from aggJoin2357577527067625665 group by v11;
+create or replace view aggJoin6998917624178999714 as select v2, v11, v13 from aggJoin4675125177455054210 join aggView2675470093285151470 using(v11);
+create or replace view semiJoinView2526599162846318808 as select v2, v11, v13 from aggJoin6998917624178999714 where (v11) in (select (v11) from aggView1034722194300671876);
+create or replace view semiJoinView8377070085616053039 as select v2, v3 as v51 from aggView7772594578044685273 where (v2) in (select (v2) from semiJoinView2526599162846318808);
+create or replace view semiEnum7262337979740525236 as select v11, v51, v13 from semiJoinView8377070085616053039 join semiJoinView2526599162846318808 using(v2);
+create or replace view semiEnum8361856154211398155 as select v51, v40 from semiEnum7262337979740525236 join aggView1034722194300671876 using(v11);
+select MIN(v51) as v51,MIN(v40) as v52 from semiEnum8361856154211398155;
