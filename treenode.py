@@ -57,7 +57,7 @@ class TreeNode:
     
     @property
     def fanout(self):
-        return max([len(self.children)] + [len(c.children) for c in self.children])
+        return max([len(self.children)] + [c.fanout for c in self.children])
     
     def removeChild(self, child):
         self.children.remove(child)
