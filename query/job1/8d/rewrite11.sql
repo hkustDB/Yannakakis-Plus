@@ -1,0 +1,15 @@
+create or replace view aggView1390197633380530248 as select name as v3, person_id as v2 from aka_name as an1 group by name,person_id;
+create or replace view aggView2707437006570070051 as select id as v11, title as v40 from title as t;
+create or replace view aggView1950605541071927941 as select id as v15 from role_type as rt where role= 'costume designer';
+create or replace view aggJoin626236565356405011 as select person_id as v2, movie_id as v11 from cast_info as ci, aggView1950605541071927941 where ci.role_id=aggView1950605541071927941.v15;
+create or replace view aggView7759071198292034287 as select id as v2 from name as n1;
+create or replace view aggJoin7082079476923877160 as select v2, v11 from aggJoin626236565356405011 join aggView7759071198292034287 using(v2);
+create or replace view aggView7655764637562621393 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin1683796565755457738 as select movie_id as v11 from movie_companies as mc, aggView7655764637562621393 where mc.company_id=aggView7655764637562621393.v25;
+create or replace view aggView3062792050728031809 as select v11 from aggJoin1683796565755457738 group by v11;
+create or replace view aggJoin5981717703458103710 as select v2, v11 from aggJoin7082079476923877160 join aggView3062792050728031809 using(v11);
+create or replace view semiJoinView6218767323459287890 as select v2, v11 from aggJoin5981717703458103710 where (v11) in (select (v11) from aggView2707437006570070051);
+create or replace view semiJoinView2741031058536281175 as select v2, v3 as v51 from aggView1390197633380530248 where (v2) in (select (v2) from semiJoinView6218767323459287890);
+create or replace view semiEnum931067754589311403 as select v11, v51 from semiJoinView2741031058536281175 join semiJoinView6218767323459287890 using(v2);
+create or replace view semiEnum4342351801831617727 as select v51, v40 from semiEnum931067754589311403 join aggView2707437006570070051 using(v11);
+select MIN(v51) as v51,MIN(v40) as v52 from semiEnum4342351801831617727;

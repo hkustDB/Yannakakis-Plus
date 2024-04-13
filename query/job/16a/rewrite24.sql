@@ -1,0 +1,17 @@
+create or replace view aggView8194723208139337556 as select name as v3, person_id as v2 from aka_name as an group by name,person_id;
+create or replace view aggView4201303565979399591 as select id as v33 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin20946041118234956 as select movie_id as v11 from movie_keyword as mk, aggView4201303565979399591 where mk.keyword_id=aggView4201303565979399591.v33;
+create or replace view aggView5937758733395757329 as select v11 from aggJoin20946041118234956 group by v11;
+create or replace view aggJoin1909835360283395852 as select id as v11, title as v44, episode_nr as v52 from title as t, aggView5937758733395757329 where t.id=aggView5937758733395757329.v11 and episode_nr>=50 and episode_nr<100;
+create or replace view aggView8491728108262173854 as select v44, v11 from aggJoin1909835360283395852 group by v44,v11;
+create or replace view aggView8185095837594657967 as select id as v2 from name as n;
+create or replace view aggJoin8755608552681953248 as select person_id as v2, movie_id as v11 from cast_info as ci, aggView8185095837594657967 where ci.person_id=aggView8185095837594657967.v2;
+create or replace view aggView1207808321959899975 as select id as v28 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin8455925451033793172 as select movie_id as v11 from movie_companies as mc, aggView1207808321959899975 where mc.company_id=aggView1207808321959899975.v28;
+create or replace view aggView7170327557062268102 as select v11 from aggJoin8455925451033793172 group by v11;
+create or replace view aggJoin8613160869064040922 as select v2, v11 from aggJoin8755608552681953248 join aggView7170327557062268102 using(v11);
+create or replace view semiJoinView4754940121758112914 as select v2, v11 from aggJoin8613160869064040922 where (v2) in (select (v2) from aggView8194723208139337556);
+create or replace view semiJoinView5521502414124242078 as select v11, v44 as v56 from aggView8491728108262173854 where (v11) in (select (v11) from semiJoinView4754940121758112914);
+create or replace view semiEnum1111930136798278464 as select v2, v56 from semiJoinView5521502414124242078 join semiJoinView4754940121758112914 using(v11);
+create or replace view semiEnum861809902352149923 as select v3, v56 from semiEnum1111930136798278464 join aggView8194723208139337556 using(v2);
+select MIN(v3) as v55,MIN(v56) as v56 from semiEnum861809902352149923;

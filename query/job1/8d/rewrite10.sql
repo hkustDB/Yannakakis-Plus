@@ -1,0 +1,15 @@
+create or replace view aggView5643638404117779164 as select name as v3, person_id as v2 from aka_name as an1 group by name,person_id;
+create or replace view aggView3882275150488987211 as select id as v11, title as v40 from title as t;
+create or replace view aggView4763434086877905995 as select id as v15 from role_type as rt where role= 'costume designer';
+create or replace view aggJoin7629122946421679153 as select person_id as v2, movie_id as v11 from cast_info as ci, aggView4763434086877905995 where ci.role_id=aggView4763434086877905995.v15;
+create or replace view aggView5179854338943539070 as select id as v2 from name as n1;
+create or replace view aggJoin3931906690081176686 as select v2, v11 from aggJoin7629122946421679153 join aggView5179854338943539070 using(v2);
+create or replace view aggView8849630429809084492 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin7565948213259395033 as select movie_id as v11 from movie_companies as mc, aggView8849630429809084492 where mc.company_id=aggView8849630429809084492.v25;
+create or replace view aggView2397015960832886332 as select v11 from aggJoin7565948213259395033 group by v11;
+create or replace view aggJoin2320955917653660849 as select v2, v11 from aggJoin3931906690081176686 join aggView2397015960832886332 using(v11);
+create or replace view semiJoinView4172382452038246536 as select v2, v11 from aggJoin2320955917653660849 where (v2) in (select (v2) from aggView5643638404117779164);
+create or replace view semiJoinView3790499321697994909 as select v11, v40 as v52 from aggView3882275150488987211 where (v11) in (select (v11) from semiJoinView4172382452038246536);
+create or replace view semiEnum3441721795346152917 as select v2, v52 from semiJoinView3790499321697994909 join semiJoinView4172382452038246536 using(v11);
+create or replace view semiEnum8718437587749943613 as select v3, v52 from semiEnum3441721795346152917 join aggView5643638404117779164 using(v2);
+select MIN(v3) as v51,MIN(v52) as v52 from semiEnum8718437587749943613;

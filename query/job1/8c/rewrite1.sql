@@ -1,0 +1,15 @@
+create or replace view aggView7263599192601185012 as select id as v2 from name as n1;
+create or replace view aggJoin4739366370530312048 as select person_id as v2, name as v3 from aka_name as a1, aggView7263599192601185012 where a1.person_id=aggView7263599192601185012.v2;
+create or replace view aggView1528065725107720627 as select v3, v2 from aggJoin4739366370530312048 group by v3,v2;
+create or replace view aggView4281130840827696581 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin4723984665382815898 as select movie_id as v11 from movie_companies as mc, aggView4281130840827696581 where mc.company_id=aggView4281130840827696581.v25;
+create or replace view aggView8943219790135723059 as select v11 from aggJoin4723984665382815898 group by v11;
+create or replace view aggJoin4766402272518179072 as select id as v11, title as v40 from title as t, aggView8943219790135723059 where t.id=aggView8943219790135723059.v11;
+create or replace view aggView2905683918056394697 as select v11, v40 from aggJoin4766402272518179072 group by v11,v40;
+create or replace view aggView9181858754690685497 as select id as v15 from role_type as rt where role= 'writer';
+create or replace view aggJoin3018860370511644300 as select person_id as v2, movie_id as v11 from cast_info as ci, aggView9181858754690685497 where ci.role_id=aggView9181858754690685497.v15;
+create or replace view semiJoinView3830119202130337902 as select v2, v11 from aggJoin3018860370511644300 where (v11) in (select (v11) from aggView2905683918056394697);
+create or replace view semiJoinView8692195266514682791 as select v2, v3 as v51 from aggView1528065725107720627 where (v2) in (select (v2) from semiJoinView3830119202130337902);
+create or replace view semiEnum2562358372057102367 as select v11, v51 from semiJoinView8692195266514682791 join semiJoinView3830119202130337902 using(v2);
+create or replace view semiEnum573530289503391251 as select v40, v51 from semiEnum2562358372057102367 join aggView2905683918056394697 using(v11);
+select MIN(v51) as v51,MIN(v40) as v52 from semiEnum573530289503391251;

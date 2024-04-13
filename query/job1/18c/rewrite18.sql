@@ -1,0 +1,13 @@
+create or replace view aggView2329111997877798258 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin7629064217083144039 as select movie_id as v31, info_type_id as v10, info as v20, v45 from movie_info_idx as mi_idx, aggView2329111997877798258 where mi_idx.movie_id=aggView2329111997877798258.v31;
+create or replace view aggView3066984358560594554 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin3940996711786259723 as select movie_id as v31, info as v15 from movie_info as mi, aggView3066984358560594554 where mi.info_type_id=aggView3066984358560594554.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView3478439183255203858 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin5511862447499501584 as select v31, v20, v45 from aggJoin7629064217083144039 join aggView3478439183255203858 using(v10);
+create or replace view aggView2283657321114953580 as select v31, MIN(v45) as v45, MIN(v20) as v44 from aggJoin5511862447499501584 group by v31,v45;
+create or replace view aggJoin8082821571299823918 as select v31, v15, v45, v44 from aggJoin3940996711786259723 join aggView2283657321114953580 using(v31);
+create or replace view aggView5827310832859598937 as select v31, MIN(v45) as v45, MIN(v44) as v44, MIN(v15) as v43 from aggJoin8082821571299823918 group by v31,v44,v45;
+create or replace view aggJoin8932476679736686825 as select person_id as v22, note as v5, v45, v44, v43 from cast_info as ci, aggView5827310832859598937 where ci.movie_id=aggView5827310832859598937.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView7052884939011708654 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin4183858054414680747 as select v45, v44, v43 from aggJoin8932476679736686825 join aggView7052884939011708654 using(v22);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin4183858054414680747;
