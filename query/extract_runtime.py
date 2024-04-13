@@ -3,7 +3,7 @@ import statistics
 
 
 if __name__ == "__main__":
-    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/extra')
+    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/job2')
 
     for path, dir_lst, file_lst in paths:
         for dir_name in dir_lst:
@@ -19,7 +19,7 @@ if __name__ == "__main__":
                         for line in lines:
                             if line.startswith('1 row'):
                                 if 'min' in line:
-                                    base_time_list.append(int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6][1:]))
+                                    base_time_list.append(int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6]))
                                 else:
                                     base_time_list.append(float(line.split(' ')[4][1:]))
                             elif line.startswith('Exec time'):
@@ -37,7 +37,7 @@ if __name__ == "__main__":
                         for line in lines[:-1]:
                             if line.startswith('1 row'):
                                 if 'min' in line:
-                                    rewrite_time_list.append(int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6][1:]))
+                                    rewrite_time_list.append(int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6]))
                                 else:
                                     rewrite_time_list.append(float(line.split(' ')[4][1:]))
                             elif line.startswith('Exec time'):
