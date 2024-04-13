@@ -170,8 +170,8 @@ def connect(base: int, mode: int, type: GenType):
     body['query'] = query_file.read()
     query_file.close()
     try:
-        # http://localhost:8848/api/v1/parse?orderBy=fanout&limit=50, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true", headers=headers, json=body).json()['data']
+        # http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize20&limit=30, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=10&limit=20&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -324,7 +324,7 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job1/2a/')
+    globalVar.set_value('BASE_PATH', 'query/extra/19a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
