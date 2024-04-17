@@ -1,0 +1,25 @@
+Relations:
+dict_values([cn[777725,company_name]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+, ct[777726,company_type]: ['v8', 'v9']
+, it1[777727,info_type]: ['v21', 'v11']
+, it2[777728,info_type]: ['v26', 'v13']
+, mc[777729,movie_companies]: ['v14', 'v29', 'v1', 'v8', 'v18']
+, mi[777730,movie_info]: ['v19', 'v29', 'v21', 'v22', 'v23']
+, mi_idx[777731,movie_info_idx]: ['v24', 'v29', 'v26', 'v27', 'v28']
+, t[777732,title]: ['v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40']
+, tAux86[777776,t]: ['v29', 'v30']
+, cnAux29[777785,cn]: ['v1', 'v2']
+, mi_idxAux41[777803,mi_idx]: ['v29', 'v27']
+])
+Edges:
+dict_values([777785->777729, 777776->777732, 777732->777730, 777730->777727, 777729->777776, 777785->777725, 777731->777728, 777776->777803, 777729->777726, 777803->777731])
+Root:
+777785
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

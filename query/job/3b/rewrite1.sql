@@ -1,8 +1,7 @@
-create or replace view aggView6866047403885576506 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
-create or replace view aggJoin94880347791908175 as select movie_id as v12 from movie_keyword as mk, aggView6866047403885576506 where mk.keyword_id=aggView6866047403885576506.v1;
-create or replace view aggView7290200669574618034 as select v12 from aggJoin94880347791908175 group by v12;
-create or replace view aggJoin2776054798046203246 as select id as v12, title as v13, production_year as v16 from title as t, aggView7290200669574618034 where t.id=aggView7290200669574618034.v12 and production_year>2010;
-create or replace view aggView5988115836607710318 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
-create or replace view aggJoin5629170210382976225 as select v13, v16 from aggJoin2776054798046203246 join aggView5988115836607710318 using(v12);
-create or replace view aggView4709938249269834526 as select v13 from aggJoin5629170210382976225 group by v13;
-select (v13) as v24 from aggView4709938249269834526;
+create or replace view aggView2250447623703253923 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin6004834801108250922 as select movie_id as v12 from movie_keyword as mk, aggView2250447623703253923 where mk.keyword_id=aggView2250447623703253923.v1;
+create or replace view aggView6177428642366814323 as select v12 from aggJoin6004834801108250922 group by v12;
+create or replace view aggJoin7069706979931584164 as select id as v12, title as v13, production_year as v16 from title as t, aggView6177428642366814323 where t.id=aggView6177428642366814323.v12 and production_year>2010;
+create or replace view aggView3531315318636513957 as select v12, MIN(v13) as v24 from aggJoin7069706979931584164 group by v12;
+create or replace view aggJoin5304707318628285782 as select v24 from movie_info as mi, aggView3531315318636513957 where mi.movie_id=aggView3531315318636513957.v12 and info= 'Bulgaria';
+select MIN(v24) as v24 from aggJoin5304707318628285782;

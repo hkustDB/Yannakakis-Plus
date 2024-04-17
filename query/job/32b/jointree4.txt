@@ -1,0 +1,20 @@
+Relations:
+dict_values([k[845539,keyword]: ['v8', 'v2', 'v3']
+, lt[845540,link_type]: ['v4', 'v5']
+, mk[845541,movie_keyword]: ['v6', 'v13', 'v8']
+, ml[845542,movie_link]: ['v9', 'v13', 'v11', 'v4']
+, t1[845543,title]: ['v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24']
+, t2[845544,title]: ['v11', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36']
+])
+Edges:
+dict_values([845542->845544, 845542->845543, 845541->845539, 845542->845540, 845541->845542])
+Root:
+845541
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[845541]
+fixroot:
+True
