@@ -315,7 +315,7 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
 
 if __name__ == '__main__':
-    base, mode, type = 2, 0, 'D'
+    base, mode, type = 2, 0, GenType.DuckDB
     globalVar._init()
     globalVar.set_value('QUERY_NAME', 'query.sql')
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
@@ -324,8 +324,8 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/extra/19a/')
-    globalVar.set_value('DDL_NAME', "job.ddl")
+    globalVar.set_value('BASE_PATH', 'query/extra/q1/')
+    globalVar.set_value('DDL_NAME', "graph.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
     '''

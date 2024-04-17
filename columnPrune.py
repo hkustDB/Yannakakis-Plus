@@ -111,11 +111,10 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
         ## Set up joinKeyEnum
         corNode = JT.getNode(reduce.corresNodeId)
         if corNode.parent.id in JT.subset:
-            if len(addUpJoinKey):
-                if corNode.id in joinKeyEnum:
-                    joinKeyEnum[corNode.id] |= addUpJoinKey
-                else:
-                    joinKeyEnum[corNode.id] = addUpJoinKey.copy()
+            if corNode.id in joinKeyEnum:
+                joinKeyEnum[corNode.id] |= addUpJoinKey
+            else:
+                joinKeyEnum[corNode.id] = addUpJoinKey.copy()
             addUpJoinKey |= (set(corNode.cols) & set(corNode.parent.cols))
             if corNode.parent.id in joinKeyEnum:
                 joinKeyEnum[corNode.parent.id] |= addUpJoinKey
@@ -149,8 +148,10 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, finalKeepSet, Agg=Agg, removeAnnot=finalAnnotKeep)
         else:
             # FIXME: use all joinKeys to prune
-            corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[enum.corresNodeId], Agg=Agg)
-                
+            if enum.corresNodeId in joinKeyEnum:
+                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[enum.corresNodeId], Agg=Agg)
+            else:
+                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables, Agg=Agg)
     # step3: prune aggReduce (bottom up)
     if Agg:
         for index, aggReduce in enumerate(aggReduceList):
