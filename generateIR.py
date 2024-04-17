@@ -1108,7 +1108,10 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         for comp in corReducePhase.incidentComp[1:]:
             whereCondList.append(comp.left + comp.op + comp.right)
         if corReducePhase.minView.whereCond != '':
-            whereCondList.append(corReducePhase.minView.whereCond)  # add self-comparison
+            appendWhere = corReducePhase.minView.whereCond.split('and')
+            appendWhere.remove('rn = 1')
+            if len(appendWhere):
+                whereCondList.append(' and '.join(appendWhere))  # add self-comparison
         joinKey = corReducePhase.joinView.joinKey
         if not origiNode.JoinResView and origiNode.relationType == RelationType.TableScanRelation:
             for key in joinKey:
