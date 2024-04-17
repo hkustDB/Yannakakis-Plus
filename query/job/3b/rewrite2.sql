@@ -1,8 +1,8 @@
-create or replace view aggView5732749425489842986 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
-create or replace view aggJoin7669397027705131597 as select movie_id as v12, keyword_id as v1 from movie_keyword as mk, aggView5732749425489842986 where mk.movie_id=aggView5732749425489842986.v12;
-create or replace view aggView3005952871105472957 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
-create or replace view aggJoin4604794432763924684 as select v12 from aggJoin7669397027705131597 join aggView3005952871105472957 using(v1);
-create or replace view aggView4002559960796980535 as select v12 from aggJoin4604794432763924684 group by v12;
-create or replace view aggJoin6354086594481427730 as select title as v13, production_year as v16 from title as t, aggView4002559960796980535 where t.id=aggView4002559960796980535.v12 and production_year>2010;
-create or replace view aggView3566142046481845512 as select v13 from aggJoin6354086594481427730 group by v13;
-select (v13) as v24 from aggView3566142046481845512;
+create or replace view aggView1720276826368835197 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
+create or replace view aggJoin4532135954306286006 as select movie_id as v12, keyword_id as v1 from movie_keyword as mk, aggView1720276826368835197 where mk.movie_id=aggView1720276826368835197.v12;
+create or replace view aggView4435585036897103773 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin5584343005008778984 as select v12 from aggJoin4532135954306286006 join aggView4435585036897103773 using(v1);
+create or replace view aggView1103952107482388776 as select v12 from aggJoin5584343005008778984 group by v12;
+create or replace view aggJoin5913598543333306920 as select title as v13, production_year as v16 from title as t, aggView1103952107482388776 where t.id=aggView1103952107482388776.v12 and production_year>2010;
+create or replace view aggView7762271573232225627 as select v13 from aggJoin5913598543333306920 group by v13;
+select MIN(v13) as v24 from aggView7762271573232225627;

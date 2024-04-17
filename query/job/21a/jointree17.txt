@@ -1,0 +1,23 @@
+Relations:
+dict_values([cn[388177,company_name]: ['v17', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+, ct[388178,company_type]: ['v18', 'v9']
+, k[388179,keyword]: ['v27', 'v11', 'v12']
+, lt[388180,link_type]: ['v13', 'v14']
+, mc[388181,movie_companies]: ['v15', 'v29', 'v17', 'v18', 'v19']
+, mi[388182,movie_info]: ['v20', 'v29', 'v22', 'v23', 'v24']
+, mk[388183,movie_keyword]: ['v25', 'v29', 'v27']
+, ml[388184,movie_link]: ['v28', 'v29', 'v30', 'v13']
+, t[388185,title]: ['v29', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43']
+])
+Edges:
+dict_values([388185->388183, 388182->388184, 388184->388185, 388183->388181, 388184->388180, 388181->388178, 388181->388177, 388183->388179])
+Root:
+388182
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[388182]
+fixroot:
+True

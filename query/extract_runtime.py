@@ -3,7 +3,7 @@ import statistics
 
 
 if __name__ == "__main__":
-    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/job2')
+    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/job')
 
     for path, dir_lst, file_lst in paths:
         for dir_name in dir_lst:

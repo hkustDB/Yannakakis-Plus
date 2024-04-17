@@ -1,0 +1,13 @@
+create or replace view aggView3557643030270715830 as select id as v31, title as v45 from title as t;
+create or replace view aggJoin678305184450259878 as select movie_id as v31, info_type_id as v10, info as v20, v45 from movie_info_idx as mi_idx, aggView3557643030270715830 where mi_idx.movie_id=aggView3557643030270715830.v31;
+create or replace view aggView151686919571723838 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin5102021189350173845 as select movie_id as v31, info as v15 from movie_info as mi, aggView151686919571723838 where mi.info_type_id=aggView151686919571723838.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView4288069945905337341 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin1408449323481390963 as select v31, v20, v45 from aggJoin678305184450259878 join aggView4288069945905337341 using(v10);
+create or replace view aggView4414777083720926389 as select v31, MIN(v45) as v45, MIN(v20) as v44 from aggJoin1408449323481390963 group by v31,v45;
+create or replace view aggJoin6300892641406949 as select v31, v15, v45, v44 from aggJoin5102021189350173845 join aggView4414777083720926389 using(v31);
+create or replace view aggView2196402676058888075 as select v31, MIN(v45) as v45, MIN(v44) as v44, MIN(v15) as v43 from aggJoin6300892641406949 group by v31,v45,v44;
+create or replace view aggJoin6918810857378471983 as select person_id as v22, note as v5, v45, v44, v43 from cast_info as ci, aggView2196402676058888075 where ci.movie_id=aggView2196402676058888075.v31 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView685667664670786082 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin7382388906481852139 as select v45, v44, v43 from aggJoin6918810857378471983 join aggView685667664670786082 using(v22);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin7382388906481852139;

@@ -1,0 +1,13 @@
+create or replace view aggView7937730537518483197 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin4528419682961370493 as select movie_id as v31, note as v5 from cast_info as ci, aggView7937730537518483197 where ci.person_id=aggView7937730537518483197.v22 and note IN ('(producer)','(executive producer)');
+create or replace view aggView3166142643930856687 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin510260644191019292 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView3166142643930856687 where mi_idx.info_type_id=aggView3166142643930856687.v10;
+create or replace view aggView1096344076408427727 as select v31, MIN(v20) as v44 from aggJoin510260644191019292 group by v31;
+create or replace view aggJoin6665716325724163395 as select id as v31, title as v32, v44 from title as t, aggView1096344076408427727 where t.id=aggView1096344076408427727.v31;
+create or replace view aggView5556769358039498565 as select v31, MIN(v44) as v44, MIN(v32) as v45 from aggJoin6665716325724163395 group by v31,v44;
+create or replace view aggJoin2619614880399969393 as select movie_id as v31, info_type_id as v8, info as v15, v44, v45 from movie_info as mi, aggView5556769358039498565 where mi.movie_id=aggView5556769358039498565.v31;
+create or replace view aggView6901048620996218245 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin903828499109121917 as select v31, v15, v44, v45 from aggJoin2619614880399969393 join aggView6901048620996218245 using(v8);
+create or replace view aggView8109154853144084678 as select v31, MIN(v44) as v44, MIN(v45) as v45, MIN(v15) as v43 from aggJoin903828499109121917 group by v31,v45,v44;
+create or replace view aggJoin4981978897680273718 as select v44, v45, v43 from aggJoin4528419682961370493 join aggView8109154853144084678 using(v31);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin4981978897680273718;

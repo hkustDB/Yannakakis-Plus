@@ -1,0 +1,15 @@
+create or replace view aggView5647392130713967727 as select id as v31, title as v32 from title as t where production_year>2005;
+create or replace view aggView1463480743493230153 as select id as v1, name as v2 from char_name as chn;
+create or replace view aggView3001057256412498425 as select v1, MIN(v2) as v43 from aggView1463480743493230153 group by v1;
+create or replace view aggJoin4297134572710770072 as select movie_id as v31, note as v12, role_id as v29, v43 from cast_info as ci, aggView3001057256412498425 where ci.person_role_id=aggView3001057256412498425.v1 and note LIKE '%(voice)%' and note LIKE '%(uncredited)%';
+create or replace view aggView210300722885119988 as select id as v22 from company_type as ct;
+create or replace view aggJoin2346670628678681564 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView210300722885119988 where mc.company_type_id=aggView210300722885119988.v22;
+create or replace view aggView1319050215371302597 as select id as v15 from company_name as cn where country_code= '[ru]';
+create or replace view aggJoin866509536269528468 as select v31 from aggJoin2346670628678681564 join aggView1319050215371302597 using(v15);
+create or replace view aggView8411622174205687375 as select id as v29 from role_type as rt where role= 'actor';
+create or replace view aggJoin1345492775254536330 as select v31, v12, v43 from aggJoin4297134572710770072 join aggView8411622174205687375 using(v29);
+create or replace view aggView2975502584218483623 as select v31 from aggJoin866509536269528468 group by v31;
+create or replace view aggJoin4861414407159451922 as select v31, v12, v43 as v43 from aggJoin1345492775254536330 join aggView2975502584218483623 using(v31);
+create or replace view aggView6465419414694480618 as select v31, MIN(v43) as v43 from aggJoin4861414407159451922 group by v31,v43;
+create or replace view aggJoin3328730912367968677 as select v32, v43 from aggView5647392130713967727 join aggView6465419414694480618 using(v31);
+select MIN(v43) as v43,MIN(v32) as v44 from aggJoin3328730912367968677;
