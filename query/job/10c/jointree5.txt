@@ -1,0 +1,21 @@
+Relations:
+dict_values([chn[484726,char_name]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+, ci[484727,cast_info]: ['v8', 'v9', 'v31', 'v1', 'v12', 'v13', 'v29']
+, cn[484728,company_name]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21']
+, ct[484729,company_type]: ['v22', 'v23']
+, mc[484730,movie_companies]: ['v24', 'v31', 'v15', 'v22', 'v28']
+, rt[484731,role_type]: ['v29', 'v30']
+, t[484732,title]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42']
+])
+Edges:
+dict_values([484726->484727, 484727->484730, 484730->484728, 484727->484731, 484730->484729, 484727->484732])
+Root:
+484726
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[484726]
+fixroot:
+True

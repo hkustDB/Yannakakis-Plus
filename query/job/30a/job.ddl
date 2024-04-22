@@ -9,7 +9,7 @@ CREATE TABLE aka_name (
     md5sum varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '9914773'
+        'cardinality' = '90134300'
 );
 
 CREATE TABLE aka_title (
@@ -27,7 +27,7 @@ CREATE TABLE aka_title (
     md5sum varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '3976192'
+        'cardinality' = '36147200'
 );
 
 CREATE TABLE cast_info (
@@ -40,7 +40,7 @@ CREATE TABLE cast_info (
     role_id integer,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '398687784'
+        'cardinality' = '124471600'
 );
 
 CREATE TABLE char_name (
@@ -53,7 +53,7 @@ CREATE TABLE char_name (
     md5sum varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '34543729'
+        'cardinality' = '314033900'
 );
 
 CREATE TABLE comp_cast_type (
@@ -61,7 +61,7 @@ CREATE TABLE comp_cast_type (
     kind varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '44'
+        'cardinality' = '200'
 );
 
 CREATE TABLE company_name (
@@ -74,7 +74,7 @@ CREATE TABLE company_name (
     md5sum varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '2584967'
+        'cardinality' = '23499700'
 );
 
 CREATE TABLE company_type (
@@ -82,7 +82,7 @@ CREATE TABLE company_type (
     kind varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '44'
+        'cardinality' = '400'
 );
 
 CREATE TABLE complete_cast (
@@ -92,7 +92,7 @@ CREATE TABLE complete_cast (
     status_id integer,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '1485946'
+        'cardinality' = '13508600'
 );
 
 CREATE TABLE info_type (
@@ -100,7 +100,7 @@ CREATE TABLE info_type (
     info varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '1243'
+        'cardinality' = '100'
 );
 
 CREATE TABLE keyword (
@@ -109,7 +109,7 @@ CREATE TABLE keyword (
     phonetic_code varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '1475870'
+        'cardinality' = '700'
 );
 
 CREATE TABLE kind_type (
@@ -117,7 +117,7 @@ CREATE TABLE kind_type (
     kind varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '77'
+        'cardinality' = '700'
 );
 
 CREATE TABLE link_type (
@@ -125,7 +125,7 @@ CREATE TABLE link_type (
     link varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '198'
+        'cardinality' = '1800'
 );
 
 CREATE TABLE movie_companies (
@@ -136,7 +136,7 @@ CREATE TABLE movie_companies (
     note varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '28700419'
+        'cardinality' = '260912900'
 );
 
 CREATE TABLE movie_info_idx (
@@ -147,7 +147,7 @@ CREATE TABLE movie_info_idx (
     note varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '15180385'
+        'cardinality' = '138003500'
 );
 
 CREATE TABLE movie_keyword (
@@ -156,7 +156,7 @@ CREATE TABLE movie_keyword (
     keyword_id integer,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '49763230'
+        'cardinality' = '452393000'
 );
 
 CREATE TABLE movie_link (
@@ -166,7 +166,7 @@ CREATE TABLE movie_link (
     link_type_id integer,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '329967'
+        'cardinality' = '2999700'
 );
 
 CREATE TABLE name (
@@ -181,7 +181,7 @@ CREATE TABLE name (
     md5sum varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '45842401'
+        'cardinality' = '173957900'
 );
 
 CREATE TABLE role_type (
@@ -189,7 +189,7 @@ CREATE TABLE role_type (
     role varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '132'
+        'cardinality' = '1200'
 );
 
 CREATE TABLE title (
@@ -207,7 +207,7 @@ CREATE TABLE title (
     md5sum varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '27811432'
+        'cardinality' = '138145300'
 );
 
 CREATE TABLE movie_info (
@@ -218,7 +218,7 @@ CREATE TABLE movie_info (
     note varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '163192920'
+        'cardinality' = '7304700'
 );
 
 CREATE TABLE person_info (
@@ -229,5 +229,5 @@ CREATE TABLE person_info (
     note varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '32600304'
+        'cardinality' = '296366400'
 );

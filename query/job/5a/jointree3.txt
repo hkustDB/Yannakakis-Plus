@@ -1,19 +1,19 @@
 Relations:
-dict_values([ct[107516,company_type]: ['v1', 'v2']
-, it[107517,info_type]: ['v3', 'v4']
-, mc[107518,movie_companies]: ['v5', 'v15', 'v7', 'v1', 'v9']
-, mi[107519,movie_info]: ['v10', 'v15', 'v3', 'v13', 'v14']
-, t[107520,title]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26']
+dict_values([ct[508932,company_type]: ['v1', 'v2']
+, it[508933,info_type]: ['v3', 'v4']
+, mc[508934,movie_companies]: ['v5', 'v15', 'v7', 'v1', 'v9']
+, mi[508935,movie_info]: ['v10', 'v15', 'v3', 'v13', 'v14']
+, t[508936,title]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26']
 ])
 Edges:
-dict_values([107518->107516, 107520->107518, 107519->107520, 107519->107517])
+dict_values([508935->508933, 508934->508932, 508935->508934, 508936->508935])
 Root:
-107519
+508936
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[107519]
+[508936]
 fixroot:
 True

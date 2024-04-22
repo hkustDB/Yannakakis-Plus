@@ -1,9 +1,13 @@
-create or replace view aggView2274761199166893411 as select id as v15, title as v27 from title as t where production_year>2005;
-create or replace view aggJoin8565228437914034333 as select movie_id as v15, info_type_id as v3, info as v13, v27 from movie_info as mi, aggView2274761199166893411 where mi.movie_id=aggView2274761199166893411.v15 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
-create or replace view aggView5729946996834330925 as select id as v3 from info_type as it;
-create or replace view aggJoin6142595653130634062 as select v15, v13, v27 from aggJoin8565228437914034333 join aggView5729946996834330925 using(v3);
-create or replace view aggView3934007077979355050 as select id as v1 from company_type as ct where kind= 'production companies';
-create or replace view aggJoin8420233510510700672 as select movie_id as v15, note as v9 from movie_companies as mc, aggView3934007077979355050 where mc.company_type_id=aggView3934007077979355050.v1 and note LIKE '%(theatrical)%' and note LIKE '%(France)%';
-create or replace view aggView6923214483077849783 as select v15 from aggJoin8420233510510700672 group by v15;
-create or replace view aggJoin5795141255277298191 as select v27 as v27 from aggJoin6142595653130634062 join aggView6923214483077849783 using(v15);
-select MIN(v27) as v27 from aggJoin5795141255277298191;
+create or replace view aggJoin3100867958643090990 as (
+with aggView4037760148231849224 as (select id as v1 from company_type as ct where kind= 'production companies')
+select movie_id as v15, note as v9 from movie_companies as mc, aggView4037760148231849224 where mc.company_type_id=aggView4037760148231849224.v1 and note LIKE '%(theatrical)%' and note LIKE '%(France)%');
+create or replace view aggJoin1969116875253307808 as (
+with aggView699522887534616220 as (select id as v3 from info_type as it)
+select movie_id as v15, info as v13 from movie_info as mi, aggView699522887534616220 where mi.info_type_id=aggView699522887534616220.v3 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German'));
+create or replace view aggJoin727332218081012333 as (
+with aggView2730700034258615398 as (select v15 from aggJoin1969116875253307808 group by v15)
+select v15, v9 from aggJoin3100867958643090990 join aggView2730700034258615398 using(v15));
+create or replace view aggJoin6946673686951299299 as (
+with aggView8813410347874912324 as (select v15 from aggJoin727332218081012333 group by v15)
+select title as v16 from title as t, aggView8813410347874912324 where t.id=aggView8813410347874912324.v15 and production_year>2005);
+select MIN(v16) as v27 from aggJoin6946673686951299299;

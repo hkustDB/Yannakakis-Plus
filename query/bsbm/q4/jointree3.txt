@@ -1,0 +1,21 @@
+Relations:
+dict_values([p[1639,product]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18']
+, ptp[1640,producttypeproduct]: ['v1', 'v20']
+, pfp1[1641,productfeatureproduct]: ['v1', 'v22']
+, pfp2[1642,productfeatureproduct]: ['v1', 'v24']
+, pfp3[1643,productfeatureproduct]: ['v1', 'v26']
+, ptpAux22[1648,ptp]: ['v1']
+, pAux37[1703,p]: ['v1', 'v2', 'v11']
+])
+Edges:
+dict_values([1648->1640, 1703->1641, 1703->1639, 1703->1642, 1703->1643, 1648->1703])
+Root:
+1648
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[1703, 1648]
+fixroot:
+False

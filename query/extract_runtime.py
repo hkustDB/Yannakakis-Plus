@@ -3,7 +3,7 @@ import statistics
 
 
 if __name__ == "__main__":
-    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/job')
+    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/extra')
 
     for path, dir_lst, file_lst in paths:
         for dir_name in dir_lst:
@@ -63,6 +63,7 @@ if __name__ == "__main__":
                 median = statistics.median(rewrite_time)
                 runtime_staistics.write('min max mean variance\n')
                 runtime_staistics.write(str(min) + ' ' + str(max) + ' ' + str(round(mean, 2)) + ' ' + str(round(variance, 2)) + '\n')
-                runtime_staistics.write('original_time: ' + str(original_time) + '\n')
+                runtime_staistics.write('original_time: \n')
+                runtime_staistics.write('\n'.join([str(x) for x in original_time]))
             
             runtime_staistics.close()

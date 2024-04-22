@@ -1,22 +1,31 @@
-create or replace view aggView6388509131030520682 as select id as v18 from keyword as k;
-create or replace view aggJoin2369142113246790986 as select movie_id as v36 from movie_keyword as mk, aggView6388509131030520682 where mk.keyword_id=aggView6388509131030520682.v18;
-create or replace view aggView5573720461342051875 as select id as v7 from company_name as cn where country_code= '[us]';
-create or replace view aggJoin186489054433134277 as select movie_id as v36, company_type_id as v14 from movie_companies as mc, aggView5573720461342051875 where mc.company_id=aggView5573720461342051875.v7;
-create or replace view aggView389449446843920822 as select id as v5 from comp_cast_type as cct1 where kind= 'complete+verified';
-create or replace view aggJoin3756521686329406660 as select movie_id as v36 from complete_cast as cc, aggView389449446843920822 where cc.status_id=aggView389449446843920822.v5;
-create or replace view aggView2138638676994414629 as select id as v14 from company_type as ct;
-create or replace view aggJoin7262539643886172073 as select v36 from aggJoin186489054433134277 join aggView2138638676994414629 using(v14);
-create or replace view aggView7322223684125968531 as select id as v16 from info_type as it1 where info= 'release dates';
-create or replace view aggJoin8182525192022942501 as select movie_id as v36, info as v31, note as v32 from movie_info as mi, aggView7322223684125968531 where mi.info_type_id=aggView7322223684125968531.v16 and ((info LIKE 'USA:% 199%') OR (info LIKE 'USA:% 200%')) and note LIKE '%internet%';
-create or replace view aggView552959942183794719 as select v36 from aggJoin2369142113246790986 group by v36;
-create or replace view aggJoin8323933045758659499 as select id as v36, title as v37, kind_id as v21, production_year as v40 from title as t, aggView552959942183794719 where t.id=aggView552959942183794719.v36 and production_year>1990;
-create or replace view aggView5464864576745070429 as select v36 from aggJoin7262539643886172073 group by v36;
-create or replace view aggJoin5069168195040831801 as select v36 from aggJoin3756521686329406660 join aggView5464864576745070429 using(v36);
-create or replace view aggView2565284192813128369 as select v36 from aggJoin5069168195040831801 group by v36;
-create or replace view aggJoin7256432362908321828 as select v36, v31, v32 from aggJoin8182525192022942501 join aggView2565284192813128369 using(v36);
-create or replace view aggView9084722740984914522 as select v36 from aggJoin7256432362908321828 group by v36;
-create or replace view aggJoin8416299707869043826 as select v37, v21, v40 from aggJoin8323933045758659499 join aggView9084722740984914522 using(v36);
-create or replace view aggView3937603635771760891 as select v21, v37 from aggJoin8416299707869043826 group by v21,v37;
-create or replace view aggView8343426058670082589 as select v21, MIN(v37) as v49 from aggView3937603635771760891 group by v21;
-create or replace view aggJoin9157666349291009132 as select kind as v22, v49 from kind_type as kt, aggView8343426058670082589 where kt.id=aggView8343426058670082589.v21 and kind IN ('movie','tv movie','video movie','video game');
-select MIN(v22) as v48,MIN(v49) as v49 from aggJoin9157666349291009132;
+create or replace view aggJoin4066419304927104650 as (
+with aggView4821726687371528662 as (select id as v21, kind as v48 from kind_type as kt where kind IN ('movie','tv movie','video movie','video game'))
+select id as v36, title as v37, production_year as v40, v48 from title as t, aggView4821726687371528662 where t.kind_id=aggView4821726687371528662.v21 and production_year>1990);
+create or replace view aggJoin757195540705244013 as (
+with aggView7894088400634779150 as (select id as v16 from info_type as it1 where info= 'release dates')
+select movie_id as v36, info as v31, note as v32 from movie_info as mi, aggView7894088400634779150 where mi.info_type_id=aggView7894088400634779150.v16 and ((info LIKE 'USA:% 199%') OR (info LIKE 'USA:% 200%')) and note LIKE '%internet%');
+create or replace view aggJoin4615194788804389259 as (
+with aggView4551636567369511012 as (select id as v18 from keyword as k)
+select movie_id as v36 from movie_keyword as mk, aggView4551636567369511012 where mk.keyword_id=aggView4551636567369511012.v18);
+create or replace view aggJoin3249354640933969069 as (
+with aggView403301653023460679 as (select id as v14 from company_type as ct)
+select movie_id as v36, company_id as v7 from movie_companies as mc, aggView403301653023460679 where mc.company_type_id=aggView403301653023460679.v14);
+create or replace view aggJoin4719362858772418728 as (
+with aggView8969361816523065518 as (select id as v7 from company_name as cn where country_code= '[us]')
+select v36 from aggJoin3249354640933969069 join aggView8969361816523065518 using(v7));
+create or replace view aggJoin4203787944686933474 as (
+with aggView8715456526675997900 as (select id as v5 from comp_cast_type as cct1 where kind= 'complete+verified')
+select movie_id as v36 from complete_cast as cc, aggView8715456526675997900 where cc.status_id=aggView8715456526675997900.v5);
+create or replace view aggJoin8719120255520179022 as (
+with aggView338096797209519968 as (select v36 from aggJoin757195540705244013 group by v36)
+select v36, v37, v40, v48 as v48 from aggJoin4066419304927104650 join aggView338096797209519968 using(v36));
+create or replace view aggJoin7058569047033083703 as (
+with aggView5469527334057734299 as (select v36 from aggJoin4719362858772418728 group by v36)
+select v36 from aggJoin4615194788804389259 join aggView5469527334057734299 using(v36));
+create or replace view aggJoin9179541888126846278 as (
+with aggView2278385647504697331 as (select v36 from aggJoin4203787944686933474 group by v36)
+select v36, v37, v40, v48 as v48 from aggJoin8719120255520179022 join aggView2278385647504697331 using(v36));
+create or replace view aggJoin407522023289756889 as (
+with aggView8592159411707388365 as (select v36, MIN(v48) as v48, MIN(v37) as v49 from aggJoin9179541888126846278 group by v36,v48)
+select v48, v49 from aggJoin7058569047033083703 join aggView8592159411707388365 using(v36));
+select MIN(v48) as v48,MIN(v49) as v49 from aggJoin407522023289756889;

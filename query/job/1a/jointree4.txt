@@ -1,19 +1,19 @@
 Relations:
-dict_values([ct[775424,company_type]: ['v1', 'v2']
-, it[775425,info_type]: ['v3', 'v4']
-, mc[775426,movie_companies]: ['v5', 'v15', 'v7', 'v1', 'v9']
-, mi_idx[775427,movie_info_idx]: ['v10', 'v15', 'v3', 'v13', 'v14']
-, t[775428,title]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26']
+dict_values([ct[1076784,company_type]: ['v1', 'v2']
+, it[1076785,info_type]: ['v3', 'v4']
+, mc[1076786,movie_companies]: ['v5', 'v15', 'v7', 'v1', 'v9']
+, mi_idx[1076787,movie_info_idx]: ['v10', 'v15', 'v3', 'v13', 'v14']
+, t[1076788,title]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26']
 ])
 Edges:
-dict_values([775426->775428, 775426->775424, 775427->775425, 775426->775427])
+dict_values([1076786->1076784, 1076787->1076785, 1076786->1076787, 1076788->1076786])
 Root:
-775426
+1076788
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[775426]
+[1076788]
 fixroot:
 True
