@@ -1,22 +1,25 @@
-create or replace view aggView8492893569110831474 as select id as v37, title as v38 from title as t;
-create or replace view aggView6899840909020439756 as select id as v28, name as v29 from name as n where gender= 'm';
-create or replace view aggView8134949229816665731 as select id as v8 from info_type as it1 where info= 'genres';
-create or replace view aggJoin2253827068128959971 as select movie_id as v37, info as v18 from movie_info as mi, aggView8134949229816665731 where mi.info_type_id=aggView8134949229816665731.v8;
-create or replace view aggView1559582704225331343 as select v37, v18 from aggJoin2253827068128959971 group by v37,v18;
-create or replace view aggJoin7162502625468260877 as select v37, v18 from aggView1559582704225331343 where v18= 'Horror';
-create or replace view aggView703146163892297624 as select id as v10 from info_type as it2 where info= 'votes';
-create or replace view aggJoin2943037873267024830 as select movie_id as v37, info as v23 from movie_info_idx as mi_idx, aggView703146163892297624 where mi_idx.info_type_id=aggView703146163892297624.v10;
-create or replace view aggView7075504276977249663 as select v37, v23 from aggJoin2943037873267024830 group by v37,v23;
-create or replace view aggView4017745072724123951 as select v28, MIN(v29) as v51 from aggView6899840909020439756 group by v28;
-create or replace view aggJoin2115005389084977052 as select movie_id as v37, note as v5, v51 from cast_info as ci, aggView4017745072724123951 where ci.person_id=aggView4017745072724123951.v28 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
-create or replace view aggView5919197682573561477 as select id as v12 from keyword as k where keyword IN ('murder','blood','gore','death','female-nudity');
-create or replace view aggJoin5636900419158534855 as select movie_id as v37 from movie_keyword as mk, aggView5919197682573561477 where mk.keyword_id=aggView5919197682573561477.v12;
-create or replace view aggView8421185698257545423 as select v37 from aggJoin5636900419158534855 group by v37;
-create or replace view aggJoin6681538243982809049 as select v37, v5, v51 as v51 from aggJoin2115005389084977052 join aggView8421185698257545423 using(v37);
-create or replace view aggView5312841869461840862 as select v37, MIN(v51) as v51 from aggJoin6681538243982809049 group by v37,v51;
-create or replace view aggJoin6197325370877145796 as select v37, v38, v51 from aggView8492893569110831474 join aggView5312841869461840862 using(v37);
-create or replace view aggView6494229522391325589 as select v37, MIN(v51) as v51, MIN(v38) as v52 from aggJoin6197325370877145796 group by v37,v51;
-create or replace view aggJoin6395474031780975756 as select v37, v18, v51, v52 from aggJoin7162502625468260877 join aggView6494229522391325589 using(v37);
-create or replace view aggView7777845834842174517 as select v37, MIN(v51) as v51, MIN(v52) as v52, MIN(v18) as v49 from aggJoin6395474031780975756 group by v37,v51,v52;
-create or replace view aggJoin8109596533327681776 as select v23, v51, v52, v49 from aggView7075504276977249663 join aggView7777845834842174517 using(v37);
-select MIN(v49) as v49,MIN(v23) as v50,MIN(v51) as v51,MIN(v52) as v52 from aggJoin8109596533327681776;
+create or replace view aggJoin7411391954850880135 as (
+with aggView1446855402685606569 as (select id as v37, title as v52 from title as t)
+select movie_id as v37, info_type_id as v8, info as v18, v52 from movie_info as mi, aggView1446855402685606569 where mi.movie_id=aggView1446855402685606569.v37 and info= 'Horror');
+create or replace view aggJoin4779363144960467684 as (
+with aggView2223743071940331406 as (select id as v28, name as v51 from name as n where gender= 'm')
+select movie_id as v37, note as v5, v51 from cast_info as ci, aggView2223743071940331406 where ci.person_id=aggView2223743071940331406.v28 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)'));
+create or replace view aggJoin2317892722447613284 as (
+with aggView5669633167531306178 as (select v37, MIN(v51) as v51 from aggJoin4779363144960467684 group by v37,v51)
+select movie_id as v37, keyword_id as v12, v51 from movie_keyword as mk, aggView5669633167531306178 where mk.movie_id=aggView5669633167531306178.v37);
+create or replace view aggJoin965247155054385869 as (
+with aggView4146276393350685171 as (select id as v10 from info_type as it2 where info= 'votes')
+select movie_id as v37, info as v23 from movie_info_idx as mi_idx, aggView4146276393350685171 where mi_idx.info_type_id=aggView4146276393350685171.v10);
+create or replace view aggJoin5306639685943175726 as (
+with aggView3978576356011273011 as (select id as v12 from keyword as k where keyword IN ('murder','blood','gore','death','female-nudity'))
+select v37, v51 from aggJoin2317892722447613284 join aggView3978576356011273011 using(v12));
+create or replace view aggJoin3757590837041627944 as (
+with aggView8901782033916121320 as (select id as v8 from info_type as it1 where info= 'genres')
+select v37, v18, v52 from aggJoin7411391954850880135 join aggView8901782033916121320 using(v8));
+create or replace view aggJoin4952725622638607443 as (
+with aggView7707604323516152878 as (select v37, MIN(v52) as v52, MIN(v18) as v49 from aggJoin3757590837041627944 group by v37,v52)
+select v37, v23, v52, v49 from aggJoin965247155054385869 join aggView7707604323516152878 using(v37));
+create or replace view aggJoin4513052214251676374 as (
+with aggView6430478847504343684 as (select v37, MIN(v52) as v52, MIN(v49) as v49, MIN(v23) as v50 from aggJoin4952725622638607443 group by v37,v49,v52)
+select v51 as v51, v52, v49, v50 from aggJoin5306639685943175726 join aggView6430478847504343684 using(v37));
+select MIN(v49) as v49,MIN(v50) as v50,MIN(v51) as v51,MIN(v52) as v52 from aggJoin4513052214251676374;

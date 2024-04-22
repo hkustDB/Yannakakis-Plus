@@ -170,8 +170,8 @@ def connect(base: int, mode: int, type: GenType):
     body['query'] = query_file.read()
     query_file.close()
     try:
-        # http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize20&limit=30, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=10&limit=20&fixRootEnable=true", headers=headers, json=body).json()['data']
+        # http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=10&limit=10&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -181,7 +181,8 @@ def connect(base: int, mode: int, type: GenType):
     outputVariables = response['outputVariables']
     groupBy = response['groupByVariables']
     setSubset0 = False
-    if not len(groupBy):
+    # NOTE: only change subset at root node aggregation without group by
+    if not len(groupBy) and len(response['aggregations']):
         setSubset0 = True
     # 2. parse jointree
     joinTrees = response['joinTrees']
@@ -315,7 +316,7 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
 
 if __name__ == '__main__':
-    base, mode, type = 2, 0, GenType.DuckDB
+    base, mode, type = 2, 0, GenType.Mysql
     globalVar._init()
     globalVar.set_value('QUERY_NAME', 'query.sql')
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
@@ -324,11 +325,11 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/extra/q1/')
-    globalVar.set_value('DDL_NAME', "graph.ddl")
+    globalVar.set_value('BASE_PATH', 'query/job/33c/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
-    '''
+    
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -341,7 +342,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    '''
+    
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
     OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')

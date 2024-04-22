@@ -148,6 +148,8 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
                 line += END
             return line
         
+        if not reduce.joinView:
+            continue
         line = BEGIN + reduce.joinView.viewName + ' as (\n'
         if reduce.orderView:
             line += getOrderViewLine(reduce.orderView, 1)
@@ -188,9 +190,25 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
     
     # 2. enumerateList rewrite
     if len(enumerateList) > 0:
-        line = BEGIN + enumerateList[-1].stageEnd.viewName + ' as (\n'
+        line = BEGIN + enumerateList[-1].stageEnd.viewName + ' as (\n' if enumerateList[-1].stageEnd else BEGIN + enumerateList[-1].semiEnumerate.viewName + ' as (\n'
         for index, enum in enumerate(enumerateList):
             if enum.semiEnumerate is not None:
+                if len(enumerateList) == 1:
+                    line += 'select ' + transSelectData(enum.semiEnumerate.selectAttrs, enum.semiEnumerate.selectAttrAlias) + ' from ' + enum.semiEnumerate.fromTable
+                    line += ' join ' if len(enum.semiEnumerate.joinKey) != 0 else ', '
+                    line += enum.semiEnumerate.joinTable
+                    line += ' using(' + ', '.join(enum.semiEnumerate.joinKey) + ')' if len(enum.semiEnumerate.joinKey) != 0 else ''
+            
+                    if enum.semiEnumerate.joinCond and len(enum.semiEnumerate.whereCondList):
+                        line += ' where ' + enum.semiEnumerate.joinCond + ' and ' + ' and '.join(enum.semiEnumerate.whereCondList)
+                    elif enum.semiEnumerate.joinCond:
+                        line += ' where ' + enum.semiEnumerate.joinCond
+                    elif len(enum.semiEnumerate.whereCondList):
+                        line += ' where ' + ' and '.join(enum.semiEnumerate.whereCondList)
+                    line += ');\n'
+                    outFile.write(line)
+                    continue
+
                 # outFile.write('# +. SemiEnumerate\n')
                 if 'with' in line:
                     line += ','

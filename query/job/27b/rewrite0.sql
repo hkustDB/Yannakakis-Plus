@@ -1,25 +1,36 @@
-create or replace view aggView8869738791183893290 as select id as v25, name as v10 from company_name as cn where ((name LIKE '%Film%') OR (name LIKE '%Warner%')) and country_code<> '[pl]';
-create or replace view aggView3953919699265989224 as select id as v7 from comp_cast_type as cct2 where kind= 'complete';
-create or replace view aggJoin2605229553040615724 as select movie_id as v37, subject_id as v5 from complete_cast as cc, aggView3953919699265989224 where cc.status_id=aggView3953919699265989224.v7;
-create or replace view aggView6615300836043694479 as select id as v35 from keyword as k where keyword= 'sequel';
-create or replace view aggJoin7929025723169864734 as select movie_id as v37 from movie_keyword as mk, aggView6615300836043694479 where mk.keyword_id=aggView6615300836043694479.v35;
-create or replace view aggView4797848526058984749 as select id as v5 from comp_cast_type as cct1 where kind IN ('cast','crew');
-create or replace view aggJoin281485564914171972 as select v37 from aggJoin2605229553040615724 join aggView4797848526058984749 using(v5);
-create or replace view aggView1147280189259406980 as select v37 from aggJoin281485564914171972 group by v37;
-create or replace view aggJoin6031506647678752195 as select v37 from aggJoin7929025723169864734 join aggView1147280189259406980 using(v37);
-create or replace view aggView4312022806152208516 as select v37 from aggJoin6031506647678752195 group by v37;
-create or replace view aggJoin6554134859786699968 as select movie_id as v37, info as v31 from movie_info as mi, aggView4312022806152208516 where mi.movie_id=aggView4312022806152208516.v37 and info IN ('Sweden','Germany','Swedish','German');
-create or replace view aggView2157938387453574788 as select v37 from aggJoin6554134859786699968 group by v37;
-create or replace view aggJoin2909333141880985332 as select id as v37, title as v41, production_year as v44 from title as t, aggView2157938387453574788 where t.id=aggView2157938387453574788.v37 and production_year= 1998;
-create or replace view aggView6372588766425675694 as select v41, v37 from aggJoin2909333141880985332 group by v41,v37;
-create or replace view aggView2087205628717204046 as select v25, MIN(v10) as v52 from aggView8869738791183893290 group by v25;
-create or replace view aggJoin3597505673979037886 as select movie_id as v37, company_type_id as v26, v52 from movie_companies as mc, aggView2087205628717204046 where mc.company_id=aggView2087205628717204046.v25;
-create or replace view aggView1120068366487194493 as select id as v26 from company_type as ct where kind= 'production companies';
-create or replace view aggJoin2847436408520754008 as select v37, v52 from aggJoin3597505673979037886 join aggView1120068366487194493 using(v26);
-create or replace view aggView2206607843781878380 as select v37, MIN(v52) as v52 from aggJoin2847436408520754008 group by v37,v52;
-create or replace view aggJoin437962918184233481 as select v41, v37, v52 from aggView6372588766425675694 join aggView2206607843781878380 using(v37);
-create or replace view aggView3715645532047346577 as select v37, MIN(v52) as v52, MIN(v41) as v54 from aggJoin437962918184233481 group by v37,v52;
-create or replace view aggJoin4403692526583120733 as select link_type_id as v21, v52, v54 from movie_link as ml, aggView3715645532047346577 where ml.movie_id=aggView3715645532047346577.v37;
-create or replace view aggView4226421330396407823 as select v21, MIN(v52) as v52, MIN(v54) as v54 from aggJoin4403692526583120733 group by v21,v52,v54;
-create or replace view aggJoin8900876430153432251 as select link as v22, v52, v54 from link_type as lt, aggView4226421330396407823 where lt.id=aggView4226421330396407823.v21 and link LIKE '%follow%';
-select MIN(v52) as v52,MIN(v22) as v53,MIN(v54) as v54 from aggJoin8900876430153432251;
+create or replace view aggView2468091087316911568 as select id as v25, name as v10 from company_name as cn where ((name LIKE '%Film%') OR (name LIKE '%Warner%')) and country_code<> '[pl]';
+create or replace view aggJoin1275439708771008464 as (
+with aggView8001970621711865775 as (select id as v35 from keyword as k where keyword= 'sequel')
+select movie_id as v37 from movie_keyword as mk, aggView8001970621711865775 where mk.keyword_id=aggView8001970621711865775.v35);
+create or replace view aggJoin9089445628899877350 as (
+with aggView2887605739488749204 as (select v37 from aggJoin1275439708771008464 group by v37)
+select movie_id as v37, info as v31 from movie_info as mi, aggView2887605739488749204 where mi.movie_id=aggView2887605739488749204.v37 and info IN ('Sweden','Germany','Swedish','German'));
+create or replace view aggJoin3984074408405350489 as (
+with aggView7670100774895046956 as (select v37 from aggJoin9089445628899877350 group by v37)
+select id as v37, title as v41, production_year as v44 from title as t, aggView7670100774895046956 where t.id=aggView7670100774895046956.v37 and production_year= 1998);
+create or replace view aggView1056762270164966823 as select v37, v41 from aggJoin3984074408405350489 group by v37,v41;
+create or replace view aggJoin2675973113816426349 as (
+with aggView1966834957057314961 as (select v25, MIN(v10) as v52 from aggView2468091087316911568 group by v25)
+select movie_id as v37, company_type_id as v26, v52 from movie_companies as mc, aggView1966834957057314961 where mc.company_id=aggView1966834957057314961.v25);
+create or replace view aggJoin3079088788760078466 as (
+with aggView2647514739499465658 as (select id as v21, link as v53 from link_type as lt where link LIKE '%follow%')
+select movie_id as v37, v53 from movie_link as ml, aggView2647514739499465658 where ml.link_type_id=aggView2647514739499465658.v21);
+create or replace view aggJoin5880397938648572992 as (
+with aggView4846130481559757589 as (select id as v5 from comp_cast_type as cct1 where kind IN ('cast','crew'))
+select movie_id as v37, status_id as v7 from complete_cast as cc, aggView4846130481559757589 where cc.subject_id=aggView4846130481559757589.v5);
+create or replace view aggJoin786891476110464944 as (
+with aggView3098124826607444905 as (select id as v7 from comp_cast_type as cct2 where kind= 'complete')
+select v37 from aggJoin5880397938648572992 join aggView3098124826607444905 using(v7));
+create or replace view aggJoin1897618511437911083 as (
+with aggView7035798920272734923 as (select id as v26 from company_type as ct where kind= 'production companies')
+select v37, v52 from aggJoin2675973113816426349 join aggView7035798920272734923 using(v26));
+create or replace view aggJoin5165443830878653729 as (
+with aggView6163272869496356594 as (select v37, MIN(v52) as v52 from aggJoin1897618511437911083 group by v37,v52)
+select v37, v53 as v53, v52 from aggJoin3079088788760078466 join aggView6163272869496356594 using(v37));
+create or replace view aggJoin5226779248200595488 as (
+with aggView2536951398619750826 as (select v37 from aggJoin786891476110464944 group by v37)
+select v37, v53 as v53, v52 as v52 from aggJoin5165443830878653729 join aggView2536951398619750826 using(v37));
+create or replace view aggJoin1880826836465963770 as (
+with aggView8980959126366022656 as (select v37, MIN(v53) as v53, MIN(v52) as v52 from aggJoin5226779248200595488 group by v37,v53,v52)
+select v41, v53, v52 from aggView1056762270164966823 join aggView8980959126366022656 using(v37));
+select MIN(v52) as v52,MIN(v53) as v53,MIN(v41) as v54 from aggJoin1880826836465963770;

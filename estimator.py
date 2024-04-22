@@ -134,6 +134,8 @@ def getEstimation(DDL_NAME: str, jt: JoinTree):
 
 def selectBest(cost_stat: list[list[int]]) -> int:
     # index, cost_height, cost_fanout, cost_estimate
+    if not len(cost_stat):
+        return [0]
     group: dict[str, list[int]] = {}
     for cost in cost_stat:
         estimate = cost[-1]
