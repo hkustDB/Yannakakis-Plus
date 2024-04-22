@@ -1,19 +1,21 @@
 Relations:
-dict_values([it[704537,info_type]: ['v1', 'v2']
-, k[704538,keyword]: ['v3', 'v4', 'v5']
-, mi_idx[704539,movie_info_idx]: ['v6', 'v14', 'v1', 'v9', 'v10']
-, mk[704540,movie_keyword]: ['v11', 'v14', 'v3']
-, t[704541,title]: ['v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25']
+dict_values([it[1072308,info_type]: ['v1', 'v2']
+, k[1072309,keyword]: ['v3', 'v4', 'v5']
+, mi_idx[1072310,movie_info_idx]: ['v6', 'v14', 'v1', 'v9', 'v10']
+, mk[1072311,movie_keyword]: ['v11', 'v14', 'v3']
+, t[1072312,title]: ['v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25']
+, tAux59[1072327,t]: ['v14', 'v15']
+, mi_idxAux41[1072331,mi_idx]: ['v14', 'v9']
 ])
 Edges:
-dict_values([704540->704538, 704539->704537, 704539->704541, 704540->704539])
+dict_values([1072331->1072310, 1072310->1072308, 1072311->1072309, 1072331->1072327, 1072327->1072312, 1072312->1072311])
 Root:
-704540
+1072331
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[704540]
+[]
 fixroot:
-True
+False

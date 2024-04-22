@@ -1,18 +1,18 @@
 Relations:
-dict_values([k[13153,keyword]: ['v1', 'v2', 'v3']
-, mi[13154,movie_info]: ['v4', 'v12', 'v6', 'v7', 'v8']
-, mk[13155,movie_keyword]: ['v9', 'v12', 'v1']
-, t[13156,title]: ['v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23']
+dict_values([k[363862,keyword]: ['v1', 'v2', 'v3']
+, mi[363863,movie_info]: ['v4', 'v12', 'v6', 'v7', 'v8']
+, mk[363864,movie_keyword]: ['v9', 'v12', 'v1']
+, t[363865,title]: ['v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23']
 ])
 Edges:
-dict_values([13155->13153, 13154->13155, 13154->13156])
+dict_values([363864->363862, 363864->363863, 363864->363865])
 Root:
-13154
+363864
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[13154]
+[363864]
 fixroot:
 True

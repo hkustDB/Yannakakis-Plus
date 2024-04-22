@@ -1,6 +1,7 @@
 *.txt
 !query/*/*/jointree*.txt
 *.pyc
+__pycache__/*.pyc
 *.csv
 
 .DS_Store

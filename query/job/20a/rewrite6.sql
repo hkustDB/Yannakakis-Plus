@@ -1,20 +1,29 @@
-create or replace view aggView602398441294843122 as select id as v26 from kind_type as kt where kind= 'movie';
-create or replace view aggJoin443850199893785049 as select id as v40, title as v41, production_year as v44 from title as t, aggView602398441294843122 where t.kind_id=aggView602398441294843122.v26 and production_year>1950;
-create or replace view aggView581638672242386186 as select id as v9 from char_name as chn where ((name LIKE '%Tony%Stark%') OR (name LIKE '%Iron%Man%')) and name NOT LIKE '%Sherlock%';
-create or replace view aggJoin6439185752314987672 as select person_id as v31, movie_id as v40 from cast_info as ci, aggView581638672242386186 where ci.person_role_id=aggView581638672242386186.v9;
-create or replace view aggView7001214277994968989 as select id as v7 from comp_cast_type as cct2 where kind LIKE '%complete%';
-create or replace view aggJoin5847964120919474510 as select movie_id as v40, subject_id as v5 from complete_cast as cc, aggView7001214277994968989 where cc.status_id=aggView7001214277994968989.v7;
-create or replace view aggView8744578851896960977 as select id as v23 from keyword as k where keyword IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence');
-create or replace view aggJoin6660831482649879773 as select movie_id as v40 from movie_keyword as mk, aggView8744578851896960977 where mk.keyword_id=aggView8744578851896960977.v23;
-create or replace view aggView5643623586765489776 as select id as v31 from name as n;
-create or replace view aggJoin3086415551681024032 as select v40 from aggJoin6439185752314987672 join aggView5643623586765489776 using(v31);
-create or replace view aggView5836334439299687465 as select id as v5 from comp_cast_type as cct1 where kind= 'cast';
-create or replace view aggJoin8957371382426122369 as select v40 from aggJoin5847964120919474510 join aggView5836334439299687465 using(v5);
-create or replace view aggView1388348746351065856 as select v40 from aggJoin8957371382426122369 group by v40;
-create or replace view aggJoin2176811458525096839 as select v40 from aggJoin3086415551681024032 join aggView1388348746351065856 using(v40);
-create or replace view aggView2996334920249168495 as select v40 from aggJoin2176811458525096839 group by v40;
-create or replace view aggJoin349484074097111040 as select v40 from aggJoin6660831482649879773 join aggView2996334920249168495 using(v40);
-create or replace view aggView9140706630123607621 as select v40 from aggJoin349484074097111040 group by v40;
-create or replace view aggJoin2757597102671021799 as select v41, v44 from aggJoin443850199893785049 join aggView9140706630123607621 using(v40);
-create or replace view aggView7120601459136229970 as select v41 from aggJoin2757597102671021799 group by v41;
-select MIN(v41) as v52 from aggView7120601459136229970;
+create or replace view aggJoin2182505621974630206 as (
+with aggView1064778494624047189 as (select id as v5 from comp_cast_type as cct1 where kind= 'cast')
+select movie_id as v40, status_id as v7 from complete_cast as cc, aggView1064778494624047189 where cc.subject_id=aggView1064778494624047189.v5);
+create or replace view aggJoin3976228920595551203 as (
+with aggView7884772212385250145 as (select id as v31 from name as n)
+select movie_id as v40, person_role_id as v9 from cast_info as ci, aggView7884772212385250145 where ci.person_id=aggView7884772212385250145.v31);
+create or replace view aggJoin4607757682633851008 as (
+with aggView2274008424975137335 as (select id as v7 from comp_cast_type as cct2 where kind LIKE '%complete%')
+select v40 from aggJoin2182505621974630206 join aggView2274008424975137335 using(v7));
+create or replace view aggJoin4991894637591889794 as (
+with aggView5817176093302294763 as (select v40 from aggJoin4607757682633851008 group by v40)
+select v40, v9 from aggJoin3976228920595551203 join aggView5817176093302294763 using(v40));
+create or replace view aggJoin8483467427793875701 as (
+with aggView2769359469978158730 as (select id as v26 from kind_type as kt where kind= 'movie')
+select id as v40, title as v41, production_year as v44 from title as t, aggView2769359469978158730 where t.kind_id=aggView2769359469978158730.v26 and production_year>1950);
+create or replace view aggJoin581248182958977471 as (
+with aggView7340799428284535088 as (select id as v9 from char_name as chn where ((name LIKE '%Tony%Stark%') OR (name LIKE '%Iron%Man%')) and name NOT LIKE '%Sherlock%')
+select v40 from aggJoin4991894637591889794 join aggView7340799428284535088 using(v9));
+create or replace view aggJoin1033866695981815985 as (
+with aggView5313238602175965073 as (select v40 from aggJoin581248182958977471 group by v40)
+select movie_id as v40, keyword_id as v23 from movie_keyword as mk, aggView5313238602175965073 where mk.movie_id=aggView5313238602175965073.v40);
+create or replace view aggJoin3267339232051996611 as (
+with aggView4250598103253779885 as (select id as v23 from keyword as k where keyword IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence'))
+select v40 from aggJoin1033866695981815985 join aggView4250598103253779885 using(v23));
+create or replace view aggJoin3836680651611468433 as (
+with aggView394861949083760208 as (select v40 from aggJoin3267339232051996611 group by v40)
+select v41, v44 from aggJoin8483467427793875701 join aggView394861949083760208 using(v40));
+create or replace view aggView1086623994575437447 as select v41 from aggJoin3836680651611468433 group by v41;
+select MIN(v41) as v52 from aggView1086623994575437447;

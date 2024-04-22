@@ -1,21 +1,28 @@
-create or replace view aggView6595995849491532879 as select id as v53, title as v54 from title as t where production_year>=2007 and production_year<=2008 and title LIKE '%Kung%Fu%Panda%';
-create or replace view aggView2924642539858573497 as select person_id as v42 from aka_name as an group by person_id;
-create or replace view aggJoin979905277675563722 as select id as v42, name as v43, gender as v46 from name as n, aggView2924642539858573497 where n.id=aggView2924642539858573497.v42 and gender= 'f' and name LIKE '%Angel%';
-create or replace view aggView3904734789417907991 as select v43, v42 from aggJoin979905277675563722 group by v43,v42;
-create or replace view aggView5839644889240473937 as select v42, MIN(v43) as v65 from aggView3904734789417907991 group by v42;
-create or replace view aggJoin3176383611879525349 as select movie_id as v53, person_role_id as v9, note as v20, role_id as v51, v65 from cast_info as ci, aggView5839644889240473937 where ci.person_id=aggView5839644889240473937.v42 and note= '(voice)';
-create or replace view aggView6319144305530514887 as select id as v9 from char_name as chn;
-create or replace view aggJoin4817095976246731639 as select v53, v20, v51, v65 from aggJoin3176383611879525349 join aggView6319144305530514887 using(v9);
-create or replace view aggView6459360651841577350 as select id as v23 from company_name as cn where country_code= '[us]';
-create or replace view aggJoin5733580129701704164 as select movie_id as v53, note as v36 from movie_companies as mc, aggView6459360651841577350 where mc.company_id=aggView6459360651841577350.v23 and ((note LIKE '%(USA)%') OR (note LIKE '%(worldwide)%')) and note LIKE '%(200%)%';
-create or replace view aggView1352975999053785718 as select v53 from aggJoin5733580129701704164 group by v53;
-create or replace view aggJoin4121264118995529814 as select v53, v20, v51, v65 as v65 from aggJoin4817095976246731639 join aggView1352975999053785718 using(v53);
-create or replace view aggView5512993698520319897 as select id as v51 from role_type as rt where role= 'actress';
-create or replace view aggJoin2894050808732833056 as select v53, v20, v65 from aggJoin4121264118995529814 join aggView5512993698520319897 using(v51);
-create or replace view aggView4792572396122755039 as select id as v30 from info_type as it where info= 'release dates';
-create or replace view aggJoin3504269360367719217 as select movie_id as v53, info as v40 from movie_info as mi, aggView4792572396122755039 where mi.info_type_id=aggView4792572396122755039.v30 and ((info LIKE 'Japan:%2007%') OR (info LIKE 'USA:%2008%'));
-create or replace view aggView4726764821182046736 as select v53 from aggJoin3504269360367719217 group by v53;
-create or replace view aggJoin6015823444028084374 as select v53, v20, v65 as v65 from aggJoin2894050808732833056 join aggView4726764821182046736 using(v53);
-create or replace view aggView5783799361771663325 as select v53, MIN(v65) as v65 from aggJoin6015823444028084374 group by v53,v65;
-create or replace view aggJoin7312527226836862302 as select v54, v65 from aggView6595995849491532879 join aggView5783799361771663325 using(v53);
-select MIN(v65) as v65,MIN(v54) as v66 from aggJoin7312527226836862302;
+create or replace view aggJoin1422323394134070965 as (
+with aggView6256999516052995536 as (select id as v53, title as v66 from title as t where production_year>=2007 and production_year<=2008 and title LIKE '%Kung%Fu%Panda%')
+select movie_id as v53, company_id as v23, note as v36, v66 from movie_companies as mc, aggView6256999516052995536 where mc.movie_id=aggView6256999516052995536.v53 and ((note LIKE '%(USA)%') OR (note LIKE '%(worldwide)%')) and note LIKE '%(200%)%');
+create or replace view aggJoin5291705516137908000 as (
+with aggView4577380180690885634 as (select id as v42, name as v65 from name as n where gender= 'f' and name LIKE '%Angel%')
+select person_id as v42, movie_id as v53, person_role_id as v9, note as v20, role_id as v51, v65 from cast_info as ci, aggView4577380180690885634 where ci.person_id=aggView4577380180690885634.v42 and note= '(voice)');
+create or replace view aggJoin5306943707607846640 as (
+with aggView4070930205569253668 as (select person_id as v42 from aka_name as an group by person_id)
+select v53, v9, v20, v51, v65 as v65 from aggJoin5291705516137908000 join aggView4070930205569253668 using(v42));
+create or replace view aggJoin480441168116431203 as (
+with aggView8878587089083412307 as (select id as v23 from company_name as cn where country_code= '[us]')
+select v53, v36, v66 from aggJoin1422323394134070965 join aggView8878587089083412307 using(v23));
+create or replace view aggJoin447114699372626459 as (
+with aggView5864188968126160227 as (select v53, MIN(v66) as v66 from aggJoin480441168116431203 group by v53,v66)
+select movie_id as v53, info_type_id as v30, info as v40, v66 from movie_info as mi, aggView5864188968126160227 where mi.movie_id=aggView5864188968126160227.v53 and ((info LIKE 'Japan:%2007%') OR (info LIKE 'USA:%2008%')));
+create or replace view aggJoin7558872198583508949 as (
+with aggView2712935812700821454 as (select id as v30 from info_type as it where info= 'release dates')
+select v53, v40, v66 from aggJoin447114699372626459 join aggView2712935812700821454 using(v30));
+create or replace view aggJoin1463341076084388421 as (
+with aggView4938417695151425284 as (select v53, MIN(v66) as v66 from aggJoin7558872198583508949 group by v53,v66)
+select v9, v20, v51, v65 as v65, v66 from aggJoin5306943707607846640 join aggView4938417695151425284 using(v53));
+create or replace view aggJoin4707991168970008941 as (
+with aggView8435433047111010705 as (select id as v51 from role_type as rt where role= 'actress')
+select v9, v20, v65, v66 from aggJoin1463341076084388421 join aggView8435433047111010705 using(v51));
+create or replace view aggJoin2562838533037860446 as (
+with aggView2688020240443940819 as (select v9, MIN(v65) as v65, MIN(v66) as v66 from aggJoin4707991168970008941 group by v9,v65,v66)
+select v65, v66 from char_name as chn, aggView2688020240443940819 where chn.id=aggView2688020240443940819.v9);
+select MIN(v65) as v65,MIN(v66) as v66 from aggJoin2562838533037860446;
