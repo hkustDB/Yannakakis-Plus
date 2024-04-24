@@ -325,11 +325,11 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job/33c/')
+    globalVar.set_value('BASE_PATH', 'query/job/31b/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
-    
+    '''
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -342,7 +342,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    
+    '''
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
     OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')

@@ -1,0 +1,15 @@
+create or replace view aggView690965512696608011 as select id as v2 from name as n1;
+create or replace view aggJoin8291796938523397086 as select person_id as v2, name as v3 from aka_name as an1, aggView690965512696608011 where an1.person_id=aggView690965512696608011.v2;
+create or replace view aggView1627885253088974703 as select v3, v2 from aggJoin8291796938523397086 group by v3,v2;
+create or replace view aggView446076866654000346 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin178002836297333368 as select movie_id as v11 from movie_companies as mc, aggView446076866654000346 where mc.company_id=aggView446076866654000346.v25;
+create or replace view aggView637321100879654255 as select v11 from aggJoin178002836297333368 group by v11;
+create or replace view aggJoin2296658941144412154 as select id as v11, title as v40 from title as t, aggView637321100879654255 where t.id=aggView637321100879654255.v11;
+create or replace view aggView2464725702412777384 as select v40, v11 from aggJoin2296658941144412154 group by v40,v11;
+create or replace view aggView6080403677842197989 as select v2, MIN(v3) as v51 from aggView1627885253088974703 group by v2;
+create or replace view aggJoin4235187122848717245 as select movie_id as v11, role_id as v15, v51 from cast_info as ci, aggView6080403677842197989 where ci.person_id=aggView6080403677842197989.v2;
+create or replace view aggView7670500122424894164 as select id as v15 from role_type as rt where role= 'costume designer';
+create or replace view aggJoin3661982335609906353 as select v11, v51 from aggJoin4235187122848717245 join aggView7670500122424894164 using(v15);
+create or replace view aggView8908696529108541513 as select v11, MIN(v51) as v51 from aggJoin3661982335609906353 group by v11,v51;
+create or replace view aggJoin8567727999454926020 as select v40, v51 from aggView2464725702412777384 join aggView8908696529108541513 using(v11);
+select MIN(v51) as v51,MIN(v40) as v52 from aggJoin8567727999454926020;

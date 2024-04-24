@@ -1,0 +1,21 @@
+Relations:
+dict_values([an1[1974,aka_name]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+, ci[1975,cast_info]: ['v9', 'v2', 'v11', 'v12', 'v13', 'v14', 'v15']
+, cn[1976,company_name]: ['v25', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22']
+, mc[1977,movie_companies]: ['v23', 'v11', 'v25', 'v26', 'v27']
+, n1[1978,name]: ['v2', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36']
+, rt[1979,role_type]: ['v15', 'v38']
+, t[1980,title]: ['v11', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50']
+])
+Edges:
+dict_values([1975->1977, 1977->1976, 1975->1978, 1978->1974, 1975->1979, 1975->1980])
+Root:
+1975
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[1975]
+fixroot:
+True
