@@ -1,0 +1,15 @@
+create or replace view aggView9083245747307033854 as select id as v2 from name as n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin3590271079429384402 as select person_id as v2, name as v3 from aka_name as an1, aggView9083245747307033854 where an1.person_id=aggView9083245747307033854.v2;
+create or replace view aggView7251791744738259298 as select v2, v3 from aggJoin3590271079429384402 group by v2,v3;
+create or replace view aggView3573225499529088380 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin4348383275079634305 as select movie_id as v11, note as v27 from movie_companies as mc, aggView3573225499529088380 where mc.company_id=aggView3573225499529088380.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView6378095172847298969 as select v11 from aggJoin4348383275079634305 group by v11;
+create or replace view aggJoin7812793527204139085 as select id as v11, title as v40 from title as t, aggView6378095172847298969 where t.id=aggView6378095172847298969.v11;
+create or replace view aggView9200472928831785049 as select v40, v11 from aggJoin7812793527204139085 group by v40,v11;
+create or replace view aggView12262580392061411 as select v2, MIN(v3) as v51 from aggView7251791744738259298 group by v2;
+create or replace view aggJoin274977420177096033 as select movie_id as v11, note as v13, role_id as v15, v51 from cast_info as ci, aggView12262580392061411 where ci.person_id=aggView12262580392061411.v2 and note= '(voice: English version)';
+create or replace view aggView523307124751349523 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin421869607101055699 as select v11, v13, v51 from aggJoin274977420177096033 join aggView523307124751349523 using(v15);
+create or replace view aggView882920866823124269 as select v11, MIN(v51) as v51 from aggJoin421869607101055699 group by v11,v51;
+create or replace view aggJoin1273508565784721053 as select v40, v51 from aggView9200472928831785049 join aggView882920866823124269 using(v11);
+select MIN(v51) as v51,MIN(v40) as v52 from aggJoin1273508565784721053;

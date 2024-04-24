@@ -1,0 +1,15 @@
+create or replace view aggView8896558032923607604 as select id as v2 from name as n1;
+create or replace view aggJoin3815017901892644706 as select person_id as v2, name as v3 from aka_name as an1, aggView8896558032923607604 where an1.person_id=aggView8896558032923607604.v2;
+create or replace view aggView1333767504383857868 as select v3, v2 from aggJoin3815017901892644706 group by v3,v2;
+create or replace view aggView6509503942725031431 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin3011683385211443653 as select movie_id as v11 from movie_companies as mc, aggView6509503942725031431 where mc.company_id=aggView6509503942725031431.v25;
+create or replace view aggView8054941012565149312 as select v11 from aggJoin3011683385211443653 group by v11;
+create or replace view aggJoin3020039368229966888 as select id as v11, title as v40 from title as t, aggView8054941012565149312 where t.id=aggView8054941012565149312.v11;
+create or replace view aggView6675573361229203336 as select v40, v11 from aggJoin3020039368229966888 group by v40,v11;
+create or replace view aggView815477927878786228 as select v11, MIN(v40) as v52 from aggView6675573361229203336 group by v11;
+create or replace view aggJoin425753844763033038 as select person_id as v2, role_id as v15, v52 from cast_info as ci, aggView815477927878786228 where ci.movie_id=aggView815477927878786228.v11;
+create or replace view aggView8577857492061101425 as select id as v15 from role_type as rt where role= 'costume designer';
+create or replace view aggJoin7160028565256518312 as select v2, v52 from aggJoin425753844763033038 join aggView8577857492061101425 using(v15);
+create or replace view aggView4841262656102462568 as select v2, MIN(v52) as v52 from aggJoin7160028565256518312 group by v2,v52;
+create or replace view aggJoin3019211042644024131 as select v3, v52 from aggView1333767504383857868 join aggView4841262656102462568 using(v2);
+select MIN(v3) as v51,MIN(v52) as v52 from aggJoin3019211042644024131;
