@@ -1,0 +1,15 @@
+create or replace view aggView762326708927970170 as select id as v11, title as v40 from title as t;
+create or replace view aggView1094453989034492889 as select id as v2 from name as n1;
+create or replace view aggJoin7377337191470582966 as select person_id as v2, name as v3 from aka_name as a1, aggView1094453989034492889 where a1.person_id=aggView1094453989034492889.v2;
+create or replace view aggView314747750881059850 as select v2, v3 from aggJoin7377337191470582966 group by v2,v3;
+create or replace view aggView2659174322770075327 as select v11, MIN(v40) as v52 from aggView762326708927970170 group by v11;
+create or replace view aggJoin8215474861571319352 as select person_id as v2, movie_id as v11, role_id as v15, v52 from cast_info as ci, aggView2659174322770075327 where ci.movie_id=aggView2659174322770075327.v11;
+create or replace view aggView5655349582891240643 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin6798911321819794479 as select movie_id as v11 from movie_companies as mc, aggView5655349582891240643 where mc.company_id=aggView5655349582891240643.v25;
+create or replace view aggView9194049603152217437 as select v11 from aggJoin6798911321819794479 group by v11;
+create or replace view aggJoin6054815309189345205 as select v2, v15, v52 as v52 from aggJoin8215474861571319352 join aggView9194049603152217437 using(v11);
+create or replace view aggView8963233134328426970 as select id as v15 from role_type as rt where role= 'writer';
+create or replace view aggJoin1535749833330247989 as select v2, v52 from aggJoin6054815309189345205 join aggView8963233134328426970 using(v15);
+create or replace view aggView5712297035491239471 as select v2, MIN(v52) as v52 from aggJoin1535749833330247989 group by v2,v52;
+create or replace view aggJoin7138851304312601902 as select v3, v52 from aggView314747750881059850 join aggView5712297035491239471 using(v2);
+select MIN(v3) as v51,MIN(v52) as v52 from aggJoin7138851304312601902;

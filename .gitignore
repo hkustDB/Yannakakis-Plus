@@ -2,7 +2,7 @@
 !query/*/*/jointree*.txt
 *.pyc
 __pycache__/*.pyc
-*.csv
+# *.csv
 
 .DS_Store
 rewrite_and_run.result
