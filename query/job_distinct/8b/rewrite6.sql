@@ -1,0 +1,11 @@
+create or replace view tAux99 as select id as v11, title as v40 from title where production_year<=2007 and ((title LIKE 'One Piece%') OR (title LIKE 'Dragon Ball Z%')) and production_year>=2006;
+create or replace view anAux79 as select person_id as v2, name as v3 from aka_name;
+create or replace view semiJoinView5011295754094394660 as select person_id as v2, movie_id as v11, note as v13, role_id as v15 from cast_info AS ci where (role_id) in (select (id) from role_type AS rt where role= 'actress') and note= '(voice: English version)';
+create or replace view semiJoinView3018110325019940743 as select v2, v11, v13, v15 from semiJoinView5011295754094394660 where (v11) in (select (v11) from tAux99);
+create or replace view semiJoinView954026514406104510 as select movie_id as v11, company_id as v25, note as v27 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[jp]') and ((note LIKE '%(2006)%') OR (note LIKE '%(2007)%')) and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view semiJoinView8162389245358452449 as select v2, v11, v13, v15 from semiJoinView3018110325019940743 where (v11) in (select (v11) from semiJoinView954026514406104510);
+create or replace view semiJoinView3650788041441514375 as select v2, v11, v13, v15 from semiJoinView8162389245358452449 where (v2) in (select (id) from name AS n where name LIKE '%Yo%' and name NOT LIKE '%Yu%');
+create or replace view semiJoinView6545297806221610379 as select distinct v2, v3 from anAux79 where (v2) in (select (v2) from semiJoinView3650788041441514375);
+create or replace view semiEnum5547007336633165067 as select distinct v13, v15, v3, v11, v2 from semiJoinView6545297806221610379 join semiJoinView3650788041441514375 using(v2);
+create or replace view semiEnum4078161620176959512 as select v3, v40 from semiEnum5547007336633165067 join tAux99 using(v11);
+select distinct v3, v40 from semiEnum4078161620176959512;

@@ -1,0 +1,11 @@
+create or replace view semiJoinView6483705108204526296 as select movie_id as v23, keyword_id as v5 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('murder','murder-in-title','blood','violence'));
+create or replace view semiJoinView925759858759702014 as select id as v23, title as v24, kind_id as v8, production_year as v27 from title AS t where (kind_id) in (select (id) from kind_type AS kt where kind= 'movie') and production_year>2010;
+create or replace view tAux17 as select v23, v24 from semiJoinView925759858759702014;
+create or replace view semiJoinView5532449587197869381 as select movie_id as v23, info_type_id as v1, info as v13 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'countries') and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American');
+create or replace view semiJoinView355116861656315800 as select movie_id as v23, info_type_id as v3, info as v18 from movie_info_idx AS mi_idx where (info_type_id) in (select (id) from info_type AS it2 where info= 'rating') and info<'8.5';
+create or replace view semiJoinView4641458931449711376 as select v23, v1, v13 from semiJoinView5532449587197869381 where (v23) in (select (v23) from semiJoinView6483705108204526296);
+create or replace view semiJoinView8748205383676316725 as select v23, v3, v18 from semiJoinView355116861656315800 where (v23) in (select (v23) from semiJoinView4641458931449711376);
+create or replace view mi_idxAux28 as select v23, v18 from semiJoinView8748205383676316725;
+create or replace view semiJoinView4741830803190922332 as select distinct v23, v24 from tAux17 where (v23) in (select (v23) from mi_idxAux28);
+create or replace view semiEnum3257255331510372387 as select v18, v24 from semiJoinView4741830803190922332 join mi_idxAux28 using(v23);
+select distinct v18, v24 from semiEnum3257255331510372387;

@@ -1,0 +1,13 @@
+create or replace view tAux65 as select id as v24, title as v28 from title where production_year>1950;
+create or replace view semiJoinView7115024479852959353 as select movie_id as v24, link_type_id as v13 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt);
+create or replace view semiJoinView4747390934778935041 as select movie_id as v24, keyword_id as v22 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('sequel','revenge','based-on-novel'));
+create or replace view semiJoinView2288610759782233531 as select movie_id as v24, company_id as v17, company_type_id as v18, note as v19 from movie_companies AS mc where (movie_id) in (select (v24) from semiJoinView7115024479852959353);
+create or replace view cnAux22 as select id as v17, name as v2 from company_name where country_code<> '[pl]' and ((name LIKE '20th Century Fox%') OR (name LIKE 'Twentieth Century Fox%'));
+create or replace view semiJoinView6461409691023472513 as select v24, v17, v18, v19 from semiJoinView2288610759782233531 where (v24) in (select (v24) from semiJoinView4747390934778935041);
+create or replace view semiJoinView6007442699856437326 as select v24, v17, v18, v19 from semiJoinView6461409691023472513 where (v18) in (select (id) from company_type AS ct where kind<> 'production companies');
+create or replace view mcAux42 as select v24, v17, v19 from semiJoinView6007442699856437326;
+create or replace view semiJoinView7012774240201553634 as select v24, v17, v19 from mcAux42 where (v17) in (select (v17) from cnAux22);
+create or replace view semiJoinView4671830647146660644 as select distinct v24, v28 from tAux65 where (v24) in (select (v24) from semiJoinView7012774240201553634);
+create or replace view semiEnum5946785303144817370 as select distinct v28, v24, v17, v19 from semiJoinView4671830647146660644 join semiJoinView7012774240201553634 using(v24);
+create or replace view semiEnum2432640439025907919 as select v28, v2, v19 from semiEnum5946785303144817370 join cnAux22 using(v17);
+select distinct v2, v19, v28 from semiEnum2432640439025907919;

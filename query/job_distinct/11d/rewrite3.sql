@@ -1,0 +1,13 @@
+create or replace view semiJoinView3725210465313892878 as select movie_id as v24, link_type_id as v13 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt);
+create or replace view cnAux38 as select id as v17, name as v2 from company_name where country_code<> '[pl]';
+create or replace view semiJoinView2741922735882014216 as select movie_id as v24, company_id as v17, company_type_id as v18, note as v19 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct where kind<> 'production companies');
+create or replace view semiJoinView4944411472218552234 as select movie_id as v24, keyword_id as v22 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('sequel','revenge','based-on-novel'));
+create or replace view semiJoinView7063981763718943775 as select id as v24, title as v28, production_year as v31 from title AS t where (id) in (select (v24) from semiJoinView3725210465313892878) and production_year>1950;
+create or replace view mcAux12 as select v24, v17, v19 from semiJoinView2741922735882014216;
+create or replace view semiJoinView189049486419050242 as select v24, v28, v31 from semiJoinView7063981763718943775 where (v24) in (select (v24) from semiJoinView4944411472218552234);
+create or replace view tAux28 as select v24, v28 from semiJoinView189049486419050242;
+create or replace view semiJoinView3365929765360970638 as select v24, v17, v19 from mcAux12 where (v24) in (select (v24) from tAux28);
+create or replace view semiJoinView721361279639659761 as select distinct v17, v2 from cnAux38 where (v17) in (select (v17) from semiJoinView3365929765360970638);
+create or replace view semiEnum5243738345810754031 as select distinct v24, v17, v19, v2 from semiJoinView721361279639659761 join semiJoinView3365929765360970638 using(v17);
+create or replace view semiEnum8258486463679524425 as select v28, v19, v2 from semiEnum5243738345810754031 join tAux28 using(v24);
+select distinct v2, v19, v28 from semiEnum8258486463679524425;

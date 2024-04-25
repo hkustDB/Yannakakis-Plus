@@ -1,0 +1,12 @@
+create or replace view semiJoinView952275384521377180 as select movie_id as v40, company_id as v13, company_type_id as v20, note as v31 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[us]') and note LIKE '%(200%)%' and note LIKE '%(worldwide)%';
+create or replace view semiJoinView7506649430473073429 as select movie_id as v40, info_type_id as v22, info as v35, note as v36 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'release dates') and note LIKE '%internet%' and info LIKE 'USA:% 200%';
+create or replace view semiJoinView3621635809970392511 as select movie_id as v40, keyword_id as v24 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k);
+create or replace view semiJoinView6280618845502439574 as select id as v40, title as v41, production_year as v44 from title AS t where (id) in (select (v40) from semiJoinView3621635809970392511) and production_year>2000;
+create or replace view semiJoinView2831785854298017199 as select v40, v13, v20, v31 from semiJoinView952275384521377180 where (v20) in (select (id) from company_type AS ct);
+create or replace view semiJoinView4339635865969939231 as select v40, v41, v44 from semiJoinView6280618845502439574 where (v40) in (select (v40) from semiJoinView2831785854298017199);
+create or replace view semiJoinView3449298497028530986 as select v40, v22, v35, v36 from semiJoinView7506649430473073429 where (v40) in (select (movie_id) from aka_title AS aka_t);
+create or replace view miAux56 as select v40, v35 from semiJoinView3449298497028530986;
+create or replace view tAux73 as select v40, v41 from semiJoinView4339635865969939231;
+create or replace view semiJoinView4580556715469274573 as select distinct v40, v35 from miAux56 where (v40) in (select (v40) from tAux73);
+create or replace view semiEnum3785760790575438772 as select v41, v35 from semiJoinView4580556715469274573 join tAux73 using(v40);
+select distinct v35, v41 from semiEnum3785760790575438772;

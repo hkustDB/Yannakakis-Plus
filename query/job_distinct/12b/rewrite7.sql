@@ -1,0 +1,11 @@
+create or replace view semiJoinView3010830285706653268 as select movie_id as v29, company_id as v1, company_type_id as v8 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[us]');
+create or replace view semiJoinView5529118892017849211 as select v29, v1, v8 from semiJoinView3010830285706653268 where (v8) in (select (id) from company_type AS ct where kind IN ('production companies','distributors'));
+create or replace view semiJoinView3142587090626622654 as select movie_id as v29, info_type_id as v26 from movie_info_idx AS mi_idx where (movie_id) in (select (v29) from semiJoinView5529118892017849211);
+create or replace view semiJoinView8049661463519086276 as select v29, v26 from semiJoinView3142587090626622654 where (v26) in (select (id) from info_type AS it2 where info= 'bottom 10 rank');
+create or replace view semiJoinView4626322337777103122 as select movie_id as v29, info_type_id as v21, info as v22 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'budget');
+create or replace view miAux63 as select v29, v22 from semiJoinView4626322337777103122;
+create or replace view semiJoinView1113548396957564144 as select id as v29, title as v30, production_year as v33 from title AS t where (id) in (select (v29) from semiJoinView8049661463519086276) and production_year>2000 and ((title LIKE 'Birdemic%') OR (title LIKE '%Movie%'));
+create or replace view tAux56 as select v29, v30 from semiJoinView1113548396957564144;
+create or replace view semiJoinView304775633807407236 as select distinct v29, v22 from miAux63 where (v29) in (select (v29) from tAux56);
+create or replace view semiEnum2820870610701715422 as select v30, v22 from semiJoinView304775633807407236 join tAux56 using(v29);
+select distinct v22, v30 from semiEnum2820870610701715422;

@@ -1,0 +1,28 @@
+Relations:
+dict_values([cc[191769,complete_cast]: ['v1', 'v45', 'v5', 'v7']
+, cct1[191770,comp_cast_type]: ['v5', 'v6']
+, cct2[191771,comp_cast_type]: ['v7', 'v8']
+, cn[191772,company_name]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+, ct[191773,company_type]: ['v16', 'v17']
+, it1[191774,info_type]: ['v18', 'v19']
+, it2[191775,info_type]: ['v20', 'v21']
+, k[191776,keyword]: ['v22', 'v23', 'v24']
+, kt[191777,kind_type]: ['v25', 'v26']
+, mc[191778,movie_companies]: ['v27', 'v45', 'v9', 'v16', 'v31']
+, mi[191779,movie_info]: ['v32', 'v45', 'v18', 'v35', 'v36']
+, mi_idx[191780,movie_info_idx]: ['v37', 'v45', 'v20', 'v40', 'v41']
+, mk[191781,movie_keyword]: ['v42', 'v45', 'v22']
+, t[191782,title]: ['v45', 'v46', 'v47', 'v25', 'v49', 'v50', 'v51', 'v52', 'v53', 'v54', 'v55', 'v56']
+])
+Edges:
+dict_values([191781->191776, 191779->191774, 191781->191769, 191769->191771, 191782->191780, 191769->191778, 191780->191775, 191782->191777, 191769->191770, 191778->191773, 191769->191782, 191769->191779, 191778->191772])
+Root:
+191781
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[191781]
+fixroot:
+True

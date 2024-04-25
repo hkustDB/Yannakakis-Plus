@@ -1,0 +1,11 @@
+create or replace view semiJoinView244966223881161051 as select person_id as v31, movie_id as v40, person_role_id as v9 from cast_info AS ci where (person_id) in (select (id) from name AS n);
+create or replace view semiJoinView6502029959062761702 as select movie_id as v40, keyword_id as v23 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence'));
+create or replace view semiJoinView2624588619128529002 as select v31, v40, v9 from semiJoinView244966223881161051 where (v9) in (select (id) from char_name AS chn where ((name LIKE '%Tony%Stark%') OR (name LIKE '%Iron%Man%')) and name NOT LIKE '%Sherlock%');
+create or replace view semiJoinView1785760344243484565 as select movie_id as v40, subject_id as v5, status_id as v7 from complete_cast AS cc where (subject_id) in (select (id) from comp_cast_type AS cct1 where kind= 'cast');
+create or replace view semiJoinView4115428821183648344 as select v40, v5, v7 from semiJoinView1785760344243484565 where (v7) in (select (id) from comp_cast_type AS cct2 where kind LIKE '%complete%');
+create or replace view semiJoinView6676967264299978529 as select id as v40, title as v41, kind_id as v26, production_year as v44 from title AS t where (id) in (select (v40) from semiJoinView4115428821183648344) and production_year>1950;
+create or replace view semiJoinView3861780515177277232 as select v40, v41, v26, v44 from semiJoinView6676967264299978529 where (v26) in (select (id) from kind_type AS kt where kind= 'movie');
+create or replace view semiJoinView2796557396365915967 as select v31, v40, v9 from semiJoinView2624588619128529002 where (v40) in (select (v40) from semiJoinView6502029959062761702);
+create or replace view semiJoinView2369935233208573157 as select v40, v41, v26, v44 from semiJoinView3861780515177277232 where (v40) in (select (v40) from semiJoinView2796557396365915967);
+create or replace view tAux71 as select v41 from semiJoinView2369935233208573157;
+select distinct v41 from tAux71;

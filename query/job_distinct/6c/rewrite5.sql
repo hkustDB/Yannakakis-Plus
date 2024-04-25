@@ -1,0 +1,12 @@
+create or replace view tAux81 as select id as v23, title as v24 from title where production_year>2014;
+create or replace view nAux90 as select id as v14, name as v15 from name where name LIKE '%Downey%Robert%';
+create or replace view kAux49 as select id as v8, keyword as v9 from keyword;
+create or replace view semiJoinView3200927921897203741 as select person_id as v14, movie_id as v23 from cast_info AS ci where (person_id) in (select (v14) from nAux90);
+create or replace view semiJoinView6882917033311409886 as select v14, v23 from semiJoinView3200927921897203741 where (v23) in (select (v23) from tAux81);
+create or replace view semiJoinView3608151867253003725 as select movie_id as v23, keyword_id as v8 from movie_keyword AS mk where (movie_id) in (select (v23) from semiJoinView6882917033311409886);
+create or replace view semiJoinView3681104809432303489 as select distinct v8, v9 from kAux49 where (v8) in (select (v8) from semiJoinView3608151867253003725);
+create or replace view semiEnum5146166301197821415 as select distinct v8, v23, v9 from semiJoinView3681104809432303489 join semiJoinView3608151867253003725 using(v8);
+create or replace view semiEnum3258329762741524090 as select distinct v14, v8, v23, v9 from semiEnum5146166301197821415 join semiJoinView6882917033311409886 using(v23);
+create or replace view semiEnum1787476689687869659 as select distinct v14, v8, v24, v23, v9 from semiEnum3258329762741524090 join tAux81 using(v23);
+create or replace view semiEnum4288344497736110639 as select v24, v15, v9 from semiEnum1787476689687869659 join nAux90 using(v14);
+select distinct v9, v15, v24 from semiEnum4288344497736110639;

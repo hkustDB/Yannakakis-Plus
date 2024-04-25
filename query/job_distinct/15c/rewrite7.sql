@@ -1,0 +1,12 @@
+create or replace view semiJoinView17892325708484979 as select movie_id as v40, info_type_id as v22, info as v35, note as v36 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'release dates') and note LIKE '%internet%' and ((info LIKE 'USA:% 199%') OR (info LIKE 'USA:% 200%'));
+create or replace view miAux77 as select v40, v35 from semiJoinView17892325708484979;
+create or replace view semiJoinView2679675972381229488 as select movie_id as v40, company_id as v13, company_type_id as v20 from movie_companies AS mc where (movie_id) in (select (movie_id) from aka_title AS aka_t);
+create or replace view semiJoinView394562264370100513 as select v40, v13, v20 from semiJoinView2679675972381229488 where (v13) in (select (id) from company_name AS cn where country_code= '[us]');
+create or replace view semiJoinView7694422792170563429 as select movie_id as v40, keyword_id as v24 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k);
+create or replace view semiJoinView2122945824198284142 as select v40, v13, v20 from semiJoinView394562264370100513 where (v20) in (select (id) from company_type AS ct);
+create or replace view semiJoinView4633347286379658289 as select v40, v24 from semiJoinView7694422792170563429 where (v40) in (select (v40) from semiJoinView2122945824198284142);
+create or replace view semiJoinView2864666856423558127 as select id as v40, title as v41, production_year as v44 from title AS t where (id) in (select (v40) from semiJoinView4633347286379658289) and production_year>1990;
+create or replace view tAux37 as select v40, v41 from semiJoinView2864666856423558127;
+create or replace view semiJoinView408495341737362375 as select distinct v40, v41 from tAux37 where (v40) in (select (v40) from miAux77);
+create or replace view semiEnum5908191967268800604 as select v35, v41 from semiJoinView408495341737362375 join miAux77 using(v40);
+select distinct v35, v41 from semiEnum5908191967268800604;

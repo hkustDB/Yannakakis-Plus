@@ -1,0 +1,12 @@
+create or replace view semiJoinView6950269210667972226 as select movie_id as v11, keyword_id as v33 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword= 'character-name-in-title');
+create or replace view semiJoinView92472931063605943 as select person_id as v2, name as v3 from aka_name AS an where (person_id) in (select (id) from name AS n);
+create or replace view anAux78 as select v2, v3 from semiJoinView92472931063605943;
+create or replace view semiJoinView7706037266502892007 as select movie_id as v11, company_id as v28 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[us]');
+create or replace view semiJoinView4945183378978606923 as select v11, v33 from semiJoinView6950269210667972226 where (v11) in (select (v11) from semiJoinView7706037266502892007);
+create or replace view semiJoinView4317382598125933040 as select id as v11, title as v44 from title AS t where (id) in (select (v11) from semiJoinView4945183378978606923);
+create or replace view tAux30 as select v11, v44 from semiJoinView4317382598125933040;
+create or replace view semiJoinView1662163622654702218 as select person_id as v2, movie_id as v11 from cast_info AS ci where (person_id) in (select (v2) from anAux78);
+create or replace view semiJoinView5383969677613409308 as select distinct v11, v44 from tAux30 where (v11) in (select (v11) from semiJoinView1662163622654702218);
+create or replace view semiEnum3235860973528993098 as select distinct v44, v11, v2 from semiJoinView5383969677613409308 join semiJoinView1662163622654702218 using(v11);
+create or replace view semiEnum3356527338917897851 as select v44, v3 from semiEnum3235860973528993098 join anAux78 using(v2);
+select distinct v3, v44 from semiEnum3356527338917897851;

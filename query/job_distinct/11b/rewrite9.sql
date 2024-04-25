@@ -1,0 +1,14 @@
+create or replace view cnAux40 as select id as v17, name as v2 from company_name where country_code<> '[pl]' and ((name LIKE '%Film%') OR (name LIKE '%Warner%'));
+create or replace view semiJoinView7433428114606716897 as select movie_id as v24, keyword_id as v22 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword= 'sequel');
+create or replace view semiJoinView4821973800071718812 as select id as v24, title as v28, production_year as v31 from title AS t where (id) in (select (v24) from semiJoinView7433428114606716897) and title LIKE '%Money%' and production_year= 1998;
+create or replace view tAux91 as select v24, v28 from semiJoinView4821973800071718812;
+create or replace view semiJoinView6321734736682755034 as select movie_id as v24, company_id as v17, company_type_id as v18 from movie_companies AS mc where (company_id) in (select (v17) from cnAux40);
+create or replace view semiJoinView7841362102056522585 as select movie_id as v24, link_type_id as v13 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt where link LIKE '%follows%');
+create or replace view semiJoinView1220228563520806345 as select v24, v28 from tAux91 where (v24) in (select (v24) from semiJoinView7841362102056522585);
+create or replace view semiJoinView4149878377591533335 as select v24, v17, v18 from semiJoinView6321734736682755034 where (v18) in (select (id) from company_type AS ct where kind= 'production companies');
+create or replace view semiJoinView1186515542099642644 as select distinct v24, v28 from semiJoinView1220228563520806345 where (v24) in (select (v24) from semiJoinView4149878377591533335);
+create or replace view semiEnum7176449734131125343 as select distinct v17, v24, v18, v28 from semiJoinView1186515542099642644 join semiJoinView4149878377591533335 using(v24);
+create or replace view semiEnum6495541550950273352 as select distinct v28, v13, v17, v24 from semiEnum7176449734131125343 join semiJoinView7841362102056522585 using(v24);
+create or replace view semiEnum9054164915631981111 as select distinct link as v14, v28, v17, v24 from semiEnum6495541550950273352, link_type as lt where lt.id=semiEnum6495541550950273352.v13 and link LIKE '%follows%';
+create or replace view semiEnum5216721051624541375 as select v14, v28, v2 from semiEnum9054164915631981111 join cnAux40 using(v17);
+select distinct v2, v14, v28 from semiEnum5216721051624541375;

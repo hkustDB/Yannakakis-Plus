@@ -1,0 +1,12 @@
+create or replace view tAux66 as select id as v38, title as v39 from title where production_year<=1984 and production_year>=1980;
+create or replace view semiJoinView9188172901271272665 as select id as v24, name as v25, gender as v28, name_pcode_cf as v29 from name AS n where (id) in (select (person_id) from aka_name AS an where name LIKE '%a%') and gender= 'm' and name_pcode_cf LIKE 'D%';
+create or replace view nAux40 as select v24, v25 from semiJoinView9188172901271272665;
+create or replace view semiJoinView2549888019787029913 as select linked_movie_id as v38, link_type_id as v18 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt where link= 'features');
+create or replace view semiJoinView318073399572228135 as select person_id as v24, info_type_id as v16, note as v37 from person_info AS pi where (info_type_id) in (select (id) from info_type AS it where info= 'mini biography') and note= 'Volker Boehm';
+create or replace view semiJoinView7499735469634814522 as select person_id as v24, movie_id as v38 from cast_info AS ci where (person_id) in (select (v24) from semiJoinView318073399572228135);
+create or replace view semiJoinView9118133215780693937 as select v24, v38 from semiJoinView7499735469634814522 where (v38) in (select (v38) from tAux66);
+create or replace view semiJoinView2610517805688149534 as select v24, v38 from semiJoinView9118133215780693937 where (v38) in (select (v38) from semiJoinView2549888019787029913);
+create or replace view semiJoinView7361107443501021925 as select distinct v24, v25 from nAux40 where (v24) in (select (v24) from semiJoinView2610517805688149534);
+create or replace view semiEnum2418261615000652489 as select distinct v38, v25, v24 from semiJoinView7361107443501021925 join semiJoinView2610517805688149534 using(v24);
+create or replace view semiEnum5239145677990756416 as select v39, v25 from semiEnum2418261615000652489 join tAux66 using(v38);
+select distinct v25, v39 from semiEnum5239145677990756416;

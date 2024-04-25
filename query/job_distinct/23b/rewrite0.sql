@@ -1,0 +1,13 @@
+create or replace view semiJoinView1473430256018837238 as select movie_id as v36, company_id as v7, company_type_id as v14 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct);
+create or replace view semiJoinView1602206378586574762 as select movie_id as v36, keyword_id as v18 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('nerd','loner','alienation','dignity'));
+create or replace view semiJoinView8494263119443711329 as select v36, v7, v14 from semiJoinView1473430256018837238 where (v7) in (select (id) from company_name AS cn where country_code= '[us]');
+create or replace view semiJoinView4669480532506523544 as select movie_id as v36, info_type_id as v16, info as v31, note as v32 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'release dates') and info LIKE 'USA:% 200%' and note LIKE '%internet%';
+create or replace view semiJoinView2540522479160746589 as select movie_id as v36, status_id as v5 from complete_cast AS cc where (status_id) in (select (id) from comp_cast_type AS cct1 where kind= 'complete+verified');
+create or replace view semiJoinView421834758489942184 as select v36, v18 from semiJoinView1602206378586574762 where (v36) in (select (v36) from semiJoinView8494263119443711329);
+create or replace view semiJoinView2148227242684307398 as select v36, v16, v31, v32 from semiJoinView4669480532506523544 where (v36) in (select (v36) from semiJoinView421834758489942184);
+create or replace view semiJoinView4906329961582306562 as select v36, v5 from semiJoinView2540522479160746589 where (v36) in (select (v36) from semiJoinView2148227242684307398);
+create or replace view semiJoinView5939443497272825034 as select id as v36, title as v37, kind_id as v21, production_year as v40 from title AS t where (id) in (select (v36) from semiJoinView4906329961582306562) and production_year>2000;
+create or replace view tAux6 as select v37, v21 from semiJoinView5939443497272825034;
+create or replace view semiJoinView9124424821699184715 as select distinct id as v21, kind as v22 from kind_type AS kt where (id) in (select (v21) from tAux6) and kind= 'movie';
+create or replace view semiEnum2907152499412013493 as select v37, v22 from semiJoinView9124424821699184715 join tAux6 using(v21);
+select distinct v22, v37 from semiEnum2907152499412013493;

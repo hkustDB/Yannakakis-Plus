@@ -1,0 +1,11 @@
+create or replace view semiJoinView498565105402840006 as select movie_id as v40, subject_id as v5, status_id as v7 from complete_cast AS cc where (status_id) in (select (id) from comp_cast_type AS cct2 where kind LIKE '%complete%');
+create or replace view semiJoinView2638714532665175939 as select id as v40, title as v41, kind_id as v26, production_year as v44 from title AS t where (kind_id) in (select (id) from kind_type AS kt where kind= 'movie') and production_year>1950;
+create or replace view semiJoinView99956324220561430 as select movie_id as v40, keyword_id as v23 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence'));
+create or replace view semiJoinView158385483148469461 as select person_id as v31, movie_id as v40, person_role_id as v9 from cast_info AS ci where (person_id) in (select (id) from name AS n);
+create or replace view semiJoinView41741216167281009 as select v40, v5, v7 from semiJoinView498565105402840006 where (v5) in (select (id) from comp_cast_type AS cct1 where kind= 'cast');
+create or replace view semiJoinView538140429925663201 as select v31, v40, v9 from semiJoinView158385483148469461 where (v9) in (select (id) from char_name AS chn where ((name LIKE '%Tony%Stark%') OR (name LIKE '%Iron%Man%')) and name NOT LIKE '%Sherlock%');
+create or replace view semiJoinView9131964881392963740 as select v40, v5, v7 from semiJoinView41741216167281009 where (v40) in (select (v40) from semiJoinView538140429925663201);
+create or replace view semiJoinView8902090936305535509 as select v40, v23 from semiJoinView99956324220561430 where (v40) in (select (v40) from semiJoinView9131964881392963740);
+create or replace view semiJoinView1439487057823033623 as select v40, v41, v26, v44 from semiJoinView2638714532665175939 where (v40) in (select (v40) from semiJoinView8902090936305535509);
+create or replace view tAux64 as select v41 from semiJoinView1439487057823033623;
+select distinct v41 from tAux64;

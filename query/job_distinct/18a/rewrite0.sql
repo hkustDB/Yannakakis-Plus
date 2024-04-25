@@ -1,0 +1,12 @@
+create or replace view semiJoinView8173456315488367890 as select movie_id as v31, info_type_id as v8, info as v15 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'budget');
+create or replace view miAux1 as select v31, v15 from semiJoinView8173456315488367890;
+create or replace view semiJoinView7071085352740165021 as select movie_id as v31, info_type_id as v10, info as v20 from movie_info_idx AS mi_idx where (info_type_id) in (select (id) from info_type AS it2 where info= 'votes');
+create or replace view semiJoinView1955513794053321957 as select person_id as v22, movie_id as v31, note as v5 from cast_info AS ci where (person_id) in (select (id) from name AS n where gender= 'm' and name LIKE '%Tim%') and note IN ('(producer)','(executive producer)');
+create or replace view semiJoinView8131580137819143721 as select id as v31, title as v32 from title AS t where (id) in (select (v31) from semiJoinView1955513794053321957);
+create or replace view tAux93 as select v31, v32 from semiJoinView8131580137819143721;
+create or replace view mi_idxAux96 as select v31, v20 from semiJoinView7071085352740165021;
+create or replace view semiJoinView2511563177591170694 as select v31, v32 from tAux93 where (v31) in (select (v31) from miAux1);
+create or replace view semiJoinView7923934314686194481 as select distinct v31, v20 from mi_idxAux96 where (v31) in (select (v31) from semiJoinView2511563177591170694);
+create or replace view semiEnum5829224767530169522 as select distinct v20, v32, v31 from semiJoinView7923934314686194481 join semiJoinView2511563177591170694 using(v31);
+create or replace view semiEnum7621068877764052703 as select v20, v32, v15 from semiEnum5829224767530169522 join miAux1 using(v31);
+select distinct v15, v20, v32 from semiEnum7621068877764052703;
