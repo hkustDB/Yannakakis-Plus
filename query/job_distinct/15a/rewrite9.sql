@@ -1,0 +1,12 @@
+create or replace view semiJoinView638292481496599997 as select movie_id as v40, info_type_id as v22, info as v35, note as v36 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'release dates') and note LIKE '%internet%' and info LIKE 'USA:% 200%';
+create or replace view miAux35 as select v40, v35 from semiJoinView638292481496599997;
+create or replace view semiJoinView4388845472021920192 as select movie_id as v40, company_id as v13, company_type_id as v20, note as v31 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[us]') and note LIKE '%(200%)%' and note LIKE '%(worldwide)%';
+create or replace view semiJoinView1341259756876534996 as select movie_id as v40, keyword_id as v24 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k);
+create or replace view semiJoinView3753954874706864494 as select v40, v13, v20, v31 from semiJoinView4388845472021920192 where (v40) in (select (v40) from semiJoinView1341259756876534996);
+create or replace view semiJoinView2338701462012214816 as select v40, v13, v20, v31 from semiJoinView3753954874706864494 where (v20) in (select (id) from company_type AS ct);
+create or replace view semiJoinView760053203564167499 as select v40, v13, v20, v31 from semiJoinView2338701462012214816 where (v40) in (select (movie_id) from aka_title AS aka_t);
+create or replace view semiJoinView8665598779517690955 as select id as v40, title as v41, production_year as v44 from title AS t where (id) in (select (v40) from semiJoinView760053203564167499) and production_year>2000;
+create or replace view tAux86 as select v40, v41 from semiJoinView8665598779517690955;
+create or replace view semiJoinView5423871156405075831 as select distinct v40, v41 from tAux86 where (v40) in (select (v40) from miAux35);
+create or replace view semiEnum4949320350054081547 as select v41, v35 from semiJoinView5423871156405075831 join miAux35 using(v40);
+select distinct v35, v41 from semiEnum4949320350054081547;

@@ -1,0 +1,13 @@
+create or replace view cnAux27 as select id as v17, name as v2 from company_name where country_code<> '[pl]';
+create or replace view semiJoinView5356750630925951441 as select movie_id as v24, link_type_id as v13 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt);
+create or replace view semiJoinView2554044065925738479 as select movie_id as v24, keyword_id as v22 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('sequel','revenge','based-on-novel'));
+create or replace view tAux45 as select id as v24, title as v28 from title where production_year>1950;
+create or replace view semiJoinView1901175509109228998 as select movie_id as v24, company_id as v17, company_type_id as v18, note as v19 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct where kind<> 'production companies');
+create or replace view semiJoinView9134444713265423807 as select v24, v17, v18, v19 from semiJoinView1901175509109228998 where (v24) in (select (v24) from semiJoinView2554044065925738479);
+create or replace view semiJoinView2173855805990104709 as select v24, v17, v18, v19 from semiJoinView9134444713265423807 where (v24) in (select (v24) from semiJoinView5356750630925951441);
+create or replace view mcAux54 as select v24, v17, v19 from semiJoinView2173855805990104709;
+create or replace view semiJoinView6494700547329537167 as select v24, v17, v19 from mcAux54 where (v24) in (select (v24) from tAux45);
+create or replace view semiJoinView4537516888021220636 as select distinct v17, v2 from cnAux27 where (v17) in (select (v17) from semiJoinView6494700547329537167);
+create or replace view semiEnum8821443484911475144 as select distinct v24, v17, v19, v2 from semiJoinView4537516888021220636 join semiJoinView6494700547329537167 using(v17);
+create or replace view semiEnum3343080748373087781 as select v28, v19, v2 from semiEnum8821443484911475144 join tAux45 using(v24);
+select distinct v2, v19, v28 from semiEnum3343080748373087781;

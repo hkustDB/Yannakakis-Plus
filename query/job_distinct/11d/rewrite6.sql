@@ -1,0 +1,13 @@
+create or replace view semiJoinView392656224254536493 as select movie_id as v24, company_id as v17, company_type_id as v18, note as v19 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct where kind<> 'production companies');
+create or replace view cnAux47 as select id as v17, name as v2 from company_name where country_code<> '[pl]';
+create or replace view semiJoinView9137346143577177835 as select movie_id as v24, keyword_id as v22 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('sequel','revenge','based-on-novel'));
+create or replace view semiJoinView5301753142003675587 as select v24, v17, v18, v19 from semiJoinView392656224254536493 where (v24) in (select (v24) from semiJoinView9137346143577177835);
+create or replace view semiJoinView2423689492824490355 as select movie_id as v24, link_type_id as v13 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt);
+create or replace view semiJoinView5312666913528034780 as select id as v24, title as v28, production_year as v31 from title AS t where (id) in (select (v24) from semiJoinView2423689492824490355) and production_year>1950;
+create or replace view tAux53 as select v24, v28 from semiJoinView5312666913528034780;
+create or replace view mcAux5 as select v24, v17, v19 from semiJoinView5301753142003675587;
+create or replace view semiJoinView9184262208164371610 as select v24, v17, v19 from mcAux5 where (v24) in (select (v24) from tAux53);
+create or replace view semiJoinView1174490603564696817 as select distinct v17, v2 from cnAux47 where (v17) in (select (v17) from semiJoinView9184262208164371610);
+create or replace view semiEnum8880255901602550502 as select distinct v24, v17, v19, v2 from semiJoinView1174490603564696817 join semiJoinView9184262208164371610 using(v17);
+create or replace view semiEnum2997632335431987216 as select v28, v19, v2 from semiEnum8880255901602550502 join tAux53 using(v24);
+select distinct v2, v19, v28 from semiEnum2997632335431987216;

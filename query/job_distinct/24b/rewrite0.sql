@@ -1,0 +1,18 @@
+create or replace view chnAux57 as select id as v9, name as v10 from char_name;
+create or replace view semiJoinView4014956507634822107 as select movie_id as v59, info_type_id as v30, info as v43 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it where info= 'release dates') and ((info LIKE 'Japan:%201%') OR (info LIKE 'USA:%201%'));
+create or replace view semiJoinView4492713856512731547 as select movie_id as v59, keyword_id as v32 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('hero','martial-arts','hand-to-hand-combat','computer-animated-movie'));
+create or replace view semiJoinView2041082601174162043 as select id as v48, name as v49, gender as v52 from name AS n where (id) in (select (person_id) from aka_name AS an) and gender= 'f';
+create or replace view semiJoinView7882446117735965889 as select id as v59, title as v60, production_year as v63 from title AS t where (id) in (select (v59) from semiJoinView4014956507634822107) and title LIKE 'Kung Fu Panda%' and production_year>2010;
+create or replace view semiJoinView5879304585828863666 as select movie_id as v59, company_id as v23 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[us]' and name= 'DreamWorks Animation');
+create or replace view nAux21 as select v48, v49 from semiJoinView2041082601174162043;
+create or replace view semiJoinView5966517127478820456 as select v59, v32 from semiJoinView4492713856512731547 where (v59) in (select (v59) from semiJoinView5879304585828863666);
+create or replace view semiJoinView4172562484681391213 as select v59, v60, v63 from semiJoinView7882446117735965889 where (v59) in (select (v59) from semiJoinView5966517127478820456);
+create or replace view tAux8 as select v59, v60 from semiJoinView4172562484681391213;
+create or replace view semiJoinView9009167517639518109 as select person_id as v48, movie_id as v59, person_role_id as v9, note as v20, role_id as v57 from cast_info AS ci where (movie_id) in (select (v59) from tAux8) and note IN ('(voice)','(voice: Japanese version)','(voice) (uncredited)','(voice: English version)');
+create or replace view semiJoinView7424496764362894814 as select v48, v59, v9, v20, v57 from semiJoinView9009167517639518109 where (v9) in (select (v9) from chnAux57);
+create or replace view semiJoinView1188970486343674410 as select v48, v59, v9, v20, v57 from semiJoinView7424496764362894814 where (v57) in (select (id) from role_type AS rt where role= 'actress');
+create or replace view semiJoinView6429104621641024837 as select distinct v48, v49 from nAux21 where (v48) in (select (v48) from semiJoinView1188970486343674410);
+create or replace view semiEnum705776201270099669 as select distinct v49, v20, v48, v59, v57, v9 from semiJoinView6429104621641024837 join semiJoinView1188970486343674410 using(v48);
+create or replace view semiEnum6164292469599610680 as select distinct v49, v20, v59, v48, v9, v10 from semiEnum705776201270099669 join chnAux57 using(v9);
+create or replace view semiEnum819441972829663613 as select v60, v49, v10 from semiEnum6164292469599610680 join tAux8 using(v59);
+select distinct v10, v49, v60 from semiEnum819441972829663613;

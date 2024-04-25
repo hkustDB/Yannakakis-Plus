@@ -1,0 +1,12 @@
+create or replace view semiJoinView4767728219627311616 as select movie_id as v40, company_id as v13, company_type_id as v20, note as v31 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct) and note LIKE '%(200%)%' and note LIKE '%(worldwide)%';
+create or replace view semiJoinView4000689427559328604 as select movie_id as v40, keyword_id as v24 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k);
+create or replace view semiJoinView4045551183514248815 as select v40, v13, v20, v31 from semiJoinView4767728219627311616 where (v13) in (select (id) from company_name AS cn where name= 'YouTube' and country_code= '[us]');
+create or replace view semiJoinView4141055213494639239 as select movie_id as v40, info_type_id as v22, info as v35, note as v36 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'release dates') and note LIKE '%internet%' and info LIKE 'USA:% 200%';
+create or replace view miAux56 as select v40, v35 from semiJoinView4141055213494639239;
+create or replace view semiJoinView1355077312275804108 as select movie_id as v40 from aka_title AS aka_t where (movie_id) in (select (v40) from semiJoinView4000689427559328604);
+create or replace view semiJoinView7940088644333937556 as select id as v40, title as v41, production_year as v44 from title AS t where (id) in (select (v40) from semiJoinView4045551183514248815) and production_year<=2010 and production_year>=2005;
+create or replace view semiJoinView3207478077406274806 as select v40, v41, v44 from semiJoinView7940088644333937556 where (v40) in (select (v40) from semiJoinView1355077312275804108);
+create or replace view tAux94 as select v40, v41 from semiJoinView3207478077406274806;
+create or replace view semiJoinView7154453848559612657 as select distinct v40, v41 from tAux94 where (v40) in (select (v40) from miAux56);
+create or replace view semiEnum8938958314372101730 as select v41, v35 from semiJoinView7154453848559612657 join miAux56 using(v40);
+select distinct v35, v41 from semiEnum8938958314372101730;

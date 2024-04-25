@@ -1,0 +1,16 @@
+create or replace view anAux37 as select person_id as v35, name as v3 from aka_name;
+create or replace view chnAux99 as select id as v9, name as v10 from char_name;
+create or replace view semiJoinView677271551179546842 as select movie_id as v18, company_id as v32 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[us]');
+create or replace view semiJoinView4715893082119147948 as select id as v18, title as v47 from title AS t where (id) in (select (v18) from semiJoinView677271551179546842);
+create or replace view tAux25 as select v18, v47 from semiJoinView4715893082119147948;
+create or replace view nAux89 as select id as v35, name as v36 from name where gender= 'f';
+create or replace view semiJoinView5346801096546303779 as select person_id as v35, movie_id as v18, person_role_id as v9, note as v20, role_id as v22 from cast_info AS ci where (person_id) in (select (v35) from anAux37) and note IN ('(voice)','(voice: Japanese version)','(voice) (uncredited)','(voice: English version)');
+create or replace view semiJoinView1442921455251121411 as select v35, v18, v9, v20, v22 from semiJoinView5346801096546303779 where (v22) in (select (id) from role_type AS rt where role= 'actress');
+create or replace view semiJoinView7548579708378086206 as select v35, v18, v9, v20, v22 from semiJoinView1442921455251121411 where (v9) in (select (v9) from chnAux99);
+create or replace view semiJoinView1094969917627412855 as select v35, v18, v9, v20, v22 from semiJoinView7548579708378086206 where (v18) in (select (v18) from tAux25);
+create or replace view semiJoinView7339524407150788244 as select distinct v35, v36 from nAux89 where (v35) in (select (v35) from semiJoinView1094969917627412855);
+create or replace view semiEnum7992887640471258124 as select distinct v36, v20, v35, v9, v22, v18 from semiJoinView7339524407150788244 join semiJoinView1094969917627412855 using(v35);
+create or replace view semiEnum5011472811493890440 as select distinct v36, v20, v35, v47, v9, v22, v18 from semiEnum7992887640471258124 join tAux25 using(v18);
+create or replace view semiEnum7268583373584454591 as select distinct v36, v20, v10, v35, v9, v47, v22, v18 from semiEnum5011472811493890440 join chnAux99 using(v9);
+create or replace view semiEnum4716941815608383164 as select v36, v3, v10, v47 from semiEnum7268583373584454591 join anAux37 using(v35);
+select distinct v3, v10, v36, v47 from semiEnum4716941815608383164;

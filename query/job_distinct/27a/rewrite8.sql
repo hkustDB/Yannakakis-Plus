@@ -1,0 +1,18 @@
+create or replace view semiJoinView5695086090840541058 as select movie_id as v37, subject_id as v5, status_id as v7 from complete_cast AS cc where (subject_id) in (select (id) from comp_cast_type AS cct1 where kind IN ('cast','crew'));
+create or replace view cnAux21 as select id as v25, name as v10 from company_name where ((name LIKE '%Film%') OR (name LIKE '%Warner%')) and country_code<> '[pl]';
+create or replace view semiJoinView2990587283843720369 as select v37, v5, v7 from semiJoinView5695086090840541058 where (v7) in (select (id) from comp_cast_type AS cct2 where kind= 'complete');
+create or replace view semiJoinView528190364778748569 as select id as v37, title as v41, production_year as v44 from title AS t where (id) in (select (v37) from semiJoinView2990587283843720369) and production_year>=1950 and production_year<=2000;
+create or replace view tAux46 as select v37, v41 from semiJoinView528190364778748569;
+create or replace view semiJoinView240711976606650554 as select movie_id as v37, link_type_id as v21 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt where link LIKE '%follow%');
+create or replace view semiJoinView6920647198414026459 as select movie_id as v37, company_id as v25, company_type_id as v26 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct where kind= 'production companies');
+create or replace view semiJoinView8430109686458928242 as select movie_id as v37, keyword_id as v35 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword= 'sequel');
+create or replace view semiJoinView4012760217103108933 as select v37, v21 from semiJoinView240711976606650554 where (v37) in (select (v37) from semiJoinView8430109686458928242);
+create or replace view semiJoinView2506424244310530381 as select v37, v21 from semiJoinView4012760217103108933 where (v37) in (select (movie_id) from movie_info AS mi where info IN ('Sweden','Germany','Swedish','German'));
+create or replace view semiJoinView611751662373864515 as select v37, v25, v26 from semiJoinView6920647198414026459 where (v25) in (select (v25) from cnAux21);
+create or replace view semiJoinView8160996711178714188 as select v37, v21 from semiJoinView2506424244310530381 where (v37) in (select (v37) from semiJoinView611751662373864515);
+create or replace view semiJoinView8565202493239198077 as select distinct v37, v41 from tAux46 where (v37) in (select (v37) from semiJoinView8160996711178714188);
+create or replace view semiEnum6063380404270642305 as select distinct v21, v37, v41 from semiJoinView8565202493239198077 join semiJoinView8160996711178714188 using(v37);
+create or replace view semiEnum889692543818816770 as select distinct v25, v37, v21, v41, v26 from semiEnum6063380404270642305 join semiJoinView611751662373864515 using(v37);
+create or replace view semiEnum7741984932412655521 as select distinct v25, v37, v21, v10, v41, v26 from semiEnum889692543818816770 join cnAux21 using(v25);
+create or replace view semiEnum2369494066802087025 as select link as v22, v10, v41 from semiEnum7741984932412655521, link_type as lt where lt.id=semiEnum7741984932412655521.v21 and link LIKE '%follow%';
+select distinct v10, v22, v41 from semiEnum2369494066802087025;
