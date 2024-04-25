@@ -1,0 +1,18 @@
+create or replace view chnAux1 as select id as v9, name as v10 from char_name;
+create or replace view tAux11 as select id as v59, title as v60 from title where title LIKE 'Kung Fu Panda%' and production_year>2010;
+create or replace view semiJoinView3387391820995689242 as select id as v48, name as v49, gender as v52 from name AS n where (id) in (select (person_id) from aka_name AS an) and gender= 'f';
+create or replace view nAux27 as select v48, v49 from semiJoinView3387391820995689242;
+create or replace view semiJoinView2878457421712077729 as select person_id as v48, movie_id as v59, person_role_id as v9, note as v20, role_id as v57 from cast_info AS ci where (role_id) in (select (id) from role_type AS rt where role= 'actress') and note IN ('(voice)','(voice: Japanese version)','(voice) (uncredited)','(voice: English version)');
+create or replace view semiJoinView4807764490390418901 as select v48, v59, v9, v20, v57 from semiJoinView2878457421712077729 where (v48) in (select (v48) from nAux27);
+create or replace view semiJoinView3696283642121012140 as select movie_id as v59, company_id as v23 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[us]' and name= 'DreamWorks Animation');
+create or replace view semiJoinView7952341533174083312 as select movie_id as v59, info_type_id as v30, info as v43 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it where info= 'release dates') and ((info LIKE 'Japan:%201%') OR (info LIKE 'USA:%201%'));
+create or replace view semiJoinView5885525067738619371 as select v48, v59, v9, v20, v57 from semiJoinView4807764490390418901 where (v9) in (select (v9) from chnAux1);
+create or replace view semiJoinView9049689803303873021 as select movie_id as v59, keyword_id as v32 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('hero','martial-arts','hand-to-hand-combat','computer-animated-movie'));
+create or replace view semiJoinView3012425145122712018 as select v59, v23 from semiJoinView3696283642121012140 where (v59) in (select (v59) from semiJoinView7952341533174083312);
+create or replace view semiJoinView7272751496070716495 as select v48, v59, v9, v20, v57 from semiJoinView5885525067738619371 where (v59) in (select (v59) from semiJoinView9049689803303873021);
+create or replace view semiJoinView5848404904070909929 as select v48, v59, v9, v20, v57 from semiJoinView7272751496070716495 where (v59) in (select (v59) from semiJoinView3012425145122712018);
+create or replace view semiJoinView1643797353971841584 as select distinct v59, v60 from tAux11 where (v59) in (select (v59) from semiJoinView5848404904070909929);
+create or replace view semiEnum5543762662938221818 as select distinct v60, v20, v48, v59, v57, v9 from semiJoinView1643797353971841584 join semiJoinView5848404904070909929 using(v59);
+create or replace view semiEnum7736195871925772905 as select distinct v60, v20, v59, v48, v57, v9, v10 from semiEnum5543762662938221818 join chnAux1 using(v9);
+create or replace view semiEnum8749206162397714366 as select v60, v49, v10 from semiEnum7736195871925772905 join nAux27 using(v48);
+select distinct v10, v49, v60 from semiEnum8749206162397714366;

@@ -1,0 +1,11 @@
+create or replace view tAux93 as select id as v11, title as v40 from title;
+create or replace view an1Aux58 as select person_id as v2, name as v3 from aka_name;
+create or replace view semiJoinView4250408387905677429 as select person_id as v2, movie_id as v11, note as v13, role_id as v15 from cast_info AS ci where (role_id) in (select (id) from role_type AS rt where role= 'actress') and note= '(voice: English version)';
+create or replace view semiJoinView9043992765462581539 as select movie_id as v11, company_id as v25, note as v27 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[jp]') and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view semiJoinView3833887624584129657 as select v2, v11, v13, v15 from semiJoinView4250408387905677429 where (v2) in (select (id) from name AS n1 where name LIKE '%Yo%' and name NOT LIKE '%Yu%');
+create or replace view semiJoinView4022067223554556399 as select v2, v11, v13, v15 from semiJoinView3833887624584129657 where (v2) in (select (v2) from an1Aux58);
+create or replace view semiJoinView9213725957405584801 as select v2, v11, v13, v15 from semiJoinView4022067223554556399 where (v11) in (select (v11) from semiJoinView9043992765462581539);
+create or replace view semiJoinView7768676050932111341 as select distinct v11, v40 from tAux93 where (v11) in (select (v11) from semiJoinView9213725957405584801);
+create or replace view semiEnum6863008627772321828 as select distinct v15, v40, v2, v13, v11 from semiJoinView7768676050932111341 join semiJoinView9213725957405584801 using(v11);
+create or replace view semiEnum5170100859150124277 as select v40, v3 from semiEnum6863008627772321828 join an1Aux58 using(v2);
+select distinct v3, v40 from semiEnum5170100859150124277;

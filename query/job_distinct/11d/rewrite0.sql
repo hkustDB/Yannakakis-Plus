@@ -1,0 +1,13 @@
+create or replace view cnAux20 as select id as v17, name as v2 from company_name where country_code<> '[pl]';
+create or replace view semiJoinView5568562000576190745 as select movie_id as v24, company_id as v17, company_type_id as v18, note as v19 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct where kind<> 'production companies');
+create or replace view mcAux34 as select v24, v17, v19 from semiJoinView5568562000576190745;
+create or replace view semiJoinView7322497038455962949 as select movie_id as v24, link_type_id as v13 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt);
+create or replace view semiJoinView2756850062046526830 as select movie_id as v24, keyword_id as v22 from movie_keyword AS mk where (movie_id) in (select (v24) from semiJoinView7322497038455962949);
+create or replace view semiJoinView1193691944774191389 as select v24, v22 from semiJoinView2756850062046526830 where (v22) in (select (id) from keyword AS k where keyword IN ('sequel','revenge','based-on-novel'));
+create or replace view semiJoinView2004535086121981704 as select id as v24, title as v28, production_year as v31 from title AS t where (id) in (select (v24) from semiJoinView1193691944774191389) and production_year>1950;
+create or replace view tAux8 as select v24, v28 from semiJoinView2004535086121981704;
+create or replace view semiJoinView984555192115959940 as select v24, v17, v19 from mcAux34 where (v17) in (select (v17) from cnAux20);
+create or replace view semiJoinView3516826931560313049 as select distinct v24, v28 from tAux8 where (v24) in (select (v24) from semiJoinView984555192115959940);
+create or replace view semiEnum2006164377653766177 as select distinct v24, v17, v28, v19 from semiJoinView3516826931560313049 join semiJoinView984555192115959940 using(v24);
+create or replace view semiEnum8915292825334725176 as select v28, v19, v2 from semiEnum2006164377653766177 join cnAux20 using(v17);
+select distinct v2, v19, v28 from semiEnum8915292825334725176;

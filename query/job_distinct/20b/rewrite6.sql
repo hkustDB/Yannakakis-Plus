@@ -1,0 +1,11 @@
+create or replace view semiJoinView4420496321480193367 as select person_id as v31, movie_id as v40, person_role_id as v9 from cast_info AS ci where (person_role_id) in (select (id) from char_name AS chn where ((name LIKE '%Tony%Stark%') OR (name LIKE '%Iron%Man%')) and name NOT LIKE '%Sherlock%');
+create or replace view semiJoinView7584561176215835202 as select id as v40, title as v41, kind_id as v26, production_year as v44 from title AS t where (kind_id) in (select (id) from kind_type AS kt where kind= 'movie') and production_year>2000;
+create or replace view semiJoinView3211996678275949678 as select movie_id as v40, keyword_id as v23 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence'));
+create or replace view semiJoinView8222676468945785278 as select movie_id as v40, subject_id as v5, status_id as v7 from complete_cast AS cc where (status_id) in (select (id) from comp_cast_type AS cct2 where kind LIKE '%complete%');
+create or replace view semiJoinView6629437157095622630 as select v31, v40, v9 from semiJoinView4420496321480193367 where (v31) in (select (id) from name AS n where name LIKE '%Downey%Robert%');
+create or replace view semiJoinView6217463828992148050 as select v40, v5, v7 from semiJoinView8222676468945785278 where (v5) in (select (id) from comp_cast_type AS cct1 where kind= 'cast');
+create or replace view semiJoinView1323017312945092109 as select v40, v23 from semiJoinView3211996678275949678 where (v40) in (select (v40) from semiJoinView6217463828992148050);
+create or replace view semiJoinView1968230815763122957 as select v31, v40, v9 from semiJoinView6629437157095622630 where (v40) in (select (v40) from semiJoinView1323017312945092109);
+create or replace view semiJoinView5786347410574904623 as select v40, v41, v26, v44 from semiJoinView7584561176215835202 where (v40) in (select (v40) from semiJoinView1968230815763122957);
+create or replace view tAux74 as select v41 from semiJoinView5786347410574904623;
+select distinct v41 from tAux74;
