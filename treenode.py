@@ -17,9 +17,10 @@ class TreeNode:
                                     # zipped = zip(a,b), zip(*zipped)
         self.children: list[TreeNode] = []
         self.parent: TreeNode = None
-        self.anscestors: set[TreeNode] = set()
+        self.allchildren: set[TreeNode] = set() # all nodes whose degth smaller than self
         
         self.statistics: list[int, int] = []                    # estimate relation size
+        self.statisticsC: list[int, int] = []                   # keep child max ndv
         self.relationType: RelationType = None
         self.createViewAlready: bool = False        # create view TableAgg, Aux, bag already
         self.reducePhase: Union[ReducePhase, AggReducePhase, LevelKReducePhase, ProductKReducePhase] = None        # Attach reduce information to the node

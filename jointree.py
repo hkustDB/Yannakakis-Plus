@@ -25,10 +25,10 @@ class Edge:
     def getId(self): return self.id
     
     def __str__(self) -> str:
-        return str(self.src.id) + str('->') + str(self.dst.id)
+        return self.src + str('\n->\n') + self.dst
     
     def __repr__(self) -> str:
-        return str(self.src.id) + str('->') + str(self.dst.id)
+        return str(self.src.alias) + str('->') + str(self.dst.alias)
     
 class JoinTree:
     def __init__(self, node: dict[int, TreeNode], isFull: bool, isFreeConnex: bool, supId: set[int], subset: list[int], extraCondList: ExtraCondList, fixRoot: bool, setSubset0: bool) -> None:

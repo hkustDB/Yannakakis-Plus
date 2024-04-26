@@ -19,7 +19,7 @@ INPUT_DIR_PATH="${SCRIPT_PATH}/${INPUT_DIR}"
 # graph, tpch, lsqb
 DATABASE=$1
 
-duckdb="/home/bchenba/duckdb"
+duckdb="/opt/homebrew/bin/duckdb"
 
 # Suffix function
 function FileSuffix() {
