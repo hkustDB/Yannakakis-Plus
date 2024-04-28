@@ -549,7 +549,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
     if 'caseRes' in selectAttrAlias and 'caseRes' not in groupBy:
         groupBy.append('caseRes')
 
-    if pkFlag:
+    if pkFlag or (parentNode.relationType == RelationType.AuxiliaryRelation and parentNode.supRelationId == childNode.id):
         groupBy = []
     
     if childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation and childIsOriLeaf and len(childSelfComp):
@@ -758,6 +758,9 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     def getAggRelation(node: TreeNode) -> list[AggFunc]:
         aggs = []
         if node.parent:
+            # For auxi->support, no aggregation process
+            if node.parent.relationType == RelationType.AuxiliaryRelation and node.parent.supRelationId == node.id:
+                return []
             joinKeys = set(node.cols) & set(node.parent.cols)
             if node.JoinResView:
                 satisKeys = [alias for alias in node.JoinResView.selectAttrAlias if alias not in joinKeys]
@@ -806,6 +809,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                     break
                 childNode = childNode.parent
         
+        supportRelation.sort(key=lambda x: jointree.getNode(x[0].dst.id).trueSize)
         return supportRelation
     
     '''Get incident comparisons'''
@@ -852,7 +856,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
     
     def aggCmp(rel1: list[Edge, list[AggFunc]], rel2: list[Edge, list[AggFunc]]):
         if len(rel1[1]) and len(rel2[1]):
-            if rel1[1][0].funcName == AggFuncType.MIN or rel1[1][0].funcName == AggFuncType.MAX:
+            if jointree.getNode(rel1[0].dst.id).trueSize < jointree.getNode(rel2[0].dst.id).trueSize:
                 return -1
             else: return 1
         elif len(rel1[1]): return -1

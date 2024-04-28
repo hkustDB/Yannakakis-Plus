@@ -128,27 +128,33 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
         else:
             staC = statistics[node.source][0]
         
-        return staP, staC
+        return staP, staC, staP[0]
 
     for node in all_jt_nodes:
-        node.statistics, node.statisticsC = calJoinStatistic(node)
+        node.statistics, node.statisticsC, node.trueSize = calJoinStatistic(node)
+        node.estimateSize = node.trueSize
         for child in node.children:
             node.allchildren |= child.allchildren
             node.allchildren.add(child)
     
     for node in all_jt_nodes:
-        if len(node.children):
+        if len(node.allchildren):
             min_ndv = maxsize
             cur_cost = 1.0
+            node.allchildren = list(node.allchildren)
+            node.allchildren.sort(key=lambda x: x.trueSize)
             for child in node.allchildren:
+                if node.relationType == RelationType.AuxiliaryRelation and child.id == node.supRelationId:
+                    continue
                 min_ndv = min(min_ndv, child.statistics[1])
                 cur_cost = cur_cost * child.statistics[0] / child.statistics[1]
-            
-            min_ndv = min(min_ndv, node.statisticsC[1])
-            cur_cost = cur_cost * node.statisticsC[0] / node.statisticsC[1]
 
-            cur_cost = cur_cost * min_ndv
-            cost_estimate += cur_cost
+                cost_estimate += min(min_ndv, node.statisticsC[1]) * cur_cost * node.estimateSize / node.statisticsC[1]
+                node.estimateSize = min(min_ndv, node.statisticsC[1]) * cur_cost * node.estimateSize / node.statisticsC[1]
+            
+            node.estimateSize = min(min_ndv, node.statisticsC[1]) * cur_cost * node.statisticsC[0] / node.statisticsC[1]
+        else:
+            node.estimateSize = node.statistics[0]
         nodeId = node.id
         jt.node[nodeId] = node
     

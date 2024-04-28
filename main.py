@@ -171,7 +171,7 @@ def connect(base: int, mode: int, type: GenType):
     query_file.close()
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=50&limit=100&fixRootEnable=true", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=10&limit=15&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -325,7 +325,7 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job/6f/')
+    globalVar.set_value('BASE_PATH', 'query/job/1a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
@@ -433,9 +433,8 @@ if __name__ == '__main__':
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(cost_stat)
-            best = selectBest(cost_stat, 2)
-            write.writerow('\n')
-            write.writerow(', '.join(map(str, best)))
+            best = selectBest(cost_stat, 3)
+            write.writerow(best)
 
     end2 = time.time()
     with open(BASE_PATH + REWRITE_TIME, 'a+') as f:
