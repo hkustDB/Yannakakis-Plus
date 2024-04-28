@@ -19,6 +19,8 @@ class TreeNode:
         self.parent: TreeNode = None
         self.allchildren: set[TreeNode] = set() # all nodes whose degth smaller than self
         
+        self.trueSize: int = 0
+        self.estimateSize: int = 0
         self.statistics: list[int, int] = []                    # estimate relation size
         self.statisticsC: list[int, int] = []                   # keep child max ndv
         self.relationType: RelationType = None
@@ -64,7 +66,7 @@ class TreeNode:
         self.children.remove(child)
     
     def __repr__(self) -> str:
-        return self.alias + '[' + str(self.id) +',' + self.source + ']: ' + str(self.cols) + "\n"
+        return self.alias + '[' + str(self.id) +',' + self.source + ', ' + str(self.estimateSize) + ']: ' + str(self.cols) + "\n"
     
     def __str__(self) -> str:
         ret = str(self.id) + str('\n') + str(self.source) + str('\n') + str(self.cols)
