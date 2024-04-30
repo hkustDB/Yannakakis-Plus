@@ -9,7 +9,7 @@ FROM company_type AS ct,
 WHERE ct.kind = 'production companies'
   AND it.info = 'top 250 rank'
   AND mc.note NOT LIKE '%(as Metro-Goldwyn-Mayer Pictures)%'
-  AND (mc.note LIKE '%(co-production)%')
+  AND mc.note LIKE '%(co-production)%'
   AND t.production_year >2010
   AND ct.id = mc.company_type_id
   AND t.id = mc.movie_id

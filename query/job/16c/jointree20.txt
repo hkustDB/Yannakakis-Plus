@@ -1,0 +1,24 @@
+Relations:
+dict_values([an[2482205,aka_name, 1]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+, ci[2482206,cast_info, 84.87431192996772]: ['v9', 'v2', 'v11', 'v12', 'v13', 'v14', 'v15']
+, cn[2482207,company_name, 2584967]: ['v28', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22']
+, k[2482208,keyword, 1475870]: ['v33', 'v24', 'v25']
+, mc[2482209,movie_companies, 28700419.0]: ['v26', 'v11', 'v28', 'v29', 'v30']
+, mk[2482210,movie_keyword, 49763230.0]: ['v31', 'v11', 'v33']
+, n[2482211,name, 45842401]: ['v2', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42']
+, t[2482212,title, 6203356.36765431]: ['v11', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51', 'v52', 'v53', 'v54']
+, anAux40[2482386,an, 1.0]: ['v2', 'v3']
+, tAux25[2482418,t, 353.950747125583]: ['v11', 'v44']
+])
+Edges:
+dict_values([t->mc, ci->n, ci->mk, mk->k, ci->anAux40, tAux25->ci, anAux40->an, tAux25->t, mc->cn])
+Root:
+2482418
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

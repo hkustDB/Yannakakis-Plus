@@ -171,7 +171,7 @@ def connect(base: int, mode: int, type: GenType):
     query_file.close()
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=10&limit=15&fixRootEnable=true", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=10&limit=10&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
         traceback.print_exc()
         print("Error query: " + QUERY_NAME)
@@ -325,11 +325,11 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/job/1a/')
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/13d/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
-    '''
+    
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -342,7 +342,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    '''
+    
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
     OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
@@ -433,7 +433,7 @@ if __name__ == '__main__':
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(cost_stat)
-            best = selectBest(cost_stat, 3)
+            best = selectBest(cost_stat, 2)
             write.writerow(best)
 
     end2 = time.time()

@@ -1,0 +1,25 @@
+Relations:
+dict_values([an[2862881,aka_name, 1]: ['v1', 'v35', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+, chn[2862882,char_name, 1]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+, ci[2862883,cast_info, 6.8072926394075655]: ['v16', 'v35', 'v18', 'v9', 'v20', 'v21', 'v22']
+, cn[2862884,company_name, 8484300]: ['v32', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29']
+, mc[2862885,movie_companies, 59099400.0]: ['v30', 'v18', 'v32', 'v33', 'v34']
+, n[2862886,name, 676800]: ['v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43']
+, rt[2862887,role_type, 100]: ['v22', 'v45']
+, t[2862888,title, 1]: ['v18', 'v47', 'v48', 'v49', 'v50', 'v51', 'v52', 'v53', 'v54', 'v55', 'v56', 'v57']
+, chnAux73[2862948,chn, 7.763689500733488]: ['v9', 'v10']
+, anAux43[2862966,an, 1.0]: ['v35', 'v3']
+, tAux34[2862984,t, 1.0]: ['v18', 'v47']
+])
+Edges:
+dict_values([ci->n, mc->cn, ci->mc, ci->anAux43, tAux34->t, chnAux73->chn, chnAux73->ci, anAux43->an, ci->tAux34, ci->rt])
+Root:
+2862948
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False
