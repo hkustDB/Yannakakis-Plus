@@ -218,7 +218,7 @@ CREATE TABLE movie_info (
     note varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '1483572000'
+        'cardinality' = '65363500'
 );
 
 CREATE TABLE person_info (

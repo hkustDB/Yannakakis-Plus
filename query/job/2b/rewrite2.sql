@@ -1,14 +1,10 @@
-create or replace view aggJoin7402694046316364680 as (
-with aggView7123418357943074757 as (select id as v1 from company_name as cn where country_code= '[nl]')
-select movie_id as v12 from movie_companies as mc, aggView7123418357943074757 where mc.company_id=aggView7123418357943074757.v1);
-create or replace view aggJoin5911901753033295827 as (
-with aggView6040373606216376881 as (select v12 from aggJoin7402694046316364680 group by v12)
-select movie_id as v12, keyword_id as v18 from movie_keyword as mk, aggView6040373606216376881 where mk.movie_id=aggView6040373606216376881.v12);
-create or replace view aggJoin127881971663108358 as (
-with aggView7419262769033828651 as (select id as v18 from keyword as k where keyword= 'character-name-in-title')
-select v12 from aggJoin5911901753033295827 join aggView7419262769033828651 using(v18));
-create or replace view aggJoin7544510670951394197 as (
-with aggView4525040755929859174 as (select v12 from aggJoin127881971663108358 group by v12)
-select title as v20 from title as t, aggView4525040755929859174 where t.id=aggView4525040755929859174.v12);
-create or replace view aggView5615933025543769417 as select v20 from aggJoin7544510670951394197 group by v20;
-select MIN(v20) as v31 from aggView5615933025543769417;
+create or replace view aggView4987333242373548424 as select id as v18 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin6546424541547041844 as select movie_id as v12 from movie_keyword as mk, aggView4987333242373548424 where mk.keyword_id=aggView4987333242373548424.v18;
+create or replace view aggView6280739401510083179 as select id as v1 from company_name as cn where country_code= '[nl]';
+create or replace view aggJoin6795497656418115894 as select movie_id as v12 from movie_companies as mc, aggView6280739401510083179 where mc.company_id=aggView6280739401510083179.v1;
+create or replace view aggView5676666631709800524 as select v12 from aggJoin6795497656418115894 group by v12;
+create or replace view aggJoin5920689130307319401 as select id as v12, title as v20 from title as t, aggView5676666631709800524 where t.id=aggView5676666631709800524.v12;
+create or replace view aggView7049815527947117841 as select v12 from aggJoin6546424541547041844 group by v12;
+create or replace view aggJoin44010278065361132 as select v20 from aggJoin5920689130307319401 join aggView7049815527947117841 using(v12);
+create or replace view aggView4140264241321486732 as select v20 from aggJoin44010278065361132;
+select MIN(v20) as v31 from aggView4140264241321486732;

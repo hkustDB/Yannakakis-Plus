@@ -117,7 +117,7 @@ CREATE TABLE kind_type (
     kind varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '700'
+        'cardinality' = '100'
 );
 
 CREATE TABLE link_type (

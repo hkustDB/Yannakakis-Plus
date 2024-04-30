@@ -1,0 +1,24 @@
+Relations:
+dict_values([ci[2897349,cast_info, 124471600.0]: ['v1', 'v22', 'v31', 'v4', 'v5', 'v6', 'v7']
+, it1[2897350,info_type, 100]: ['v8', 'v9']
+, it2[2897351,info_type, 100]: ['v10', 'v11']
+, mi[2897352,movie_info, 247.51147366260426]: ['v12', 'v31', 'v8', 'v15', 'v16']
+, mi_idx[2897353,movie_info_idx, 100.0]: ['v17', 'v31', 'v10', 'v20', 'v21']
+, n[2897354,name, 173957900]: ['v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30']
+, t[2897355,title, 1]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42']
+, mi_idxAux42[2897404,mi_idx, 1.8942248722057613]: ['v31', 'v20']
+, tAux66[2897419,t, 1.8942248722057613]: ['v31', 'v32']
+, miAux36[2897431,mi, 1.8942248722057613]: ['v31', 'v15']
+])
+Edges:
+dict_values([mi_idx->it2, mi->it1, tAux66->miAux36, mi_idxAux42->mi_idx, mi->ci, mi_idxAux42->tAux66, miAux36->mi, tAux66->t, ci->n])
+Root:
+2897404
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

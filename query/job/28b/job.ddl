@@ -74,7 +74,7 @@ CREATE TABLE company_name (
     md5sum varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '23499700'
+        'cardinality' = '12623000'
 );
 
 CREATE TABLE company_type (

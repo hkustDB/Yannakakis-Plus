@@ -1,22 +1,15 @@
-create or replace view aggJoin6051090368981987958 as (
-with aggView2227027818631614627 as (select person_id as v2, MIN(name) as v55 from aka_name as an group by person_id)
-select id as v2, v55 from name as n, aggView2227027818631614627 where n.id=aggView2227027818631614627.v2);
-create or replace view aggJoin511461194055384502 as (
-with aggView2239163040980104444 as (select id as v11, title as v56 from title as t)
-select person_id as v2, movie_id as v11, v56 from cast_info as ci, aggView2239163040980104444 where ci.movie_id=aggView2239163040980104444.v11);
-create or replace view aggJoin5251797156458782406 as (
-with aggView8956708263111598113 as (select id as v33 from keyword as k where keyword= 'character-name-in-title')
-select movie_id as v11 from movie_keyword as mk, aggView8956708263111598113 where mk.keyword_id=aggView8956708263111598113.v33);
-create or replace view aggJoin5554815693396551002 as (
-with aggView8392599520580038963 as (select id as v28 from company_name as cn where country_code= '[us]')
-select movie_id as v11 from movie_companies as mc, aggView8392599520580038963 where mc.company_id=aggView8392599520580038963.v28);
-create or replace view aggJoin2620551841127109118 as (
-with aggView6307997534932547244 as (select v2, MIN(v55) as v55 from aggJoin6051090368981987958 group by v2,v55)
-select v11, v56 as v56, v55 from aggJoin511461194055384502 join aggView6307997534932547244 using(v2));
-create or replace view aggJoin8658655851964456594 as (
-with aggView8006469201226859400 as (select v11 from aggJoin5251797156458782406 group by v11)
-select v11 from aggJoin5554815693396551002 join aggView8006469201226859400 using(v11));
-create or replace view aggJoin8197976726029736607 as (
-with aggView5507192169248828747 as (select v11 from aggJoin8658655851964456594 group by v11)
-select v56 as v56, v55 as v55 from aggJoin2620551841127109118 join aggView5507192169248828747 using(v11));
-select MIN(v55) as v55,MIN(v56) as v56 from aggJoin8197976726029736607;
+create or replace view aggView8964983675642033732 as select person_id as v2, MIN(name) as v55 from aka_name as an group by person_id;
+create or replace view aggJoin1063135957056227072 as select person_id as v2, movie_id as v11, v55 from cast_info as ci, aggView8964983675642033732 where ci.person_id=aggView8964983675642033732.v2;
+create or replace view aggView4072411024125048006 as select id as v11, title as v56 from title as t;
+create or replace view aggJoin6964035986767293172 as select movie_id as v11, company_id as v28, v56 from movie_companies as mc, aggView4072411024125048006 where mc.movie_id=aggView4072411024125048006.v11;
+create or replace view aggView9137150459252164052 as select id as v28 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin3827550475654269650 as select v11, v56 from aggJoin6964035986767293172 join aggView9137150459252164052 using(v28);
+create or replace view aggView4013826018441104120 as select id as v33 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin6173390532495326907 as select movie_id as v11 from movie_keyword as mk, aggView4013826018441104120 where mk.keyword_id=aggView4013826018441104120.v33;
+create or replace view aggView8196275961382141171 as select v11 from aggJoin6173390532495326907 group by v11;
+create or replace view aggJoin7728216716228150287 as select v11, v56 as v56 from aggJoin3827550475654269650 join aggView8196275961382141171 using(v11);
+create or replace view aggView3493405604602798111 as select v11, MIN(v56) as v56 from aggJoin7728216716228150287 group by v11;
+create or replace view aggJoin8942996727965279290 as select v2, v55 as v55, v56 from aggJoin1063135957056227072 join aggView3493405604602798111 using(v11);
+create or replace view aggView3865042768745259850 as select id as v2 from name as n;
+create or replace view aggJoin1240418515155643601 as select v55, v56 from aggJoin8942996727965279290 join aggView3865042768745259850 using(v2);
+select MIN(v55) as v55,MIN(v56) as v56 from aggJoin1240418515155643601;

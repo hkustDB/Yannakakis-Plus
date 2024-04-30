@@ -136,7 +136,7 @@ CREATE TABLE movie_companies (
     note varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '2888900'
+        'cardinality' = '133708800'
 );
 
 CREATE TABLE movie_info_idx (

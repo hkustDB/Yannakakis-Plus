@@ -1,21 +1,15 @@
-create or replace view aggView7437678885642063716 as select id as v1, name as v2 from char_name as chn;
-create or replace view aggJoin1652981016271993444 as (
-with aggView4537765004980008057 as (select id as v22 from company_type as ct)
-select movie_id as v31, company_id as v15 from movie_companies as mc, aggView4537765004980008057 where mc.company_type_id=aggView4537765004980008057.v22);
-create or replace view aggJoin4312176216314855073 as (
-with aggView3563793345545083638 as (select id as v15 from company_name as cn where country_code= '[ru]')
-select v31 from aggJoin1652981016271993444 join aggView3563793345545083638 using(v15));
-create or replace view aggJoin2126668167009925511 as (
-with aggView8609375324248703937 as (select v31 from aggJoin4312176216314855073 group by v31)
-select id as v31, title as v32, production_year as v35 from title as t, aggView8609375324248703937 where t.id=aggView8609375324248703937.v31 and production_year>2010);
-create or replace view aggView8785819483360272127 as select v32, v31 from aggJoin2126668167009925511 group by v32,v31;
-create or replace view aggJoin8027821831499944993 as (
-with aggView6657917228060198522 as (select v31, MIN(v32) as v44 from aggView8785819483360272127 group by v31)
-select person_role_id as v1, note as v12, role_id as v29, v44 from cast_info as ci, aggView6657917228060198522 where ci.movie_id=aggView6657917228060198522.v31 and note LIKE '%(producer)%');
-create or replace view aggJoin5751181134294191645 as (
-with aggView5995458341544102740 as (select id as v29 from role_type as rt where role= 'actor')
-select v1, v12, v44 from aggJoin8027821831499944993 join aggView5995458341544102740 using(v29));
-create or replace view aggJoin4182208213703267890 as (
-with aggView752508752721469104 as (select v1, MIN(v44) as v44 from aggJoin5751181134294191645 group by v1,v44)
-select v2, v44 from aggView7437678885642063716 join aggView752508752721469104 using(v1));
-select MIN(v2) as v43,MIN(v44) as v44 from aggJoin4182208213703267890;
+create or replace view aggView6100946459016544883 as select name as v2, id as v1 from char_name as chn;
+create or replace view aggView5202649054357110377 as select id as v22 from company_type as ct;
+create or replace view aggJoin2536473362222223854 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView5202649054357110377 where mc.company_type_id=aggView5202649054357110377.v22;
+create or replace view aggView1622647068347335837 as select id as v15 from company_name as cn where country_code= '[ru]';
+create or replace view aggJoin6368646802962282234 as select v31 from aggJoin2536473362222223854 join aggView1622647068347335837 using(v15);
+create or replace view aggView891879545245194599 as select v31 from aggJoin6368646802962282234 group by v31;
+create or replace view aggJoin4959810166228289755 as select id as v31, title as v32, production_year as v35 from title as t, aggView891879545245194599 where t.id=aggView891879545245194599.v31 and production_year>2010;
+create or replace view aggView358357222397266457 as select v31, v32 from aggJoin4959810166228289755;
+create or replace view aggView7555030055658057755 as select v1, MIN(v2) as v43 from aggView6100946459016544883 group by v1;
+create or replace view aggJoin4084242696919099294 as select movie_id as v31, note as v12, role_id as v29, v43 from cast_info as ci, aggView7555030055658057755 where ci.person_role_id=aggView7555030055658057755.v1 and note LIKE '%(producer)%';
+create or replace view aggView8137491871246647833 as select id as v29 from role_type as rt where role= 'actor';
+create or replace view aggJoin126005166206100943 as select v31, v12, v43 from aggJoin4084242696919099294 join aggView8137491871246647833 using(v29);
+create or replace view aggView22865537225847602 as select v31, MIN(v43) as v43 from aggJoin126005166206100943 group by v31;
+create or replace view aggJoin4025669651910199820 as select v32, v43 from aggView358357222397266457 join aggView22865537225847602 using(v31);
+select MIN(v43) as v43,MIN(v32) as v44 from aggJoin4025669651910199820;

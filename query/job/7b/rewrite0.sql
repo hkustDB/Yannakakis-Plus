@@ -1,24 +1,17 @@
-create or replace view aggJoin5151460717763460537 as (
-with aggView1520721387164729671 as (select id as v16 from info_type as it where info= 'mini biography')
-select person_id as v24, note as v37 from person_info as pi, aggView1520721387164729671 where pi.info_type_id=aggView1520721387164729671.v16 and note= 'Volker Boehm');
-create or replace view aggJoin7523047537250221680 as (
-with aggView3499773718387709091 as (select id as v18 from link_type as lt where link= 'features')
-select linked_movie_id as v38 from movie_link as ml, aggView3499773718387709091 where ml.link_type_id=aggView3499773718387709091.v18);
-create or replace view aggJoin3640794360222321794 as (
-with aggView3653582485370690590 as (select v38 from aggJoin7523047537250221680 group by v38)
-select id as v38, title as v39, production_year as v42 from title as t, aggView3653582485370690590 where t.id=aggView3653582485370690590.v38 and production_year<=1984 and production_year>=1980);
-create or replace view aggView1245004647027266203 as select v38, v39 from aggJoin3640794360222321794 group by v38,v39;
-create or replace view aggJoin4484732987964966364 as (
-with aggView1874473754954500363 as (select person_id as v24 from aka_name as an where name LIKE '%a%' group by person_id)
-select v24, v37 from aggJoin5151460717763460537 join aggView1874473754954500363 using(v24));
-create or replace view aggJoin6108933677333787140 as (
-with aggView1636380039802632718 as (select v24 from aggJoin4484732987964966364 group by v24)
-select id as v24, name as v25, gender as v28, name_pcode_cf as v29 from name as n, aggView1636380039802632718 where n.id=aggView1636380039802632718.v24 and gender= 'm' and name_pcode_cf LIKE 'D%');
-create or replace view aggView3463816753423783839 as select v25, v24 from aggJoin6108933677333787140 group by v25,v24;
-create or replace view aggJoin3281342401772952750 as (
-with aggView2435245278409249853 as (select v24, MIN(v25) as v50 from aggView3463816753423783839 group by v24)
-select movie_id as v38, v50 from cast_info as ci, aggView2435245278409249853 where ci.person_id=aggView2435245278409249853.v24);
-create or replace view aggJoin2340161768360843516 as (
-with aggView6076567563989065010 as (select v38, MIN(v50) as v50 from aggJoin3281342401772952750 group by v38,v50)
-select v39, v50 from aggView1245004647027266203 join aggView6076567563989065010 using(v38));
-select MIN(v50) as v50,MIN(v39) as v51 from aggJoin2340161768360843516;
+create or replace view aggView6895389191242051707 as select id as v16 from info_type as it where info= 'mini biography';
+create or replace view aggJoin3875912016829847693 as select person_id as v24, note as v37 from person_info as pi, aggView6895389191242051707 where pi.info_type_id=aggView6895389191242051707.v16 and note= 'Volker Boehm';
+create or replace view aggView2767601661391186451 as select id as v18 from link_type as lt where link= 'features';
+create or replace view aggJoin3467086143527236326 as select linked_movie_id as v38 from movie_link as ml, aggView2767601661391186451 where ml.link_type_id=aggView2767601661391186451.v18;
+create or replace view aggView5542122231571292379 as select v24 from aggJoin3875912016829847693 group by v24;
+create or replace view aggJoin2357317012387263516 as select person_id as v24, name as v3 from aka_name as an, aggView5542122231571292379 where an.person_id=aggView5542122231571292379.v24 and name LIKE '%a%';
+create or replace view aggView2539690760820139365 as select v38 from aggJoin3467086143527236326 group by v38;
+create or replace view aggJoin7116798246976133453 as select id as v38, title as v39, production_year as v42 from title as t, aggView2539690760820139365 where t.id=aggView2539690760820139365.v38 and production_year<=1984 and production_year>=1980;
+create or replace view aggView772412750237109586 as select v38, v39 from aggJoin7116798246976133453;
+create or replace view aggView498317957699324044 as select v24 from aggJoin2357317012387263516 group by v24;
+create or replace view aggJoin3657585999703058652 as select id as v24, name as v25, gender as v28, name_pcode_cf as v29 from name as n, aggView498317957699324044 where n.id=aggView498317957699324044.v24 and gender= 'm' and name_pcode_cf LIKE 'D%';
+create or replace view aggView8779038965107033720 as select v24, v25 from aggJoin3657585999703058652;
+create or replace view aggView7555978849388430887 as select v38, MIN(v39) as v51 from aggView772412750237109586 group by v38;
+create or replace view aggJoin4813363566079954994 as select person_id as v24, v51 from cast_info as ci, aggView7555978849388430887 where ci.movie_id=aggView7555978849388430887.v38;
+create or replace view aggView8312337008363187144 as select v24, MIN(v51) as v51 from aggJoin4813363566079954994 group by v24;
+create or replace view aggJoin3642826946374307538 as select v25, v51 from aggView8779038965107033720 join aggView8312337008363187144 using(v24);
+select MIN(v25) as v50,MIN(v51) as v51 from aggJoin3642826946374307538;

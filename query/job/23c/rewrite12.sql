@@ -1,31 +1,21 @@
-create or replace view aggJoin5361684428202019250 as (
-with aggView186252426305896843 as (select id as v21, kind as v48 from kind_type as kt where kind IN ('movie','tv movie','video movie','video game'))
-select id as v36, title as v37, production_year as v40, v48 from title as t, aggView186252426305896843 where t.kind_id=aggView186252426305896843.v21 and production_year>1990);
-create or replace view aggJoin1394523218751215217 as (
-with aggView7572412098461205572 as (select id as v16 from info_type as it1 where info= 'release dates')
-select movie_id as v36, info as v31, note as v32 from movie_info as mi, aggView7572412098461205572 where mi.info_type_id=aggView7572412098461205572.v16 and ((info LIKE 'USA:% 199%') OR (info LIKE 'USA:% 200%')) and note LIKE '%internet%');
-create or replace view aggJoin2186248967151983592 as (
-with aggView64902422810148669 as (select id as v14 from company_type as ct)
-select movie_id as v36, company_id as v7 from movie_companies as mc, aggView64902422810148669 where mc.company_type_id=aggView64902422810148669.v14);
-create or replace view aggJoin8624344209589521595 as (
-with aggView9063703510174247819 as (select id as v18 from keyword as k)
-select movie_id as v36 from movie_keyword as mk, aggView9063703510174247819 where mk.keyword_id=aggView9063703510174247819.v18);
-create or replace view aggJoin5960696177837151125 as (
-with aggView7628828509291244120 as (select v36 from aggJoin1394523218751215217 group by v36)
-select movie_id as v36, status_id as v5 from complete_cast as cc, aggView7628828509291244120 where cc.movie_id=aggView7628828509291244120.v36);
-create or replace view aggJoin4637378524299441606 as (
-with aggView1063146291216020806 as (select id as v7 from company_name as cn where country_code= '[us]')
-select v36 from aggJoin2186248967151983592 join aggView1063146291216020806 using(v7));
-create or replace view aggJoin2792058846484463285 as (
-with aggView7654699624902514720 as (select id as v5 from comp_cast_type as cct1 where kind= 'complete+verified')
-select v36 from aggJoin5960696177837151125 join aggView7654699624902514720 using(v5));
-create or replace view aggJoin6351171526708778643 as (
-with aggView2579532969627208245 as (select v36 from aggJoin4637378524299441606 group by v36)
-select v36, v37, v40, v48 as v48 from aggJoin5361684428202019250 join aggView2579532969627208245 using(v36));
-create or replace view aggJoin1016164837810635280 as (
-with aggView5658211070644994104 as (select v36 from aggJoin2792058846484463285 group by v36)
-select v36, v37, v40, v48 as v48 from aggJoin6351171526708778643 join aggView5658211070644994104 using(v36));
-create or replace view aggJoin6016222876580984282 as (
-with aggView802872319819508629 as (select v36, MIN(v48) as v48, MIN(v37) as v49 from aggJoin1016164837810635280 group by v36,v48)
-select v48, v49 from aggJoin8624344209589521595 join aggView802872319819508629 using(v36));
-select MIN(v48) as v48,MIN(v49) as v49 from aggJoin6016222876580984282;
+create or replace view aggView3437430012957053457 as select id as v21, kind as v48 from kind_type as kt where kind IN ('movie','tv movie','video movie','video game');
+create or replace view aggJoin6560350541798731266 as select id as v36, title as v37, production_year as v40, v48 from title as t, aggView3437430012957053457 where t.kind_id=aggView3437430012957053457.v21 and production_year>1990;
+create or replace view aggView3970185440121201812 as select id as v18 from keyword as k;
+create or replace view aggJoin2909709359360007643 as select movie_id as v36 from movie_keyword as mk, aggView3970185440121201812 where mk.keyword_id=aggView3970185440121201812.v18;
+create or replace view aggView2730453282388670152 as select id as v16 from info_type as it1 where info= 'release dates';
+create or replace view aggJoin1112179714691684214 as select movie_id as v36, info as v31, note as v32 from movie_info as mi, aggView2730453282388670152 where mi.info_type_id=aggView2730453282388670152.v16 and ((info LIKE 'USA:% 199%') OR (info LIKE 'USA:% 200%')) and note LIKE '%internet%';
+create or replace view aggView8312916791656237560 as select id as v14 from company_type as ct;
+create or replace view aggJoin7696025816467758321 as select movie_id as v36, company_id as v7 from movie_companies as mc, aggView8312916791656237560 where mc.company_type_id=aggView8312916791656237560.v14;
+create or replace view aggView7666253498926549601 as select id as v5 from comp_cast_type as cct1 where kind= 'complete+verified';
+create or replace view aggJoin9029130842292411370 as select movie_id as v36 from complete_cast as cc, aggView7666253498926549601 where cc.status_id=aggView7666253498926549601.v5;
+create or replace view aggView298301535189106612 as select v36 from aggJoin9029130842292411370 group by v36;
+create or replace view aggJoin3115547461095361743 as select v36, v31, v32 from aggJoin1112179714691684214 join aggView298301535189106612 using(v36);
+create or replace view aggView485969934588820737 as select v36 from aggJoin3115547461095361743 group by v36;
+create or replace view aggJoin4536864309401930513 as select v36, v37, v40, v48 as v48 from aggJoin6560350541798731266 join aggView485969934588820737 using(v36);
+create or replace view aggView29435354384477730 as select v36, MIN(v48) as v48, MIN(v37) as v49 from aggJoin4536864309401930513 group by v36;
+create or replace view aggJoin600961082209619700 as select v36, v48, v49 from aggJoin2909709359360007643 join aggView29435354384477730 using(v36);
+create or replace view aggView7200272342416612129 as select id as v7 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin569437515305071120 as select v36 from aggJoin7696025816467758321 join aggView7200272342416612129 using(v7);
+create or replace view aggView6268840160059605698 as select v36 from aggJoin569437515305071120 group by v36;
+create or replace view aggJoin3090317288823998817 as select v48 as v48, v49 as v49 from aggJoin600961082209619700 join aggView6268840160059605698 using(v36);
+select MIN(v48) as v48,MIN(v49) as v49 from aggJoin3090317288823998817;

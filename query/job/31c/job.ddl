@@ -109,7 +109,7 @@ CREATE TABLE keyword (
     phonetic_code varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '13417000'
+        'cardinality' = '700'
 );
 
 CREATE TABLE kind_type (

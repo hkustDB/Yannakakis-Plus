@@ -1,16 +1,16 @@
 Relations:
-dict_values([ct[2279194,company_type]: ['v1', 'v2']
-, it[2279195,info_type]: ['v3', 'v4']
-, mc[2279196,movie_companies]: ['v5', 'v15', 'v7', 'v1', 'v9']
-, mi_idx[2279197,movie_info_idx]: ['v10', 'v15', 'v3', 'v13', 'v14']
-, t[2279198,title]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26']
-, tAux73[2279213,t]: ['v15', 'v16', 'v19']
-, mcAux47[2279217,mc]: ['v15', 'v9']
+dict_values([ct[2901990,company_type, 100]: ['v1', 'v2']
+, it[2901991,info_type, 100]: ['v3', 'v4']
+, mc[2901992,movie_companies, 890800.0]: ['v5', 'v15', 'v7', 'v1', 'v9']
+, mi_idx[2901993,movie_info_idx, 100.0]: ['v10', 'v15', 'v3', 'v13', 'v14']
+, t[2901994,title, 100.0]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26']
+, tAux79[2902009,t, 1.0]: ['v15', 'v16', 'v19']
+, mcAux33[2902013,mc, 1.0]: ['v15', 'v9']
 ])
 Edges:
-dict_values([2279197->2279195, 2279196->2279194, 2279213->2279217, 2279217->2279196, 2279198->2279197, 2279213->2279198])
+dict_values([mc->ct, mi_idx->it, mcAux33->mc, t->mi_idx, tAux79->t, mcAux33->tAux79])
 Root:
-2279213
+2902013
 isFull:
 False
 isFreeConnex:

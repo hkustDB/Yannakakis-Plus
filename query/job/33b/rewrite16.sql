@@ -1,40 +1,27 @@
-create or replace view aggJoin8719275549600025731 as (
-with aggView1565259176702886731 as (select id as v1, name as v73 from company_name as cn1 where country_code= '[nl]')
-select movie_id as v49, v73 from movie_companies as mc1, aggView1565259176702886731 where mc1.company_id=aggView1565259176702886731.v1);
-create or replace view aggJoin4178402367557888609 as (
-with aggView5489019489468968222 as (select id as v8, name as v74 from company_name as cn2)
-select movie_id as v61, v74 from movie_companies as mc2, aggView5489019489468968222 where mc2.company_id=aggView5489019489468968222.v8);
-create or replace view aggJoin7579993641205162210 as (
-with aggView2999892213616781975 as (select id as v15 from info_type as it1 where info= 'rating')
-select movie_id as v49, info as v38 from movie_info_idx as mi_idx1, aggView2999892213616781975 where mi_idx1.info_type_id=aggView2999892213616781975.v15);
-create or replace view aggJoin3299380925501502547 as (
-with aggView577752359427989738 as (select v49, MIN(v38) as v75 from aggJoin7579993641205162210 group by v49)
-select id as v49, title as v50, kind_id as v19, v75 from title as t1, aggView577752359427989738 where t1.id=aggView577752359427989738.v49);
-create or replace view aggJoin9183198566458625866 as (
-with aggView5901519471546863637 as (select v49, MIN(v73) as v73 from aggJoin8719275549600025731 group by v49,v73)
-select movie_id as v49, linked_movie_id as v61, link_type_id as v23, v73 from movie_link as ml, aggView5901519471546863637 where ml.movie_id=aggView5901519471546863637.v49);
-create or replace view aggJoin5799986224386593596 as (
-with aggView888971670918236738 as (select id as v23 from link_type as lt where link LIKE '%follow%')
-select v49, v61, v73 from aggJoin9183198566458625866 join aggView888971670918236738 using(v23));
-create or replace view aggJoin4413162244176351212 as (
-with aggView7206590875473026873 as (select id as v17 from info_type as it2 where info= 'rating')
-select movie_id as v61, info as v43 from movie_info_idx as mi_idx2, aggView7206590875473026873 where mi_idx2.info_type_id=aggView7206590875473026873.v17 and info<'3.0');
-create or replace view aggJoin4640168663839465888 as (
-with aggView7715540895286514871 as (select v61, MIN(v43) as v76 from aggJoin4413162244176351212 group by v61)
-select v61, v74 as v74, v76 from aggJoin4178402367557888609 join aggView7715540895286514871 using(v61));
-create or replace view aggJoin7328425828352480287 as (
-with aggView8269219929742706200 as (select id as v19 from kind_type as kt1 where kind= 'tv series')
-select v49, v50, v75 from aggJoin3299380925501502547 join aggView8269219929742706200 using(v19));
-create or replace view aggJoin2646287425796652983 as (
-with aggView6449655342022658015 as (select v49, MIN(v75) as v75, MIN(v50) as v77 from aggJoin7328425828352480287 group by v49,v75)
-select v61, v73 as v73, v75, v77 from aggJoin5799986224386593596 join aggView6449655342022658015 using(v49));
-create or replace view aggJoin4248319026506267202 as (
-with aggView4739499171188470948 as (select v61, MIN(v73) as v73, MIN(v75) as v75, MIN(v77) as v77 from aggJoin2646287425796652983 group by v61,v73,v75,v77)
-select v61, v74 as v74, v76 as v76, v73, v75, v77 from aggJoin4640168663839465888 join aggView4739499171188470948 using(v61));
-create or replace view aggJoin253304424440590247 as (
-with aggView5330660738461490709 as (select id as v21 from kind_type as kt2 where kind= 'tv series')
-select id as v61, title as v62, production_year as v65 from title as t2, aggView5330660738461490709 where t2.kind_id=aggView5330660738461490709.v21 and production_year= 2007);
-create or replace view aggJoin5867895726981590815 as (
-with aggView282478395294517868 as (select v61, MIN(v62) as v78 from aggJoin253304424440590247 group by v61)
-select v74 as v74, v76 as v76, v73 as v73, v75 as v75, v77 as v77, v78 from aggJoin4248319026506267202 join aggView282478395294517868 using(v61));
-select MIN(v73) as v73,MIN(v74) as v74,MIN(v75) as v75,MIN(v76) as v76,MIN(v77) as v77,MIN(v78) as v78 from aggJoin5867895726981590815;
+create or replace view aggView8783549154336216680 as select id as v1, name as v73 from company_name as cn1 where country_code= '[nl]';
+create or replace view aggJoin7531631629200053877 as select movie_id as v49, v73 from movie_companies as mc1, aggView8783549154336216680 where mc1.company_id=aggView8783549154336216680.v1;
+create or replace view aggView776610750753858492 as select id as v8, name as v74 from company_name as cn2;
+create or replace view aggJoin2349276462791995468 as select movie_id as v61, v74 from movie_companies as mc2, aggView776610750753858492 where mc2.company_id=aggView776610750753858492.v8;
+create or replace view aggView1156481113770639019 as select id as v23 from link_type as lt where link LIKE '%follow%';
+create or replace view aggJoin2051583420015756572 as select movie_id as v49, linked_movie_id as v61 from movie_link as ml, aggView1156481113770639019 where ml.link_type_id=aggView1156481113770639019.v23;
+create or replace view aggView3747211056991360679 as select id as v19 from kind_type as kt1 where kind= 'tv series';
+create or replace view aggJoin4761586164459169144 as select id as v49, title as v50 from title as t1, aggView3747211056991360679 where t1.kind_id=aggView3747211056991360679.v19;
+create or replace view aggView4945964466326850570 as select v49, MIN(v50) as v77 from aggJoin4761586164459169144 group by v49;
+create or replace view aggJoin5616984611288871802 as select movie_id as v49, info_type_id as v15, info as v38, v77 from movie_info_idx as mi_idx1, aggView4945964466326850570 where mi_idx1.movie_id=aggView4945964466326850570.v49;
+create or replace view aggView4878936844442774700 as select id as v21 from kind_type as kt2 where kind= 'tv series';
+create or replace view aggJoin6615513438581298851 as select id as v61, title as v62, production_year as v65 from title as t2, aggView4878936844442774700 where t2.kind_id=aggView4878936844442774700.v21 and production_year= 2007;
+create or replace view aggView1696243531530652595 as select v61, MIN(v62) as v78 from aggJoin6615513438581298851 group by v61;
+create or replace view aggJoin6029645418120132076 as select v61, v74 as v74, v78 from aggJoin2349276462791995468 join aggView1696243531530652595 using(v61);
+create or replace view aggView8501067357124572623 as select id as v17 from info_type as it2 where info= 'rating';
+create or replace view aggJoin1577545942336304041 as select movie_id as v61, info as v43 from movie_info_idx as mi_idx2, aggView8501067357124572623 where mi_idx2.info_type_id=aggView8501067357124572623.v17 and info<'3.0';
+create or replace view aggView6384973362600784818 as select v61, MIN(v43) as v76 from aggJoin1577545942336304041 group by v61;
+create or replace view aggJoin6552251925094050969 as select v61, v74 as v74, v78 as v78, v76 from aggJoin6029645418120132076 join aggView6384973362600784818 using(v61);
+create or replace view aggView7500785906015074941 as select id as v15 from info_type as it1 where info= 'rating';
+create or replace view aggJoin5734655982277087101 as select v49, v38, v77 from aggJoin5616984611288871802 join aggView7500785906015074941 using(v15);
+create or replace view aggView7072475578238769589 as select v49, MIN(v73) as v73 from aggJoin7531631629200053877 group by v49;
+create or replace view aggJoin358085386528266571 as select v49, v38, v77 as v77, v73 from aggJoin5734655982277087101 join aggView7072475578238769589 using(v49);
+create or replace view aggView804265313709286501 as select v49, MIN(v77) as v77, MIN(v73) as v73, MIN(v38) as v75 from aggJoin358085386528266571 group by v49;
+create or replace view aggJoin5123607616639646435 as select v61, v77, v73, v75 from aggJoin2051583420015756572 join aggView804265313709286501 using(v49);
+create or replace view aggView4742788673523992211 as select v61, MIN(v77) as v77, MIN(v73) as v73, MIN(v75) as v75 from aggJoin5123607616639646435 group by v61;
+create or replace view aggJoin1370745495534408519 as select v74 as v74, v78 as v78, v76 as v76, v77, v73, v75 from aggJoin6552251925094050969 join aggView4742788673523992211 using(v61);
+select MIN(v73) as v73,MIN(v74) as v74,MIN(v75) as v75,MIN(v76) as v76,MIN(v77) as v77,MIN(v78) as v78 from aggJoin1370745495534408519;

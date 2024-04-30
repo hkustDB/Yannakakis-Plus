@@ -1,22 +1,15 @@
-create or replace view aggJoin1865936790270536421 as (
-with aggView3172678749963395688 as (select id as v11, title as v56 from title as t)
-select movie_id as v11, company_id as v28, v56 from movie_companies as mc, aggView3172678749963395688 where mc.movie_id=aggView3172678749963395688.v11);
-create or replace view aggJoin4257881064536008738 as (
-with aggView8061970887763703809 as (select id as v28 from company_name as cn where country_code= '[us]')
-select v11, v56 from aggJoin1865936790270536421 join aggView8061970887763703809 using(v28));
-create or replace view aggJoin5696631148546265889 as (
-with aggView6773604514179510912 as (select id as v33 from keyword as k where keyword= 'character-name-in-title')
-select movie_id as v11 from movie_keyword as mk, aggView6773604514179510912 where mk.keyword_id=aggView6773604514179510912.v33);
-create or replace view aggJoin2430729157818428000 as (
-with aggView2952548560452853335 as (select id as v2 from name as n)
-select person_id as v2, name as v3 from aka_name as an, aggView2952548560452853335 where an.person_id=aggView2952548560452853335.v2);
-create or replace view aggJoin1873364837238252556 as (
-with aggView3287946447144793952 as (select v2, MIN(v3) as v55 from aggJoin2430729157818428000 group by v2)
-select movie_id as v11, v55 from cast_info as ci, aggView3287946447144793952 where ci.person_id=aggView3287946447144793952.v2);
-create or replace view aggJoin1591803719535519510 as (
-with aggView7156644143866323101 as (select v11 from aggJoin5696631148546265889 group by v11)
-select v11, v55 as v55 from aggJoin1873364837238252556 join aggView7156644143866323101 using(v11));
-create or replace view aggJoin5513684859946476738 as (
-with aggView8254856615397839012 as (select v11, MIN(v56) as v56 from aggJoin4257881064536008738 group by v11,v56)
-select v55 as v55, v56 from aggJoin1591803719535519510 join aggView8254856615397839012 using(v11));
-select MIN(v55) as v55,MIN(v56) as v56 from aggJoin5513684859946476738;
+create or replace view aggView6005532802225987203 as select person_id as v2, MIN(name) as v55 from aka_name as an group by person_id;
+create or replace view aggJoin617650936800977287 as select id as v2, v55 from name as n, aggView6005532802225987203 where n.id=aggView6005532802225987203.v2;
+create or replace view aggView8985001709291378187 as select id as v11, title as v56 from title as t;
+create or replace view aggJoin7476521153236777570 as select movie_id as v11, keyword_id as v33, v56 from movie_keyword as mk, aggView8985001709291378187 where mk.movie_id=aggView8985001709291378187.v11;
+create or replace view aggView63976123245675472 as select id as v28 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin2428969192730517868 as select movie_id as v11 from movie_companies as mc, aggView63976123245675472 where mc.company_id=aggView63976123245675472.v28;
+create or replace view aggView7019046585728698428 as select v11 from aggJoin2428969192730517868 group by v11;
+create or replace view aggJoin154454820151843641 as select v11, v33, v56 as v56 from aggJoin7476521153236777570 join aggView7019046585728698428 using(v11);
+create or replace view aggView3024193716860784031 as select id as v33 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin4073390880101184286 as select v11, v56 from aggJoin154454820151843641 join aggView3024193716860784031 using(v33);
+create or replace view aggView7575579802333575091 as select v11, MIN(v56) as v56 from aggJoin4073390880101184286 group by v11;
+create or replace view aggJoin9078538754252869974 as select person_id as v2, v56 from cast_info as ci, aggView7575579802333575091 where ci.movie_id=aggView7575579802333575091.v11;
+create or replace view aggView5943603037469113826 as select v2, MIN(v55) as v55 from aggJoin617650936800977287 group by v2;
+create or replace view aggJoin681478187603681748 as select v56 as v56, v55 from aggJoin9078538754252869974 join aggView5943603037469113826 using(v2);
+select MIN(v55) as v55,MIN(v56) as v56 from aggJoin681478187603681748;

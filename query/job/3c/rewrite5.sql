@@ -1,10 +1,7 @@
-create or replace view aggJoin1011390068559013147 as (
-with aggView5678089431624213604 as (select id as v12, title as v24 from title as t where production_year>1990)
-select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView5678089431624213604 where mk.movie_id=aggView5678089431624213604.v12);
-create or replace view aggJoin5989479702961522631 as (
-with aggView3433004161549985404 as (select movie_id as v12 from movie_info as mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American') group by movie_id)
-select v1, v24 as v24 from aggJoin1011390068559013147 join aggView3433004161549985404 using(v12));
-create or replace view aggJoin4825970806629510582 as (
-with aggView4883780345703299255 as (select id as v1 from keyword as k where keyword LIKE '%sequel%')
-select v24 from aggJoin5989479702961522631 join aggView4883780345703299255 using(v1));
-select MIN(v24) as v24 from aggJoin4825970806629510582;
+create or replace view aggView9109858088689211221 as select id as v12, title as v24 from title as t where production_year>1990;
+create or replace view aggJoin1425293692688288111 as select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView9109858088689211221 where mk.movie_id=aggView9109858088689211221.v12;
+create or replace view aggView1320294157501278975 as select movie_id as v12 from movie_info as mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American') group by movie_id;
+create or replace view aggJoin5451374825657262737 as select v1, v24 as v24 from aggJoin1425293692688288111 join aggView1320294157501278975 using(v12);
+create or replace view aggView4290101377305670074 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin6715425052230359475 as select v24 from aggJoin5451374825657262737 join aggView4290101377305670074 using(v1);
+select MIN(v24) as v24 from aggJoin6715425052230359475;
