@@ -40,7 +40,7 @@ CREATE TABLE cast_info (
     role_id integer,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '3624434400'
+        'cardinality' = '36244344'
 );
 
 CREATE TABLE char_name (
@@ -156,7 +156,7 @@ CREATE TABLE movie_keyword (
     keyword_id integer,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '452393000'
+        'cardinality' = '4523930'
 );
 
 CREATE TABLE movie_link (
@@ -207,7 +207,7 @@ CREATE TABLE title (
     md5sum varchar,
     PRIMARY KEY (id)
 ) WITH (
-        'cardinality' = '138145300'
+        'cardinality' = '1381453'
 );
 
 CREATE TABLE movie_info (

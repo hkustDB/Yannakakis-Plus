@@ -16,7 +16,7 @@ def input_car_ndv(DDL_NAME: str):
     try:
         BASE_PATH = globalVar.get_value('BASE_PATH')
         if DDL_NAME == 'tpch':
-            data_tpch = pd.read_excel(STATIS_PATH + BASE_PATH + 'tpch.xlsx', header=None, keep_default_na=False)
+            data_tpch = pd.read_excel(BASE_PATH + 'tpch.xlsx', header=None, keep_default_na=False)
             tpch = data_tpch.values.tolist()
             sta_tpch = dict()
             for table in tpch:
@@ -29,7 +29,7 @@ def input_car_ndv(DDL_NAME: str):
                 sta_tpch[name] = col_sta
             return sta_tpch
         elif DDL_NAME == 'lsqb':
-            data_lsqb = pd.read_excel(STATIS_PATH +  BASE_PATH + 'lsqb.xlsx', header=None, keep_default_na=False)
+            data_lsqb = pd.read_excel(BASE_PATH + 'lsqb.xlsx', header=None, keep_default_na=False)
             lsqb = data_lsqb.values.tolist()
             sta_lsqb = dict()
             for table in lsqb:
@@ -42,7 +42,7 @@ def input_car_ndv(DDL_NAME: str):
                 sta_lsqb[name] = col_sta
             return sta_lsqb
         else:
-            data_job = pd.read_excel(STATIS_PATH +  BASE_PATH + 'job.xlsx', header=None, keep_default_na=False)
+            data_job = pd.read_excel(BASE_PATH + 'job.xlsx', header=None, keep_default_na=False)
             job = data_job.values.tolist()
             sta_job = dict()
             for table in job:
@@ -50,7 +50,10 @@ def input_car_ndv(DDL_NAME: str):
                 col_sta = []
                 for col in table[1:]:
                     if col != '':
-                        cardinality, ndv = int(col.split(';')[0]), int(col.split(';')[1])
+                        if col.split(';')[1] == '':
+                            cardinality, ndv = int(col.split(';')[0]), int(col.split(';')[0])
+                        else:
+                            cardinality, ndv = int(col.split(';')[0]), int(col.split(';')[1])
                         col_sta.append([cardinality, ndv])
                 sta_job[name] = col_sta
             return sta_job
