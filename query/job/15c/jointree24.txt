@@ -1,0 +1,25 @@
+Relations:
+dict_values([aka_t[16932639,aka_title, 36147200]: ['v1', 'v40', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12']
+, cn[16932640,company_name, 8484300]: ['v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19']
+, ct[16932641,company_type, 400]: ['v20', 'v21']
+, it1[16932642,info_type, 100]: ['v22', 'v23']
+, k[16932643,keyword, 13417000]: ['v24', 'v25', 'v26']
+, mc[16932644,movie_companies, 400.0]: ['v27', 'v40', 'v13', 'v20', 'v31']
+, mi[16932645,movie_info, 178300.0]: ['v32', 'v40', 'v22', 'v35', 'v36']
+, mk[16932646,movie_keyword, 13417000.0]: ['v37', 'v40', 'v24']
+, t[16932647,title, 174903200.0]: ['v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
+, tAux19[16933877,t, 178300.0]: ['v40', 'v41']
+, miAux43[16933977,mi, 178300]: ['v40', 'v35']
+])
+Edges:
+dict_values([mk->k, mc->ct, mk->aka_t, t->mk, tAux19->miAux43, tAux19->t, mi->it1, t->mc, miAux43->mi, mc->cn])
+Root:
+16933877
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

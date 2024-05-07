@@ -1,4 +1,4 @@
-SELECT MIN(mi.info) AS movie_budget,
+explain SELECT MIN(mi.info) AS movie_budget,
        MIN(mi_idx.info) AS movie_votes,
        MIN(n.name) AS writer,
        MIN(t.title) AS violent_liongate_movie
@@ -33,7 +33,7 @@ WHERE ci.note IN ('(writer)',
                   'Thriller')
   AND n.gender = 'm'
   AND t.production_year > 2000
-  AND (t.title LIKE '%Freddy%'
+  AND (t.title LIKE 'Saw%'
        OR t.title LIKE '%Jason%')
   AND t.id = mi.movie_id
   AND t.id = mi_idx.movie_id

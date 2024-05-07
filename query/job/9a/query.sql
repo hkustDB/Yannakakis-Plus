@@ -1,4 +1,4 @@
-SELECT MIN(an.name) AS alternative_name,
+explain SELECT MIN(an.name) AS alternative_name,
        MIN(chn.name) AS character_name,
        MIN(t.title) AS movie
 FROM aka_name AS an,
