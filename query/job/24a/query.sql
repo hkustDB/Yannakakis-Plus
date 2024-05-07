@@ -1,4 +1,4 @@
-SELECT MIN(chn.name) AS voiced_char_name,
+explain SELECT MIN(chn.name) AS voiced_char_name,
        MIN(n.name) AS voicing_actress_name,
        MIN(t.title) AS voiced_action_movie_jap_eng
 FROM aka_name AS an,

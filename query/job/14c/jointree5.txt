@@ -1,19 +1,19 @@
 Relations:
-dict_values([it1[2860108,info_type, 100]: ['v1', 'v2']
-, it2[2860109,info_type, 100]: ['v3', 'v4']
-, k[2860110,keyword, 300]: ['v5', 'v6', 'v7']
-, kt[2860111,kind_type, 200]: ['v8', 'v9']
-, mi[2860112,movie_info, 112.38104204423314]: ['v10', 'v23', 'v1', 'v13', 'v14']
-, mi_idx[2860113,movie_info_idx, 26752680.0]: ['v15', 'v23', 'v3', 'v18', 'v19']
-, mk[2860114,movie_keyword, 300.0]: ['v20', 'v23', 'v5']
-, t[2860115,title, 112.38104204423314]: ['v23', 'v24', 'v25', 'v8', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34']
-, tAux19[2860363,t, 1.1238104204423314]: ['v23', 'v24']
-, mi_idxAux85[2860379,mi_idx, 1.1238104204423314]: ['v23', 'v18']
+dict_values([it1[16701422,info_type, 100]: ['v1', 'v2']
+, it2[16701423,info_type, 100]: ['v3', 'v4']
+, k[16701424,keyword, 300]: ['v5', 'v6', 'v7']
+, kt[16701425,kind_type, 200]: ['v8', 'v9']
+, mi[16701426,movie_info, 8952625.0]: ['v10', 'v23', 'v1', 'v13', 'v14']
+, mi_idx[16701427,movie_info_idx, 150797666.66666666]: ['v15', 'v23', 'v3', 'v18', 'v19']
+, mk[16701428,movie_keyword, 337.1431261326994]: ['v20', 'v23', 'v5']
+, t[16701429,title, 33764000.0]: ['v23', 'v24', 'v25', 'v8', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34']
+, tAux50[16701675,t, 101292000]: ['v23', 'v24']
+, mi_idxAux86[16701691,mi_idx, 101292000.0]: ['v23', 'v18']
 ])
 Edges:
-dict_values([tAux19->t, mi_idx->it2, t->kt, mk->k, mi->it1, mi->mk, mi_idxAux85->mi_idx, t->mi, mi_idxAux85->tAux19])
+dict_values([mi_idxAux86->mi_idx, tAux50->t, mk->mi, mi_idx->it2, mi->it1, mi_idx->mk, mi_idxAux86->tAux50, mk->k, t->kt])
 Root:
-2860379
+16701691
 isFull:
 False
 isFreeConnex:

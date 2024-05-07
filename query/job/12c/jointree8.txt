@@ -1,20 +1,20 @@
 Relations:
-dict_values([cn[2900176,company_name, 1]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
-, ct[2900177,company_type, 100]: ['v8', 'v9']
-, it1[2900178,info_type, 100]: ['v21', 'v11']
-, it2[2900179,info_type, 100]: ['v26', 'v13']
-, mc[2900180,movie_companies, 1.0]: ['v14', 'v29', 'v1', 'v8', 'v18']
-, mi[2900181,movie_info, 16365650.0]: ['v19', 'v29', 'v21', 'v22', 'v23']
-, mi_idx[2900182,movie_info_idx, 117.72282225562185]: ['v24', 'v29', 'v26', 'v27', 'v28']
-, t[2900183,title, 1]: ['v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40']
-, mi_idxAux7[2900227,mi_idx, 1.0637475706699426]: ['v29', 'v27']
-, tAux54[2900236,t, 1.0]: ['v29', 'v30']
-, cnAux67[2900254,cn, 1.0]: ['v1', 'v2']
+dict_values([cn[17845142,company_name, 8484300]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+, ct[17845143,company_type, 100]: ['v8', 'v9']
+, it1[17845144,info_type, 100]: ['v21', 'v11']
+, it2[17845145,info_type, 100]: ['v26', 'v13']
+, mc[17845146,movie_companies, 100.0]: ['v14', 'v29', 'v1', 'v8', 'v18']
+, mi[17845147,movie_info, 16365650.0]: ['v19', 'v29', 'v21', 'v22', 'v23']
+, mi_idx[17845148,movie_info_idx, 3856780.0]: ['v24', 'v29', 'v26', 'v27', 'v28']
+, t[17845149,title, 32731300.0]: ['v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40']
+, cnAux47[17845199,cn, 8484300]: ['v1', 'v2']
+, mi_idxAux83[17845214,mi_idx, 19283900]: ['v29', 'v27']
+, tAux46[17845226,t, 104280000.0]: ['v29', 'v30']
 ])
 Edges:
-dict_values([mi_idx->it2, mc->ct, tAux54->t, mi_idxAux7->mc, mi->it1, cnAux67->cn, mi_idx->mi, mc->cnAux67, mi_idxAux7->tAux54, mi_idxAux7->mi_idx])
+dict_values([mi_idx->it2, cnAux47->cn, t->mi, mc->cnAux47, mc->ct, mi_idxAux83->mi_idx, mi->it1, tAux46->mc, tAux46->t, mc->mi_idxAux83])
 Root:
-2900227
+17845226
 isFull:
 False
 isFreeConnex:

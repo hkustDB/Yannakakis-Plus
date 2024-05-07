@@ -1,0 +1,23 @@
+Relations:
+dict_values([aka_t[17172468,aka_title, 36147200]: ['v1', 'v40', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12']
+, cn[17172469,company_name, 100]: ['v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19']
+, ct[17172470,company_type, 400]: ['v20', 'v21']
+, it1[17172471,info_type, 100]: ['v22', 'v23']
+, k[17172472,keyword, 13417000]: ['v24', 'v25', 'v26']
+, mc[17172473,movie_companies, 100.0]: ['v27', 'v40', 'v13', 'v20', 'v31']
+, mi[17172474,movie_info, 177100.0]: ['v32', 'v40', 'v22', 'v35', 'v36']
+, mk[17172475,movie_keyword, 71625900.0]: ['v37', 'v40', 'v24']
+, t[17172476,title, 175500.0]: ['v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
+])
+Edges:
+dict_values([t->mi, mi->it1, mk->mc, mc->cn, mk->t, mk->k, t->aka_t, mc->ct])
+Root:
+17172475
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[17172475]
+fixroot:
+True
