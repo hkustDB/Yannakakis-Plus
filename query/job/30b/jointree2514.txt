@@ -1,0 +1,26 @@
+Relations:
+dict_values([cc[17066397,complete_cast, 157822301.16322762]: ['v1', 'v45', 'v5', 'v7']
+, cct1[17066398,comp_cast_type, 200]: ['v5', 'v6']
+, cct2[17066399,comp_cast_type, 200]: ['v7', 'v8']
+, ci[17066400,cast_info, 45500.0]: ['v9', 'v36', 'v45', 'v12', 'v13', 'v14', 'v15']
+, it1[17066401,info_type, 100]: ['v16', 'v17']
+, it2[17066402,info_type, 100]: ['v18', 'v19']
+, k[17066403,keyword, 700]: ['v20', 'v21', 'v22']
+, mi[17066404,movie_info, 3652350.0]: ['v23', 'v45', 'v16', 'v26', 'v27']
+, mi_idx[17066405,movie_info_idx, 144420.0]: ['v28', 'v45', 'v18', 'v31', 'v32']
+, mk[17066406,movie_keyword, 13508600.0]: ['v33', 'v45', 'v20']
+, n[17066407,name, 173957900]: ['v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44']
+, t[17066408,title, 45500]: ['v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51', 'v52', 'v53', 'v54', 'v55', 'v56']
+])
+Edges:
+dict_values([mk->k, mi->it1, mi_idx->ci, cc->mi_idx, cc->mi, cc->cct2, mk->cc, mi_idx->it2, ci->n, cc->cct1, ci->t])
+Root:
+17066406
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[17066406]
+fixroot:
+True

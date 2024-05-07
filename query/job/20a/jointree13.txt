@@ -1,24 +1,24 @@
 Relations:
-dict_values([cc[5038877,complete_cast, 200.0]: ['v1', 'v40', 'v5', 'v7']
-, cct1[5038878,comp_cast_type, 200]: ['v5', 'v6']
-, cct2[5038879,comp_cast_type, 200]: ['v7', 'v8']
-, chn[5038880,char_name, 3000]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
-, ci[5038881,cast_info, 100.0]: ['v16', 'v31', 'v40', 'v9', 'v20', 'v21', 'v22']
-, k[5038882,keyword, 800]: ['v23', 'v24', 'v25']
-, kt[5038883,kind_type, 100]: ['v26', 'v27']
-, mk[5038884,movie_keyword, 100.0]: ['v28', 'v40', 'v23']
-, n[5038885,name, 416749100]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39']
-, t[5038886,title, 38121183.333333336]: ['v40', 'v41', 'v42', 'v26', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
+dict_values([cc[17838867,complete_cast, 200.0]: ['v1', 'v40', 'v5', 'v7']
+, cct1[17838868,comp_cast_type, 200]: ['v5', 'v6']
+, cct2[17838869,comp_cast_type, 200]: ['v7', 'v8']
+, chn[17838870,char_name, 3000]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+, ci[17838871,cast_info, 7624236.666666667]: ['v16', 'v31', 'v40', 'v9', 'v20', 'v21', 'v22']
+, k[17838872,keyword, 800]: ['v23', 'v24', 'v25']
+, kt[17838873,kind_type, 100]: ['v26', 'v27']
+, mk[17838874,movie_keyword, 800.0]: ['v28', 'v40', 'v23']
+, n[17838875,name, 416749100]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39']
+, t[17838876,title, 56549125.0]: ['v40', 'v41', 'v42', 'v26', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
 ])
 Edges:
-dict_values([t->kt, ci->mk, mk->cc, ci->chn, mk->k, mk->t, cc->cct2, cc->cct1, ci->n])
+dict_values([t->kt, ci->chn, cc->cct2, t->mk, mk->cc, mk->k, ci->n, cc->cct1, ci->t])
 Root:
-5038881
+17838871
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[5038881]
+[17838871]
 fixroot:
 True

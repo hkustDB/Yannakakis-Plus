@@ -1,0 +1,23 @@
+Relations:
+dict_values([ci[17768424,cast_info, 124471600.0]: ['v1', 'v28', 'v37', 'v4', 'v5', 'v6', 'v7']
+, it1[17768425,info_type, 100]: ['v8', 'v9']
+, it2[17768426,info_type, 100]: ['v10', 'v11']
+, k[17768427,keyword, 600]: ['v12', 'v13', 'v14']
+, mi[17768428,movie_info, 6299033.333333333]: ['v15', 'v37', 'v8', 'v18', 'v19']
+, mi_idx[17768429,movie_info_idx, 100.0]: ['v20', 'v37', 'v10', 'v23', 'v24']
+, mk[17768430,movie_keyword, 341574496.5559721]: ['v25', 'v37', 'v12']
+, n[17768431,name, 173957900]: ['v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36']
+, t[17768432,title, 252831200]: ['v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48']
+])
+Edges:
+dict_values([mi->it1, mk->k, mi_idx->t, mk->ci, mk->mi, mi_idx->it2, ci->n, mk->mi_idx])
+Root:
+17768430
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[17768430]
+fixroot:
+True

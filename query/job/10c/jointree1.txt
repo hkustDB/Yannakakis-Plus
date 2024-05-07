@@ -1,18 +1,18 @@
 Relations:
-dict_values([chn[2820668,char_name, 1]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
-, ci[2820669,cast_info, 478479.6666666667]: ['v8', 'v9', 'v31', 'v1', 'v12', 'v13', 'v29']
-, cn[2820670,company_name, 8484300]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21']
-, ct[2820671,company_type, 400]: ['v22', 'v23']
-, mc[2820672,movie_companies, 400.0]: ['v24', 'v31', 'v15', 'v22', 'v28']
-, rt[2820673,role_type, 1200]: ['v29', 'v30']
-, t[2820674,title, 400.0]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42']
-, tAux27[2820699,t, 1.4638852175473807]: ['v31', 'v32']
-, chnAux52[2820703,chn, 1.0]: ['v1', 'v2']
+dict_values([chn[15751065,char_name, 314033900]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+, ci[15751066,cast_info, 1200.0000000000002]: ['v8', 'v9', 'v31', 'v1', 'v12', 'v13', 'v29']
+, cn[15751067,company_name, 8484300]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21']
+, ct[15751068,company_type, 400]: ['v22', 'v23']
+, mc[15751069,movie_companies, 400.0]: ['v24', 'v31', 'v15', 'v22', 'v28']
+, rt[15751070,role_type, 1200]: ['v29', 'v30']
+, t[15751071,title, 174903200.0]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42']
+, chnAux81[15751096,chn, 143543900.0]: ['v1', 'v2']
+, tAux1[15751100,t, 174903200]: ['v31', 'v32']
 ])
 Edges:
-dict_values([tAux27->t, tAux27->ci, ci->rt, t->mc, ci->chnAux52, mc->ct, chnAux52->chn, mc->cn])
+dict_values([mc->ct, mc->cn, ci->tAux1, chnAux81->chn, t->mc, chnAux81->ci, tAux1->t, ci->rt])
 Root:
-2820699
+15751096
 isFull:
 False
 isFreeConnex:

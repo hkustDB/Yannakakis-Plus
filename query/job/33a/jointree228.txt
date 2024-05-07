@@ -1,0 +1,34 @@
+Relations:
+dict_values([cn1[15632322,company_name, 8484300]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+, cn2[15632323,company_name, 8484300]: ['v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14']
+, it1[15632324,info_type, 100]: ['v15', 'v16']
+, it2[15632325,info_type, 100]: ['v17', 'v18']
+, kt1[15632326,kind_type, 100]: ['v19', 'v20']
+, kt2[15632327,kind_type, 100]: ['v21', 'v22']
+, lt[15632328,link_type, 200]: ['v23', 'v24']
+, mc1[15632329,movie_companies, 9284732.852240613]: ['v25', 'v49', 'v1', 'v28', 'v29']
+, mc2[15632330,movie_companies, 8484300.0]: ['v30', 'v61', 'v8', 'v33', 'v34']
+, mi_idx1[15632331,movie_info_idx, 100.0]: ['v35', 'v49', 'v15', 'v38', 'v39']
+, mi_idx2[15632332,movie_info_idx, 100.0]: ['v40', 'v61', 'v17', 'v43', 'v44']
+, ml[15632333,movie_link, 619.0440945588301]: ['v45', 'v49', 'v61', 'v23']
+, t1[15632334,title, 7431000.0]: ['v49', 'v50', 'v51', 'v19', 'v53', 'v54', 'v55', 'v56', 'v57', 'v58', 'v59', 'v60']
+, t2[15632335,title, 7431000.0]: ['v61', 'v62', 'v63', 'v21', 'v65', 'v66', 'v67', 'v68', 'v69', 'v70', 'v71', 'v72']
+, cn2Aux63[15632429,cn2, 8484300]: ['v8', 'v9']
+, mi_idx2Aux90[15632435,mi_idx2, 44586000.0]: ['v61', 'v43']
+, t2Aux41[15632465,t2, 44586000]: ['v61', 'v62']
+, t1Aux92[15632525,t1, 260912900.0]: ['v49', 'v50']
+, mi_idx1Aux74[15632585,mi_idx1, 138003500]: ['v49', 'v38']
+, cn1Aux60[15632615,cn1, 8484300]: ['v1', 'v2']
+])
+Edges:
+dict_values([ml->mi_idx2Aux90, ml->lt, t2Aux41->t2, mc1->mi_idx1Aux74, cn1Aux60->cn1, mi_idx2->it2, mi_idx2Aux90->mi_idx2, mi_idx2Aux90->t2Aux41, t1Aux92->mc1, mi_idx1Aux74->mi_idx1, cn2Aux63->cn2, mi_idx2Aux90->mc2, t1->kt1, t2->kt2, t1Aux92->t1, mc1->ml, mi_idx1->it1, mc1->cn1Aux60, mc2->cn2Aux63])
+Root:
+15632525
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

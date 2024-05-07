@@ -1,0 +1,25 @@
+Relations:
+dict_values([cn[17179318,company_name, 4830200]: ['v17', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+, ct[17179319,company_type, 100]: ['v18', 'v9']
+, k[17179320,keyword, 100]: ['v27', 'v11', 'v12']
+, lt[17179321,link_type, 200]: ['v13', 'v14']
+, mc[17179322,movie_companies, 150.19715478583578]: ['v15', 'v29', 'v17', 'v18', 'v19']
+, mi[17179323,movie_info, 11655900]: ['v20', 'v29', 'v22', 'v23', 'v24']
+, mk[17179324,movie_keyword, 100.0]: ['v25', 'v29', 'v27']
+, ml[17179325,movie_link, 130456450.0]: ['v28', 'v29', 'v30', 'v13']
+, t[17179326,title, 104280000]: ['v29', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43']
+, cnAux20[17179464,cn, 4830200]: ['v17', 'v2']
+, tAux2[17179494,t, 2999700.0]: ['v29', 'v33']
+])
+Edges:
+dict_values([tAux2->t, tAux2->ml, ml->mk, mc->mi, mc->ct, mc->cnAux20, ml->mc, cnAux20->cn, mk->k, ml->lt])
+Root:
+17179494
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

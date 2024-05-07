@@ -1,20 +1,20 @@
 Relations:
-dict_values([cc[5038877,complete_cast, 200.0]: ['v1', 'v40', 'v5', 'v7']
-, cct1[5038878,comp_cast_type, 200]: ['v5', 'v6']
-, cct2[5038879,comp_cast_type, 200]: ['v7', 'v8']
-, chn[5038880,char_name, 3000]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
-, ci[5038881,cast_info, 800.0]: ['v16', 'v31', 'v40', 'v9', 'v20', 'v21', 'v22']
-, k[5038882,keyword, 800]: ['v23', 'v24', 'v25']
-, kt[5038883,kind_type, 100]: ['v26', 'v27']
-, mk[5038884,movie_keyword, 800.0]: ['v28', 'v40', 'v23']
-, n[5038885,name, 416749100]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39']
-, t[5038886,title, 100.0]: ['v40', 'v41', 'v42', 'v26', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
-, tAux90[5040249,t, 100.0]: ['v41']
+dict_values([cc[54472,complete_cast, 200.0]: ['v1', 'v40', 'v5', 'v7']
+, cct1[54473,comp_cast_type, 200]: ['v5', 'v6']
+, cct2[54474,comp_cast_type, 200]: ['v7', 'v8']
+, chn[54475,char_name, 3000]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+, ci[54476,cast_info, 3000.0]: ['v16', 'v31', 'v40', 'v9', 'v20', 'v21', 'v22']
+, k[54477,keyword, 800]: ['v23', 'v24', 'v25']
+, kt[54478,kind_type, 100]: ['v26', 'v27']
+, mk[54479,movie_keyword, 800.0]: ['v28', 'v40', 'v23']
+, n[54480,name, 416749100]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39']
+, t[54481,title, 100.0]: ['v40', 'v41', 'v42', 'v26', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
+, tAux82[55849,t, 228727100]: ['v41']
 ])
 Edges:
-dict_values([t->kt, ci->mk, ci->chn, mk->k, cc->cct2, t->cc, t->ci, tAux90->t, cc->cct1, ci->n])
+dict_values([t->ci, cc->cct1, ci->n, mk->k, cc->cct2, tAux82->t, ci->chn, mk->cc, ci->mk, t->kt])
 Root:
-5040249
+55849
 isFull:
 False
 isFreeConnex:
