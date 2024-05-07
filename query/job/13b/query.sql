@@ -1,4 +1,4 @@
-explain SELECT MIN(cn.name) AS producing_company,
+SELECT MIN(cn.name) AS producing_company,
        MIN(mi_idx.info) AS rating,
        MIN(t.title) AS movie_about_winning
 FROM company_name AS cn,

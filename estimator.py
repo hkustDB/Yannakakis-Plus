@@ -70,8 +70,6 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
     if statistics == None:
         return cost_height, cost_fanout, cost_estimate
 
-    leaf_nodes = []
-    all_ansestors = set()
     all_jt_nodes = set()
 
     for edge in jt.edge.values():
@@ -85,9 +83,7 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
         staP, staC = [], []
         if node.parent != None:
             joinKey = list(set(node.cols) & set(node.parent.cols))
-            if len(joinKey) >= 2:
-                staP = [1, 1]
-            elif len(joinKey) == 1:
+            if len(joinKey):
                 idx = node.cols.index(joinKey[0])
                 try:
                     staP = statistics[re.sub(r'[0-9]+', '', node.source)][idx]
@@ -106,9 +102,7 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
         if len(node.children):
             for child in node.children:
                 joinKey = list(set(node.cols) & set(child.cols))
-                if len(joinKey) >= 2:
-                    staC = [1, 1]
-                elif len(joinKey) == 1:
+                if len(joinKey):
                     idx = node.cols.index(joinKey[0])
                     try:
                         if not len(staC):
@@ -140,27 +134,38 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
             node.allchildren |= child.allchildren
             node.allchildren.add(child)
     
+    join_cost, view_cost = 0.0, 0.0
     for node in all_jt_nodes:
-        if len(node.allchildren):
+        if len(node.children):
             min_ndv = maxsize
-            cur_cost = 1.0
-            node.allchildren = list(node.allchildren)
-            node.allchildren.sort(key=lambda x: x.trueSize)
-            for child in node.allchildren:
+            inter_size = 1.0
+            
+            node.children.sort(key=lambda x: x.trueSize)
+            for child in node.children:
                 if node.relationType == RelationType.AuxiliaryRelation and child.id == node.supRelationId:
                     continue
-                min_ndv = min(min_ndv, child.statistics[1])
-                cur_cost = cur_cost * child.statistics[0] / child.statistics[1]
+                min_ndv = min(min_ndv, child.statistics[1], node.statisticsC[1])
 
-                cost_estimate += min(min_ndv, node.statisticsC[1]) * cur_cost * node.estimateSize / node.statisticsC[1]
-                node.estimateSize = min(min_ndv, node.statisticsC[1]) * cur_cost * node.estimateSize / node.statisticsC[1]
+                if child.estimateSize < child.statistics[1]:
+                    child.statistics[1] = child.estimateSize
+                if node.estimateSize < node.statisticsC[1]:
+                    node.statisticsC[1] = node.estimateSize
+
+                inter_size = min_ndv * child.estimateSize / child.statistics[1] * node.estimateSize / node.statisticsC[1]
+                node.estimateSize = inter_size
+                view_cost += child.estimateSize / child.statistics[1]
+                join_cost += inter_size
             
-            node.estimateSize = min(min_ndv, node.statisticsC[1]) * cur_cost * node.statisticsC[0] / node.statisticsC[1]
         else:
             node.estimateSize = node.statistics[0]
         nodeId = node.id
         jt.node[nodeId] = node
+
+    cost_estimate = -0.000000173953612 * join_cost + 0.000000151063199 * view_cost + 3.969433084056
     
+    if cost_estimate < 0:
+        cost_estimate = 0.000000261898682 * join_cost + 0.000000124901126 * view_cost
+
     return cost_height, cost_fanout, cost_estimate
 
 

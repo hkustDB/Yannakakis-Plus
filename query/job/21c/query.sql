@@ -1,4 +1,4 @@
-explain SELECT MIN(cn.name) AS company_name,
+SELECT MIN(cn.name) AS company_name,
        MIN(lt.link) AS link_type,
        MIN(t.title) AS western_follow_up
 FROM company_name AS cn,

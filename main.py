@@ -27,10 +27,12 @@ from codegenYan import *
 from topk import *
 from estimator import *
 from enumsType import EdgeType
+
 import globalVar
 import csv
 
 from random import randint
+from queue import PriorityQueue as PQ
 import os
 import re
 import time
@@ -325,11 +327,11 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/13d/')
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/20a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
-    
+    '''
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -342,7 +344,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    
+    '''
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
     OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
@@ -390,12 +392,33 @@ if __name__ == '__main__':
             codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=topK.genType)  
     else:
         fields = ['index', 'hight', 'width', 'estimate'] 
-        cost_stat = []
+        cost_stat = PQ()
+        total_number = 12
+        fix_number, nonfix_number = total_number // 2, total_number // 2
+        fix_iter, nonfix_iter = 0, 0
+        best_res = []
+        
         for jt, comp, index in allRes:
             outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
             outYaName = OUT_YA_NAME.split('.')[0] + str(index) + '.' + OUT_YA_NAME.split('.')[1]
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
-            cost_stat.append([index, cost_height, cost_fanout, cost_estimate])
+            cost_stat.put((cost_estimate, jt, comp, index))
+        
+        while not cost_stat.empty() and fix_iter < fix_number and nonfix_iter < nonfix_number:
+            cost_estimate, jt, comp, index = cost_stat.get()
+
+            if jt.fixRoot and fix_iter >= fix_number:
+                continue
+            if not jt.fixRoot and nonfix_iter >= nonfix_number:
+                continue
+
+            if jt.fixRoot:
+                fix_iter += 1
+            else:
+                nonfix_iter += 1
+
+            best_res.append(index)
+
             try:
                 
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
@@ -433,8 +456,7 @@ if __name__ == '__main__':
             write = csv.writer(f)
             write.writerow(fields)
             write.writerows(cost_stat)
-            best = selectBest(cost_stat, 2)
-            write.writerow(best)
+            write.writerow(best_res)
 
     end2 = time.time()
     with open(BASE_PATH + REWRITE_TIME, 'a+') as f:
