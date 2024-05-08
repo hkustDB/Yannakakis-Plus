@@ -30,6 +30,7 @@ from enumsType import EdgeType
 
 import globalVar
 import csv
+import json
 
 from random import randint
 from queue import PriorityQueue as PQ
@@ -172,11 +173,14 @@ def connect(base: int, mode: int, type: GenType):
     body['query'] = query_file.read()
     query_file.close()
     try:
+        json_file = open(BASE_PATH + globalVar.get_value('PLAN_NAME'))
+        plan = json.load(json_file)
+        body['plan'] = plan
         # http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=10&limit=10&fixRootEnable=true", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
-        traceback.print_exc()
-        print("Error query: " + QUERY_NAME)
+        # traceback.print_exc()
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000&fixRootEnable=true", headers=headers, json=body).json()['data']
     # 1. 
     table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
     # 3. parse outputVariables
@@ -324,14 +328,15 @@ if __name__ == '__main__':
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.csv')
+    globalVar.set_value('PLAN_NAME', 'plan.json')
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/20a/')
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/27a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
-    '''
+    
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -344,7 +349,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    '''
+    
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
     OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
@@ -393,19 +398,28 @@ if __name__ == '__main__':
     else:
         fields = ['index', 'hight', 'width', 'estimate'] 
         cost_stat = PQ()
-        total_number = 12
+        total_number = 8
         fix_number, nonfix_number = total_number // 2, total_number // 2
         fix_iter, nonfix_iter = 0, 0
-        best_res = []
+        best_res_nonfix, best_res_fix = [], []
+        all_res = []
+        has_nonfix: bool = False
         
         for jt, comp, index in allRes:
-            outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
-            outYaName = OUT_YA_NAME.split('.')[0] + str(index) + '.' + OUT_YA_NAME.split('.')[1]
             cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
             cost_stat.put((cost_estimate, jt, comp, index))
+            all_res.append([index, cost_height, cost_fanout, cost_estimate])
+            if not has_nonfix and not jt.fixRoot:
+                has_nonfix = True
+
+        if not has_nonfix:
+            fix_number = total_number
         
-        while not cost_stat.empty() and fix_iter < fix_number and nonfix_iter < nonfix_number:
+        while not cost_stat.empty():
             cost_estimate, jt, comp, index = cost_stat.get()
+
+            if fix_iter + nonfix_iter >= total_number:
+                break
 
             if jt.fixRoot and fix_iter >= fix_number:
                 continue
@@ -414,16 +428,18 @@ if __name__ == '__main__':
 
             if jt.fixRoot:
                 fix_iter += 1
+                best_res_fix.append(index)
             else:
                 nonfix_iter += 1
-
-            best_res.append(index)
+                best_res_nonfix.append(index)
 
             try:
                 
                 jtout = open(BASE_PATH + 'jointree' + str(index) + '.txt', 'w+')
                 jtout.write(str(jt))
                 jtout.close()
+                outName = OUT_NAME.split('.')[0] + str(index) + '.' + OUT_NAME.split('.')[1]
+                outYaName = OUT_YA_NAME.split('.')[0] + str(index) + '.' + OUT_YA_NAME.split('.')[1]
                 
                 computationList.reset()
                 if IRmode == IRType.Report:
@@ -455,8 +471,9 @@ if __name__ == '__main__':
         with open(BASE_PATH + COST_NAME, 'w+') as f:
             write = csv.writer(f)
             write.writerow(fields)
-            write.writerows(cost_stat)
-            write.writerow(best_res)
+            write.writerows(all_res)
+            write.writerow(best_res_nonfix)
+            write.writerow(best_res_fix)
 
     end2 = time.time()
     with open(BASE_PATH + REWRITE_TIME, 'a+') as f:
