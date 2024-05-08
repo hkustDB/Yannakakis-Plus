@@ -1,0 +1,12 @@
+create or replace view semiJoinView3126814784776932169 as select movie_id as v40, company_id as v13, company_type_id as v20, note as v31 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct) and note LIKE '%(200%)%' and note LIKE '%(worldwide)%';
+create or replace view semiJoinView8747970422006245150 as select movie_id as v40, info_type_id as v22, info as v35, note as v36 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'release dates') and note LIKE '%internet%';
+create or replace view miAux61 as select v40, v35 from semiJoinView8747970422006245150;
+create or replace view semiJoinView7182490360983168265 as select v40, v13, v20, v31 from semiJoinView3126814784776932169 where (v40) in (select (movie_id) from aka_title AS aka_t);
+create or replace view semiJoinView543650385719332012 as select movie_id as v40, keyword_id as v24 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k);
+create or replace view semiJoinView5604125680782873097 as select v40, v13, v20, v31 from semiJoinView7182490360983168265 where (v40) in (select (v40) from semiJoinView543650385719332012);
+create or replace view semiJoinView4265018402274517821 as select v40, v13, v20, v31 from semiJoinView5604125680782873097 where (v13) in (select (id) from company_name AS cn where name= 'YouTube' and country_code= '[us]');
+create or replace view semiJoinView913645372607528618 as select id as v40, title as v41, production_year as v44 from title AS t where (id) in (select (v40) from semiJoinView4265018402274517821) and production_year<=2010 and production_year>=2005;
+create or replace view tAux28 as select v40, v41 from semiJoinView913645372607528618;
+create or replace view semiJoinView782355320717481275 as select distinct v40, v41 from tAux28 where (v40) in (select (v40) from miAux61);
+create or replace view semiEnum4532243997018597955 as select v41, v35 from semiJoinView782355320717481275 join miAux61 using(v40);
+select distinct v35, v41 from semiEnum4532243997018597955;

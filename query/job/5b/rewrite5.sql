@@ -1,9 +1,9 @@
-create or replace view aggView6145526803143400517 as select id as v3 from info_type as it;
-create or replace view aggJoin2674558396299955070 as select movie_id as v15, info as v13 from movie_info as mi, aggView6145526803143400517 where mi.info_type_id=aggView6145526803143400517.v3 and info IN ('USA','America');
-create or replace view aggView6783052947968217635 as select v15 from aggJoin2674558396299955070 group by v15;
-create or replace view aggJoin5050036811844499505 as select id as v15, title as v16 from title as t, aggView6783052947968217635 where t.id=aggView6783052947968217635.v15 and production_year>2010;
-create or replace view aggView6560085777110166191 as select v15, MIN(v16) as v27 from aggJoin5050036811844499505 group by v15;
-create or replace view aggJoin2911105658719591293 as select company_type_id as v1, v27 from movie_companies as mc, aggView6560085777110166191 where mc.movie_id=aggView6560085777110166191.v15 and note LIKE '%(USA)%' and note LIKE '%(VHS)%' and note LIKE '%(1994)%';
-create or replace view aggView6785526542080222743 as select id as v1 from company_type as ct where kind= 'production companies';
-create or replace view aggJoin2362260900502567586 as select v27 from aggJoin2911105658719591293 join aggView6785526542080222743 using(v1);
-select MIN(v27) as v27 from aggJoin2362260900502567586;
+create or replace view aggView954780203306294773 as select id as v15, title as v27 from title as t where production_year>2010;
+create or replace view aggJoin1247996828306391923 as select movie_id as v15, info_type_id as v3, info as v13, v27 from movie_info as mi, aggView954780203306294773 where mi.movie_id=aggView954780203306294773.v15 and info IN ('USA','America');
+create or replace view aggView2187997579323884836 as select id as v1 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin946004862372516165 as select movie_id as v15, note as v9 from movie_companies as mc, aggView2187997579323884836 where mc.company_type_id=aggView2187997579323884836.v1 and note LIKE '%(USA)%' and note LIKE '%(VHS)%' and note LIKE '%(1994)%';
+create or replace view aggView9039662673564547769 as select v15 from aggJoin946004862372516165 group by v15;
+create or replace view aggJoin737545842154563238 as select v3, v13, v27 as v27 from aggJoin1247996828306391923 join aggView9039662673564547769 using(v15);
+create or replace view aggView1944398513090632354 as select id as v3 from info_type as it;
+create or replace view aggJoin6071873072096038466 as select v27 from aggJoin737545842154563238 join aggView1944398513090632354 using(v3);
+select MIN(v27) as v27 from aggJoin6071873072096038466;

@@ -1,0 +1,18 @@
+create or replace view semiJoinView5764151447587152115 as select movie_id as v47, info_type_id as v23, info as v33 from movie_info_idx AS mi_idx where (info_type_id) in (select (id) from info_type AS it2 where info= 'rating');
+create or replace view semiJoinView5794812020836042080 as select movie_id as v47, subject_id as v5, status_id as v7 from complete_cast AS cc where (subject_id) in (select (id) from comp_cast_type AS cct1 where kind= 'cast');
+create or replace view chnAux22 as select id as v9, name as v10 from char_name where ((name LIKE '%man%') OR (name LIKE '%Man%'));
+create or replace view semiJoinView6195712561540293621 as select v47, v5, v7 from semiJoinView5794812020836042080 where (v7) in (select (id) from comp_cast_type AS cct2 where kind LIKE '%complete%');
+create or replace view semiJoinView4719517257298751060 as select id as v47, title as v48, kind_id as v28, production_year as v51 from title AS t where (id) in (select (v47) from semiJoinView6195712561540293621) and production_year>2000;
+create or replace view semiJoinView7612825471664537547 as select movie_id as v47, keyword_id as v25 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('superhero','marvel-comics','based-on-comic','tv-special','fight','violence','magnet','web','claw','laser'));
+create or replace view semiJoinView8112995397612835524 as select v47, v23, v33 from semiJoinView5764151447587152115 where (v47) in (select (v47) from semiJoinView7612825471664537547);
+create or replace view mi_idxAux24 as select v47, v33 from semiJoinView8112995397612835524;
+create or replace view semiJoinView2468518437488856135 as select v47, v48, v28, v51 from semiJoinView4719517257298751060 where (v28) in (select (id) from kind_type AS kt where kind= 'movie');
+create or replace view tAux55 as select v47, v48 from semiJoinView2468518437488856135;
+create or replace view semiJoinView4173437950892964199 as select person_id as v38, movie_id as v47, person_role_id as v9 from cast_info AS ci where (person_id) in (select (id) from name AS n);
+create or replace view semiJoinView2017603291199762172 as select v38, v47, v9 from semiJoinView4173437950892964199 where (v9) in (select (v9) from chnAux22);
+create or replace view semiJoinView4074135085344186499 as select v38, v47, v9 from semiJoinView2017603291199762172 where (v47) in (select (v47) from tAux55);
+create or replace view semiJoinView4941649845956744872 as select distinct v47, v33 from mi_idxAux24 where (v47) in (select (v47) from semiJoinView4074135085344186499);
+create or replace view semiEnum3803939193122045505 as select distinct v9, v47, v38, v33 from semiJoinView4941649845956744872 join semiJoinView4074135085344186499 using(v47);
+create or replace view semiEnum1390933176800387112 as select distinct v9, v47, v38, v33, v48 from semiEnum3803939193122045505 join tAux55 using(v47);
+create or replace view semiEnum146990166564576237 as select v10, v33, v48 from semiEnum1390933176800387112 join chnAux22 using(v9);
+select distinct v10, v33, v48 from semiEnum146990166564576237;

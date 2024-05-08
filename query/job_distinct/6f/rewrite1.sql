@@ -1,0 +1,12 @@
+create or replace view tAux63 as select id as v23, title as v24 from title where production_year>2000;
+create or replace view nAux41 as select id as v14, name as v15 from name;
+create or replace view kAux48 as select id as v8, keyword as v9 from keyword where keyword IN ('superhero','sequel','second-part','marvel-comics','based-on-comic','tv-special','fight','violence');
+create or replace view semiJoinView3128818393415424261 as select movie_id as v23, keyword_id as v8 from movie_keyword AS mk where (keyword_id) in (select (v8) from kAux48);
+create or replace view semiJoinView7394297632833492116 as select person_id as v14, movie_id as v23 from cast_info AS ci where (person_id) in (select (v14) from nAux41);
+create or replace view semiJoinView8656861345053257883 as select v23, v8 from semiJoinView3128818393415424261 where (v23) in (select (v23) from semiJoinView7394297632833492116);
+create or replace view semiJoinView2078455256709519105 as select distinct v23, v24 from tAux63 where (v23) in (select (v23) from semiJoinView8656861345053257883);
+create or replace view semiEnum4041817507603360890 as select distinct v24, v8, v23 from semiJoinView2078455256709519105 join semiJoinView8656861345053257883 using(v23);
+create or replace view semiEnum8213770525832856422 as select distinct v8, v23, v24, v14 from semiEnum4041817507603360890 join semiJoinView7394297632833492116 using(v23);
+create or replace view semiEnum3015952374181860148 as select distinct v8, v23, v15, v24, v14 from semiEnum8213770525832856422 join nAux41 using(v14);
+create or replace view semiEnum6582949486912148700 as select v9, v15, v24 from semiEnum3015952374181860148 join kAux48 using(v8);
+select distinct v9, v15, v24 from semiEnum6582949486912148700;

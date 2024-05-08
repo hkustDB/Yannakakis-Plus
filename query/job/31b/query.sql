@@ -33,7 +33,7 @@ WHERE ci.note IN ('(writer)',
                   'Thriller')
   AND n.gender = 'm'
   AND t.production_year > 2000
-  AND (t.title LIKE '%Freddy%'
+  AND (t.title LIKE 'Saw%'
        OR t.title LIKE '%Jason%')
   AND t.id = mi.movie_id
   AND t.id = mi_idx.movie_id

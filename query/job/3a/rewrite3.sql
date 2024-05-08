@@ -1,7 +1,7 @@
-create or replace view aggView1720250248887383794 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
-create or replace view aggJoin4950655012746528549 as select movie_id as v12 from movie_keyword as mk, aggView1720250248887383794 where mk.keyword_id=aggView1720250248887383794.v1;
-create or replace view aggView7095535253033652392 as select v12 from aggJoin4950655012746528549 group by v12;
-create or replace view aggJoin8911106195878518633 as select movie_id as v12, info as v7 from movie_info as mi, aggView7095535253033652392 where mi.movie_id=aggView7095535253033652392.v12 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
-create or replace view aggView5187931121341577669 as select v12 from aggJoin8911106195878518633 group by v12;
-create or replace view aggJoin4954907792382364773 as select title as v13 from title as t, aggView5187931121341577669 where t.id=aggView5187931121341577669.v12 and production_year>2005;
-select MIN(v13) as v24 from aggJoin4954907792382364773;
+create or replace view aggView8542503524877229477 as select movie_id as v12 from movie_info as mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German') group by movie_id;
+create or replace view aggJoin2073018370288474818 as select id as v12, title as v13, production_year as v16 from title as t, aggView8542503524877229477 where t.id=aggView8542503524877229477.v12 and production_year>2005;
+create or replace view aggView6596964121595516127 as select v12, MIN(v13) as v24 from aggJoin2073018370288474818 group by v12;
+create or replace view aggJoin5168656884296840475 as select keyword_id as v1, v24 from movie_keyword as mk, aggView6596964121595516127 where mk.movie_id=aggView6596964121595516127.v12;
+create or replace view aggView975237340276526603 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin2393761685388106760 as select v24 from aggJoin5168656884296840475 join aggView975237340276526603 using(v1);
+select MIN(v24) as v24 from aggJoin2393761685388106760;

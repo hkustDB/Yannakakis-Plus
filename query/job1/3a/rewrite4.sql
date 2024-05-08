@@ -1,7 +1,7 @@
-create or replace view aggView4460469262333502781 as select id as v12, title as v24 from title as t where production_year>2005;
-create or replace view aggJoin4318778680087624219 as select movie_id as v12, keyword_id as v1, v24 from movie_keyword as mk, aggView4460469262333502781 where mk.movie_id=aggView4460469262333502781.v12;
-create or replace view aggView1107071256996922987 as select movie_id as v12 from movie_info as mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German') group by movie_id;
-create or replace view aggJoin610417380367915100 as select v1, v24 as v24 from aggJoin4318778680087624219 join aggView1107071256996922987 using(v12);
-create or replace view aggView3341299249081870921 as select v1, MIN(v24) as v24 from aggJoin610417380367915100 group by v1;
-create or replace view aggJoin2202745234606685119 as select keyword as v2, v24 from keyword as k, aggView3341299249081870921 where k.id=aggView3341299249081870921.v1 and keyword LIKE '%sequel%';
-select MIN(v24) as v24 from aggJoin2202745234606685119;
+create or replace view aggView8052346054586300178 as select id as v12, title as v24 from title as t where production_year>2005;
+create or replace view aggJoin2466612966445004227 as select movie_id as v12, info as v7, v24 from movie_info as mi, aggView8052346054586300178 where mi.movie_id=aggView8052346054586300178.v12 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
+create or replace view aggView6626168912515769001 as select v12, MIN(v24) as v24 from aggJoin2466612966445004227 group by v12;
+create or replace view aggJoin8335509255757753840 as select keyword_id as v1, v24 from movie_keyword as mk, aggView6626168912515769001 where mk.movie_id=aggView6626168912515769001.v12;
+create or replace view aggView4610683486257305262 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin444956317074275619 as select v24 from aggJoin8335509255757753840 join aggView4610683486257305262 using(v1);
+select MIN(v24) as v24 from aggJoin444956317074275619;

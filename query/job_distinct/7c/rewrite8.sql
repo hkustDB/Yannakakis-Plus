@@ -1,0 +1,11 @@
+create or replace view semiJoinView5330175993174083438 as select linked_movie_id as v38, link_type_id as v18 from movie_link AS ml where (linked_movie_id) in (select (id) from title AS t where production_year<=2010 and production_year>=1980);
+create or replace view semiJoinView6287586360706334817 as select v38, v18 from semiJoinView5330175993174083438 where (v18) in (select (id) from link_type AS lt where link IN ('references','referenced in','features','featured in'));
+create or replace view semiJoinView5672047810202316219 as select person_id as v24, movie_id as v38 from cast_info AS ci where (movie_id) in (select (v38) from semiJoinView6287586360706334817);
+create or replace view semiJoinView2748009164429100522 as select person_id as v24, info_type_id as v16, info as v36 from person_info AS pi where (info_type_id) in (select (id) from info_type AS it where info= 'mini biography');
+create or replace view semiJoinView4917844078314105045 as select person_id as v24, name as v3 from aka_name AS an where (person_id) in (select (v24) from semiJoinView5672047810202316219) and ((name LIKE '%a%') OR (name LIKE 'A%'));
+create or replace view piAux86 as select v24, v36 from semiJoinView2748009164429100522;
+create or replace view semiJoinView2718462270804059064 as select id as v24, name as v25, name_pcode_cf as v29 from name AS n where (id) in (select (v24) from semiJoinView4917844078314105045) and name_pcode_cf>='A' and name_pcode_cf<='F';
+create or replace view nAux53 as select v24, v25 from semiJoinView2718462270804059064;
+create or replace view semiJoinView6796610955321550828 as select distinct v24, v36 from piAux86 where (v24) in (select (v24) from nAux53);
+create or replace view semiEnum679516840147095627 as select v25, v36 from semiJoinView6796610955321550828 join nAux53 using(v24);
+select distinct v25, v36 from semiEnum679516840147095627;

@@ -1,0 +1,12 @@
+create or replace view semiJoinView5977225402227239039 as select movie_id as v40, keyword_id as v24 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k);
+create or replace view semiJoinView8819777641630194443 as select movie_id as v40, company_id as v13, company_type_id as v20, note as v31 from movie_companies AS mc where (movie_id) in (select (v40) from semiJoinView5977225402227239039) and note LIKE '%(200%)%' and note LIKE '%(worldwide)%';
+create or replace view semiJoinView996040650267683174 as select v40, v13, v20, v31 from semiJoinView8819777641630194443 where (v20) in (select (id) from company_type AS ct);
+create or replace view semiJoinView7837284492796671487 as select id as v40, title as v41, production_year as v44 from title AS t where (id) in (select (movie_id) from aka_title AS aka_t) and production_year<=2010 and production_year>=2005;
+create or replace view semiJoinView1151596756877113438 as select v40, v13, v20, v31 from semiJoinView996040650267683174 where (v13) in (select (id) from company_name AS cn where name= 'YouTube' and country_code= '[us]');
+create or replace view tAux64 as select v40, v41 from semiJoinView7837284492796671487;
+create or replace view semiJoinView1356690715405687310 as select movie_id as v40, info_type_id as v22, info as v35, note as v36 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'release dates') and note LIKE '%internet%' and info LIKE 'USA:% 200%';
+create or replace view semiJoinView2325121136205374803 as select v40, v22, v35, v36 from semiJoinView1356690715405687310 where (v40) in (select (v40) from semiJoinView1151596756877113438);
+create or replace view miAux69 as select v40, v35 from semiJoinView2325121136205374803;
+create or replace view semiJoinView4417484201074972631 as select distinct v40, v35 from miAux69 where (v40) in (select (v40) from tAux64);
+create or replace view semiEnum9154818160936586439 as select v35, v41 from semiJoinView4417484201074972631 join tAux64 using(v40);
+select distinct v35, v41 from semiEnum9154818160936586439;

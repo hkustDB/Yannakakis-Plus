@@ -1,0 +1,11 @@
+create or replace view anAux32 as select person_id as v2, name as v3 from aka_name;
+create or replace view semiJoinView3927313490580285871 as select movie_id as v11, company_id as v25, note as v27 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[jp]') and ((note LIKE '%(2006)%') OR (note LIKE '%(2007)%')) and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view semiJoinView2525148674459411057 as select id as v11, title as v40, production_year as v43 from title AS t where (id) in (select (v11) from semiJoinView3927313490580285871) and production_year<=2007 and ((title LIKE 'One Piece%') OR (title LIKE 'Dragon Ball Z%')) and production_year>=2006;
+create or replace view tAux99 as select v11, v40 from semiJoinView2525148674459411057;
+create or replace view semiJoinView3633293144653644243 as select person_id as v2, movie_id as v11, note as v13, role_id as v15 from cast_info AS ci where (movie_id) in (select (v11) from tAux99) and note= '(voice: English version)';
+create or replace view semiJoinView3170466991494156416 as select v2, v11, v13, v15 from semiJoinView3633293144653644243 where (v2) in (select (id) from name AS n where name LIKE '%Yo%' and name NOT LIKE '%Yu%');
+create or replace view semiJoinView6369392872553747621 as select v2, v11, v13, v15 from semiJoinView3170466991494156416 where (v15) in (select (id) from role_type AS rt where role= 'actress');
+create or replace view semiJoinView3475819969296835215 as select distinct v2, v3 from anAux32 where (v2) in (select (v2) from semiJoinView6369392872553747621);
+create or replace view semiEnum8992144854778381359 as select distinct v13, v15, v3, v11, v2 from semiJoinView3475819969296835215 join semiJoinView6369392872553747621 using(v2);
+create or replace view semiEnum754792755103567113 as select v3, v40 from semiEnum8992144854778381359 join tAux99 using(v11);
+select distinct v3, v40 from semiEnum754792755103567113;

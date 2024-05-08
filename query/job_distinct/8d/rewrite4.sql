@@ -1,0 +1,11 @@
+create or replace view semiJoinView109990046000919445 as select person_id as v2, name as v3 from aka_name AS an1 where (person_id) in (select (id) from name AS n1);
+create or replace view tAux59 as select id as v11, title as v40 from title;
+create or replace view an1Aux12 as select v2, v3 from semiJoinView109990046000919445;
+create or replace view semiJoinView6075636896550451753 as select movie_id as v11, company_id as v25 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[us]');
+create or replace view semiJoinView1044855416422343707 as select person_id as v2, movie_id as v11, role_id as v15 from cast_info AS ci where (movie_id) in (select (v11) from semiJoinView6075636896550451753);
+create or replace view semiJoinView3598281215711506244 as select v2, v11, v15 from semiJoinView1044855416422343707 where (v15) in (select (id) from role_type AS rt where role= 'costume designer');
+create or replace view semiJoinView4864657475977240477 as select v2, v11, v15 from semiJoinView3598281215711506244 where (v2) in (select (v2) from an1Aux12);
+create or replace view semiJoinView7582877970569472456 as select distinct v11, v40 from tAux59 where (v11) in (select (v11) from semiJoinView4864657475977240477);
+create or replace view semiEnum7254271889574632327 as select distinct v11, v40, v15, v2 from semiJoinView7582877970569472456 join semiJoinView4864657475977240477 using(v11);
+create or replace view semiEnum3838119317349786180 as select v3, v40 from semiEnum7254271889574632327 join an1Aux12 using(v2);
+select distinct v3, v40 from semiEnum3838119317349786180;

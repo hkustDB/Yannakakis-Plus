@@ -1,1 +1,0 @@
-select count(Person_knows_Person.Person1Id) from Person_knows_Person as Person_knows_Person, Comment as Comment, Post as Post where Person_knows_Person.Person1Id=Comment.hasCreator_PersonId and Comment.replyOf_PostId=Post.PostId and Post.hasCreator_PersonId=Person_knows_Person.Person2Id;

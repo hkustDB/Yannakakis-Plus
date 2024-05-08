@@ -1,0 +1,15 @@
+create or replace view semiJoinView601918956819130029 as select movie_id as v22, info_type_id as v12 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it2 where info= 'release dates');
+create or replace view semiJoinView9057759518118050681 as select movie_id as v22, info_type_id as v10, info as v29 from movie_info_idx AS miidx where (info_type_id) in (select (id) from info_type AS it where info= 'rating');
+create or replace view cnAux99 as select id as v1, name as v2 from company_name where country_code= '[us]';
+create or replace view semiJoinView9093091529229141035 as select id as v22, title as v32, kind_id as v14 from title AS t where (kind_id) in (select (id) from kind_type AS kt where kind= 'movie') and title<> '' and ((title LIKE 'Champion%') OR (title LIKE 'Loser%'));
+create or replace view tAux45 as select v22, v32 from semiJoinView9093091529229141035;
+create or replace view semiJoinView2906020030052785306 as select v22, v10, v29 from semiJoinView9057759518118050681 where (v22) in (select (v22) from semiJoinView601918956819130029);
+create or replace view miidxAux46 as select v22, v29 from semiJoinView2906020030052785306;
+create or replace view semiJoinView5465501131306363565 as select movie_id as v22, company_id as v1, company_type_id as v8 from movie_companies AS mc where (movie_id) in (select (v22) from miidxAux46);
+create or replace view semiJoinView2054554715426367615 as select v22, v1, v8 from semiJoinView5465501131306363565 where (v8) in (select (id) from company_type AS ct where kind= 'production companies');
+create or replace view semiJoinView2618194894829853185 as select v22, v1, v8 from semiJoinView2054554715426367615 where (v1) in (select (v1) from cnAux99);
+create or replace view semiJoinView243392372017958639 as select distinct v22, v32 from tAux45 where (v22) in (select (v22) from semiJoinView2618194894829853185);
+create or replace view semiEnum2139370771149211744 as select distinct v1, v8, v22, v32 from semiJoinView243392372017958639 join semiJoinView2618194894829853185 using(v22);
+create or replace view semiEnum855782855046234193 as select distinct v1, v8, v22, v32, v2 from semiEnum2139370771149211744 join cnAux99 using(v1);
+create or replace view semiEnum2261467330558528171 as select v29, v32, v2 from semiEnum855782855046234193 join miidxAux46 using(v22);
+select distinct v2, v29, v32 from semiEnum2261467330558528171;

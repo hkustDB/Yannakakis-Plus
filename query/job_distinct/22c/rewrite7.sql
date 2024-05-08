@@ -1,0 +1,17 @@
+create or replace view semiJoinView5248869125632834340 as select movie_id as v37, keyword_id as v14 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('murder','murder-in-title','blood','violence'));
+create or replace view semiJoinView4480374382825942709 as select movie_id as v37, info_type_id as v12, info as v32 from movie_info_idx AS mi_idx where (info_type_id) in (select (id) from info_type AS it2 where info= 'rating') and info<'8.5';
+create or replace view mi_idxAux29 as select v37, v32 from semiJoinView4480374382825942709;
+create or replace view semiJoinView7964512815204940495 as select movie_id as v37, info_type_id as v10, info as v27 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'countries') and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Danish','Norwegian','German','USA','American');
+create or replace view cnAux64 as select id as v1, name as v2 from company_name where country_code<> '[us]';
+create or replace view semiJoinView7451809220036766846 as select v37, v10, v27 from semiJoinView7964512815204940495 where (v37) in (select (v37) from semiJoinView5248869125632834340);
+create or replace view semiJoinView7915351695101585076 as select id as v37, title as v38, kind_id as v17, production_year as v41 from title AS t where (id) in (select (v37) from semiJoinView7451809220036766846) and production_year>2005;
+create or replace view semiJoinView2604300836437540036 as select v37, v38, v17, v41 from semiJoinView7915351695101585076 where (v17) in (select (id) from kind_type AS kt where kind IN ('movie','episode'));
+create or replace view tAux5 as select v37, v38 from semiJoinView2604300836437540036;
+create or replace view semiJoinView5190237393585201189 as select movie_id as v37, company_id as v1, company_type_id as v8, note as v23 from movie_companies AS mc where (movie_id) in (select (v37) from tAux5) and note NOT LIKE '%(USA)%' and note LIKE '%(200%)%';
+create or replace view semiJoinView7146463062883008566 as select v37, v1, v8, v23 from semiJoinView5190237393585201189 where (v37) in (select (v37) from mi_idxAux29);
+create or replace view semiJoinView616385528631723946 as select v37, v1, v8, v23 from semiJoinView7146463062883008566 where (v8) in (select (id) from company_type AS ct);
+create or replace view semiJoinView4718552688909114060 as select distinct v1, v2 from cnAux64 where (v1) in (select (v1) from semiJoinView616385528631723946);
+create or replace view semiEnum3072421041044814627 as select distinct v37, v23, v1, v8, v2 from semiJoinView4718552688909114060 join semiJoinView616385528631723946 using(v1);
+create or replace view semiEnum202889205720585971 as select distinct v37, v23, v1, v2, v32 from semiEnum3072421041044814627 join mi_idxAux29 using(v37);
+create or replace view semiEnum2014778199796093458 as select v2, v32, v38 from semiEnum202889205720585971 join tAux5 using(v37);
+select distinct v2, v32, v38 from semiEnum2014778199796093458;

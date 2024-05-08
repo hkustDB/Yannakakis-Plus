@@ -1,0 +1,14 @@
+create or replace view cnAux76 as select id as v17, name as v2 from company_name where country_code<> '[pl]' and ((name LIKE '%Film%') OR (name LIKE '%Warner%'));
+create or replace view tAux60 as select id as v24, title as v28 from title where production_year<=2000 and production_year>=1950;
+create or replace view semiJoinView8570400288860779699 as select movie_id as v24, company_id as v17, company_type_id as v18 from movie_companies AS mc where (company_type_id) in (select (id) from company_type AS ct where kind= 'production companies');
+create or replace view semiJoinView554925155722550322 as select movie_id as v24, keyword_id as v22 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword= 'sequel');
+create or replace view semiJoinView2937169780354936050 as select movie_id as v24, link_type_id as v13 from movie_link AS ml where (movie_id) in (select (v24) from semiJoinView554925155722550322);
+create or replace view semiJoinView7574267872211159609 as select v24, v17, v18 from semiJoinView8570400288860779699 where (v17) in (select (v17) from cnAux76);
+create or replace view semiJoinView1968521169426704701 as select v24, v28 from tAux60 where (v24) in (select (v24) from semiJoinView7574267872211159609);
+create or replace view semiJoinView1409046659716648125 as select v24, v13 from semiJoinView2937169780354936050 where (v24) in (select (v24) from semiJoinView1968521169426704701);
+create or replace view semiJoinView3496416227253027354 as select distinct id as v13, link as v14 from link_type AS lt where (id) in (select (v13) from semiJoinView1409046659716648125) and link LIKE '%follow%';
+create or replace view semiEnum1508948851460204939 as select distinct v24, v14 from semiJoinView3496416227253027354 join semiJoinView1409046659716648125 using(v13);
+create or replace view semiEnum4182577790607444112 as select distinct v24, v14, v28 from semiEnum1508948851460204939 join semiJoinView1968521169426704701 using(v24);
+create or replace view semiEnum5532823408883504028 as select distinct v24, v28, v17, v14, v18 from semiEnum4182577790607444112 join semiJoinView7574267872211159609 using(v24);
+create or replace view semiEnum6959567423070411862 as select v28, v2, v14 from semiEnum5532823408883504028 join cnAux76 using(v17);
+select distinct v2, v14, v28 from semiEnum6959567423070411862;

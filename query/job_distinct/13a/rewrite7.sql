@@ -1,0 +1,14 @@
+create or replace view semiJoinView4740201224486648720 as select movie_id as v22, company_id as v1, company_type_id as v8 from movie_companies AS mc where (company_id) in (select (id) from company_name AS cn where country_code= '[de]');
+create or replace view semiJoinView5387315715219480048 as select id as v22, title as v32, kind_id as v14 from title AS t where (kind_id) in (select (id) from kind_type AS kt where kind= 'movie');
+create or replace view semiJoinView7822746164634702394 as select movie_id as v22, info_type_id as v12, info as v24 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it2 where info= 'release dates');
+create or replace view semiJoinView6203048446993138703 as select v22, v1, v8 from semiJoinView4740201224486648720 where (v8) in (select (id) from company_type AS ct where kind= 'production companies');
+create or replace view miAux46 as select v22, v24 from semiJoinView7822746164634702394;
+create or replace view semiJoinView8145665009737555521 as select movie_id as v22, info_type_id as v10, info as v29 from movie_info_idx AS miidx where (info_type_id) in (select (id) from info_type AS it where info= 'rating');
+create or replace view miidxAux19 as select v22, v29 from semiJoinView8145665009737555521;
+create or replace view semiJoinView1330432378980692724 as select v22, v32, v14 from semiJoinView5387315715219480048 where (v22) in (select (v22) from semiJoinView6203048446993138703);
+create or replace view tAux87 as select v22, v32 from semiJoinView1330432378980692724;
+create or replace view semiJoinView2837442627755286741 as select v22, v24 from miAux46 where (v22) in (select (v22) from tAux87);
+create or replace view semiJoinView3813019552829879633 as select distinct v22, v29 from miidxAux19 where (v22) in (select (v22) from semiJoinView2837442627755286741);
+create or replace view semiEnum40212549666644786 as select distinct v29, v24, v22 from semiJoinView3813019552829879633 join semiJoinView2837442627755286741 using(v22);
+create or replace view semiEnum3329008883094316797 as select v24, v32, v29 from semiEnum40212549666644786 join tAux87 using(v22);
+select distinct v24, v29, v32 from semiEnum3329008883094316797;

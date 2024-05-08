@@ -1,0 +1,12 @@
+create or replace view semiJoinView5335479795810035249 as select movie_id as v31, info_type_id as v8, info as v15 from movie_info AS mi where (info_type_id) in (select (id) from info_type AS it1 where info= 'genres') and info IN ('Horror','Thriller');
+create or replace view semiJoinView4173986334119185224 as select movie_id as v31, info_type_id as v10, info as v20 from movie_info_idx AS mi_idx where (info_type_id) in (select (id) from info_type AS it2 where info= 'rating');
+create or replace view mi_idxAux99 as select v31, v20 from semiJoinView4173986334119185224;
+create or replace view miAux56 as select v31, v15 from semiJoinView5335479795810035249;
+create or replace view semiJoinView4144851359222453060 as select person_id as v22, movie_id as v31, note as v5 from cast_info AS ci where (person_id) in (select (id) from name AS n where gender= 'f') and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view semiJoinView628553578835526770 as select id as v31, title as v32, production_year as v35 from title AS t where (id) in (select (v31) from semiJoinView4144851359222453060) and production_year>=2008 and production_year<=2014;
+create or replace view tAux72 as select v31, v32 from semiJoinView628553578835526770;
+create or replace view semiJoinView8329834251017208173 as select v31, v32 from tAux72 where (v31) in (select (v31) from miAux56);
+create or replace view semiJoinView786592461636751793 as select distinct v31, v20 from mi_idxAux99 where (v31) in (select (v31) from semiJoinView8329834251017208173);
+create or replace view semiEnum8341346944961061471 as select distinct v20, v31, v32 from semiJoinView786592461636751793 join semiJoinView8329834251017208173 using(v31);
+create or replace view semiEnum6328733083799012382 as select v15, v20, v32 from semiEnum8341346944961061471 join miAux56 using(v31);
+select distinct v15, v20, v32 from semiEnum6328733083799012382;

@@ -1,0 +1,14 @@
+create or replace view semiJoinView4390601042337425126 as select movie_id as v40, subject_id as v5, status_id as v7 from complete_cast AS cc where (status_id) in (select (id) from comp_cast_type AS cct2 where kind LIKE '%complete%');
+create or replace view semiJoinView4754573077419917598 as select movie_id as v40, keyword_id as v23 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('superhero','marvel-comics','based-on-comic','tv-special','fight','violence','magnet','web','claw','laser'));
+create or replace view semiJoinView2610583304989122775 as select id as v40, title as v41, kind_id as v26, production_year as v44 from title AS t where (kind_id) in (select (id) from kind_type AS kt where kind= 'movie') and production_year>2000;
+create or replace view nAux73 as select id as v31, name as v32 from name;
+create or replace view semiJoinView1201779619702916463 as select v40, v5, v7 from semiJoinView4390601042337425126 where (v5) in (select (id) from comp_cast_type AS cct1 where kind= 'cast');
+create or replace view semiJoinView2189050756953760473 as select v40, v23 from semiJoinView4754573077419917598 where (v40) in (select (v40) from semiJoinView1201779619702916463);
+create or replace view semiJoinView4402923085267203478 as select v40, v41, v26, v44 from semiJoinView2610583304989122775 where (v40) in (select (v40) from semiJoinView2189050756953760473);
+create or replace view tAux98 as select v40, v41 from semiJoinView4402923085267203478;
+create or replace view semiJoinView6723638456139983290 as select person_id as v31, movie_id as v40, person_role_id as v9 from cast_info AS ci where (person_role_id) in (select (id) from char_name AS chn where ((name LIKE '%man%') OR (name LIKE '%Man%')));
+create or replace view semiJoinView5220196511527486296 as select v31, v40, v9 from semiJoinView6723638456139983290 where (v31) in (select (v31) from nAux73);
+create or replace view semiJoinView7062808441941422656 as select distinct v40, v41 from tAux98 where (v40) in (select (v40) from semiJoinView5220196511527486296);
+create or replace view semiEnum7031203141253314240 as select distinct v40, v9, v41, v31 from semiJoinView7062808441941422656 join semiJoinView5220196511527486296 using(v40);
+create or replace view semiEnum7547735788205101394 as select v32, v41 from semiEnum7031203141253314240 join nAux73 using(v31);
+select distinct v32, v41 from semiEnum7547735788205101394;

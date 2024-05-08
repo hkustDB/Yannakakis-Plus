@@ -1,0 +1,17 @@
+create or replace view semiJoinView2370219728508196869 as select movie_id as v37, info_type_id as v10, info as v23 from movie_info_idx AS mi_idx where (info_type_id) in (select (id) from info_type AS it2 where info= 'votes');
+create or replace view mi_idxAux94 as select v37, v23 from semiJoinView2370219728508196869;
+create or replace view semiJoinView4694631912255141364 as select movie_id as v37, keyword_id as v12 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword IN ('murder','blood','gore','death','female-nudity'));
+create or replace view tAux87 as select id as v37, title as v38 from title;
+create or replace view semiJoinView3749113660411692874 as select movie_id as v37, info_type_id as v8, info as v18 from movie_info AS mi where (movie_id) in (select (v37) from semiJoinView4694631912255141364);
+create or replace view nAux0 as select id as v28, name as v29 from name where gender= 'm';
+create or replace view semiJoinView2978038300985971163 as select v37, v8, v18 from semiJoinView3749113660411692874 where (v8) in (select (id) from info_type AS it1 where info= 'genres');
+create or replace view miAux36 as select v37, v18 from semiJoinView2978038300985971163;
+create or replace view semiJoinView6636519165773280920 as select v37, v38 from tAux87 where (v37) in (select (v37) from miAux36);
+create or replace view semiJoinView6333930327565889348 as select person_id as v28, movie_id as v37, note as v5 from cast_info AS ci where (movie_id) in (select (v37) from mi_idxAux94) and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view semiJoinView490657614983182362 as select v28, v37, v5 from semiJoinView6333930327565889348 where (v37) in (select (v37) from semiJoinView6636519165773280920);
+create or replace view semiJoinView6317412206431759408 as select distinct v28, v29 from nAux0 where (v28) in (select (v28) from semiJoinView490657614983182362);
+create or replace view semiEnum1762049571044640707 as select distinct v29, v5, v28, v37 from semiJoinView6317412206431759408 join semiJoinView490657614983182362 using(v28);
+create or replace view semiEnum7735716358351700239 as select distinct v29, v5, v28, v37, v38 from semiEnum1762049571044640707 join semiJoinView6636519165773280920 using(v37);
+create or replace view semiEnum2540571587019374879 as select distinct v29, v5, v28, v23, v37, v38 from semiEnum7735716358351700239 join mi_idxAux94 using(v37);
+create or replace view semiEnum1576865369931051572 as select v18, v29, v23, v38 from semiEnum2540571587019374879 join miAux36 using(v37);
+select distinct v18, v23, v29, v38 from semiEnum1576865369931051572;

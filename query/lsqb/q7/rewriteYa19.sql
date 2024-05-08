@@ -1,0 +1,13 @@
+create or replace view semiUp3439113700013750492 as select MessageId as v1 from Person_likes_Message AS Person_likes_Message where (MessageId) in (select (ParentMessageId) from Comment_replyOf_Message AS Comment_replyOf_Message);
+create or replace view semiUp7057915873897983592 as select MessageId as v1 from Message_hasTag_Tag AS Message_hasTag_Tag where (MessageId) in (select (v1) from semiUp3439113700013750492);
+create or replace view semiUp4109808368886328800 as select MessageId as v1 from Message_hasCreator_Person AS Message_hasCreator_Person where (MessageId) in (select (v1) from semiUp7057915873897983592);
+create or replace view semiDown4505403480574555693 as select v1 from semiUp7057915873897983592 where (v1) in (select (v1) from semiUp4109808368886328800);
+create or replace view semiDown1400295791481077407 as select v1 from semiUp3439113700013750492 where (v1) in (select (v1) from semiDown4505403480574555693);
+create or replace view semiDown7621554040002746480 as select ParentMessageId as v1 from Comment_replyOf_Message AS Comment_replyOf_Message where (ParentMessageId) in (select (v1) from semiDown1400295791481077407);
+create or replace view aggView2209754321292129374 as select v1, COUNT(*) as annot from semiDown7621554040002746480 group by v1;
+create or replace view aggJoin7257782627462579774 as select v1, annot from semiDown1400295791481077407 join aggView2209754321292129374 using(v1);
+create or replace view aggView1253819150418097290 as select v1, SUM(annot) as annot from aggJoin7257782627462579774 group by v1;
+create or replace view aggJoin2694531489981078552 as select v1, annot from semiDown4505403480574555693 join aggView1253819150418097290 using(v1);
+create or replace view aggView6893885945072466275 as select v1, SUM(annot) as annot from aggJoin2694531489981078552 group by v1;
+create or replace view aggJoin7385406166252194057 as select annot from semiUp4109808368886328800 join aggView6893885945072466275 using(v1);
+select SUM(annot) as v9 from aggJoin7385406166252194057;

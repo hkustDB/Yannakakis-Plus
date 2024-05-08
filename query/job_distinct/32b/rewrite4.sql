@@ -1,0 +1,11 @@
+create or replace view t1Aux52 as select id as v13, title as v14 from title;
+create or replace view t2Aux8 as select id as v11, title as v26 from title;
+create or replace view semiJoinView7683263391180868244 as select movie_id as v13, keyword_id as v8 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword= 'character-name-in-title');
+create or replace view semiJoinView3312777616333463095 as select movie_id as v13, linked_movie_id as v11, link_type_id as v4 from movie_link AS ml where (movie_id) in (select (v13) from semiJoinView7683263391180868244);
+create or replace view semiJoinView6998499307422998160 as select v13, v11, v4 from semiJoinView3312777616333463095 where (v4) in (select (id) from link_type AS lt);
+create or replace view semiJoinView5955051434810326584 as select v13, v11, v4 from semiJoinView6998499307422998160 where (v11) in (select (v11) from t2Aux8);
+create or replace view semiJoinView800910688654765263 as select distinct v13, v14 from t1Aux52 where (v13) in (select (v13) from semiJoinView5955051434810326584);
+create or replace view semiEnum6541195058886705159 as select distinct v11, v14, v13, v4 from semiJoinView800910688654765263 join semiJoinView5955051434810326584 using(v13);
+create or replace view semiEnum7008897432056827763 as select distinct v11, v14, v13, v4, v26 from semiEnum6541195058886705159 join t2Aux8 using(v11);
+create or replace view semiEnum7452374122399252958 as select v14, link as v5, v26 from semiEnum7008897432056827763, link_type as lt where lt.id=semiEnum7008897432056827763.v4;
+select distinct v5, v14, v26 from semiEnum7452374122399252958;

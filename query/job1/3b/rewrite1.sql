@@ -1,7 +1,8 @@
-create or replace view aggView4834424582295946036 as select id as v12, title as v24 from title as t where production_year>2010;
-create or replace view aggJoin9195382712879078146 as select movie_id as v12, info as v7, v24 from movie_info as mi, aggView4834424582295946036 where mi.movie_id=aggView4834424582295946036.v12 and info= 'Bulgaria';
-create or replace view aggView2222434902171225464 as select v12, MIN(v24) as v24 from aggJoin9195382712879078146 group by v12;
-create or replace view aggJoin3651698880561997430 as select keyword_id as v1, v24 from movie_keyword as mk, aggView2222434902171225464 where mk.movie_id=aggView2222434902171225464.v12;
-create or replace view aggView8507840784757873840 as select v1, MIN(v24) as v24 from aggJoin3651698880561997430 group by v1;
-create or replace view aggJoin6187341592109914779 as select keyword as v2, v24 from keyword as k, aggView8507840784757873840 where k.id=aggView8507840784757873840.v1 and keyword LIKE '%sequel%';
-select MIN(v24) as v24 from aggJoin6187341592109914779;
+create or replace view aggView7440441429993597497 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin3437657987450724099 as select movie_id as v12 from movie_keyword as mk, aggView7440441429993597497 where mk.keyword_id=aggView7440441429993597497.v1;
+create or replace view aggView7129491252356106267 as select movie_id as v12 from movie_info as mi where info= 'Bulgaria' group by movie_id;
+create or replace view aggJoin2574935007272549176 as select id as v12, title as v13, production_year as v16 from title as t, aggView7129491252356106267 where t.id=aggView7129491252356106267.v12 and production_year>2010;
+create or replace view aggView2325235504866138361 as select v12 from aggJoin3437657987450724099 group by v12;
+create or replace view aggJoin8895936140337454340 as select v13, v16 from aggJoin2574935007272549176 join aggView2325235504866138361 using(v12);
+create or replace view aggView781799054927127044 as select v13 from aggJoin8895936140337454340;
+select MIN(v13) as v24 from aggView781799054927127044;

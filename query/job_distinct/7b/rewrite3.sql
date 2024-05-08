@@ -1,0 +1,12 @@
+create or replace view semiJoinView807780520025229674 as select person_id as v24, info_type_id as v16, note as v37 from person_info AS pi where (info_type_id) in (select (id) from info_type AS it where info= 'mini biography') and note= 'Volker Boehm';
+create or replace view semiJoinView7977495928860073314 as select id as v24, name as v25, gender as v28, name_pcode_cf as v29 from name AS n where (id) in (select (person_id) from aka_name AS an where name LIKE '%a%') and gender= 'm' and name_pcode_cf LIKE 'D%';
+create or replace view semiJoinView4519090334650790681 as select linked_movie_id as v38, link_type_id as v18 from movie_link AS ml where (link_type_id) in (select (id) from link_type AS lt where link= 'features');
+create or replace view semiJoinView2320409047682814525 as select id as v38, title as v39, production_year as v42 from title AS t where (id) in (select (v38) from semiJoinView4519090334650790681) and production_year<=1984 and production_year>=1980;
+create or replace view tAux82 as select v38, v39 from semiJoinView2320409047682814525;
+create or replace view semiJoinView5189566974374824668 as select v24, v25, v28, v29 from semiJoinView7977495928860073314 where (v24) in (select (v24) from semiJoinView807780520025229674);
+create or replace view nAux29 as select v24, v25 from semiJoinView5189566974374824668;
+create or replace view semiJoinView6819125458224658007 as select person_id as v24, movie_id as v38 from cast_info AS ci where (person_id) in (select (v24) from nAux29);
+create or replace view semiJoinView2327522253704819916 as select distinct v38, v39 from tAux82 where (v38) in (select (v38) from semiJoinView6819125458224658007);
+create or replace view semiEnum1175445511972648593 as select distinct v39, v38, v24 from semiJoinView2327522253704819916 join semiJoinView6819125458224658007 using(v38);
+create or replace view semiEnum8645188061556488772 as select v39, v25 from semiEnum1175445511972648593 join nAux29 using(v24);
+select distinct v25, v39 from semiEnum8645188061556488772;

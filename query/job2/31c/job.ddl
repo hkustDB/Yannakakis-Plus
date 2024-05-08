@@ -8,6 +8,8 @@ CREATE TABLE aka_name (
     surname_pcode varchar,
     md5sum varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '90134300'
 );
 
 CREATE TABLE aka_title (
@@ -24,6 +26,8 @@ CREATE TABLE aka_title (
     note varchar,
     md5sum varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '36147200'
 );
 
 CREATE TABLE cast_info (
@@ -35,6 +39,8 @@ CREATE TABLE cast_info (
     nr_order integer,
     role_id integer,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '124471600'
 );
 
 CREATE TABLE char_name (
@@ -46,12 +52,16 @@ CREATE TABLE char_name (
     surname_pcode varchar,
     md5sum varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '314033900'
 );
 
 CREATE TABLE comp_cast_type (
     id integer,
     kind varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '400'
 );
 
 CREATE TABLE company_name (
@@ -63,12 +73,16 @@ CREATE TABLE company_name (
     name_pcode_sf varchar,
     md5sum varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '1000'
 );
 
 CREATE TABLE company_type (
     id integer,
     kind varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '400'
 );
 
 CREATE TABLE complete_cast (
@@ -77,12 +91,16 @@ CREATE TABLE complete_cast (
     subject_id integer,
     status_id integer,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '13508600'
 );
 
 CREATE TABLE info_type (
     id integer,
     info varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '100'
 );
 
 CREATE TABLE keyword (
@@ -90,18 +108,24 @@ CREATE TABLE keyword (
     keyword varchar,
     phonetic_code varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '700'
 );
 
 CREATE TABLE kind_type (
     id integer,
     kind varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '700'
 );
 
 CREATE TABLE link_type (
     id integer,
     link varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '1800'
 );
 
 CREATE TABLE movie_companies (
@@ -111,6 +135,8 @@ CREATE TABLE movie_companies (
     company_type_id integer,
     note varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '260912900'
 );
 
 CREATE TABLE movie_info_idx (
@@ -120,6 +146,8 @@ CREATE TABLE movie_info_idx (
     info varchar,
     note varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '138003500'
 );
 
 CREATE TABLE movie_keyword (
@@ -127,6 +155,8 @@ CREATE TABLE movie_keyword (
     movie_id integer,
     keyword_id integer,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '452393000'
 );
 
 CREATE TABLE movie_link (
@@ -135,6 +165,8 @@ CREATE TABLE movie_link (
     linked_movie_id integer,
     link_type_id integer,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '2999700'
 );
 
 CREATE TABLE name (
@@ -148,12 +180,16 @@ CREATE TABLE name (
     surname_pcode varchar,
     md5sum varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '416749100'
 );
 
 CREATE TABLE role_type (
     id integer,
     role varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '1200'
 );
 
 CREATE TABLE title (
@@ -170,6 +206,8 @@ CREATE TABLE title (
     series_years varchar,
     md5sum varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '252831200'
 );
 
 CREATE TABLE movie_info (
@@ -179,6 +217,8 @@ CREATE TABLE movie_info (
     info varchar,
     note varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '18897100'
 );
 
 CREATE TABLE person_info (
@@ -188,4 +228,6 @@ CREATE TABLE person_info (
     info varchar,
     note varchar,
     PRIMARY KEY (id)
+) WITH (
+        'cardinality' = '296366400'
 );

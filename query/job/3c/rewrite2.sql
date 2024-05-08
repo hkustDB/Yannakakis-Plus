@@ -1,7 +1,8 @@
-create or replace view aggView6893868645561632837 as select id as v12, title as v24 from title as t where production_year>1990;
-create or replace view aggJoin7652012833944633995 as select movie_id as v12, info as v7, v24 from movie_info as mi, aggView6893868645561632837 where mi.movie_id=aggView6893868645561632837.v12 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American');
-create or replace view aggView1632508796730922336 as select v12, MIN(v24) as v24 from aggJoin7652012833944633995 group by v12;
-create or replace view aggJoin6686152966293849951 as select keyword_id as v1, v24 from movie_keyword as mk, aggView1632508796730922336 where mk.movie_id=aggView1632508796730922336.v12;
-create or replace view aggView8304254365798700658 as select v1, MIN(v24) as v24 from aggJoin6686152966293849951 group by v1;
-create or replace view aggJoin7606520251248241576 as select keyword as v2, v24 from keyword as k, aggView8304254365798700658 where k.id=aggView8304254365798700658.v1 and keyword LIKE '%sequel%';
-select MIN(v24) as v24 from aggJoin7606520251248241576;
+create or replace view aggView6254661132469906565 as select id as v1 from keyword as k where keyword LIKE '%sequel%';
+create or replace view aggJoin1585242839095392454 as select movie_id as v12 from movie_keyword as mk, aggView6254661132469906565 where mk.keyword_id=aggView6254661132469906565.v1;
+create or replace view aggView1205535392088245113 as select movie_id as v12 from movie_info as mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American') group by movie_id;
+create or replace view aggJoin8137679307595935921 as select v12 from aggJoin1585242839095392454 join aggView1205535392088245113 using(v12);
+create or replace view aggView8737387937885253309 as select v12 from aggJoin8137679307595935921 group by v12;
+create or replace view aggJoin8777069353240354652 as select title as v13, production_year as v16 from title as t, aggView8737387937885253309 where t.id=aggView8737387937885253309.v12 and production_year>1990;
+create or replace view aggView5052630180604630852 as select v13 from aggJoin8777069353240354652;
+select MIN(v13) as v24 from aggView5052630180604630852;
