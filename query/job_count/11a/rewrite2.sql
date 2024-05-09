@@ -1,0 +1,15 @@
+create or replace view aggView1853333916877464632 as select id as v17 from company_name as cn where country_code<> '[pl]' and ((name LIKE '%Film%') OR (name LIKE '%Warner%'));
+create or replace view aggJoin4375918862464872339 as select movie_id as v24, company_type_id as v18 from movie_companies as mc, aggView1853333916877464632 where mc.company_id=aggView1853333916877464632.v17;
+create or replace view aggView7731160230456149415 as select id as v18 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin3782121406072733519 as select v24 from aggJoin4375918862464872339 join aggView7731160230456149415 using(v18);
+create or replace view aggView3112227169326157025 as select v24, COUNT(*) as annot from aggJoin3782121406072733519 group by v24;
+create or replace view aggJoin8461366136141656999 as select id as v24, production_year as v31, annot from title as t, aggView3112227169326157025 where t.id=aggView3112227169326157025.v24 and production_year<=2000 and production_year>=1950;
+create or replace view aggView504805849664068285 as select v24, SUM(annot) as annot from aggJoin8461366136141656999 group by v24;
+create or replace view aggJoin2767265898241095772 as select movie_id as v24, keyword_id as v22, annot from movie_keyword as mk, aggView504805849664068285 where mk.movie_id=aggView504805849664068285.v24;
+create or replace view aggView8644274581825571926 as select id as v22 from keyword as k where keyword= 'sequel';
+create or replace view aggJoin5147269623300262291 as select v24, annot from aggJoin2767265898241095772 join aggView8644274581825571926 using(v22);
+create or replace view aggView7543000772776935269 as select v24, SUM(annot) as annot from aggJoin5147269623300262291 group by v24;
+create or replace view aggJoin4885950698801274275 as select link_type_id as v13, annot from movie_link as ml, aggView7543000772776935269 where ml.movie_id=aggView7543000772776935269.v24;
+create or replace view aggView750846594460927905 as select v13, SUM(annot) as annot from aggJoin4885950698801274275 group by v13;
+create or replace view aggJoin5885098641121902990 as select link as v14, annot from link_type as lt, aggView750846594460927905 where lt.id=aggView750846594460927905.v13 and link LIKE '%follow%';
+select SUM(annot) as v39 from aggJoin5885098641121902990;

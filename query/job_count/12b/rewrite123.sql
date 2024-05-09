@@ -1,0 +1,15 @@
+create or replace view aggView5537591429759296311 as select id as v8 from company_type as ct where kind IN ('production companies','distributors');
+create or replace view aggJoin2299541062211520754 as select movie_id as v29, company_id as v1 from movie_companies as mc, aggView5537591429759296311 where mc.company_type_id=aggView5537591429759296311.v8;
+create or replace view aggView5974393613969188218 as select id as v26 from info_type as it2 where info= 'bottom 10 rank';
+create or replace view aggJoin328217844070262395 as select movie_id as v29 from movie_info_idx as mi_idx, aggView5974393613969188218 where mi_idx.info_type_id=aggView5974393613969188218.v26;
+create or replace view aggView6019895406042218962 as select v29, COUNT(*) as annot from aggJoin328217844070262395 group by v29;
+create or replace view aggJoin6975421790821170128 as select id as v29, title as v30, production_year as v33, annot from title as t, aggView6019895406042218962 where t.id=aggView6019895406042218962.v29 and production_year>2000 and ((title LIKE 'Birdemic%') OR (title LIKE '%Movie%'));
+create or replace view aggView5744556102580882824 as select id as v1 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin2918109074008144804 as select v29 from aggJoin2299541062211520754 join aggView5744556102580882824 using(v1);
+create or replace view aggView7545736568949913247 as select v29, SUM(annot) as annot from aggJoin6975421790821170128 group by v29;
+create or replace view aggJoin7149293245636436716 as select v29, annot from aggJoin2918109074008144804 join aggView7545736568949913247 using(v29);
+create or replace view aggView604632833946181088 as select v29, SUM(annot) as annot from aggJoin7149293245636436716 group by v29;
+create or replace view aggJoin2422296912477326974 as select info_type_id as v21, annot from movie_info as mi, aggView604632833946181088 where mi.movie_id=aggView604632833946181088.v29;
+create or replace view aggView3710560433621021114 as select id as v21 from info_type as it1 where info= 'budget';
+create or replace view aggJoin5624804352890256415 as select annot from aggJoin2422296912477326974 join aggView3710560433621021114 using(v21);
+select SUM(annot) as v41 from aggJoin5624804352890256415;

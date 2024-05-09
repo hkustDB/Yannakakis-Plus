@@ -1,0 +1,19 @@
+Relations:
+dict_values([ct[7612383,company_type, 0]: ['v1', 'v2']
+, it[7612384,info_type, 0]: ['v3', 'v4']
+, mc[7612385,movie_companies, 0]: ['v5', 'v15', 'v7', 'v1', 'v9']
+, mi[7612386,movie_info, 0]: ['v10', 'v15', 'v3', 'v13', 'v14']
+, t[7612387,title, 0]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26']
+])
+Edges:
+dict_values([mi->it, mc->ct, t->mc, mi->t])
+Root:
+7612386
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[7612386]
+fixroot:
+True

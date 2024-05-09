@@ -1,0 +1,15 @@
+create or replace view aggView7876892435787943067 as select id as v1 from info_type as it1 where info= 'countries';
+create or replace view aggJoin4199807888338251649 as select movie_id as v23, info as v13 from movie_info as mi, aggView7876892435787943067 where mi.info_type_id=aggView7876892435787943067.v1 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American');
+create or replace view aggView6809057142485030535 as select id as v3 from info_type as it2 where info= 'rating';
+create or replace view aggJoin7846882322689199597 as select movie_id as v23, info as v18 from movie_info_idx as mi_idx, aggView6809057142485030535 where mi_idx.info_type_id=aggView6809057142485030535.v3 and info<'8.5';
+create or replace view aggView1394329724035630821 as select v23, COUNT(*) as annot from aggJoin4199807888338251649 group by v23;
+create or replace view aggJoin1173838072791842317 as select id as v23, kind_id as v8, production_year as v27, annot from title as t, aggView1394329724035630821 where t.id=aggView1394329724035630821.v23 and production_year>2010;
+create or replace view aggView6855251721790565112 as select id as v8 from kind_type as kt where kind= 'movie';
+create or replace view aggJoin1793636208856502464 as select v23, v27, annot from aggJoin1173838072791842317 join aggView6855251721790565112 using(v8);
+create or replace view aggView518708797939452597 as select v23, SUM(annot) as annot from aggJoin1793636208856502464 group by v23;
+create or replace view aggJoin8181713730193977803 as select v23, v18, annot from aggJoin7846882322689199597 join aggView518708797939452597 using(v23);
+create or replace view aggView4784915901891039011 as select v23, SUM(annot) as annot from aggJoin8181713730193977803 group by v23;
+create or replace view aggJoin9200374213166383247 as select keyword_id as v5, annot from movie_keyword as mk, aggView4784915901891039011 where mk.movie_id=aggView4784915901891039011.v23;
+create or replace view aggView1638700139871987757 as select id as v5 from keyword as k where keyword IN ('murder','murder-in-title','blood','violence');
+create or replace view aggJoin7224250875063330783 as select annot from aggJoin9200374213166383247 join aggView1638700139871987757 using(v5);
+select SUM(annot) as v35 from aggJoin7224250875063330783;

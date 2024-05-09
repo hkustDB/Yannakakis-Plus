@@ -1,0 +1,13 @@
+create or replace view aggView3673027522444911532 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin249989723674645351 as select movie_id as v31, note as v5 from cast_info as ci, aggView3673027522444911532 where ci.person_id=aggView3673027522444911532.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView2354922964445101018 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin9105257197661718366 as select movie_id as v31, info as v15 from movie_info as mi, aggView2354922964445101018 where mi.info_type_id=aggView2354922964445101018.v8 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView1431086620080072741 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin2426171901748197373 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView1431086620080072741 where mi_idx.info_type_id=aggView1431086620080072741.v10;
+create or replace view aggView7903801672018298077 as select v31, MIN(v20) as v44 from aggJoin2426171901748197373 group by v31;
+create or replace view aggJoin1362349856541853753 as select v31, v15, v44 from aggJoin9105257197661718366 join aggView7903801672018298077 using(v31);
+create or replace view aggView3221462692893257290 as select v31, MIN(v44) as v44, MIN(v15) as v43 from aggJoin1362349856541853753 group by v31;
+create or replace view aggJoin4510903153732552003 as select id as v31, title as v32, v44, v43 from title as t, aggView3221462692893257290 where t.id=aggView3221462692893257290.v31;
+create or replace view aggView7653003517658190641 as select v31 from aggJoin249989723674645351 group by v31;
+create or replace view aggJoin1082392298451817636 as select v32, v44 as v44, v43 as v43 from aggJoin4510903153732552003 join aggView7653003517658190641 using(v31);
+select MIN(v43) as v43,MIN(v44) as v44,MIN(v32) as v45 from aggJoin1082392298451817636;

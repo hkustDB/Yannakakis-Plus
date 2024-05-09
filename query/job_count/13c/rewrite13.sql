@@ -1,0 +1,17 @@
+create or replace view aggView8487228355636568390 as select id as v8 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin690548715685166109 as select movie_id as v22, company_id as v1 from movie_companies as mc, aggView8487228355636568390 where mc.company_type_id=aggView8487228355636568390.v8;
+create or replace view aggView4576928684037823264 as select id as v14 from kind_type as kt where kind= 'movie';
+create or replace view aggJoin6828484328738255165 as select id as v22, title as v32 from title as t, aggView4576928684037823264 where t.kind_id=aggView4576928684037823264.v14 and title<> '' and ((title LIKE 'Champion%') OR (title LIKE 'Loser%'));
+create or replace view aggView8906588805976285140 as select id as v1 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin782823810473180293 as select v22 from aggJoin690548715685166109 join aggView8906588805976285140 using(v1);
+create or replace view aggView6840542312450751167 as select v22, COUNT(*) as annot from aggJoin782823810473180293 group by v22;
+create or replace view aggJoin2023304822938075256 as select movie_id as v22, info_type_id as v10, annot from movie_info_idx as mi_idx, aggView6840542312450751167 where mi_idx.movie_id=aggView6840542312450751167.v22;
+create or replace view aggView9179323097854748016 as select id as v10 from info_type as it where info= 'rating';
+create or replace view aggJoin5981110636005918465 as select v22, annot from aggJoin2023304822938075256 join aggView9179323097854748016 using(v10);
+create or replace view aggView8628605937917788766 as select v22, SUM(annot) as annot from aggJoin5981110636005918465 group by v22;
+create or replace view aggJoin4083245881305714059 as select v22, v32, annot from aggJoin6828484328738255165 join aggView8628605937917788766 using(v22);
+create or replace view aggView7702876559075297584 as select v22, SUM(annot) as annot from aggJoin4083245881305714059 group by v22;
+create or replace view aggJoin7513416555018462544 as select info_type_id as v12, annot from movie_info as mi, aggView7702876559075297584 where mi.movie_id=aggView7702876559075297584.v22;
+create or replace view aggView420497111535008987 as select id as v12 from info_type as it2 where info= 'release dates';
+create or replace view aggJoin1676258293201989810 as select annot from aggJoin7513416555018462544 join aggView420497111535008987 using(v12);
+select SUM(annot) as v43 from aggJoin1676258293201989810;

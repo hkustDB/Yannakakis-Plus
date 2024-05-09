@@ -1,0 +1,15 @@
+create or replace view aggView2241467192974934582 as select id as v16 from info_type as it where info= 'mini biography';
+create or replace view aggJoin8319853010490417212 as select person_id as v24, note as v37 from person_info as pi, aggView2241467192974934582 where pi.info_type_id=aggView2241467192974934582.v16 and note= 'Volker Boehm';
+create or replace view aggView5542380442266305178 as select v24, COUNT(*) as annot from aggJoin8319853010490417212 group by v24;
+create or replace view aggJoin2445276167085449628 as select id as v24, gender as v28, name_pcode_cf as v29, annot from name as n, aggView5542380442266305178 where n.id=aggView5542380442266305178.v24 and gender= 'm' and name_pcode_cf LIKE 'D%';
+create or replace view aggView4647191174937926771 as select v24, SUM(annot) as annot from aggJoin2445276167085449628 group by v24;
+create or replace view aggJoin4708479770930899746 as select person_id as v24, name as v3, annot from aka_name as an, aggView4647191174937926771 where an.person_id=aggView4647191174937926771.v24 and name LIKE '%a%';
+create or replace view aggView6458702290219342893 as select v24, SUM(annot) as annot from aggJoin4708479770930899746 group by v24;
+create or replace view aggJoin8827723587091061418 as select movie_id as v38, annot from cast_info as ci, aggView6458702290219342893 where ci.person_id=aggView6458702290219342893.v24;
+create or replace view aggView6772021296613838655 as select id as v18 from link_type as lt where link= 'features';
+create or replace view aggJoin396182992066903679 as select linked_movie_id as v38 from movie_link as ml, aggView6772021296613838655 where ml.link_type_id=aggView6772021296613838655.v18;
+create or replace view aggView874910951774786769 as select id as v38 from title as t where production_year<=1984 and production_year>=1980;
+create or replace view aggJoin2515682920458993467 as select v38 from aggJoin396182992066903679 join aggView874910951774786769 using(v38);
+create or replace view aggView4533371360677477717 as select v38, COUNT(*) as annot from aggJoin2515682920458993467 group by v38;
+create or replace view aggJoin3738634693968536057 as select aggJoin8827723587091061418.annot * aggView4533371360677477717.annot as annot from aggJoin8827723587091061418 join aggView4533371360677477717 using(v38);
+select SUM(annot) as v50 from aggJoin3738634693968536057;

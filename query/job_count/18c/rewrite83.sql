@@ -1,0 +1,13 @@
+create or replace view aggView8554314248746683726 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin1727108460812651257 as select movie_id as v31 from movie_info_idx as mi_idx, aggView8554314248746683726 where mi_idx.info_type_id=aggView8554314248746683726.v10;
+create or replace view aggView5448899824172140136 as select v31, COUNT(*) as annot from aggJoin1727108460812651257 group by v31;
+create or replace view aggJoin6780767384522108783 as select movie_id as v31, info_type_id as v8, info as v15, annot from movie_info as mi, aggView5448899824172140136 where mi.movie_id=aggView5448899824172140136.v31 and info IN ('Horror','Action','Sci-Fi','Thriller','Crime','War');
+create or replace view aggView4303516866103409729 as select id as v22 from name as n where gender= 'm';
+create or replace view aggJoin1531610819740445104 as select movie_id as v31, note as v5 from cast_info as ci, aggView4303516866103409729 where ci.person_id=aggView4303516866103409729.v22 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView6904418317676737037 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin7316620100590964500 as select v31, v15, annot from aggJoin6780767384522108783 join aggView6904418317676737037 using(v8);
+create or replace view aggView122630706415772053 as select v31, SUM(annot) as annot from aggJoin7316620100590964500 group by v31;
+create or replace view aggJoin5429921480344123087 as select v31, v5, annot from aggJoin1531610819740445104 join aggView122630706415772053 using(v31);
+create or replace view aggView454262952835728039 as select v31, SUM(annot) as annot from aggJoin5429921480344123087 group by v31;
+create or replace view aggJoin7717392609816528342 as select annot from title as t, aggView454262952835728039 where t.id=aggView454262952835728039.v31;
+select SUM(annot) as v43 from aggJoin7717392609816528342;

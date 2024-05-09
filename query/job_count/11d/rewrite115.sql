@@ -1,0 +1,15 @@
+create or replace view aggView7372644018234209610 as select id as v22 from keyword as k where keyword IN ('sequel','revenge','based-on-novel');
+create or replace view aggJoin8091874449492013605 as select movie_id as v24 from movie_keyword as mk, aggView7372644018234209610 where mk.keyword_id=aggView7372644018234209610.v22;
+create or replace view aggView7043568005684833706 as select id as v17 from company_name as cn where country_code<> '[pl]';
+create or replace view aggJoin8233977510452568242 as select movie_id as v24, company_type_id as v18 from movie_companies as mc, aggView7043568005684833706 where mc.company_id=aggView7043568005684833706.v17;
+create or replace view aggView3058488033257629214 as select id as v18 from company_type as ct where kind<> 'production companies';
+create or replace view aggJoin7626225179826076237 as select v24 from aggJoin8233977510452568242 join aggView3058488033257629214 using(v18);
+create or replace view aggView173355162886844310 as select id as v13 from link_type as lt;
+create or replace view aggJoin1721000323328683256 as select movie_id as v24 from movie_link as ml, aggView173355162886844310 where ml.link_type_id=aggView173355162886844310.v13;
+create or replace view aggView7623279482866035818 as select v24, COUNT(*) as annot from aggJoin1721000323328683256 group by v24;
+create or replace view aggJoin7054472226065632167 as select v24, annot from aggJoin7626225179826076237 join aggView7623279482866035818 using(v24);
+create or replace view aggView6437578612521807606 as select v24, SUM(annot) as annot from aggJoin7054472226065632167 group by v24;
+create or replace view aggJoin3489998914763655731 as select id as v24, production_year as v31, annot from title as t, aggView6437578612521807606 where t.id=aggView6437578612521807606.v24 and production_year>1950;
+create or replace view aggView5468538117239683003 as select v24, SUM(annot) as annot from aggJoin3489998914763655731 group by v24;
+create or replace view aggJoin563299378379508639 as select annot from aggJoin8091874449492013605 join aggView5468538117239683003 using(v24);
+select SUM(annot) as v39 from aggJoin563299378379508639;

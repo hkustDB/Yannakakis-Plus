@@ -1,0 +1,28 @@
+Relations:
+dict_values([cn1[7512502,company_name, 0]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+, cn2[7512503,company_name, 0]: ['v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14']
+, it1[7512504,info_type, 0]: ['v15', 'v16']
+, it2[7512505,info_type, 0]: ['v17', 'v18']
+, kt1[7512506,kind_type, 0]: ['v19', 'v20']
+, kt2[7512507,kind_type, 0]: ['v21', 'v22']
+, lt[7512508,link_type, 0]: ['v23', 'v24']
+, mc1[7512509,movie_companies, 0]: ['v25', 'v49', 'v1', 'v28', 'v29']
+, mc2[7512510,movie_companies, 0]: ['v30', 'v61', 'v8', 'v33', 'v34']
+, mi_idx1[7512511,movie_info_idx, 0]: ['v35', 'v49', 'v15', 'v38', 'v39']
+, mi_idx2[7512512,movie_info_idx, 0]: ['v40', 'v61', 'v17', 'v43', 'v44']
+, ml[7512513,movie_link, 0]: ['v45', 'v49', 'v61', 'v23']
+, t1[7512514,title, 0]: ['v49', 'v50', 'v51', 'v19', 'v53', 'v54', 'v55', 'v56', 'v57', 'v58', 'v59', 'v60']
+, t2[7512515,title, 0]: ['v61', 'v62', 'v63', 'v21', 'v65', 'v66', 'v67', 'v68', 'v69', 'v70', 'v71', 'v72']
+])
+Edges:
+dict_values([t2->kt2, t1->kt1, ml->lt, mi_idx1->t1, mi_idx2->it2, cn2->mc2, ml->mc1, mc1->mi_idx1, t2->ml, mi_idx1->it1, mi_idx2->t2, mc1->cn1, mc2->mi_idx2])
+Root:
+7512503
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[7512503]
+fixroot:
+True

@@ -1,0 +1,15 @@
+create or replace view aggView8893669847718080003 as select id as v5 from keyword as k where keyword IN ('murder','murder-in-title');
+create or replace view aggJoin8637298617025468671 as select movie_id as v23 from movie_keyword as mk, aggView8893669847718080003 where mk.keyword_id=aggView8893669847718080003.v5;
+create or replace view aggView342042279406319983 as select v23, COUNT(*) as annot from aggJoin8637298617025468671 group by v23;
+create or replace view aggJoin934479427854105861 as select id as v23, title as v24, kind_id as v8, production_year as v27, annot from title as t, aggView342042279406319983 where t.id=aggView342042279406319983.v23 and production_year>2010 and ((title LIKE '%murder%') OR (title LIKE '%Murder%'));
+create or replace view aggView1814804016356885394 as select id as v3 from info_type as it2 where info= 'rating';
+create or replace view aggJoin7587182856621394769 as select movie_id as v23, info as v18 from movie_info_idx as mi_idx, aggView1814804016356885394 where mi_idx.info_type_id=aggView1814804016356885394.v3 and info>'6.0';
+create or replace view aggView6228932840403081041 as select id as v8 from kind_type as kt where kind= 'movie';
+create or replace view aggJoin5306111550578152685 as select v23, v24, v27, annot from aggJoin934479427854105861 join aggView6228932840403081041 using(v8);
+create or replace view aggView1475339704630210337 as select v23, SUM(annot) as annot from aggJoin5306111550578152685 group by v23;
+create or replace view aggJoin6205689568003482684 as select v23, v18, annot from aggJoin7587182856621394769 join aggView1475339704630210337 using(v23);
+create or replace view aggView2482402305629526081 as select v23, SUM(annot) as annot from aggJoin6205689568003482684 group by v23;
+create or replace view aggJoin4542657671432109443 as select info_type_id as v1, info as v13, annot from movie_info as mi, aggView2482402305629526081 where mi.movie_id=aggView2482402305629526081.v23 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American');
+create or replace view aggView6317715847863395345 as select v1, SUM(annot) as annot from aggJoin4542657671432109443 group by v1;
+create or replace view aggJoin7834019221292956513 as select info as v2, annot from info_type as it1, aggView6317715847863395345 where it1.id=aggView6317715847863395345.v1 and info= 'countries';
+select SUM(annot) as v35 from aggJoin7834019221292956513;

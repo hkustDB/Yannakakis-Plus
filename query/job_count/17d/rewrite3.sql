@@ -1,0 +1,13 @@
+create or replace view aggView8447133180926627769 as select id as v20 from company_name as cn;
+create or replace view aggJoin2135788807545335848 as select movie_id as v3 from movie_companies as mc, aggView8447133180926627769 where mc.company_id=aggView8447133180926627769.v20;
+create or replace view aggView4187489278362706206 as select id as v26 from name as n where name LIKE '%Bert%';
+create or replace view aggJoin3977705070359554932 as select movie_id as v3 from cast_info as ci, aggView4187489278362706206 where ci.person_id=aggView4187489278362706206.v26;
+create or replace view aggView8166646223900004354 as select v3, COUNT(*) as annot from aggJoin3977705070359554932 group by v3;
+create or replace view aggJoin1820003179190484491 as select v3, annot from aggJoin2135788807545335848 join aggView8166646223900004354 using(v3);
+create or replace view aggView5985011570555635796 as select v3, SUM(annot) as annot from aggJoin1820003179190484491 group by v3;
+create or replace view aggJoin2687562603256915894 as select id as v3, annot from title as t, aggView5985011570555635796 where t.id=aggView5985011570555635796.v3;
+create or replace view aggView1102262184776182951 as select v3, SUM(annot) as annot from aggJoin2687562603256915894 group by v3;
+create or replace view aggJoin7208209363282707524 as select keyword_id as v25, annot from movie_keyword as mk, aggView1102262184776182951 where mk.movie_id=aggView1102262184776182951.v3;
+create or replace view aggView8744419311273484749 as select v25, SUM(annot) as annot from aggJoin7208209363282707524 group by v25;
+create or replace view aggJoin5646282543099718450 as select keyword as v16, annot from keyword as k, aggView8744419311273484749 where k.id=aggView8744419311273484749.v25 and keyword= 'character-name-in-title';
+select SUM(annot) as v47 from aggJoin5646282543099718450;

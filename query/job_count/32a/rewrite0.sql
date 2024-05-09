@@ -1,0 +1,11 @@
+create or replace view aggView8690804698001818392 as select id as v11 from title as t2;
+create or replace view aggJoin4802207704226286855 as select movie_id as v13, link_type_id as v4 from movie_link as ml, aggView8690804698001818392 where ml.linked_movie_id=aggView8690804698001818392.v11;
+create or replace view aggView3942422921275813083 as select id as v4 from link_type as lt;
+create or replace view aggJoin1510738262990793062 as select v13 from aggJoin4802207704226286855 join aggView3942422921275813083 using(v4);
+create or replace view aggView5172169702471280404 as select id as v8 from keyword as k where keyword= '10,000-mile-club';
+create or replace view aggJoin4028840900654148482 as select movie_id as v13 from movie_keyword as mk, aggView5172169702471280404 where mk.keyword_id=aggView5172169702471280404.v8;
+create or replace view aggView1537995594861189237 as select v13, COUNT(*) as annot from aggJoin4028840900654148482 group by v13;
+create or replace view aggJoin8802591026369448925 as select v13, annot from aggJoin1510738262990793062 join aggView1537995594861189237 using(v13);
+create or replace view aggView1903458836137914261 as select v13, SUM(annot) as annot from aggJoin8802591026369448925 group by v13;
+create or replace view aggJoin6259474492024368086 as select annot from title as t1, aggView1903458836137914261 where t1.id=aggView1903458836137914261.v13;
+select SUM(annot) as v37 from aggJoin6259474492024368086;

@@ -1,0 +1,17 @@
+create or replace view aggView4971114343792738717 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin7314798392146969818 as select movie_id as v37, info as v18 from movie_info as mi, aggView4971114343792738717 where mi.info_type_id=aggView4971114343792738717.v8 and info= 'Horror';
+create or replace view aggView8072848233419920205 as select id as v12 from keyword as k where keyword IN ('murder','blood','gore','death','female-nudity');
+create or replace view aggJoin1370709697175735692 as select movie_id as v37 from movie_keyword as mk, aggView8072848233419920205 where mk.keyword_id=aggView8072848233419920205.v12;
+create or replace view aggView7108810473854385999 as select id as v28 from name as n where gender= 'm';
+create or replace view aggJoin3530727555542450758 as select movie_id as v37, note as v5 from cast_info as ci, aggView7108810473854385999 where ci.person_id=aggView7108810473854385999.v28 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView7935048392087326465 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin3970347658940992471 as select movie_id as v37 from movie_info_idx as mi_idx, aggView7935048392087326465 where mi_idx.info_type_id=aggView7935048392087326465.v10;
+create or replace view aggView6199941522878108916 as select v37, COUNT(*) as annot from aggJoin3970347658940992471 group by v37;
+create or replace view aggJoin480460300923248895 as select v37, v18, annot from aggJoin7314798392146969818 join aggView6199941522878108916 using(v37);
+create or replace view aggView1615682747612983878 as select v37, SUM(annot) as annot from aggJoin480460300923248895 group by v37;
+create or replace view aggJoin125177284338192662 as select v37, v5, annot from aggJoin3530727555542450758 join aggView1615682747612983878 using(v37);
+create or replace view aggView7484445054624046143 as select v37, SUM(annot) as annot from aggJoin125177284338192662 group by v37;
+create or replace view aggJoin6849245136559162879 as select id as v37, annot from title as t, aggView7484445054624046143 where t.id=aggView7484445054624046143.v37;
+create or replace view aggView6695156411017173596 as select v37, SUM(annot) as annot from aggJoin6849245136559162879 group by v37;
+create or replace view aggJoin1671990007334823713 as select annot from aggJoin1370709697175735692 join aggView6695156411017173596 using(v37);
+select SUM(annot) as v49 from aggJoin1671990007334823713;

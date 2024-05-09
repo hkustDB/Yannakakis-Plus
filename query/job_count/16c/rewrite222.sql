@@ -1,0 +1,15 @@
+create or replace view aggView1822488375708646592 as select id as v33 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin2255376985696242019 as select movie_id as v11 from movie_keyword as mk, aggView1822488375708646592 where mk.keyword_id=aggView1822488375708646592.v33;
+create or replace view aggView968908967100129919 as select id as v2 from name as n;
+create or replace view aggJoin7654196763722369319 as select person_id as v2 from aka_name as an, aggView968908967100129919 where an.person_id=aggView968908967100129919.v2;
+create or replace view aggView1191002455633391907 as select v2, COUNT(*) as annot from aggJoin7654196763722369319 group by v2;
+create or replace view aggJoin7052911451338251308 as select movie_id as v11, annot from cast_info as ci, aggView1191002455633391907 where ci.person_id=aggView1191002455633391907.v2;
+create or replace view aggView3007449722855596708 as select id as v28 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin8216338409038364737 as select movie_id as v11 from movie_companies as mc, aggView3007449722855596708 where mc.company_id=aggView3007449722855596708.v28;
+create or replace view aggView6227385820320171439 as select v11, COUNT(*) as annot from aggJoin8216338409038364737 group by v11;
+create or replace view aggJoin4405686304248661768 as select id as v11, episode_nr as v52, annot from title as t, aggView6227385820320171439 where t.id=aggView6227385820320171439.v11 and episode_nr<100;
+create or replace view aggView661111550035303956 as select v11, SUM(annot) as annot from aggJoin4405686304248661768 group by v11;
+create or replace view aggJoin8577263427193049536 as select v11, annot from aggJoin2255376985696242019 join aggView661111550035303956 using(v11);
+create or replace view aggView4159401993415544643 as select v11, SUM(annot) as annot from aggJoin8577263427193049536 group by v11;
+create or replace view aggJoin7872502758112900776 as select aggJoin7052911451338251308.annot * aggView4159401993415544643.annot as annot from aggJoin7052911451338251308 join aggView4159401993415544643 using(v11);
+select SUM(annot) as v55 from aggJoin7872502758112900776;

@@ -1,0 +1,15 @@
+create or replace view aggView3963623040618580056 as select id as v28 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin7028318668882753607 as select movie_id as v11 from movie_companies as mc, aggView3963623040618580056 where mc.company_id=aggView3963623040618580056.v28;
+create or replace view aggView6157793012301632796 as select id as v2 from name as n;
+create or replace view aggJoin496444292274184772 as select person_id as v2 from aka_name as an, aggView6157793012301632796 where an.person_id=aggView6157793012301632796.v2;
+create or replace view aggView414374912140595890 as select v2, COUNT(*) as annot from aggJoin496444292274184772 group by v2;
+create or replace view aggJoin1999155939955222607 as select movie_id as v11, annot from cast_info as ci, aggView414374912140595890 where ci.person_id=aggView414374912140595890.v2;
+create or replace view aggView1048646476047021731 as select v11, SUM(annot) as annot from aggJoin1999155939955222607 group by v11;
+create or replace view aggJoin4369686243494411746 as select v11, annot from aggJoin7028318668882753607 join aggView1048646476047021731 using(v11);
+create or replace view aggView3121647059969133155 as select v11, SUM(annot) as annot from aggJoin4369686243494411746 group by v11;
+create or replace view aggJoin8328313153779513982 as select id as v11, episode_nr as v52, annot from title as t, aggView3121647059969133155 where t.id=aggView3121647059969133155.v11 and episode_nr>=50 and episode_nr<100;
+create or replace view aggView8282393427088851253 as select v11, SUM(annot) as annot from aggJoin8328313153779513982 group by v11;
+create or replace view aggJoin5396210682200466402 as select keyword_id as v33, annot from movie_keyword as mk, aggView8282393427088851253 where mk.movie_id=aggView8282393427088851253.v11;
+create or replace view aggView2148481521293247503 as select v33, SUM(annot) as annot from aggJoin5396210682200466402 group by v33;
+create or replace view aggJoin7366841246954157450 as select keyword as v24, annot from keyword as k, aggView2148481521293247503 where k.id=aggView2148481521293247503.v33 and keyword= 'character-name-in-title';
+select SUM(annot) as v55 from aggJoin7366841246954157450;

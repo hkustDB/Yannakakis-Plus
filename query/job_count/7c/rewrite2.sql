@@ -1,0 +1,15 @@
+create or replace view aggView7676393503668612640 as select id as v16 from info_type as it where info= 'mini biography';
+create or replace view aggJoin1357241514066680564 as select person_id as v24 from person_info as pi, aggView7676393503668612640 where pi.info_type_id=aggView7676393503668612640.v16;
+create or replace view aggView8900412123053501570 as select v24, COUNT(*) as annot from aggJoin1357241514066680564 group by v24;
+create or replace view aggJoin7816073310453746501 as select id as v24, name as v25, gender as v28, name_pcode_cf as v29, annot from name as n, aggView8900412123053501570 where n.id=aggView8900412123053501570.v24 and name LIKE 'A%' and name_pcode_cf>='A' and gender= 'f' and name_pcode_cf<='F';
+create or replace view aggView8188608720362460766 as select v24, SUM(annot) as annot from aggJoin7816073310453746501 group by v24;
+create or replace view aggJoin235794051693765266 as select person_id as v24, name as v3, annot from aka_name as an, aggView8188608720362460766 where an.person_id=aggView8188608720362460766.v24 and ((name LIKE '%a%') OR (name LIKE 'A%'));
+create or replace view aggView4604965963457864125 as select v24, SUM(annot) as annot from aggJoin235794051693765266 group by v24;
+create or replace view aggJoin6611807486535058310 as select movie_id as v38, annot from cast_info as ci, aggView4604965963457864125 where ci.person_id=aggView4604965963457864125.v24;
+create or replace view aggView6493417216370715163 as select v38, SUM(annot) as annot from aggJoin6611807486535058310 group by v38;
+create or replace view aggJoin8891437311469895335 as select id as v38, production_year as v42, annot from title as t, aggView6493417216370715163 where t.id=aggView6493417216370715163.v38 and production_year<=2010 and production_year>=1980;
+create or replace view aggView4923465761701400462 as select v38, SUM(annot) as annot from aggJoin8891437311469895335 group by v38;
+create or replace view aggJoin7182323040782255471 as select link_type_id as v18, annot from movie_link as ml, aggView4923465761701400462 where ml.linked_movie_id=aggView4923465761701400462.v38;
+create or replace view aggView3715269813599141261 as select v18, SUM(annot) as annot from aggJoin7182323040782255471 group by v18;
+create or replace view aggJoin1714708622061485147 as select link as v19, annot from link_type as lt, aggView3715269813599141261 where lt.id=aggView3715269813599141261.v18 and link IN ('references','referenced in','features','featured in');
+select SUM(annot) as v50 from aggJoin1714708622061485147;
