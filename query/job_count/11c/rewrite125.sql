@@ -1,0 +1,15 @@
+create or replace view aggView7047888501095455586 as select id as v18 from company_type as ct where kind<> 'production companies';
+create or replace view aggJoin8804325926932604306 as select movie_id as v24, company_id as v17 from movie_companies as mc, aggView7047888501095455586 where mc.company_type_id=aggView7047888501095455586.v18;
+create or replace view aggView5691603658327480444 as select id as v13 from link_type as lt;
+create or replace view aggJoin1673091398507286779 as select movie_id as v24 from movie_link as ml, aggView5691603658327480444 where ml.link_type_id=aggView5691603658327480444.v13;
+create or replace view aggView1364167556789501882 as select id as v17 from company_name as cn where country_code<> '[pl]' and ((name LIKE '20th Century Fox%') OR (name LIKE 'Twentieth Century Fox%'));
+create or replace view aggJoin2787854315141281551 as select v24 from aggJoin8804325926932604306 join aggView1364167556789501882 using(v17);
+create or replace view aggView425549634889372100 as select v24, COUNT(*) as annot from aggJoin1673091398507286779 group by v24;
+create or replace view aggJoin7766488212471618236 as select v24, annot from aggJoin2787854315141281551 join aggView425549634889372100 using(v24);
+create or replace view aggView8630464872328978096 as select v24, SUM(annot) as annot from aggJoin7766488212471618236 group by v24;
+create or replace view aggJoin8740140800163778844 as select id as v24, production_year as v31, annot from title as t, aggView8630464872328978096 where t.id=aggView8630464872328978096.v24 and production_year>1950;
+create or replace view aggView3002087354857263514 as select v24, SUM(annot) as annot from aggJoin8740140800163778844 group by v24;
+create or replace view aggJoin6177687159128928641 as select keyword_id as v22, annot from movie_keyword as mk, aggView3002087354857263514 where mk.movie_id=aggView3002087354857263514.v24;
+create or replace view aggView2003276253994041646 as select id as v22 from keyword as k where keyword IN ('sequel','revenge','based-on-novel');
+create or replace view aggJoin4250707612406173599 as select annot from aggJoin6177687159128928641 join aggView2003276253994041646 using(v22);
+select SUM(annot) as v39 from aggJoin4250707612406173599;

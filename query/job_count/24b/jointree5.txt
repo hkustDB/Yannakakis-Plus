@@ -1,0 +1,26 @@
+Relations:
+dict_values([an[7099617,aka_name, 0]: ['v1', 'v48', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+, chn[7099618,char_name, 0]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+, ci[7099619,cast_info, 0]: ['v16', 'v48', 'v59', 'v9', 'v20', 'v21', 'v57']
+, cn[7099620,company_name, 0]: ['v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29']
+, it[7099621,info_type, 0]: ['v30', 'v31']
+, k[7099622,keyword, 0]: ['v32', 'v33', 'v34']
+, mc[7099623,movie_companies, 0]: ['v35', 'v59', 'v23', 'v38', 'v39']
+, mi[7099624,movie_info, 0]: ['v40', 'v59', 'v30', 'v43', 'v44']
+, mk[7099625,movie_keyword, 0]: ['v45', 'v59', 'v32']
+, n[7099626,name, 0]: ['v48', 'v49', 'v50', 'v51', 'v52', 'v53', 'v54', 'v55', 'v56']
+, rt[7099627,role_type, 0]: ['v57', 'v58']
+, t[7099628,title, 0]: ['v59', 'v60', 'v61', 'v62', 'v63', 'v64', 'v65', 'v66', 'v67', 'v68', 'v69', 'v70']
+])
+Edges:
+dict_values([mi->mk, chn->ci, ci->n, mi->it, mc->cn, n->an, t->mc, ci->rt, mk->k, mc->mi, ci->t])
+Root:
+7099618
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[7099618]
+fixroot:
+True

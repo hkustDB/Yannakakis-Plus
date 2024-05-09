@@ -1,0 +1,17 @@
+create or replace view aggView4832991572556249515 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin2823532273249139477 as select movie_id as v37 from movie_info_idx as mi_idx, aggView4832991572556249515 where mi_idx.info_type_id=aggView4832991572556249515.v10;
+create or replace view aggView3979337435139590174 as select id as v8 from info_type as it1 where info= 'genres';
+create or replace view aggJoin698822953741865571 as select movie_id as v37, info as v18 from movie_info as mi, aggView3979337435139590174 where mi.info_type_id=aggView3979337435139590174.v8 and info= 'Horror';
+create or replace view aggView1918664137681443503 as select id as v12 from keyword as k where keyword IN ('murder','blood','gore','death','female-nudity');
+create or replace view aggJoin7824685663725151799 as select movie_id as v37 from movie_keyword as mk, aggView1918664137681443503 where mk.keyword_id=aggView1918664137681443503.v12;
+create or replace view aggView7384198703633775936 as select v37, COUNT(*) as annot from aggJoin7824685663725151799 group by v37;
+create or replace view aggJoin9202949092018784528 as select v37, annot from aggJoin2823532273249139477 join aggView7384198703633775936 using(v37);
+create or replace view aggView1554876827347000502 as select v37, SUM(annot) as annot from aggJoin9202949092018784528 group by v37;
+create or replace view aggJoin6729535709329286918 as select v37, v18, annot from aggJoin698822953741865571 join aggView1554876827347000502 using(v37);
+create or replace view aggView2062900732733673407 as select v37, SUM(annot) as annot from aggJoin6729535709329286918 group by v37;
+create or replace view aggJoin565277207610933187 as select id as v37, title as v38, production_year as v41, annot from title as t, aggView2062900732733673407 where t.id=aggView2062900732733673407.v37 and production_year>2010 and title LIKE 'Vampire%';
+create or replace view aggView6682329143571683194 as select v37, SUM(annot) as annot from aggJoin565277207610933187 group by v37;
+create or replace view aggJoin5654969615396719557 as select person_id as v28, note as v5, annot from cast_info as ci, aggView6682329143571683194 where ci.movie_id=aggView6682329143571683194.v37 and note IN ('(writer)','(head writer)','(written by)','(story)','(story editor)');
+create or replace view aggView8676351104256541552 as select v28, SUM(annot) as annot from aggJoin5654969615396719557 group by v28;
+create or replace view aggJoin5097760336193890961 as select annot from name as n, aggView8676351104256541552 where n.id=aggView8676351104256541552.v28 and gender= 'm';
+select SUM(annot) as v49 from aggJoin5097760336193890961;
