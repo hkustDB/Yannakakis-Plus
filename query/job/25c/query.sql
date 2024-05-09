@@ -1,4 +1,4 @@
-explain SELECT MIN(mi.info) AS movie_budget,
+select MIN(mi.info) AS movie_budget,
        MIN(mi_idx.info) AS movie_votes,
        MIN(n.name) AS male_writer,
        MIN(t.title) AS violent_movie_title

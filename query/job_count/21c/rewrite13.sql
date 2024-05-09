@@ -1,0 +1,17 @@
+create or replace view aggView6758222887044894572 as select id as v17 from company_name as cn where country_code<> '[pl]' and ((name LIKE '%Film%') OR (name LIKE '%Warner%'));
+create or replace view aggJoin2727073764805317553 as select movie_id as v29, company_type_id as v18 from movie_companies as mc, aggView6758222887044894572 where mc.company_id=aggView6758222887044894572.v17;
+create or replace view aggView2852735193411787578 as select id as v18 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin3643931092711496799 as select v29 from aggJoin2727073764805317553 join aggView2852735193411787578 using(v18);
+create or replace view aggView5638136212866787849 as select id as v13 from link_type as lt where link LIKE '%follow%';
+create or replace view aggJoin8613098675761426669 as select movie_id as v29 from movie_link as ml, aggView5638136212866787849 where ml.link_type_id=aggView5638136212866787849.v13;
+create or replace view aggView6817011295768249737 as select id as v27 from keyword as k where keyword= 'sequel';
+create or replace view aggJoin294880282374236272 as select movie_id as v29 from movie_keyword as mk, aggView6817011295768249737 where mk.keyword_id=aggView6817011295768249737.v27;
+create or replace view aggView2360031800894238400 as select v29, COUNT(*) as annot from aggJoin294880282374236272 group by v29;
+create or replace view aggJoin6711056428318530535 as select id as v29, production_year as v36, annot from title as t, aggView2360031800894238400 where t.id=aggView2360031800894238400.v29 and production_year<=2010 and production_year>=1950;
+create or replace view aggView7857394008451052161 as select v29, SUM(annot) as annot from aggJoin6711056428318530535 group by v29;
+create or replace view aggJoin8495429534026078272 as select v29, annot from aggJoin3643931092711496799 join aggView7857394008451052161 using(v29);
+create or replace view aggView3398042658317957581 as select v29, SUM(annot) as annot from aggJoin8495429534026078272 group by v29;
+create or replace view aggJoin6383094796733545579 as select v29, annot from aggJoin8613098675761426669 join aggView3398042658317957581 using(v29);
+create or replace view aggView445187972486949663 as select v29, SUM(annot) as annot from aggJoin6383094796733545579 group by v29;
+create or replace view aggJoin5914346266900325054 as select annot from movie_info as mi, aggView445187972486949663 where mi.movie_id=aggView445187972486949663.v29 and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','English');
+select SUM(annot) as v44 from aggJoin5914346266900325054;

@@ -1,0 +1,15 @@
+create or replace view aggView7821776965585332708 as select id as v17 from company_name as cn where country_code<> '[pl]' and ((name LIKE '%Film%') OR (name LIKE '%Warner%'));
+create or replace view aggJoin7363019853774374980 as select movie_id as v24, company_type_id as v18 from movie_companies as mc, aggView7821776965585332708 where mc.company_id=aggView7821776965585332708.v17;
+create or replace view aggView7777617625249238711 as select id as v13 from link_type as lt where link LIKE '%follows%';
+create or replace view aggJoin4553804995766378471 as select movie_id as v24 from movie_link as ml, aggView7777617625249238711 where ml.link_type_id=aggView7777617625249238711.v13;
+create or replace view aggView8925094663289789383 as select v24, COUNT(*) as annot from aggJoin4553804995766378471 group by v24;
+create or replace view aggJoin5776445225438352470 as select id as v24, title as v28, production_year as v31, annot from title as t, aggView8925094663289789383 where t.id=aggView8925094663289789383.v24 and title LIKE '%Money%' and production_year= 1998;
+create or replace view aggView3447506295930354710 as select v24, SUM(annot) as annot from aggJoin5776445225438352470 group by v24;
+create or replace view aggJoin4191650470498827451 as select movie_id as v24, keyword_id as v22, annot from movie_keyword as mk, aggView3447506295930354710 where mk.movie_id=aggView3447506295930354710.v24;
+create or replace view aggView1145779265109371820 as select id as v22 from keyword as k where keyword= 'sequel';
+create or replace view aggJoin7960138589424922710 as select v24, annot from aggJoin4191650470498827451 join aggView1145779265109371820 using(v22);
+create or replace view aggView490649710529462272 as select v24, SUM(annot) as annot from aggJoin7960138589424922710 group by v24;
+create or replace view aggJoin7519734613942248734 as select v18, annot from aggJoin7363019853774374980 join aggView490649710529462272 using(v24);
+create or replace view aggView2694311233648333490 as select v18, SUM(annot) as annot from aggJoin7519734613942248734 group by v18;
+create or replace view aggJoin6975483193214398296 as select kind as v9, annot from company_type as ct, aggView2694311233648333490 where ct.id=aggView2694311233648333490.v18 and kind= 'production companies';
+select SUM(annot) as v39 from aggJoin6975483193214398296;

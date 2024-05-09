@@ -176,11 +176,13 @@ def connect(base: int, mode: int, type: GenType):
         json_file = open(BASE_PATH + globalVar.get_value('PLAN_NAME'))
         plan = json.load(json_file)
         body['plan'] = plan
+    except IOError:
+        pass
+    try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&sampleSize=20&limit=30, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
         response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
-        # traceback.print_exc()
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000&fixRootEnable=true", headers=headers, json=body).json()['data']
+        print(BASE_PATH + QUERY_NAME)
     # 1. 
     table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
     # 3. parse outputVariables
@@ -332,11 +334,11 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/27a/')
-    globalVar.set_value('DDL_NAME', "job.ddl")
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job_count/7c/')
+    globalVar.set_value('DDL_NAME', "job_count.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
-    
+    '''
     arguments = docopt(__doc__)
     globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
     globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
@@ -349,7 +351,7 @@ if __name__ == '__main__':
         globalVar.set_value('GEN_TYPE', 'Mysql')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
-    
+    '''
     BASE_PATH = globalVar.get_value('BASE_PATH')
     OUT_NAME = globalVar.get_value('OUT_NAME')
     OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
@@ -398,7 +400,7 @@ if __name__ == '__main__':
     else:
         fields = ['index', 'hight', 'width', 'estimate'] 
         cost_stat = PQ()
-        total_number = 8
+        total_number = 4
         fix_number, nonfix_number = total_number // 2, total_number // 2
         fix_iter, nonfix_iter = 0, 0
         best_res_nonfix, best_res_fix = [], []

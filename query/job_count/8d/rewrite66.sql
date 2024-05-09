@@ -1,0 +1,13 @@
+create or replace view aggView3492208564854420574 as select id as v15 from role_type as rt where role= 'costume designer';
+create or replace view aggJoin7453363767402876159 as select person_id as v2, movie_id as v11 from cast_info as ci, aggView3492208564854420574 where ci.role_id=aggView3492208564854420574.v15;
+create or replace view aggView2419944686005069901 as select id as v2 from name as n1;
+create or replace view aggJoin1278896323235150925 as select v2, v11 from aggJoin7453363767402876159 join aggView2419944686005069901 using(v2);
+create or replace view aggView5206615091127592120 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin2804863537120604245 as select movie_id as v11 from movie_companies as mc, aggView5206615091127592120 where mc.company_id=aggView5206615091127592120.v25;
+create or replace view aggView81001488246525070 as select person_id as v2, COUNT(*) as annot from aka_name as an1 group by person_id;
+create or replace view aggJoin158775485352307093 as select v11, annot from aggJoin1278896323235150925 join aggView81001488246525070 using(v2);
+create or replace view aggView2978741513206439330 as select v11, COUNT(*) as annot from aggJoin2804863537120604245 group by v11;
+create or replace view aggJoin8851011063594842464 as select id as v11, annot from title as t, aggView2978741513206439330 where t.id=aggView2978741513206439330.v11;
+create or replace view aggView3185596463099150724 as select v11, SUM(annot) as annot from aggJoin8851011063594842464 group by v11;
+create or replace view aggJoin841597082286482521 as select aggJoin158775485352307093.annot * aggView3185596463099150724.annot as annot from aggJoin158775485352307093 join aggView3185596463099150724 using(v11);
+select SUM(annot) as v51 from aggJoin841597082286482521;

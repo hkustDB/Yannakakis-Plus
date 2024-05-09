@@ -486,7 +486,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
             '''
     
     ## d. append annot
-    # NOTE: Extra optimization foe job benchmark
+    # NOTE: Extra optimization for job benchmark
     if globalVar.get_value('DDL_NAME') != 'job.ddl':
         if childFlag and not pkFlag:
             if not len(selectAttr):

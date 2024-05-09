@@ -1,0 +1,13 @@
+create or replace view aggView5352348625291777714 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin7379529919198644141 as select movie_id as v11, note as v27 from movie_companies as mc, aggView5352348625291777714 where mc.company_id=aggView5352348625291777714.v25 and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView5580683152761498610 as select person_id as v2, COUNT(*) as annot from aka_name as an1 group by person_id;
+create or replace view aggJoin8145813358742221105 as select id as v2, name as v29, annot from name as n1, aggView5580683152761498610 where n1.id=aggView5580683152761498610.v2 and name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggView1758840690774357687 as select v2, SUM(annot) as annot from aggJoin8145813358742221105 group by v2;
+create or replace view aggJoin7655924946324520344 as select movie_id as v11, note as v13, role_id as v15, annot from cast_info as ci, aggView1758840690774357687 where ci.person_id=aggView1758840690774357687.v2 and note= '(voice: English version)';
+create or replace view aggView2338244425400395307 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin8541082351141913643 as select v11, v13, annot from aggJoin7655924946324520344 join aggView2338244425400395307 using(v15);
+create or replace view aggView6802163190987896401 as select v11, SUM(annot) as annot from aggJoin8541082351141913643 group by v11;
+create or replace view aggJoin8037082134584716959 as select v11, v27, annot from aggJoin7379529919198644141 join aggView6802163190987896401 using(v11);
+create or replace view aggView8767203202309845244 as select v11, SUM(annot) as annot from aggJoin8037082134584716959 group by v11;
+create or replace view aggJoin7176126380150561232 as select annot from title as t, aggView8767203202309845244 where t.id=aggView8767203202309845244.v11;
+select SUM(annot) as v51 from aggJoin7176126380150561232;

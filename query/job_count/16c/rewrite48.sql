@@ -1,0 +1,15 @@
+create or replace view aggView5594340343159136584 as select id as v33 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin8367034753741483799 as select movie_id as v11 from movie_keyword as mk, aggView5594340343159136584 where mk.keyword_id=aggView5594340343159136584.v33;
+create or replace view aggView1211950080782455672 as select v11, COUNT(*) as annot from aggJoin8367034753741483799 group by v11;
+create or replace view aggJoin951117418746970232 as select id as v11, episode_nr as v52, annot from title as t, aggView1211950080782455672 where t.id=aggView1211950080782455672.v11 and episode_nr<100;
+create or replace view aggView7829828824529266400 as select id as v28 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin3975061619413092666 as select movie_id as v11 from movie_companies as mc, aggView7829828824529266400 where mc.company_id=aggView7829828824529266400.v28;
+create or replace view aggView1621523052605021091 as select v11, SUM(annot) as annot from aggJoin951117418746970232 group by v11;
+create or replace view aggJoin1722618010759846875 as select v11, annot from aggJoin3975061619413092666 join aggView1621523052605021091 using(v11);
+create or replace view aggView3711645233143399542 as select v11, SUM(annot) as annot from aggJoin1722618010759846875 group by v11;
+create or replace view aggJoin8472266102798600550 as select person_id as v2, annot from cast_info as ci, aggView3711645233143399542 where ci.movie_id=aggView3711645233143399542.v11;
+create or replace view aggView4976951265679550164 as select v2, SUM(annot) as annot from aggJoin8472266102798600550 group by v2;
+create or replace view aggJoin2379465287943850811 as select id as v2, annot from name as n, aggView4976951265679550164 where n.id=aggView4976951265679550164.v2;
+create or replace view aggView6073656481714532968 as select v2, SUM(annot) as annot from aggJoin2379465287943850811 group by v2;
+create or replace view aggJoin5509933964229085895 as select annot from aka_name as an, aggView6073656481714532968 where an.person_id=aggView6073656481714532968.v2;
+select SUM(annot) as v55 from aggJoin5509933964229085895;

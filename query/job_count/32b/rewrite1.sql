@@ -1,0 +1,11 @@
+create or replace view aggView1135927557401498298 as select id as v11 from title as t2;
+create or replace view aggJoin8663743553458500232 as select movie_id as v13, link_type_id as v4 from movie_link as ml, aggView1135927557401498298 where ml.linked_movie_id=aggView1135927557401498298.v11;
+create or replace view aggView7391829190067042685 as select id as v8 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin5762060253695045346 as select movie_id as v13 from movie_keyword as mk, aggView7391829190067042685 where mk.keyword_id=aggView7391829190067042685.v8;
+create or replace view aggView5736643244682927481 as select v13, COUNT(*) as annot from aggJoin5762060253695045346 group by v13;
+create or replace view aggJoin6057616225237690631 as select v13, v4, annot from aggJoin8663743553458500232 join aggView5736643244682927481 using(v13);
+create or replace view aggView3462842132436873832 as select id as v4 from link_type as lt;
+create or replace view aggJoin81555860781223101 as select v13, annot from aggJoin6057616225237690631 join aggView3462842132436873832 using(v4);
+create or replace view aggView7590160811487528626 as select v13, SUM(annot) as annot from aggJoin81555860781223101 group by v13;
+create or replace view aggJoin1855504880283688589 as select annot from title as t1, aggView7590160811487528626 where t1.id=aggView7590160811487528626.v13;
+select SUM(annot) as v37 from aggJoin1855504880283688589;

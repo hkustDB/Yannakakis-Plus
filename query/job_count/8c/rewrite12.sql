@@ -1,0 +1,13 @@
+create or replace view aggView4357129960767855590 as select id as v15 from role_type as rt where role= 'writer';
+create or replace view aggJoin3799882273298804823 as select person_id as v2, movie_id as v11 from cast_info as ci, aggView4357129960767855590 where ci.role_id=aggView4357129960767855590.v15;
+create or replace view aggView502320884713138637 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin7276428918982894191 as select movie_id as v11 from movie_companies as mc, aggView502320884713138637 where mc.company_id=aggView502320884713138637.v25;
+create or replace view aggView78784303639132615 as select v11, COUNT(*) as annot from aggJoin7276428918982894191 group by v11;
+create or replace view aggJoin2698809435602677398 as select id as v11, annot from title as t, aggView78784303639132615 where t.id=aggView78784303639132615.v11;
+create or replace view aggView8202859979260569632 as select v11, SUM(annot) as annot from aggJoin2698809435602677398 group by v11;
+create or replace view aggJoin5511726394766101831 as select v2, annot from aggJoin3799882273298804823 join aggView8202859979260569632 using(v11);
+create or replace view aggView3711388032832054082 as select v2, SUM(annot) as annot from aggJoin5511726394766101831 group by v2;
+create or replace view aggJoin3957276853579774330 as select person_id as v2, annot from aka_name as an, aggView3711388032832054082 where an.person_id=aggView3711388032832054082.v2;
+create or replace view aggView7728721592044542987 as select v2, SUM(annot) as annot from aggJoin3957276853579774330 group by v2;
+create or replace view aggJoin4708920168583761652 as select annot from name as n1, aggView7728721592044542987 where n1.id=aggView7728721592044542987.v2;
+select SUM(annot) as v51 from aggJoin4708920168583761652;

@@ -1,0 +1,17 @@
+create or replace view aggView5291596591635572399 as select id as v22 from info_type as it1 where info= 'release dates';
+create or replace view aggJoin4721560663168985862 as select movie_id as v40, info as v35, note as v36 from movie_info as mi, aggView5291596591635572399 where mi.info_type_id=aggView5291596591635572399.v22 and note LIKE '%internet%' and info LIKE 'USA:% 200%';
+create or replace view aggView978378024259386473 as select v40, COUNT(*) as annot from aggJoin4721560663168985862 group by v40;
+create or replace view aggJoin8989282255256783489 as select movie_id as v40, annot from aka_title as aka_t, aggView978378024259386473 where aka_t.movie_id=aggView978378024259386473.v40;
+create or replace view aggView846216130143281995 as select id as v24 from keyword as k;
+create or replace view aggJoin8501226097395875121 as select movie_id as v40 from movie_keyword as mk, aggView846216130143281995 where mk.keyword_id=aggView846216130143281995.v24;
+create or replace view aggView6302190960337367599 as select v40, SUM(annot) as annot from aggJoin8989282255256783489 group by v40;
+create or replace view aggJoin2320950036425902436 as select id as v40, production_year as v44, annot from title as t, aggView6302190960337367599 where t.id=aggView6302190960337367599.v40 and production_year<=2010 and production_year>=2005;
+create or replace view aggView6976289257916965420 as select v40, SUM(annot) as annot from aggJoin2320950036425902436 group by v40;
+create or replace view aggJoin7246327520210488628 as select v40, annot from aggJoin8501226097395875121 join aggView6976289257916965420 using(v40);
+create or replace view aggView1981599257663919609 as select v40, SUM(annot) as annot from aggJoin7246327520210488628 group by v40;
+create or replace view aggJoin3384609917257129331 as select company_id as v13, company_type_id as v20, note as v31, annot from movie_companies as mc, aggView1981599257663919609 where mc.movie_id=aggView1981599257663919609.v40 and note LIKE '%(200%)%' and note LIKE '%(worldwide)%';
+create or replace view aggView1584020569546851201 as select id as v20 from company_type as ct;
+create or replace view aggJoin2487542156550953892 as select v13, v31, annot from aggJoin3384609917257129331 join aggView1584020569546851201 using(v20);
+create or replace view aggView833470781563523900 as select v13, SUM(annot) as annot from aggJoin2487542156550953892 group by v13;
+create or replace view aggJoin2790498286181010362 as select name as v14, country_code as v15, annot from company_name as cn, aggView833470781563523900 where cn.id=aggView833470781563523900.v13 and name= 'YouTube' and country_code= '[us]';
+select SUM(annot) as v52 from aggJoin2790498286181010362;
