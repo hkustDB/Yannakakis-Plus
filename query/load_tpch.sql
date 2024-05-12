@@ -62,8 +62,7 @@ CREATE TABLE orders (
   o_orderpriority varchar NOT NULL,
   o_clerk varchar NOT NULL,
   o_shippriority int NOT NULL,
-  o_comment varchar NOT NULL,
-  dummy varchar
+  o_comment varchar NOT NULL
 );
 
 COPY ORDERS FROM '/home/bchenba/TPC-H/1T/orders.tbl' ( DELIMITER '|' );
@@ -85,8 +84,7 @@ CREATE TABLE lineitem (
   l_receiptdate DATE NOT NULL,
   l_shipinstruct varchar NOT NULL,
   l_shipmode varchar NOT NULL,
-  l_comment varchar NOT NULL,
-  dummy varchar
+  l_comment varchar NOT NULL
 );
 
 COPY LINEITEM FROM '/home/bchenba/TPC-H/1T/lineitem.tbl' ( DELIMITER '|' );
