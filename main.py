@@ -63,6 +63,7 @@ def removeEqual(line: str, range: int = 0):
         attrs = [attr.split('=')[1] for attr in attrs]
         return attrs
 
+#NOTE: No recur case in given plan case, so no need tosupport reserve in this function
 def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
     name, id, line = node.split(';', 2)
     id = int(id.split('=')[1])
@@ -120,7 +121,7 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
 
 
 def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int]):
-    id, name, cols, alias = node['id'], node['type'], node['columns'], node['alias']
+    id, name, cols, alias, reserve = node['id'], node['type'], node['columns'], node['alias'], node['reserves']
     if name == 'BagRelation':
         inAlias = node['internal']
         inId, internal = node['internalRelations'].split('\n', 1)
@@ -129,19 +130,19 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         internal = internal.split('\n')
         for inter in internal:
             if inter != '': parseRelRecur(inter, allNodes, supId)
-        bagNode = BagTreeNode(id, str(inAlias), cols, [], alias, inId, inAlias)
+        bagNode = BagTreeNode(id, str(inAlias), cols, [], alias, reserve, inId, inAlias)
         allNodes[id] = bagNode
     
     elif name == 'AuxiliaryRelation':
         source = node['source']
         supportId = node['support']
-        auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
+        auxNode = AuxTreeNode(id, source, cols, [], alias, reserve, supportId)
         supId.add(supportId)
         allNodes[id] = auxNode
             
     elif name == 'TableScanRelation':
         source = node['source']
-        tsNode = TableTreeNode(id, source, cols, [], alias)
+        tsNode = TableTreeNode(id, source, cols, [], alias, reserve)
         allNodes[id] = tsNode
         
     elif name == 'TableAggRelation':
@@ -152,7 +153,7 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         aggs = aggs.split('\n')
         for each_agg in aggs:
             if each_agg != '': parseRelRecur(each_agg, allNodes, supId)
-        taNode = TableAggTreeNode(id, source, cols, [], alias, aggList)
+        taNode = TableAggTreeNode(id, source, cols, [], alias, reserve, aggList)
         allNodes[id] = taNode
             
     else:
@@ -334,8 +335,8 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job_count/7c/')
-    globalVar.set_value('DDL_NAME', "job_count.ddl")
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/9b/')
+    globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
     '''

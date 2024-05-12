@@ -82,9 +82,12 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
     def calJoinStatistic(node: TreeNode):
         staP, staC = [], []
         if node.parent != None:
-            joinKey = list(set(node.cols) & set(node.parent.cols))
+            joinKey = list(set(node.reserve) & set(node.parent.cols))
             if len(joinKey):
-                idx = node.cols.index(joinKey[0])
+                try:
+                    idx = node.cols.index(joinKey[0])
+                except:
+                    idx = 0
                 try:
                     staP = statistics[re.sub(r'[0-9]+', '', node.source)][idx]
                 except:
@@ -95,15 +98,18 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
                         ndv *= statistics[re.sub(r'[0-9]+', '', source)][0][1]
                     staP = [cardi, ndv]
             else:
-                raise RuntimeError("No join key")
+                raise RuntimeWarning("No join key")
         else:
             staP = statistics[re.sub(r'[0-9]+', '', node.source)][0]
 
         if len(node.children):
             for child in node.children:
-                joinKey = list(set(node.cols) & set(child.cols))
+                joinKey = list(set(node.cols) & set(child.reserve))
                 if len(joinKey):
-                    idx = node.cols.index(joinKey[0])
+                    try:
+                        idx = node.cols.index(joinKey[0])
+                    except:
+                        idx = 0
                     try:
                         if not len(staC):
                             staC = statistics[re.sub(r'[0-9]+', '', node.source)][idx]

@@ -8,12 +8,13 @@ from productK import *
 from typing import Union
 
 class TreeNode:
-    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str):
+    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, reserve: list[str]):
         self.id = id                # relation id
         self.source = source        # Graph
         self.cols = cols            # [v7, v8]
         self.alias = alias          # table displayName, g1
         self.col2vars = col2vars    # map variable name to original variable name
+        self.reserve = reserve
                                     # zipped = zip(a,b), zip(*zipped)
         self.children: list[TreeNode] = []
         self.parent: TreeNode = None
@@ -81,8 +82,8 @@ class TreeNode:
         
 '''only one Support Relation now, jar code only provide one support relation'''
 class AuxTreeNode(TreeNode):
-    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, supRelationId: int):
-        super().__init__(id, source, cols, col2vars, alias)
+    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, reserve: list[str], supRelationId: int):
+        super().__init__(id, source, cols, col2vars, alias, reserve)
         self.relationType = RelationType.AuxiliaryRelation
         self.supRelationId = supRelationId # supporting TreeNode Id
 
@@ -95,8 +96,8 @@ class AggTreeNode(TreeNode):
     '''
     Only exist in TableAggTreeNode
     '''
-    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, group: int, func: str):
-        super().__init__(id, source, cols, col2vars, alias)
+    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, reserve: list[str], group: int, func: str):
+        super().__init__(id, source, cols, col2vars, alias, reserve)
         self.relationType = RelationType.AggregatedRelation
         self.group = group
         self.func = Func[func] # use enum to build
@@ -105,15 +106,15 @@ class TableAggTreeNode(TreeNode):
     '''
     mix of TableScan and Agg
     '''
-    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, aggRelation: list[int]):
-        super().__init__(id, source, cols, col2vars, alias)
+    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, reserve: list[str], aggRelation: list[int]):
+        super().__init__(id, source, cols, col2vars, alias, reserve)
         self.relationType = RelationType.TableAggRelation
         self.aggRelation = aggRelation  # list of agg id
 
 
 class BagTreeNode(TreeNode):
-    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, insideId: list[int], insideAlias: list[str]):
-        super().__init__(id, source, cols, col2vars, alias)
+    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, reserve: list[str], insideId: list[int], insideAlias: list[str]):
+        super().__init__(id, source, cols, col2vars, alias, reserve)
         self.relationType = RelationType.BagRelation
         self.insideId = insideId
         self.inAlias = insideAlias
@@ -122,6 +123,6 @@ class BagTreeNode(TreeNode):
     
 
 class TableTreeNode(TreeNode):
-    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str):
-        super().__init__(id, source, cols, col2vars, alias)
+    def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, reserve: list[str]):
+        super().__init__(id, source, cols, col2vars, alias, reserve)
         self.relationType = RelationType.TableScanRelation

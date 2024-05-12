@@ -98,8 +98,8 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             queue.insert(0, child)
         if node.isRoot: 
             continue
-        joinKeyParent[node.id] = set(node.cols) & set(node.parent.cols)
-        allJoinKeys |= set(node.cols) & set(node.parent.cols)
+        joinKeyParent[node.id] = set(node.reserve)
+        allJoinKeys |= set(node.reserve)
     
     # step1: prune reduce list
     if Agg:
@@ -115,7 +115,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 joinKeyEnum[corNode.id] |= addUpJoinKey
             else:
                 joinKeyEnum[corNode.id] = addUpJoinKey.copy()
-            addUpJoinKey |= (set(corNode.cols) & set(corNode.parent.cols))
+            addUpJoinKey |= set(corNode.reserve)
             if corNode.parent.id in joinKeyEnum:
                 joinKeyEnum[corNode.parent.id] |= addUpJoinKey
             else:
@@ -137,7 +137,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             if not func.doneFlag:
                 aggHasLeft = True
                 break
-     
+    
     finalKeepSet = outputVariables if not aggHasLeft else outputVariables | aggKeepSet
     finalAnnotKeep = True if 'annot' in finalResult else False
     requireVariables: set[str] = outputVariables | aggKeepSet | compKeepSet | extraEqualSet

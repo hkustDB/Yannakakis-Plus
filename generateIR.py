@@ -35,6 +35,7 @@ def splitLR(LR: str):
 
 def buildJoinRelation(preNode: TreeNode, inNode: TreeNode) -> str:
     whereCondList = []
+    # FIXME: No extra process fro bag joinkey
     joinKey = list(set(inNode.cols) & set(preNode.cols))
     # natural join
     if not len(joinKey):
@@ -488,7 +489,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
             
             # joinKey = list(set(childNode.JoinResView.selectAttrAlias) & set(parentNode.cols))
             ## NOTE: Use the original, avoid importing annot
-            joinKey = list(set(childNode.cols) & set(parentNode.cols))
+            joinKey = list(set(childNode.reserve) & set(parentNode.cols))
             if not len(joinKey):
                 pass
                 # raise NotImplementedError("Need support for cross join! ")
@@ -600,7 +601,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
     # 3. minView
         viewName = 'minView' + str(randint(0, maxsize))
         mfAttr = helperLeft if direction == Direction.Left else helperRight
-        joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        joinKey = list(set(childNode.reserve) & set(parentNode.cols))
         allJoinKeySet.update(joinKey)
         selectAttr, selectAttrAlias = [], []
         if (JT.isFull or (not JT.isFull and childNode.id in JT.subset)) and reduceRel.keyType != EdgeType.Child: # has orderView
@@ -856,7 +857,7 @@ def buildReducePhase(reduceRel: Edge, JT: JoinTree, incidentComp: list[Compariso
         else:
             joinTable = childNode.source + ' AS ' + childNode.alias
         
-        joinKey = list(set(childNode.cols) & set(parentNode.cols))
+        joinKey = list(set(childNode.reserve) & set(parentNode.cols))
         # joinCondition setting
         # original variable name
         inLeft, inRight = [], []
@@ -942,7 +943,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                 else:
                     raise NotImplementedError("Only support EXTRACT function in groupBy & appear in output attrs! ")
             
-            joinKey = list(set(origiNode.cols) & set(previousView.selectAttrAlias))
+            joinKey = list(set(origiNode.reserve) & set(previousView.selectAttrAlias))
             for eachKey in joinKey:
                 cond = origiNode.alias + '.' + origiNode.col2vars[1][origiNode.cols.index(eachKey)] + '=' + previousView.viewName + '.' + eachKey
                 joinCondList.append(cond)
@@ -985,7 +986,7 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
         else:
             joinTable = origiNode.alias
             selectAttrAlias = list(set(origiNode.cols) | set(previousView.selectAttrAlias))
-            joinKey = list(set(origiNode.cols) & set(previousView.selectAttrAlias))
+            joinKey = list(set(origiNode.reserve) & set(previousView.selectAttrAlias))
         
         for eachKey in joinKey:
             cond = ''
