@@ -51,7 +51,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
         fromTable = childNode.alias
     
     ## b. Joinkey: No need to distinguish, it must appear in original alias  
-    joinKey = list(set(parentNode.cols) & set(childNode.cols))
+    joinKey = list(set(parentNode.cols) & set(childNode.reserve))
     
     ## c. select attributes: joinKey, previousAgg, newAgg
     selectAttr, selectAttrAlias  = [], []
@@ -66,6 +66,15 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
             index = childNode.cols.index(key)
             selectAttr.append(childNode.col2vars[1][index])
             groupBy.append(childNode.col2vars[1][index])
+
+        # NOTE: extra join key pass
+        if len(childNode.reserve) > 1:
+            for key in set(childNode.reserve) - set(joinKey):
+                selectAttrAlias.append(key)
+                index = childNode.cols.index(key)
+                selectAttr.append(childNode.col2vars[1][index])
+                groupBy.append(childNode.col2vars[1][index])
+                aggPass2Join.append(key)
                 
         # NOTE: support for EXTRACT
         for comp in childExtract:
@@ -221,6 +230,13 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
             selectAttr.append('')
             selectAttrAlias.append(key)
             groupBy.append(key)
+        # NOTE: extra joinkey pass
+        if len(childNode.reserve) > 1:
+            for key in set(childNode.reserve) - set(joinKey):
+                selectAttr.append('')
+                selectAttrAlias.append(key)
+                groupBy.append(key)
+                aggPass2Join.append(key)
         ## -2. previousAgg
         if childNode.JoinResView:
             for var in childNode.JoinResView.selectAttrAlias:
@@ -761,7 +777,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             # For auxi->support, no aggregation process
             if node.parent.relationType == RelationType.AuxiliaryRelation and node.parent.supRelationId == node.id:
                 return []
-            joinKeys = set(node.cols) & set(node.parent.cols)
+            joinKeys = set(node.reserve) & set(node.parent.cols)
             if node.JoinResView:
                 satisKeys = [alias for alias in node.JoinResView.selectAttrAlias if alias not in joinKeys]
             else:
