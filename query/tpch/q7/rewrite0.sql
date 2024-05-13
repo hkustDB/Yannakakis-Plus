@@ -1,0 +1,15 @@
+create or replace view aggView1448321173565073541 as select n_name as v46, n_nationkey as v36 from nation as n2;
+create or replace view aggJoin4689531092378927728 as select v36, v46 from aggView1448321173565073541 where v46= 'GERMANY';
+create or replace view aggView5176281934777727275 as select n_nationkey as v4, n_name as v42 from nation as n1;
+create or replace view aggJoin9075701777635235068 as select v4, v42 from aggView5176281934777727275 where v42= 'FRANCE';
+create or replace view semiJoinView8643237771498413773 as select c_custkey as v33, c_nationkey as v36 from customer AS customer where (c_nationkey) in (select (v36) from aggJoin4689531092378927728);
+create or replace view semiJoinView3540815806278613634 as select o_orderkey as v24, o_custkey as v33 from orders AS orders where (o_custkey) in (select (v33) from semiJoinView8643237771498413773);
+create or replace view semiJoinView9029881115222418898 as select l_orderkey as v24, l_suppkey as v1, l_shipdate as v18, EXTRACT(YEAR FROM l_shipdate) as v49, (l_extendedprice * (1 - l_discount)) as v51 from lineitem AS lineitem where (l_orderkey) in (select (v24) from semiJoinView3540815806278613634) and l_shipdate>=DATE '1995-01-01' and l_shipdate<=DATE '1996-12-31';
+create or replace view semiJoinView4158418792448672779 as select s_suppkey as v1, s_nationkey as v4 from supplier AS supplier where (s_suppkey) in (select (v1) from semiJoinView9029881115222418898);
+create or replace view semiJoinView319883661321891587 as select distinct v4, v42 from aggJoin9075701777635235068 where (v4) in (select (v4) from semiJoinView4158418792448672779);
+create or replace view semiEnum5513257986261695892 as select distinct v1, v42 from semiJoinView319883661321891587 join semiJoinView4158418792448672779 using(v4);
+create or replace view semiEnum8441290173090193450 as select distinct v24, v49, v18, v51, v42 from semiEnum5513257986261695892 join semiJoinView9029881115222418898 using(v1);
+create or replace view semiEnum281387296806628900 as select distinct v51, v49, v33, v18, v42 from semiEnum8441290173090193450 join semiJoinView3540815806278613634 using(v24);
+create or replace view semiEnum8476199917549459590 as select distinct v36, v51, v49, v18, v42 from semiEnum281387296806628900 join semiJoinView8643237771498413773 using(v33);
+create or replace view semiEnum5061842971488956733 as select v51, v46, v49, v42 from semiEnum8476199917549459590 join aggJoin4689531092378927728 using(v36);
+select v42,v46,v49,SUM(v51) as v51 from semiEnum5061842971488956733 group by v42, v46, v49;

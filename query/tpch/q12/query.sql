@@ -1,4 +1,4 @@
-create or replace view res as SELECT l_shipmode,
+SELECT l_shipmode,
        SUM(CASE
                WHEN o_orderpriority = '1-URGENT'
                    OR o_orderpriority = '2-HIGH'
@@ -19,6 +19,4 @@ WHERE o_orderkey = l_orderkey
   AND l_shipdate < l_commitdate
   AND l_receiptdate >= DATE '1994-01-01'
   AND l_receiptdate < DATE '1995-01-01'
-GROUP BY l_shipmode;
-
-select sum(l_shipmode+high_line_count+low_line_count) from res;
+GROUP BY l_shipmode

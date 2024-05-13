@@ -1,0 +1,16 @@
+create or replace view aggView1560464751861075507 as select r_regionkey as v53 from region as region where r_name= 'AMERICA';
+create or replace view aggJoin8617910152814927457 as select n_nationkey as v46 from nation as n1, aggView1560464751861075507 where n1.n_regionkey=aggView1560464751861075507.v53;
+create or replace view aggView3230408232263896062 as select n_nationkey as v13, CASE WHEN n_name = 'BRAZIL' THEN 1 ELSE 0 END as caseCond from nation as n2;
+create or replace view aggJoin7760203774747954934 as select s_suppkey as v10, caseCond from supplier as supplier, aggView3230408232263896062 where supplier.s_nationkey=aggView3230408232263896062.v13;
+create or replace view aggView6067425890730459745 as select v46, COUNT(*) as annot from aggJoin8617910152814927457 group by v46;
+create or replace view aggJoin6862772874516960653 as select c_custkey as v35, annot from customer as customer, aggView6067425890730459745 where customer.c_nationkey=aggView6067425890730459745.v46;
+create or replace view aggView6345067907529652211 as select p_partkey as v1 from part as part where p_type= 'ECONOMY ANODIZED STEEL';
+create or replace view aggJoin6310866209223073462 as select l_orderkey as v17, l_suppkey as v10, l_extendedprice as v22, l_discount as v23 from lineitem as lineitem, aggView6345067907529652211 where lineitem.l_partkey=aggView6345067907529652211.v1;
+create or replace view aggView1678073946718402627 as select v10, caseCond, COUNT(*) as annot from aggJoin7760203774747954934 group by v10,caseCond;
+create or replace view aggJoin1059245757198563773 as select v17, v22, v23, caseCond, annot from aggJoin6310866209223073462 join aggView1678073946718402627 using(v10);
+create or replace view aggView4910708044370462530 as select v35, SUM(annot) as annot from aggJoin6862772874516960653 group by v35;
+create or replace view aggJoin8851802658580158493 as select o_orderkey as v17, o_year as v34, o_orderdate as v38, annot from orderswithyear as orderswithyear, aggView4910708044370462530 where orderswithyear.o_custkey=aggView4910708044370462530.v35 and o_orderdate>=DATE '1995-01-01' and o_orderdate<=DATE '1996-12-31';
+create or replace view aggView5912313047014336306 as select v17, SUM( CASE WHEN caseCond = 1 THEN v22 * (1 - v23)*annot ELSE 0.0 END) as v64, SUM((v22 * (1 - v23)) * annot) as v65, SUM(annot) as annot from aggJoin1059245757198563773 group by v17;
+create or replace view aggJoin6387809652626760690 as select v34, v38, aggJoin8851802658580158493.annot * aggView5912313047014336306.annot as annot, v64 * aggJoin8851802658580158493.annot as v64, v65 * aggJoin8851802658580158493.annot as v65 from aggJoin8851802658580158493 join aggView5912313047014336306 using(v17);
+create or replace view aggView2337675358126173713 as select v34, SUM(v64) as v64, SUM(v65) as v65 from aggJoin6387809652626760690;
+select v34,(v64 / v65) as v66 from aggView2337675358126173713;

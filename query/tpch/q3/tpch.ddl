@@ -73,7 +73,7 @@ CREATE TABLE customer
     c_comment    VARCHAR,
     PRIMARY KEY (c_custkey)
 ) WITH (
-        'cardinality' = '15000000'
+        'cardinality' = '3000188'
 );
 
 CREATE TABLE orders
@@ -89,7 +89,7 @@ CREATE TABLE orders
     o_comment       VARCHAR,
     PRIMARY KEY (o_orderkey)
 ) WITH (
-        'cardinality' = '150000000'
+        'cardinality' = '72874383'
 );
 
 CREATE TABLE lineitem
@@ -112,5 +112,5 @@ CREATE TABLE lineitem
     l_comment       VARCHAR,
     PRIMARY KEY (l_orderkey, l_linenumber)
 ) WITH (
-        'cardinality' = '600037902'
+        'cardinality' = '323494519'
 );

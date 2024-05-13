@@ -1,0 +1,17 @@
+create or replace view semiJoinView7029691563468800884 as select n_nationkey as v13, n_name as v23, n_regionkey as v24 from nation AS nation where (n_regionkey) in (select (r_regionkey) from region AS region where r_name= 'EUROPE');
+create or replace view partsuppAux22 as select ps_partkey as v1, ps_suppkey as v10, ps_supplycost as v20 from partsupp;
+create or replace view partAux3 as select p_partkey as v1, p_mfgr as v3 from part where p_size= 15 and p_type LIKE '%BRASS';
+create or replace view nationAux54 as select v13, v23 from semiJoinView7029691563468800884;
+create or replace view semiJoinView3632226227517218776 as select s_suppkey as v10, s_name as v11, s_address as v12, s_nationkey as v13, s_phone as v14, s_acctbal as v15, s_comment as v16 from supplier AS supplier where (s_nationkey) in (select (v13) from nationAux54);
+create or replace view semiJoinView7939929860386439866 as select v1, v10, v20 from partsuppAux22 where (v1, v20) in (select (v1_partkey, v1_supplycost_min) from q2_inner AS q2_inner);
+create or replace view semiJoinView6142522315603528184 as select v1, v10, v20 from semiJoinView7939929860386439866 where (v1) in (select (v1) from partAux3);
+create or replace view semiJoinView4236228060109846911 as select distinct v1, v10, v20 from semiJoinView6142522315603528184 where (v10) in (select (v10) from semiJoinView3632226227517218776);
+create or replace view semiEnum1718289107618706764 as select distinct v12, v14, v10, v16, v13, v1, v15, v11, v20 from semiJoinView4236228060109846911 join semiJoinView3632226227517218776 using(v10);
+create or replace view semiEnum8987704948379354344 as select distinct v12, v14, v10, v16, v13, v1, v15, v3, v11, v20 from semiEnum1718289107618706764 join partAux3 using(v1);
+create or replace view semiEnum3599077378484812639 as select distinct v12, v14, v10, v16, v13, v1, v15, v3, v11, v20 from semiEnum8987704948379354344, q2_inner as q2_inner where q2_inner.v1_partkey=semiEnum8987704948379354344.v1 and q2_inner.v1_supplycost_min=semiEnum8987704948379354344.v20;
+create or replace view semiEnum4419014270969587582 as select distinct v12, v14, v10, v16, v13, v1, v15, v3, v23, v11, v20 from semiEnum3599077378484812639 join nationAux54 using(v13);
+create or replace view semiEnum8793942321195046189 as select distinct v12, v14, v10, v16, v1, v15, v3, v23, v11, v20 from semiEnum4419014270969587582 join semiJoinView7029691563468800884 using(v23, v13);
+create or replace view semiEnum2598855172616318253 as select distinct v12, p_type as v5, v14, v10, v1, p_size as v6, v15, v3, v11, v16, v23, v20 from semiEnum8793942321195046189, part as part where part.p_partkey=semiEnum8793942321195046189.v1 and part.p_mfgr=semiEnum8793942321195046189.v3 and p_size= 15 and p_type LIKE '%BRASS';
+create or replace view semiEnum8808385131394051440 as select distinct v12, v14, v5, v1, v15, v6, v3, v11, v16, v23 from semiEnum2598855172616318253, partsupp as partsupp where partsupp.ps_partkey=semiEnum2598855172616318253.v1 and partsupp.ps_suppkey=semiEnum2598855172616318253.v10 and partsupp.ps_supplycost=semiEnum2598855172616318253.v20;
+create or replace view semiEnum2919910492553152128 as select v12, v14, v1, v15, v3, v11, v16, v23 from semiEnum8808385131394051440, region as region where region.r_regionkey=semiEnum8808385131394051440.v24 and r_name= 'EUROPE';
+select distinct v15, v11, v23, v1, v3, v12, v14, v16 from semiEnum2919910492553152128;

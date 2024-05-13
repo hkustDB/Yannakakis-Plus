@@ -1,0 +1,18 @@
+Relations:
+dict_values([partsupp[11120,partsupp, 80000000.0]: ['v1', 'v2', 'v3', 'v4', 'v5']
+, supplier[11121,supplier, 40000.0]: ['v2', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12']
+, nation[11122,nation, 1]: ['v9', 'v14', 'v15', 'v16']
+, partsuppAux58[11127,partsupp, 80000000]: ['v1']
+])
+Edges:
+dict_values([supplier->nation, partsupp->supplier, partsuppAux58->partsupp])
+Root:
+11127
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[11127]
+fixroot:
+False

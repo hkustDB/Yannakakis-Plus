@@ -1,0 +1,13 @@
+create or replace view aggView9127414030065692488 as select r_regionkey as v43 from region as region where r_name= 'ASIA';
+create or replace view aggJoin4666373280663413774 as select n_nationkey as v4, n_name as v42 from nation as nation, aggView9127414030065692488 where nation.n_regionkey=aggView9127414030065692488.v43;
+create or replace view aggView1431432518720713753 as select c_custkey as v1, c_nationkey as v51 from customer as customer;
+create or replace view aggJoin1311036783380418543 as select o_orderkey as v18, o_orderdate as v13, v51 from orders as orders, aggView1431432518720713753 where orders.o_custkey=aggView1431432518720713753.v1 and o_orderdate>=DATE '1994-01-01' and o_orderdate<DATE '1995-01-01';
+create or replace view aggView2537584417701187779 as select v18, v51, COUNT(*) as annot from aggJoin1311036783380418543 group by v18,v51;
+create or replace view aggJoin7266733368034830562 as select l_suppkey as v20, l_extendedprice as v23, l_discount as v24, v51, annot from lineitem as lineitem, aggView2537584417701187779 where lineitem.l_orderkey=aggView2537584417701187779.v18;
+create or replace view aggView9221585838185533874 as select v20, SUM((v23 * (1 - v24)) * annot) as v49, v51, SUM(annot) as annot from aggJoin7266733368034830562 group by v20,v51;
+create or replace view aggJoin2248848566638346424 as select s_nationkey as v4, v49, v51, annot from supplier as supplier, aggView9221585838185533874 where supplier.s_suppkey=aggView9221585838185533874.v20;
+create or replace view aggView4384484854381941825 as select v4, SUM(v49) as v49, v51, SUM(annot) as annot from aggJoin2248848566638346424 group by v4,v51;
+create or replace view aggJoin8399212581662072222 as select v4, v42, v49, v51, annot from aggJoin4666373280663413774 join aggView4384484854381941825 using(v4);
+create or replace view aggView5680120856570484625 as select v42, SUM(v49) as v49, v51, v4 from aggJoin8399212581662072222;
+create or replace view aggJoin2221419341237757417 as select v42, v49 from aggView5680120856570484625 where v4 = v51;
+select v42,v49 from aggJoin2221419341237757417;

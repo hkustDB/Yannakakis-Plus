@@ -1,0 +1,13 @@
+create or replace view aggView7179826418012872178 as select n_nationkey as v13, n_name as v49 from nation as nation;
+create or replace view aggView3616894439483227154 as select o_orderkey as v38, o_year as v39 from orderswithyear as orderswithyear;
+create or replace view aggView1812401382398321146 as select p_partkey as v33 from part as part where p_name LIKE '%green%';
+create or replace view aggJoin8017004347233516892 as select ps_partkey as v33, ps_suppkey as v10, ps_supplycost as v36 from partsupp as partsupp, aggView1812401382398321146 where partsupp.ps_partkey=aggView1812401382398321146.v33;
+create or replace view aggView5688117087346438740 as select v33, v10, SUM(v36)/COUNT(*) as v36, COUNT(*) as annot from aggJoin8017004347233516892 group by v33,v10;
+create or replace view aggJoin8275022688785486167 as select l_orderkey as v38, l_suppkey as v10, l_quantity as v21, l_extendedprice as v22, l_discount as v23, v36, annot from lineitem as lineitem, aggView5688117087346438740 where lineitem.l_partkey=aggView5688117087346438740.v33 and lineitem.l_suppkey=aggView5688117087346438740.v10;
+create or replace view semiJoinView1177146433622951615 as select s_suppkey as v10, s_nationkey as v13 from supplier AS supplier where (s_nationkey) in (select (v13) from aggView7179826418012872178);
+create or replace view semiJoinView20584519008809646 as select v38, v10, v21, v36, annot, (v22 * (1 - v23)) as v54 from aggJoin8275022688785486167 where (v10) in (select (v10) from semiJoinView1177146433622951615);
+create or replace view semiJoinView9014729945334608099 as select distinct v38, v39 from aggView3616894439483227154 where (v38) in (select (v38) from semiJoinView20584519008809646);
+create or replace view semiEnum4621215345193834961 as select distinct v10, v36, v39, v54, annot, v21 from semiJoinView9014729945334608099 join semiJoinView20584519008809646 using(v38);
+create or replace view semiEnum7741898506024397451 as select distinct v36, v39, v54, annot, v21, v13 from semiEnum4621215345193834961 join semiJoinView1177146433622951615 using(v10);
+create or replace view semiEnum483956584219857299 as select v36, v49, v39, v54, annot, v21 from semiEnum7741898506024397451 join aggView7179826418012872178 using(v13);
+select v49,v39,SUM(v54) as v54,SUM((v36 * v21)*annot) as v55 from semiEnum483956584219857299 group by v49, v39;

@@ -1,0 +1,21 @@
+Relations:
+dict_values([orders[11019,orders, 22760819.0]: ['v18', 'v1', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17']
+, lineitem[11020,lineitem, 91049027.20374492]: ['v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33']
+, supplier[11021,supplier, 91049027.20374492]: ['v20', 'v35', 'v36', 'v4', 'v38', 'v39', 'v40']
+, nation[11022,nation, 3641961.0881497967]: ['v4', 'v42', 'v43', 'v44']
+, region[11023,region, 1]: ['v43', 'v46', 'v47']
+, customer[11027,customer, 15000000]: ['v1', 'v2', 'v3', 'v51', 'v5', 'v6', 'v7', 'v8']
+, nationAux52[11041,nation, 25]: ['v42']
+])
+Edges:
+dict_values([orders->customer, nation->region, supplier->lineitem, lineitem->orders, nation->supplier, nationAux52->nation])
+Root:
+11041
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[11041]
+fixroot:
+False

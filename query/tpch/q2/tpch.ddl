@@ -32,7 +32,7 @@ CREATE TABLE part
     p_comment     VARCHAR,
     PRIMARY KEY (p_partkey)
 ) WITH (
-        'cardinality' = '20000000'
+        'cardinality' = '79591'
 );
 
 CREATE TABLE supplier
