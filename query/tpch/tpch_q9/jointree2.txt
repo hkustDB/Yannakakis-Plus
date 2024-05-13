@@ -1,0 +1,22 @@
+Relations:
+dict_values([part[10887,part, 20000000]: ['v33', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']
+, supplier[10888,supplier, 1000000.0]: ['v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
+, lineitem[10889,lineitem, 1000000.0000000001]: ['v38', 'v33', 'v10', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32']
+, partsupp[10890,partsupp, 80000000]: ['v33', 'v10', 'v35', 'v36', 'v37']
+, orderswithyear[10891,orderswithyear, 150000000]: ['v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47']
+, nation[10892,nation, 25]: ['v13', 'v49', 'v50', 'v51']
+, orderswithyearAux78[10906,orderswithyear, 150000000.0]: ['v38', 'v39']
+, nationAux43[10910,nation, 25]: ['v13', 'v49']
+])
+Edges:
+dict_values([lineitem->part, lineitem->supplier, orderswithyearAux78->orderswithyear, supplier->nationAux43, lineitem->partsupp, nationAux43->nation, orderswithyearAux78->lineitem])
+Root:
+10906
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[10906, 10910, 10888, 10889]
+fixroot:
+False

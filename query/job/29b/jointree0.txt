@@ -1,0 +1,31 @@
+Relations:
+dict_values([an[10425,aka_name, 90134300.0]: ['v1', 'v58', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+, cc[10426,complete_cast, 13508600]: ['v9', 'v74', 'v13', 'v15']
+, cct1[10427,comp_cast_type, 1897468.472783128]: ['v13', 'v14']
+, cct2[10428,comp_cast_type, 1897468.472783128]: ['v15', 'v16']
+, chn[10429,char_name, 314033900.0]: ['v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23']
+, ci[10430,cast_info, 300.0]: ['v24', 'v58', 'v74', 'v17', 'v28', 'v29', 'v72']
+, cn[10431,company_name, 3252675.9246497587]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37']
+, it[10432,info_type, 1897468.472783128]: ['v38', 'v39']
+, it3[10433,info_type, 100.0]: ['v40', 'v41']
+, k[10434,keyword, 300.0]: ['v42', 'v43', 'v44']
+, mc[10435,movie_companies, 3252675.9246497587]: ['v45', 'v74', 'v31', 'v48', 'v49']
+, mi[10436,movie_info, 15179747.782265024]: ['v50', 'v74', 'v38', 'v53', 'v54']
+, mk[10437,movie_keyword, 12623000.0]: ['v55', 'v74', 'v42']
+, n[10438,name, 314033900.0]: ['v58', 'v59', 'v60', 'v61', 'v62', 'v63', 'v64', 'v65', 'v66']
+, pi[10439,person_info, 90134300.0]: ['v67', 'v58', 'v40', 'v70', 'v71']
+, rt[10440,role_type, 100.0]: ['v72', 'v73']
+, t[10441,title, 1200.0]: ['v74', 'v75', 'v76', 'v77', 'v78', 'v79', 'v80', 'v81', 'v82', 'v83', 'v84', 'v85']
+])
+Edges:
+dict_values([t->rt, it3->pi, rt->it3, ci->k, cn->mc, k->mk, cct2->cct1, chn->ci, n->chn, cct1->it, an->n, mc->cct2, it->mi, pi->an, mi->cc, mk->cn])
+Root:
+10441
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

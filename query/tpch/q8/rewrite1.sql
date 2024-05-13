@@ -1,0 +1,15 @@
+create or replace view aggView5878719165451692614 as select n_nationkey as v13, CASE WHEN n_name = 'BRAZIL' THEN 1 ELSE 0 END as caseCond from nation as n2;
+create or replace view aggJoin9189592408999952615 as select s_suppkey as v10, caseCond from supplier as supplier, aggView5878719165451692614 where supplier.s_nationkey=aggView5878719165451692614.v13;
+create or replace view aggView241326889750000859 as select r_regionkey as v53 from region as region where r_name= 'AMERICA';
+create or replace view aggJoin6009128118344658832 as select n_nationkey as v46 from nation as n1, aggView241326889750000859 where n1.n_regionkey=aggView241326889750000859.v53;
+create or replace view aggView5449943757866810593 as select v46, COUNT(*) as annot from aggJoin6009128118344658832 group by v46;
+create or replace view aggJoin4139860581990449271 as select c_custkey as v35, annot from customer as customer, aggView5449943757866810593 where customer.c_nationkey=aggView5449943757866810593.v46;
+create or replace view aggView7660754686911519699 as select p_partkey as v1 from part as part where p_type= 'ECONOMY ANODIZED STEEL';
+create or replace view aggJoin2137984927372364484 as select l_orderkey as v17, l_suppkey as v10, l_extendedprice as v22, l_discount as v23 from lineitem as lineitem, aggView7660754686911519699 where lineitem.l_partkey=aggView7660754686911519699.v1;
+create or replace view aggView2415593212481168139 as select v35, SUM(annot) as annot from aggJoin4139860581990449271 group by v35;
+create or replace view aggJoin2728582481143820976 as select o_orderkey as v17, o_year as v34, o_orderdate as v38, annot from orderswithyear as orderswithyear, aggView2415593212481168139 where orderswithyear.o_custkey=aggView2415593212481168139.v35 and o_orderdate>=DATE '1995-01-01' and o_orderdate<=DATE '1996-12-31';
+create or replace view aggView2620455696705834480 as select v17, SUM(annot) as annot from aggJoin2728582481143820976 group by v17;
+create or replace view aggJoin4161377386221955832 as select v10, v22, v23, annot from aggJoin2137984927372364484 join aggView2620455696705834480 using(v17);
+create or replace view aggView4171961979281649062 as select v10, caseCond, COUNT(*) as annot from aggJoin9189592408999952615 group by v10,caseCond;
+create or replace view aggJoin5090883120136038637 as select v22, v23, aggJoin4161377386221955832.annot * aggView4171961979281649062.annot as annot, caseCond from aggJoin4161377386221955832 join aggView4171961979281649062 using(v10);
+select v34,(SUM( CASE WHEN caseCond = 1 THEN v22 * (1 - v23)* annot ELSE 0.0 END) / SUM((v22 * (1 - v23))*annot)) as v66 from aggJoin5090883120136038637 group by v34;

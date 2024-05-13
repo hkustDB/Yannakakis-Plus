@@ -112,5 +112,5 @@ CREATE TABLE lineitem
     l_comment       VARCHAR,
     PRIMARY KEY (l_orderkey, l_linenumber)
 ) WITH (
-        'cardinality' = '600037902'
+        'cardinality' = '26003888'
 );
