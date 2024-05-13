@@ -6,7 +6,7 @@ CREATE TABLE nation
     n_comment   VARCHAR,
     PRIMARY KEY (n_nationkey)
 ) WITH (
-        'cardinality' = '25'
+        'cardinality' = '1'
 );
 
 CREATE TABLE region

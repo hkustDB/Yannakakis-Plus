@@ -89,7 +89,7 @@ CREATE TABLE orders
     o_comment       VARCHAR,
     PRIMARY KEY (o_orderkey)
 ) WITH (
-        'cardinality' = '150000000'
+        'cardinality' = '5730378'
 );
 
 CREATE TABLE lineitem
