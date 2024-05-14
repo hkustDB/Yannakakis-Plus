@@ -1,0 +1,20 @@
+Relations:
+dict_values([Person_knows_Person[1,Person_knows_Person, 977574437.5192338]: ['v1', 'v2']
+['v1', 'v6']
+, Comment[2,Comment, 10185067162.860641]: ['v3', 'v1', 'v5', 'v6', 'v7']
+[]
+, Post[3,Post, 24025658]: ['v6', 'v2', 'v10', 'v11']
+['v6', 'v2']
+])
+Edges:
+dict_values([Person_knows_Person->Post, Comment->Person_knows_Person])
+Root:
+2
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[2]
+fixroot:
+True

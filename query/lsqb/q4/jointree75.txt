@@ -1,0 +1,22 @@
+Relations:
+dict_values([Message_hasTag_Tag[13126,Message_hasTag_Tag, 157751856.03811625]: ['v1', 'v2']
+[]
+, Message_hasCreator_Person[13127,Message_hasCreator_Person, 99708351.0]: ['v1', 'v4']
+['v1']
+, Comment_replyOf_Message[13128,Comment_replyOf_Message, 77110476]: ['v5', 'v1']
+['v1']
+, Person_likes_Message[13129,Person_likes_Message, 99708351]: ['v7', 'v1']
+['v1']
+])
+Edges:
+dict_values([Message_hasCreator_Person->Comment_replyOf_Message, Message_hasCreator_Person->Person_likes_Message, Message_hasTag_Tag->Message_hasCreator_Person])
+Root:
+13126
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[]
+fixroot:
+False
