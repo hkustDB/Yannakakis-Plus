@@ -565,8 +565,9 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
     if 'caseRes' in selectAttrAlias and 'caseRes' not in groupBy:
         groupBy.append('caseRes')
 
-    if pkFlag or (parentNode.relationType == RelationType.AuxiliaryRelation and parentNode.supRelationId == childNode.id):
+    if pkFlag or (parentNode.relationType == RelationType.AuxiliaryRelation and parentNode.supRelationId == childNode.id and globalVar.get_value('DDL_NAME') == 'job.ddl'):
         groupBy = []
+
     
     if childNode.JoinResView is None and childNode.relationType == RelationType.TableScanRelation and childIsOriLeaf and len(childSelfComp):
         transSelfCompList = makeSelfComp(childSelfComp, childNode)

@@ -74,7 +74,7 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
         source, cols, alias, group, func = removeEqual(line)
         cols = pattern.findall(cols)
         group = int(group[1:-1])
-        aNode = AggTreeNode(id, source, cols, [], alias, group, func)
+        aNode = AggTreeNode(id, source, cols, [], alias, None, group, func)
         allNodes[id] = aNode
     elif name == 'AuxiliaryRelation':
         source, cols, alias, supportId = removeEqual(line, 3)
@@ -85,13 +85,13 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
                 parseRelRecur(supportRel, allNodes, supId)
         else:
             supportId = int(supportId.split('=')[1])
-        auxNode = AuxTreeNode(id, source, cols, [], alias, supportId)
+        auxNode = AuxTreeNode(id, source, cols, [], alias, None, supportId)
         supId.add(supportId)
         allNodes[id] = auxNode
     elif name == 'TableScanRelation':
         source, cols, alias = removeEqual(line)
         cols = pattern.findall(cols)
-        tsNode = TableTreeNode(id, source, cols, [], alias)
+        tsNode = TableTreeNode(id, source, cols, [], alias, None)
         allNodes[id] = tsNode
     elif name == 'TableAggRelation':
         source, cols, alias, aggList = removeEqual(line, 3)
@@ -102,7 +102,7 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
         aggs = aggs.split('\n')
         for index, each_agg in enumerate(aggs):
             if each_agg != '' and aggList[index] not in allNodes: parseRel(each_agg)
-        taNode = TableAggTreeNode(id, source, cols, [], alias, aggList)
+        taNode = TableAggTreeNode(id, source, cols, [], alias, None, aggList)
         allNodes[id] = taNode
     elif name == 'BagRelation':
         inAlias, cols, alias, internalRelations = removeEqual(line, 3)
@@ -114,7 +114,7 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
         else:
             inId = internalRelations.split('=', 1)[1]
         inId = [int(id) for id in inId.split(',')][::-1]
-        bagNode = BagTreeNode(id, inAlias, cols, [], alias, inId, inAlias)
+        bagNode = BagTreeNode(id, inAlias, cols, [], alias, None, inId, inAlias)
         allNodes[id] = bagNode
     else:
         raise NotImplementedError("Not implemented relation type! ")
@@ -215,6 +215,8 @@ def connect(base: int, mode: int, type: GenType):
         CompareMap: dict[int, Comparison] = dict()
         for edge_data in edges:
             edge = Edge(JT.getNode(edge_data['src']), JT.getNode(edge_data['dst']), edge_data['key'])
+            if JT.getNode(edge.dst.id).reserve is None:
+                JT.getNode(edge.dst.id).reserve = list(set(edge.src.cols) & set(edge.dst.cols))
             JT.addEdge(edge)
         # c. parse comparison
         for compId, comp in enumerate(comparisons):
@@ -335,7 +337,7 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/11a/')
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/extra/11c/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
@@ -401,7 +403,7 @@ if __name__ == '__main__':
     else:
         fields = ['index', 'hight', 'width', 'estimate'] 
         cost_stat = PQ()
-        total_number = 4
+        total_number = 8
         fix_number, nonfix_number = total_number // 2, total_number // 2
         fix_iter, nonfix_iter = 0, 0
         best_res_nonfix, best_res_fix = [], []

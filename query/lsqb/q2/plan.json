@@ -1,0 +1,14 @@
+{
+    "relation": "Comment",
+    "children": [
+        {
+            "relation": "Person_knows_Person",
+            "children": [
+                {
+                    "relation": "Post",
+                    "children": []
+                }
+            ]
+        }
+    ]
+}

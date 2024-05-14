@@ -1502,7 +1502,10 @@ def generateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: list[
     # only root node
     finalResult = ''
     
-    enumerateOrder = [enum for enum in reduceList if enum.corresNodeId in JT.subset] if not JT.isFull else reduceList.copy()
+    if JT.isFreeConnex:
+        enumerateOrder = [enum for enum in reduceList if enum.corresNodeId in JT.subset] if not JT.isFull else reduceList.copy()
+    else:
+        enumerateOrder = reduceList.copy()
     enumerateOrder.reverse()
     
     compKeys = list(computations.allAlias)

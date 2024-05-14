@@ -1,18 +1,18 @@
 Relations:
-dict_values([customer[11134,customer, 3000188]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
-, orders[11135,orders, 21935959.537885826]: ['v18', 'v1', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17']
-, lineitem[11136,lineitem, 323494519]: ['v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33']
-, ordersAux63[11140,orders, 284757169.8173236]: ['v18', 'v13', 'v16']
+dict_values([customer[11154,customer, 3000188]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+, orders[11155,orders, 21935959.537885826]: ['v18', 'v1', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17']
+, lineitem[11156,lineitem, 323494519]: ['v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33']
+, ordersAux93[11160,orders, 284757169.8173236]: ['v18', 'v13', 'v16']
 ])
 Edges:
-dict_values([orders->customer, ordersAux63->orders, ordersAux63->lineitem])
+dict_values([orders->customer, ordersAux93->orders, ordersAux93->lineitem])
 Root:
-11140
+11160
 isFull:
 False
 isFreeConnex:
 True
 subset:
-[11140]
+[11160]
 fixroot:
 False
