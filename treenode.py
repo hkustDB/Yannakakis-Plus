@@ -67,11 +67,11 @@ class TreeNode:
         self.children.remove(child)
     
     def __repr__(self) -> str:
-        return self.alias + '[' + str(self.id) +',' + self.source + ', ' + str(self.estimateSize) + ']: ' + str(self.cols) + "\n"
+        return self.alias + '[' + str(self.id) +',' + self.source + ', ' + str(self.estimateSize) + ']: ' + str(self.cols) + "\n" + str(self.reserve) + "\n"
     
     def __str__(self) -> str:
         ret = str(self.id) + str('\n') + str(self.source) + str('\n') + str(self.cols)
-        ret += str('\n') + str(self.alias) + str('\n') + str(self.col2vars)
+        ret += str('\n') + str(self.alias) + str('\n') + str(self.col2vars) + str(self.reserve) + "\n"
         return ret
     
     def setReducePhase(self, reducePhase: ReducePhase):
