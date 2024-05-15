@@ -88,6 +88,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
     joinKeyEnum: dict[int, set[str]] = dict()
     addUpJoinKey: set[str] = set()
     allJoinKeys: set[str] = set()
+    allExtraJoinKeys: set[str] = set()
 
     # step0: top down -> joinkey
     queue: list[TreeNode] = []
@@ -100,6 +101,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
             continue
         joinKeyParent[node.id] = set(node.reserve)
         allJoinKeys |= set(node.reserve)
+        allExtraJoinKeys |= set(node.reserve) - (set(node.cols) & set(node.parent.cols))
     
     # step1: prune reduce list
     if Agg:
@@ -164,7 +166,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                 corNode.optDone = True
                 for child in corNode.parent.children:
                     if not child.optDone:
-                        jkp = jkp | (set(child.cols) & set(corNode.parent.cols))
+                        jkp = jkp | set(child.reserve)
             
             # TODO: Remove comparison attributes, only support 1 comparison for aggregation
             if len(aggReduce.aggJoin.whereCondList):
@@ -173,10 +175,10 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                     requireVariables = outputVariables
                 
             if index == len(aggReduceList)-1 and len(JT.subset) == 1:
-                curRequireSet = outputVariables | jkp | aggKeepSet
+                curRequireSet = outputVariables | jkp | aggKeepSet | allExtraJoinKeys
                 removeAnnotFlag = not 'annot' in finalResult
             else:
-                curRequireSet = outputVariables | compKeepSet | extraEqualSet | aggKeepSet | jkp
+                curRequireSet = outputVariables | compKeepSet | extraEqualSet | aggKeepSet | jkp | allExtraJoinKeys
                 removeAnnotFlag = False
             
             if removeAnnotFlag and 'annot' in aggReduce.aggView.selectAttrAlias:

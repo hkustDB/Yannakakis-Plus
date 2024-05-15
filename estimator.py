@@ -173,7 +173,9 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
                             staC = [cardi, ndv]
 
                 else:
-                    raise RuntimeError("No join key")
+                    staC = [1, 1]
+                    print("No join key")
+                    # raise RuntimeError("No join key")
         else:
             if '[' in node.source:
                 cardi, ndv = 1, 1

@@ -51,7 +51,10 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
         fromTable = childNode.alias
     
     ## b. Joinkey: No need to distinguish, it must appear in original alias  
-    joinKey = list(set(parentNode.cols) & set(childNode.reserve))
+    if parentNode.JoinResView:
+        joinKey = list(set(parentNode.JoinResView.selectAttrAlias) & set(childNode.reserve))
+    else:
+        joinKey = list(set(parentNode.cols) & set(childNode.reserve))
     
     ## c. select attributes: joinKey, previousAgg, newAgg
     selectAttr, selectAttrAlias  = [], []
@@ -872,13 +875,17 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                 comp.deletePath(Direction.Left)
     
     def aggCmp(rel1: list[Edge, list[AggFunc]], rel2: list[Edge, list[AggFunc]]):
-        if len(rel1[1]) and len(rel2[1]):
-            if jointree.getNode(rel1[0].dst.id).trueSize < jointree.getNode(rel2[0].dst.id).trueSize:
+        if jointree.getNode(rel1[0].dst.id).reduceOrder < jointree.getNode(rel2[0].dst.id).reduceOrder:
+            return -1
+        elif jointree.getNode(rel1[0].dst.id).reduceOrder > jointree.getNode(rel2[0].dst.id).reduceOrder:
+            return 1
+        else:
+            if jointree.getNode(rel1[0].dst.id).depth2Root > jointree.getNode(rel2[0].dst.id).depth2Root:
                 return -1
-            else: return 1
-        elif len(rel1[1]): return -1
-        elif len(rel2[1]): return 1
-        else: return -1
+            elif jointree.getNode(rel1[0].dst.id).depth2Root < jointree.getNode(rel2[0].dst.id).depth2Root:
+                return 1
+            else:
+                return jointree.getNode(rel1[0].dst.id).estimateSize < jointree.getNode(rel2[0].dst.id).estimateSize
     
     '''Step1: aggReduce'''
     subsetRel = [rel for rel in allRelations if rel.dst.id in JT.subset and rel.src.id in JT.subset]
