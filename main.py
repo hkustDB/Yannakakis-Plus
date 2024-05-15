@@ -74,7 +74,7 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
         source, cols, alias, group, func = removeEqual(line)
         cols = pattern.findall(cols)
         group = int(group[1:-1])
-        aNode = AggTreeNode(id, source, cols, [], alias, None, group, func)
+        aNode = AggTreeNode(id, source, cols, [], alias, None, [], group, func)
         allNodes[id] = aNode
     elif name == 'AuxiliaryRelation':
         source, cols, alias, supportId = removeEqual(line, 3)
@@ -85,13 +85,13 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
                 parseRelRecur(supportRel, allNodes, supId)
         else:
             supportId = int(supportId.split('=')[1])
-        auxNode = AuxTreeNode(id, source, cols, [], alias, None, supportId)
+        auxNode = AuxTreeNode(id, source, cols, [], alias, None, [], supportId)
         supId.add(supportId)
         allNodes[id] = auxNode
     elif name == 'TableScanRelation':
         source, cols, alias = removeEqual(line)
         cols = pattern.findall(cols)
-        tsNode = TableTreeNode(id, source, cols, [], alias, None)
+        tsNode = TableTreeNode(id, source, cols, [], alias, None, [])
         allNodes[id] = tsNode
     elif name == 'TableAggRelation':
         source, cols, alias, aggList = removeEqual(line, 3)
@@ -102,7 +102,7 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
         aggs = aggs.split('\n')
         for index, each_agg in enumerate(aggs):
             if each_agg != '' and aggList[index] not in allNodes: parseRel(each_agg)
-        taNode = TableAggTreeNode(id, source, cols, [], alias, None, aggList)
+        taNode = TableAggTreeNode(id, source, cols, [], alias, None, [], aggList)
         allNodes[id] = taNode
     elif name == 'BagRelation':
         inAlias, cols, alias, internalRelations = removeEqual(line, 3)
@@ -114,14 +114,14 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
         else:
             inId = internalRelations.split('=', 1)[1]
         inId = [int(id) for id in inId.split(',')][::-1]
-        bagNode = BagTreeNode(id, inAlias, cols, [], alias, None, inId, inAlias)
+        bagNode = BagTreeNode(id, inAlias, cols, [], alias, None, [], inId, inAlias)
         allNodes[id] = bagNode
     else:
         raise NotImplementedError("Not implemented relation type! ")
 
 
 def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int]):
-    id, name, cols, alias, reserve = node['id'], node['type'], node['columns'], node['alias'], node['reserves']
+    id, name, cols, alias, reserve, hintJoinOrder = node['id'], node['type'], node['columns'], node['alias'], node['reserves'], node["hintJoinOrder"]
     if name == 'BagRelation':
         inAlias = node['internal']
         inId, internal = node['internalRelations'].split('\n', 1)
@@ -130,19 +130,19 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         internal = internal.split('\n')
         for inter in internal:
             if inter != '': parseRelRecur(inter, allNodes, supId)
-        bagNode = BagTreeNode(id, str(inAlias), cols, [], alias, reserve, inId, inAlias)
+        bagNode = BagTreeNode(id, str(inAlias), cols, [], alias, reserve, hintJoinOrder, inId, inAlias)
         allNodes[id] = bagNode
     
     elif name == 'AuxiliaryRelation':
         source = node['source']
         supportId = node['support']
-        auxNode = AuxTreeNode(id, source, cols, [], alias, reserve, supportId)
+        auxNode = AuxTreeNode(id, source, cols, [], alias, reserve, hintJoinOrder, supportId)
         supId.add(supportId)
         allNodes[id] = auxNode
             
     elif name == 'TableScanRelation':
         source = node['source']
-        tsNode = TableTreeNode(id, source, cols, [], alias, reserve)
+        tsNode = TableTreeNode(id, source, cols, [], alias, reserve, hintJoinOrder)
         allNodes[id] = tsNode
         
     elif name == 'TableAggRelation':
@@ -153,7 +153,7 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         aggs = aggs.split('\n')
         for each_agg in aggs:
             if each_agg != '': parseRelRecur(each_agg, allNodes, supId)
-        taNode = TableAggTreeNode(id, source, cols, [], alias, reserve, aggList)
+        taNode = TableAggTreeNode(id, source, cols, [], alias, reserve, hintJoinOrder, aggList)
         allNodes[id] = taNode
             
     else:
@@ -218,6 +218,11 @@ def connect(base: int, mode: int, type: GenType):
             if JT.getNode(edge.dst.id).reserve is None:
                 JT.getNode(edge.dst.id).reserve = list(set(edge.src.cols) & set(edge.dst.cols))
             JT.addEdge(edge)
+        # NOTE: Add child join order
+        for id, node in JT.node.items():
+            if len(node.children) and len(node.hintJoinOrder):
+                for child in node.children:
+                    child.reduceOrder = len(node.hintJoinOrder) - node.hintJoinOrder.index(child.id)
         # c. parse comparison
         for compId, comp in enumerate(comparisons):
             opName, path, left, right, cond, op = comp['opName'], comp['path'], comp['left'], comp['right'], comp['cond'], comp['op']
@@ -337,7 +342,7 @@ if __name__ == '__main__':
     globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/extra/11c/')
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/24a/')
     globalVar.set_value('DDL_NAME', "job.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here

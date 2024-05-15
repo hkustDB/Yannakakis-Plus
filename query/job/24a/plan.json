@@ -8,31 +8,36 @@
                     "relation": "n",
                     "children": [
                         {
-                            "relation": "rt",
-                            "children": []
-                        },
-                        {
-                            "relation": "k",
+                            "relation": "ci",
                             "children": [
                                 {
-                                    "relation": "mk",
+                                    "relation": "rt",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "k",
                                     "children": [
                                         {
-                                            "relation": "mi",
+                                            "relation": "mk",
                                             "children": [
                                                 {
-                                                    "relation": "it",
-                                                    "children": []
-                                                },
-                                                {
-                                                    "relation": "t",
+                                                    "relation": "mi",
                                                     "children": [
                                                         {
-                                                            "relation": "mc",
+                                                            "relation": "it",
+                                                            "children": []
+                                                        },
+                                                        {
+                                                            "relation": "t",
                                                             "children": [
                                                                 {
-                                                                    "relation": "cn",
-                                                                    "children": []
+                                                                    "relation": "mc",
+                                                                    "children": [
+                                                                        {
+                                                                            "relation": "cn",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
                                                                 }
                                                             ]
                                                         }

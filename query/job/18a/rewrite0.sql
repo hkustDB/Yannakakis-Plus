@@ -1,0 +1,13 @@
+create or replace view aggView3826097035945500633 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin8632986872276328212 as select movie_id as v31, info as v15 from movie_info as mi, aggView3826097035945500633 where mi.info_type_id=aggView3826097035945500633.v8;
+create or replace view aggView3652598870347048358 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin652998364157195927 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView3652598870347048358 where mi_idx.info_type_id=aggView3652598870347048358.v10;
+create or replace view aggView8630828531343416643 as select v31, MIN(v20) as v44 from aggJoin652998364157195927 group by v31;
+create or replace view aggJoin1907498743522357166 as select person_id as v22, movie_id as v31, note as v5, v44 from cast_info as ci, aggView8630828531343416643 where ci.movie_id=aggView8630828531343416643.v31 and note IN ('(producer)','(executive producer)');
+create or replace view aggView1245795073860574705 as select v22, v31, MIN(v44) as v44 from aggJoin1907498743522357166 group by v22,v31;
+create or replace view aggJoin7507436580350559348 as select name as v23, gender as v26, v31, v44 from name as n, aggView1245795073860574705 where n.id=aggView1245795073860574705.v22 and gender= 'm' and name LIKE '%Tim%';
+create or replace view aggView8158077967028999586 as select v31, MIN(v44) as v44 from aggJoin7507436580350559348 group by v31;
+create or replace view aggJoin5026917957563269767 as select id as v31, title as v32, v44 from title as t, aggView8158077967028999586 where t.id=aggView8158077967028999586.v31;
+create or replace view aggView6448090664909176454 as select v31, MIN(v44) as v44, MIN(v32) as v45 from aggJoin5026917957563269767 group by v31;
+create or replace view aggJoin3384299905382459112 as select v15, v44, v45 from aggJoin8632986872276328212 join aggView6448090664909176454 using(v31);
+select MIN(v15) as v43,MIN(v44) as v44,MIN(v45) as v45 from aggJoin3384299905382459112;
