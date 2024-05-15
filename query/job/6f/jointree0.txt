@@ -1,14 +1,19 @@
 Relations:
-dict_values([ci[10327,cast_info, 452393000.0]: ['v1', 'v14', 'v23', 'v4', 'v5', 'v6', 'v7']
-, k[10328,keyword, 800]: ['v8', 'v9', 'v10']
-, mk[10329,movie_keyword, 800.0]: ['v11', 'v23', 'v8']
-, n[10330,name, 200.0]: ['v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22']
-, t[10331,title, 1381453]: ['v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34']
+dict_values([ci[7138,cast_info, 800.0]: ['v1', 'v14', 'v23', 'v4', 'v5', 'v6', 'v7']
+['v14']
+, k[7139,keyword, 800]: ['v8', 'v9', 'v10']
+['v8']
+, mk[7140,movie_keyword, 800.0]: ['v11', 'v23', 'v8']
+['v23']
+, n[7141,name, 200.0]: ['v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22']
+[]
+, t[7142,title, 1381453]: ['v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34']
+['v23']
 ])
 Edges:
-dict_values([mk->k, n->ci, mk->t, ci->mk])
+dict_values([mk->t, ci->mk, n->ci, mk->k])
 Root:
-10330
+7141
 isFull:
 False
 isFreeConnex:

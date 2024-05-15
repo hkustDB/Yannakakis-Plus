@@ -1,23 +1,37 @@
 Relations:
-dict_values([cc[4430,complete_cast, 13508600.0]: ['v1', 'v45', 'v5', 'v7']
-, cct1[4431,comp_cast_type, 100.0]: ['v5', 'v6']
-, cct2[4432,comp_cast_type, 100.0]: ['v7', 'v8']
-, cn[4433,company_name, 2546300.0]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
-, ct[4434,company_type, 100.0]: ['v16', 'v17']
-, it1[4435,info_type, 100.0]: ['v18', 'v19']
-, it2[4436,info_type, 100]: ['v20', 'v21']
-, k[4437,keyword, 300.0]: ['v22', 'v23', 'v24']
-, kt[4438,kind_type, 200]: ['v25', 'v26']
-, mc[4439,movie_companies, 342.84373851849756]: ['v27', 'v45', 'v9', 'v16', 'v31']
-, mi[4440,movie_info, 449.483966725346]: ['v32', 'v45', 'v18', 'v35', 'v36']
-, mi_idx[4441,movie_info_idx, 26752680.0]: ['v37', 'v45', 'v20', 'v40', 'v41']
-, mk[4442,movie_keyword, 100.0]: ['v42', 'v45', 'v22']
-, t[4443,title, 200.0]: ['v45', 'v46', 'v47', 'v25', 'v49', 'v50', 'v51', 'v52', 'v53', 'v54', 'v55', 'v56']
+dict_values([cc[535362,complete_cast, 13508600.0]: ['v1', 'v45', 'v5', 'v7']
+['v7', 'v45', 'v5']
+, cct1[535363,comp_cast_type, 100.0]: ['v5', 'v6']
+['v7', 'v16', 'v45']
+, cct2[535364,comp_cast_type, 100.0]: ['v7', 'v8']
+['v16', 'v45']
+, cn[535365,company_name, 2546300.0]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+['v7', 'v16', 'v45', 'v5']
+, ct[535366,company_type, 100.0]: ['v16', 'v17']
+['v45']
+, it1[535367,info_type, 100.0]: ['v18', 'v19']
+['v45']
+, it2[535368,info_type, 100]: ['v20', 'v21']
+['v20']
+, k[535369,keyword, 300.0]: ['v22', 'v23', 'v24']
+[]
+, kt[535370,kind_type, 200]: ['v25', 'v26']
+['v25']
+, mc[535371,movie_companies, 342.84373851849756]: ['v27', 'v45', 'v9', 'v16', 'v31']
+['v7', 'v16', 'v9', 'v45', 'v5']
+, mi[535372,movie_info, 449.483966725346]: ['v32', 'v45', 'v18', 'v35', 'v36']
+['v18', 'v45']
+, mi_idx[535373,movie_info_idx, 26752680.0]: ['v37', 'v45', 'v20', 'v40', 'v41']
+['v45']
+, mk[535374,movie_keyword, 100.0]: ['v42', 'v45', 'v22']
+['v22']
+, t[535375,title, 200.0]: ['v45', 'v46', 'v47', 'v25', 'v49', 'v50', 'v51', 'v52', 'v53', 'v54', 'v55', 'v56']
+['v7', 'v45', 'v5']
 ])
 Edges:
-dict_values([mi->ct, cn->mc, t->cc, mk->it1, t->kt, mi_idx->it2, ct->cct2, mc->t, cct2->cct1, it1->mi, cc->mi_idx, cct1->cn, k->mk])
+dict_values([t->kt, mi_idx->it2, mi->ct, cn->mc, cct1->cn, mk->it1, t->cc, ct->cct2, k->mk, cct2->cct1, it1->mi, mc->t, cc->mi_idx])
 Root:
-4437
+535369
 isFull:
 False
 isFreeConnex:

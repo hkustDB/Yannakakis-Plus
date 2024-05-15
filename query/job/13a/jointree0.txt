@@ -1,23 +1,32 @@
 Relations:
-dict_values([cn[4340,company_name, 977500]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
-, ct[4341,company_type, 100]: ['v8', 'v9']
-, it[4342,info_type, 100]: ['v10', 'v11']
-, it2[4343,info_type, 100]: ['v12', 'v13']
-, kt[4344,kind_type, 100]: ['v14', 'v15']
-, mc[4345,movie_companies, 100.0]: ['v16', 'v22', 'v1', 'v8', 'v20']
-, mi[4346,movie_info, 100.0]: ['v21', 'v22', 'v12', 'v24', 'v25']
-, mi_idx[4347,movie_info_idx, 100.0]: ['v26', 'v22', 'v10', 'v29', 'v30']
-, t[4348,title, 100.0]: ['v22', 'v32', 'v33', 'v14', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42']
+dict_values([cn[380167,company_name, 977500]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+['v1']
+, ct[380168,company_type, 100]: ['v8', 'v9']
+['v8']
+, it[380169,info_type, 100]: ['v10', 'v11']
+['v10']
+, it2[380170,info_type, 100]: ['v12', 'v13']
+['v12']
+, kt[380171,kind_type, 100]: ['v14', 'v15']
+['v14']
+, mc[380172,movie_companies, 100.0]: ['v16', 'v22', 'v1', 'v8', 'v20']
+['v22']
+, mi[380173,movie_info, 100.0]: ['v21', 'v22', 'v12', 'v24', 'v25']
+[]
+, mi_idx[380174,movie_info_idx, 100.0]: ['v26', 'v22', 'v10', 'v29', 'v30']
+['v22']
+, t[380175,title, 100.0]: ['v22', 'v32', 'v33', 'v14', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42']
+['v22']
 ])
 Edges:
-dict_values([mi->t, mi->it2, mi_idx->it, mc->cn, mi_idx->mc, mc->ct, t->mi_idx, t->kt])
+dict_values([t->mi_idx, mi->t, mi_idx->mc, mi->it2, mi_idx->it, mc->cn, t->kt, mc->ct])
 Root:
-4346
+380173
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[4346]
+[380173]
 fixroot:
 True

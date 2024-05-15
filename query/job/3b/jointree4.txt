@@ -1,0 +1,22 @@
+Relations:
+dict_values([k[7091,keyword, 3000]: ['v1', 'v2', 'v3']
+['v1']
+, mi[7092,movie_info, 228700.0]: ['v4', 'v12', 'v6', 'v7', 'v8']
+['v12']
+, mk[7093,movie_keyword, 3112.9764065335753]: ['v9', 'v12', 'v1']
+[]
+, t[7094,title, 39166600]: ['v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23']
+['v12']
+])
+Edges:
+dict_values([mk->k, mi->t, mk->mi])
+Root:
+7093
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[7093]
+fixroot:
+True

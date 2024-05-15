@@ -1,0 +1,15 @@
+create or replace view aggView648815601184076002 as select id as v33 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin6716016621029443887 as select movie_id as v11 from movie_keyword as mk, aggView648815601184076002 where mk.keyword_id=aggView648815601184076002.v33;
+create or replace view aggView6545208700031973720 as select v11 from aggJoin6716016621029443887 group by v11;
+create or replace view aggJoin7927290736042736020 as select movie_id as v11, company_id as v28 from movie_companies as mc, aggView6545208700031973720 where mc.movie_id=aggView6545208700031973720.v11;
+create or replace view aggView5260468214986434016 as select id as v28 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin1053707162197873576 as select v11 from aggJoin7927290736042736020 join aggView5260468214986434016 using(v28);
+create or replace view aggView7644227026854708031 as select id as v11, title as v56 from title as t where episode_nr>=5 and episode_nr<100;
+create or replace view aggJoin7829641004188429269 as select v11, v56 from aggJoin1053707162197873576 join aggView7644227026854708031 using(v11);
+create or replace view aggView5713579411497957425 as select v11, MIN(v56) as v56 from aggJoin7829641004188429269 group by v11;
+create or replace view aggJoin2033199625812438097 as select person_id as v2, v56 from cast_info as ci, aggView5713579411497957425 where ci.movie_id=aggView5713579411497957425.v11;
+create or replace view aggView5817545867282655547 as select person_id as v2, MIN(name) as v55 from aka_name as an group by person_id;
+create or replace view aggJoin3791331553295284650 as select v2, v56 as v56, v55 from aggJoin2033199625812438097 join aggView5817545867282655547 using(v2);
+create or replace view aggView3575079582105867385 as select id as v2 from name as n;
+create or replace view aggJoin1946929036462455438 as select v56, v55 from aggJoin3791331553295284650 join aggView3575079582105867385 using(v2);
+select MIN(v55) as v55,MIN(v56) as v56 from aggJoin1946929036462455438;

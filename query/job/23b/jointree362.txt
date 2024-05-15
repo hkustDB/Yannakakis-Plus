@@ -1,0 +1,36 @@
+Relations:
+dict_values([cc[337458,complete_cast, 100.0]: ['v1', 'v36', 'v3', 'v5']
+['v36']
+, cct1[337459,comp_cast_type, 100]: ['v5', 'v6']
+['v5']
+, cn[337460,company_name, 8484300]: ['v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13']
+['v7']
+, ct[337461,company_type, 400]: ['v14', 'v15']
+['v14']
+, it1[337462,info_type, 100]: ['v16', 'v17']
+['v16']
+, k[337463,keyword, 400]: ['v18', 'v19', 'v20']
+['v18']
+, kt[337464,kind_type, 700]: ['v21', 'v22']
+['v21']
+, mc[337465,movie_companies, 400.0]: ['v23', 'v36', 'v7', 'v14', 'v27']
+['v36']
+, mi[337466,movie_info, 177100.0]: ['v28', 'v36', 'v16', 'v31', 'v32']
+['v36']
+, mk[337467,movie_keyword, 403.6467236467236]: ['v33', 'v36', 'v18']
+[]
+, t[337468,title, 706.3817663817664]: ['v36', 'v37', 'v38', 'v21', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47']
+['v36']
+])
+Edges:
+dict_values([t->mc, t->cc, cc->cct1, t->mi, mc->cn, mk->k, mi->it1, mc->ct, mk->t, t->kt])
+Root:
+337467
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[337467]
+fixroot:
+True

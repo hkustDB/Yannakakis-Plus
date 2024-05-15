@@ -1,0 +1,36 @@
+Relations:
+dict_values([cn[755577,company_name, 21003100]: ['v17', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+['v2', 'v17']
+, ct[755578,company_type, 300]: ['v18', 'v9']
+['v18']
+, k[755579,keyword, 300]: ['v22', 'v11', 'v12']
+['v22']
+, lt[755580,link_type, 1800]: ['v13', 'v14']
+['v13']
+, mc[755581,movie_companies, 300.0]: ['v15', 'v24', 'v17', 'v18', 'v19']
+['v24', 'v19', 'v17']
+, mk[755582,movie_keyword, 300.0]: ['v20', 'v24', 'v22']
+['v24']
+, ml[755583,movie_link, 1800.0]: ['v23', 'v24', 'v25', 'v13']
+['v24']
+, t[755584,title, 228727100]: ['v24', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38']
+['v24', 'v28']
+, tAux18[755699,t, 228727100]: ['v24', 'v28']
+['v24']
+, mcAux27[755738,mc, 21003100.0]: ['v24', 'v17', 'v19']
+[]
+, cnAux31[755771,cn, 21003100]: ['v17', 'v2']
+['v17']
+])
+Edges:
+dict_values([tAux18->t, mk->k, mk->ml, cnAux31->cn, mcAux27->cnAux31, mc->ct, mcAux27->tAux18, ml->lt, mc->mk, mcAux27->mc])
+Root:
+755738
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

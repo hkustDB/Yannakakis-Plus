@@ -1,0 +1,15 @@
+create or replace view aggView7331322629767738435 as select id as v22 from company_type as ct;
+create or replace view aggJoin799347714704195879 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView7331322629767738435 where mc.company_type_id=aggView7331322629767738435.v22;
+create or replace view aggView389196071829641568 as select id as v15 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin177469949355991931 as select v31 from aggJoin799347714704195879 join aggView389196071829641568 using(v15);
+create or replace view aggView40896845990664276 as select v31 from aggJoin177469949355991931 group by v31;
+create or replace view aggJoin5733680735598580523 as select id as v31, title as v32, production_year as v35 from title as t, aggView40896845990664276 where t.id=aggView40896845990664276.v31 and production_year>1990;
+create or replace view aggView4296560449173774165 as select v32, v31 from aggJoin5733680735598580523;
+create or replace view aggView8765905216211221761 as select name as v2, id as v1 from char_name as chn;
+create or replace view aggView8350508496014014807 as select id as v29 from role_type as rt;
+create or replace view aggJoin5236788751287449926 as select movie_id as v31, person_role_id as v1, note as v12 from cast_info as ci, aggView8350508496014014807 where ci.role_id=aggView8350508496014014807.v29 and note LIKE '%(producer)%';
+create or replace view aggView6818952868750498177 as select v31, MIN(v32) as v44 from aggView4296560449173774165 group by v31;
+create or replace view aggJoin21514484442293721 as select v1, v12, v44 from aggJoin5236788751287449926 join aggView6818952868750498177 using(v31);
+create or replace view aggView4225210606563538001 as select v1, MIN(v44) as v44 from aggJoin21514484442293721 group by v1;
+create or replace view aggJoin7991730289002014186 as select v2, v44 from aggView8765905216211221761 join aggView4225210606563538001 using(v1);
+select MIN(v2) as v43,MIN(v44) as v44 from aggJoin7991730289002014186;

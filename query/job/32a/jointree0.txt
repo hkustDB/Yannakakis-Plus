@@ -1,20 +1,26 @@
 Relations:
-dict_values([k[2505,keyword, 100]: ['v8', 'v2', 'v3']
-, lt[2506,link_type, 1800.0]: ['v4', 'v5']
-, mk[2507,movie_keyword, 100.0]: ['v6', 'v13', 'v8']
-, ml[2508,movie_link, 2999700.0]: ['v9', 'v13', 'v11', 'v4']
-, t1[2509,title, 35513119829688.89]: ['v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24']
-, t2[2510,title, 1800.0]: ['v11', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36']
+dict_values([k[755571,keyword, 100]: ['v8', 'v2', 'v3']
+['v8']
+, lt[755572,link_type, 1800.0]: ['v4', 'v5']
+['v11', 'v13']
+, mk[755573,movie_keyword, 100.0]: ['v6', 'v13', 'v8']
+['v13']
+, ml[755574,movie_link, 2999700.0]: ['v9', 'v13', 'v11', 'v4']
+['v11', 'v13', 'v4']
+, t1[755575,title, 35513119829688.89]: ['v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24']
+[]
+, t2[755576,title, 1800.0]: ['v11', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36']
+['v13']
 ])
 Edges:
-dict_values([lt->ml, mk->k, ml->mk, t1->t2, t2->lt])
+dict_values([mk->k, lt->ml, t2->lt, ml->mk, t1->t2])
 Root:
-2509
+755575
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[2509]
+[755575]
 fixroot:
 True
