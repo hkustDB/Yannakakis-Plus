@@ -17,7 +17,7 @@
                                             "relation": "mi",
                                             "children": [
                                                 {
-                                                    "relation": "it",
+                                                    "relation": "it1",
                                                     "children": []
                                                 },
                                                 {
@@ -35,7 +35,7 @@
                                                             "relation": "mi_idx",
                                                             "children": [
                                                                 {
-                                                                    "relation": "it",
+                                                                    "relation": "it2",
                                                                     "children": []
                                                                 }
                                                             ]

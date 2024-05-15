@@ -18,15 +18,14 @@
                                             "children": [
                                                 {
                                                     "relation": "lt",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "relation": "mk",
                                                     "children": [
                                                         {
-                                                            "relation": "mk",
-                                                            "children": [
-                                                                {
-                                                                    "relation": "k",
-                                                                    "children": []
-                                                                }
-                                                            ]
+                                                            "relation": "k",
+                                                            "children": []
                                                         }
                                                     ]
                                                 }

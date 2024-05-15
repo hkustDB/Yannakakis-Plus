@@ -14,23 +14,28 @@
                                     "relation": "cct2",
                                     "children": [
                                         {
-                                            "relation": "cct1",
+                                            "relation": "t",
                                             "children": [
                                                 {
-                                                    "relation": "lt",
+                                                    "relation": "cct1",
                                                     "children": [
                                                         {
-                                                            "relation": "cc",
+                                                            "relation": "lt",
                                                             "children": [
                                                                 {
-                                                                    "relation": "ml",
+                                                                    "relation": "cc",
                                                                     "children": [
                                                                         {
-                                                                            "relation": "mk",
+                                                                            "relation": "ml",
                                                                             "children": [
                                                                                 {
-                                                                                    "relation": "k",
-                                                                                    "children": []
+                                                                                    "relation": "mk",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "relation": "k",
+                                                                                            "children": []
+                                                                                        }
+                                                                                    ]
                                                                                 }
                                                                             ]
                                                                         }
