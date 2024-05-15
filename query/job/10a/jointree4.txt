@@ -1,0 +1,32 @@
+Relations:
+dict_values([chn[401074,char_name, 314033900]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+['v2', 'v1']
+, ci[401075,cast_info, 100.0]: ['v8', 'v9', 'v31', 'v1', 'v12', 'v13', 'v29']
+['v1']
+, cn[401076,company_name, 136100]: ['v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21']
+['v15']
+, ct[401077,company_type, 400]: ['v22', 'v23']
+['v22']
+, mc[401078,movie_companies, 400.0]: ['v24', 'v31', 'v15', 'v22', 'v28']
+['v31']
+, rt[401079,role_type, 100]: ['v29', 'v30']
+['v29']
+, t[401080,title, 101292000]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42']
+['v32', 'v31']
+, chnAux14[401105,chn, 1115600.0]: ['v1', 'v2']
+[]
+, tAux41[401109,t, 101292000]: ['v31', 'v32']
+['v31']
+])
+Edges:
+dict_values([ci->mc, ci->tAux41, tAux41->t, mc->cn, chnAux14->ci, mc->ct, chnAux14->chn, ci->rt])
+Root:
+401105
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

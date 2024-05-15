@@ -1,0 +1,34 @@
+Relations:
+dict_values([it1[377999,info_type, 100]: ['v1', 'v2']
+['v1']
+, it2[378000,info_type, 100]: ['v3', 'v4']
+['v3']
+, k[378001,keyword, 300]: ['v5', 'v6', 'v7']
+['v5']
+, kt[378002,kind_type, 200]: ['v8', 'v9']
+['v8']
+, mi[378003,movie_info, 8952625.0]: ['v10', 'v23', 'v1', 'v13', 'v14']
+['v23']
+, mi_idx[378004,movie_info_idx, 100.0]: ['v15', 'v23', 'v3', 'v18', 'v19']
+['v23', 'v18']
+, mk[378005,movie_keyword, 300.0]: ['v20', 'v23', 'v5']
+['v23']
+, t[378006,title, 200.0]: ['v23', 'v24', 'v25', 'v8', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34']
+['v23', 'v24']
+, tAux85[378248,t, 101292000]: ['v23', 'v24']
+['v23']
+, mi_idxAux15[378264,mi_idx, 101292000.0]: ['v23', 'v18']
+[]
+])
+Edges:
+dict_values([mi->it1, tAux85->t, mi_idx->mi, t->mk, mi_idxAux15->tAux85, mi_idx->it2, mk->k, t->kt, mi_idxAux15->mi_idx])
+Root:
+378264
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

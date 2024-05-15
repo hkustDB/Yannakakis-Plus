@@ -1,21 +1,33 @@
 Relations:
-dict_values([cc[8239,complete_cast, 2999700.0]: ['v1', 'v37', 'v5', 'v7']
-, cct1[8240,comp_cast_type, 200.0]: ['v5', 'v6']
-, cct2[8241,comp_cast_type, 200.0]: ['v7', 'v8']
-, cn[8242,company_name, 4830200.0]: ['v25', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
-, ct[8243,company_type, 100.0]: ['v26', 'v17']
-, k[8244,keyword, 100]: ['v35', 'v19', 'v20']
-, lt[8245,link_type, 200.0]: ['v21', 'v22']
-, mc[8246,movie_companies, 200.0]: ['v23', 'v37', 'v25', 'v26', 'v27']
-, mi[8247,movie_info, 152.66054837205598]: ['v28', 'v37', 'v30', 'v31', 'v32']
-, mk[8248,movie_keyword, 100.0]: ['v33', 'v37', 'v35']
-, ml[8249,movie_link, 2999700.0]: ['v36', 'v37', 'v38', 'v21']
-, t[8250,title, 200.0]: ['v37', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
+dict_values([cc[545950,complete_cast, 2999700.0]: ['v1', 'v37', 'v5', 'v7']
+['v7', 'v21', 'v37', 'v5']
+, cct1[545951,comp_cast_type, 200.0]: ['v5', 'v6']
+['v7', 'v37']
+, cct2[545952,comp_cast_type, 200.0]: ['v7', 'v8']
+['v37']
+, cn[545953,company_name, 4830200.0]: ['v25', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+['v26', 'v37']
+, ct[545954,company_type, 100.0]: ['v26', 'v17']
+['v37']
+, k[545955,keyword, 100]: ['v35', 'v19', 'v20']
+['v35']
+, lt[545956,link_type, 200.0]: ['v21', 'v22']
+['v7', 'v37', 'v5']
+, mc[545957,movie_companies, 200.0]: ['v23', 'v37', 'v25', 'v26', 'v27']
+['v26', 'v25', 'v37']
+, mi[545958,movie_info, 152.66054837205598]: ['v28', 'v37', 'v30', 'v31', 'v32']
+[]
+, mk[545959,movie_keyword, 100.0]: ['v33', 'v37', 'v35']
+['v37']
+, ml[545960,movie_link, 2999700.0]: ['v36', 'v37', 'v38', 'v21']
+['v21', 'v37']
+, t[545961,title, 200.0]: ['v37', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
+['v7', 'v37']
 ])
 Edges:
-dict_values([cct1->lt, t->cct1, ct->cn, ml->mk, cc->ml, mk->k, mc->cct2, cct2->t, lt->cc, mi->ct, cn->mc])
+dict_values([mc->cct2, cct2->t, cct1->lt, t->cct1, cc->ml, ct->cn, lt->cc, mi->ct, cn->mc, mk->k, ml->mk])
 Root:
-8247
+545958
 isFull:
 False
 isFreeConnex:
