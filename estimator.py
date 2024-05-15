@@ -133,10 +133,27 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
                 staP = [1, 1]
                 print("No join key")
         else:
-            if not hasAlias:
-                staP = statistics[node.source][0]
-            else:
-                staP = statistics[re.sub(r'[0-9]+', '', node.source)][0]
+            try:
+                if not hasAlias:
+                    staP = statistics[node.source][0]
+                else:
+                    staP = statistics[re.sub(r'[0-9]+', '', node.source)][0]
+            except:
+                    # bag
+                    cardi, ndv = 1, 1
+                    try:
+                        for source in eval(node.source):
+                            if not hasAlias:
+                                cardi *= statistics[source][0][0]
+                                ndv *= statistics[source][0][1]
+                            else:
+                                cardi *= statistics[re.sub(r'[0-9]+', '', source)][0][0]
+                                ndv *= statistics[re.sub(r'[0-9]+', '', source)][0][1]
+                    except:
+                        # Bag AUx
+                        pass
+
+                    staP = [cardi, ndv]
 
         if len(node.children):
             for child in node.children:
@@ -160,17 +177,20 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
                     except:
                         # bag
                         cardi, ndv = 1, 1
-                        for source in eval(node.source):
-                            if not hasAlias:
-                                cardi *= statistics[source][0][0]
-                                ndv *= statistics[source][0][1]
-                            else:
-                                cardi *= statistics[re.sub(r'[0-9]+', '', source)][0][0]
-                                ndv *= statistics[re.sub(r'[0-9]+', '', source)][0][1]
-                        if not len(staC):
-                            staC = [cardi, ndv]
-                        elif staC[1] < ndv:
-                            staC = [cardi, ndv]
+                        try:
+                            for source in eval(node.source):
+                                if not hasAlias:
+                                    cardi *= statistics[source][0][0]
+                                    ndv *= statistics[source][0][1]
+                                else:
+                                    cardi *= statistics[re.sub(r'[0-9]+', '', source)][0][0]
+                                    ndv *= statistics[re.sub(r'[0-9]+', '', source)][0][1]
+                            if not len(staC):
+                                staC = [cardi, ndv]
+                            elif staC[1] < ndv:
+                                staC = [cardi, ndv]
+                        except:
+                            pass
 
                 else:
                     staC = [1, 1]
