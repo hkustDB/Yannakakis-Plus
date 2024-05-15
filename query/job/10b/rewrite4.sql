@@ -1,0 +1,15 @@
+create or replace view aggView277017627185862540 as select id as v31, title as v32 from title as t where production_year>2010;
+create or replace view aggView6883923525506381470 as select id as v1, name as v2 from char_name as chn;
+create or replace view aggView7622547538180695311 as select id as v22 from company_type as ct;
+create or replace view aggJoin1158184414835611532 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView7622547538180695311 where mc.company_type_id=aggView7622547538180695311.v22;
+create or replace view aggView8530458775946395130 as select id as v15 from company_name as cn where country_code= '[ru]';
+create or replace view aggJoin541420544341112442 as select v31 from aggJoin1158184414835611532 join aggView8530458775946395130 using(v15);
+create or replace view aggView7917962742703010065 as select v31 from aggJoin541420544341112442 group by v31;
+create or replace view aggJoin2462195001155249336 as select movie_id as v31, person_role_id as v1, note as v12, role_id as v29 from cast_info as ci, aggView7917962742703010065 where ci.movie_id=aggView7917962742703010065.v31 and note LIKE '%(producer)%';
+create or replace view aggView7331843572917143154 as select id as v29 from role_type as rt where role= 'actor';
+create or replace view aggJoin5043941264341760204 as select v31, v1, v12 from aggJoin2462195001155249336 join aggView7331843572917143154 using(v29);
+create or replace view aggView5097773103285455623 as select v1, MIN(v2) as v43 from aggView6883923525506381470 group by v1;
+create or replace view aggJoin8912552785379042590 as select v31, v12, v43 from aggJoin5043941264341760204 join aggView5097773103285455623 using(v1);
+create or replace view aggView7440297214421904653 as select v31, MIN(v43) as v43 from aggJoin8912552785379042590 group by v31;
+create or replace view aggJoin149037752689569536 as select v32, v43 from aggView277017627185862540 join aggView7440297214421904653 using(v31);
+select MIN(v43) as v43,MIN(v32) as v44 from aggJoin149037752689569536;

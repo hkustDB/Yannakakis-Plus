@@ -1,0 +1,15 @@
+create or replace view aggView8988924330022807521 as select id as v22 from company_type as ct;
+create or replace view aggJoin4502210007773710785 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView8988924330022807521 where mc.company_type_id=aggView8988924330022807521.v22;
+create or replace view aggView4729436303563296691 as select id as v15 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin4560005251820951126 as select v31 from aggJoin4502210007773710785 join aggView4729436303563296691 using(v15);
+create or replace view aggView4835712668576815578 as select v31 from aggJoin4560005251820951126 group by v31;
+create or replace view aggJoin2335123415789541079 as select id as v31, title as v32, production_year as v35 from title as t, aggView4835712668576815578 where t.id=aggView4835712668576815578.v31 and production_year>1990;
+create or replace view aggView7749038443025346582 as select v32, v31 from aggJoin2335123415789541079;
+create or replace view aggView8904283745572612570 as select name as v2, id as v1 from char_name as chn;
+create or replace view aggView998368460276412773 as select id as v29 from role_type as rt;
+create or replace view aggJoin795991779256898935 as select movie_id as v31, person_role_id as v1, note as v12 from cast_info as ci, aggView998368460276412773 where ci.role_id=aggView998368460276412773.v29 and note LIKE '%(producer)%';
+create or replace view aggView916355048857275861 as select v1, MIN(v2) as v43 from aggView8904283745572612570 group by v1;
+create or replace view aggJoin8324995123443240260 as select v31, v12, v43 from aggJoin795991779256898935 join aggView916355048857275861 using(v1);
+create or replace view aggView5823647149111800113 as select v31, MIN(v43) as v43 from aggJoin8324995123443240260 group by v31;
+create or replace view aggJoin6695336101212284555 as select v32, v43 from aggView7749038443025346582 join aggView5823647149111800113 using(v31);
+select MIN(v43) as v43,MIN(v32) as v44 from aggJoin6695336101212284555;
