@@ -15,6 +15,7 @@ import globalVar
 import re
 import copy
 from queue import Queue
+from functools import cmp_to_key
 
 
 def buildSemiUp(reduceRel: Edge, JT: JoinTree, selfComp: list[Comparison], compExtract: list[Comp] = []):
@@ -91,7 +92,7 @@ def buildSemiUp(reduceRel: Edge, JT: JoinTree, selfComp: list[Comparison], compE
         joinTable = childNode.alias
     else:
         joinTable = childNode.source + ' AS ' + childNode.alias
-        
+    
     joinKey = list(set(childNode.cols) & set(parentNode.cols))
     inLeft, inRight = [], []
     if childFlag and parentFlag:
@@ -193,7 +194,7 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, outputVariables:
     # 1. aggView
     viewName = 'aggView' + str(randint(0, maxsize))
     fromTable = childNode.JoinResView.viewName
-    joinKey = list(set(parentNode.cols) & set(childNode.cols))
+    joinKey = list(set(parentNode.JoinResView.selectAttrAlias) & set(childNode.reserve))
 
     pkFlag = False
     if (reduceRel.keyType == EdgeType.Child or reduceRel.keyType == EdgeType.Both) and childFlag:
@@ -205,6 +206,15 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, outputVariables:
         selectAttr.append('')
         selectAttrAlias.append(key)
         groupBy.append(key)
+
+    # NOTE: extra join key pass
+    if len(childNode.reserve) > 1:
+        for key in set(childNode.reserve) - set(joinKey):
+            selectAttrAlias.append(key)
+            selectAttr.append('')
+            groupBy.append(key)
+            aggPass2Join.append(key)
+
     ## -2. previousAgg
     for var in childNode.JoinResView.selectAttrAlias:
         if var in Agg.allAggAlias:
@@ -436,7 +446,7 @@ def buildAggUp(JT: JoinTree, reduceRel: Edge, Agg: Aggregation, outputVariables:
                 aggPass2Join.append(var)
     
     ## d. append annot
-    # NOTE: Extra optimization foe job benchmark
+    # NOTE: Extra optimization for job benchmark
     if globalVar.get_value('DDL_NAME') != 'job.ddl':
         if not 'annot' in childNode.JoinResView.selectAttrAlias and not pkFlag:
             if not len(selectAttr):
@@ -577,7 +587,11 @@ def buildNonAggUp(JT: JoinTree, reduceRel: Edge, extraEqualCond: list[str] = [])
     selectAttributesAs = parentNode.JoinResView.selectAttrAlias.copy()
 
     alterJoinKey = []
-    joinKey = list(set(parentNode.cols) & set(childNode.cols))
+    if parentNode.JoinResView:
+        joinKey = list(set(parentNode.JoinResView.selectAttrAlias) & set(childNode.reserve))
+    else:
+        joinKey = list(set(parentNode.cols) & set(childNode.reserve))
+
     alterJoinKey.extend(joinKey)
     
     # original table or previous view
@@ -750,15 +764,29 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
             semiDown.append(retSemiDown)
     
     '''Step3: AggUp'''
+    def aggCmp(rel1: list[Edge], rel2: list[Edge]):
+        if jointree.getNode(rel1.dst.id).reduceOrder < jointree.getNode(rel2.dst.id).reduceOrder:
+            return -1
+        elif jointree.getNode(rel1.dst.id).reduceOrder > jointree.getNode(rel2.dst.id).reduceOrder:
+            return 1
+        else:
+            if jointree.getNode(rel1.dst.id).depth2Root > jointree.getNode(rel2.dst.id).depth2Root:
+                return -1
+            elif jointree.getNode(rel1.dst.id).depth2Root < jointree.getNode(rel2.dst.id).depth2Root:
+                return 1
+            else:
+                return jointree.getNode(rel1.dst.id).estimateSize < jointree.getNode(rel2.dst.id).estimateSize
+
     jointree = copy.deepcopy(JT)
     remainRelations = jointree.getRelations().values()
     while len(remainRelations) > 0:
         leafRelation = getLeafRelation(remainRelations)
+        leafRelation.sort(key=cmp_to_key(aggCmp))
         supportRelation = getSupportRelation(leafRelation)
         if len(supportRelation) == 0:
-            rel = choice(leafRelation)
+            rel = leafRelation[0]
         else:
-            rel = choice(supportRelation)
+            rel = supportRelation[0]
         aggs = getAggRelation(JT.getNode(rel.dst.id))
         if isAgg:
             retAggUp = buildAggUp(JT, rel, Agg, outputVariables, aggs, lastRel=len(jointree.edge)==1)

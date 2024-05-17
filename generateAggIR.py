@@ -829,7 +829,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                     break
                 childNode = childNode.parent
         
-        supportRelation.sort(key=lambda x: jointree.getNode(x[0].dst.id).trueSize)
+        # supportRelation.sort(key=lambda x: jointree.getNode(x[0].dst.id).trueSize)
         return supportRelation
     
     '''Get incident comparisons'''
