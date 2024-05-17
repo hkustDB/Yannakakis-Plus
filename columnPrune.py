@@ -196,6 +196,7 @@ def columnPruneYa(JT: JoinTree, semiUp: list[SemiUpPhase], semiDown: list[SemiJo
     aggKeepSet = getAggSet(Agg, isAll=True) 
     compKeepSet = getCompSet(COMP)
     extraEqualSet = JT.extraCondList.allAlias
+    allExtraJoinKeys: set[str] = set()
 
     joinKeyEnum: dict[int, set[str]] = dict()
     allJoinKeys: set[str] = set()
@@ -208,6 +209,16 @@ def columnPruneYa(JT: JoinTree, semiUp: list[SemiUpPhase], semiDown: list[SemiJo
         else:
             allJoinKeys |= set(last.joinKey)
 
+    queue: list[TreeNode] = []
+    queue.append(JT.root)
+    while len(queue):
+        node = queue.pop()
+        for child in node.children:
+            queue.insert(0, child)
+        if node.isRoot: 
+            continue
+        allExtraJoinKeys |= set(node.reserve) - (set(node.cols) & set(node.parent.cols))
+
     requireVariables = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
 
     for semi in semiUp:
@@ -219,10 +230,10 @@ def columnPruneYa(JT: JoinTree, semiUp: list[SemiUpPhase], semiDown: list[SemiJo
     for idx, last in enumerate(lastUp):
         if Agg:
             if idx == len(lastUp)-1:
-                requireVariables = outputVariables | aggKeepSet
+                requireVariables = outputVariables | aggKeepSet | allExtraJoinKeys
                 removeAnnotFlag =  not 'annot' in finalResult
             else:
-                requireVariables = outputVariables | aggKeepSet | compKeepSet | extraEqualSet
+                requireVariables = outputVariables | aggKeepSet | compKeepSet | extraEqualSet | allExtraJoinKeys
                 removeAnnotFlag = False
             
             last.aggJoin.selectAttrs, last.aggJoin.selectAttrAlias = removeAttrAlias(last.aggJoin.selectAttrs, last.aggJoin.selectAttrAlias, requireVariables | joinKeyEnum[idx], Agg=Agg, removeAnnot=removeAnnotFlag)
