@@ -74,7 +74,7 @@ do
                     echo ") TO '/dev/null' DELIMITER ',' CSV;" >> ${SUBMIT_QUERY}
                     echo "Start PG Task at ${QUERY}"
                     current_task=1
-                    while [[ ${current_task} -le 1 ]]
+                    while [[ ${current_task} -le 3 ]]
                     do
                         echo "Current Task: ${current_task}"
                         OUT_FILE="${CUR_PATH}/output.txt"
@@ -127,7 +127,7 @@ do
                     echo ") TO '/dev/null' DELIMITER ',' CSV;" >> ${SUBMIT_QUERY_2}
                     echo "Start PG Task at ${QUERY}"
                     current_task=1
-                    while [[ ${current_task} -le 1 ]]
+                    while [[ ${current_task} -le 3 ]]
                     do
                         echo "Current Task: ${current_task}"
                         OUT_FILE="${CUR_PATH}/output.txt"
