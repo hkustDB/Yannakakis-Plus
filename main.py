@@ -181,7 +181,7 @@ def connect(base: int, mode: int, type: GenType):
         pass
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000&fixRootEnable=true", headers=headers, json=body).json()['data']
     except:
         print(BASE_PATH + QUERY_NAME)
     # 1. 
@@ -204,6 +204,9 @@ def connect(base: int, mode: int, type: GenType):
         allNodes = dict()
         supId = set()
         nodes, edges, root, subset, comparisons, extraConditions, fixRoot = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraConditions'], jt['fixRoot']
+        # FIXME: ERROR only for testing
+        fixRoot = True
+        
         # a. parse relations
         for node in nodes:
             parseRel(node, allNodes, supId)
@@ -340,10 +343,10 @@ if __name__ == '__main__':
     globalVar.set_value('COST_NAME', 'cost.csv')
     globalVar.set_value('PLAN_NAME', 'plan.json')
     globalVar.set_value('GEN_TYPE', 'DuckDB')
-    globalVar.set_value('YANNA', True)
+    globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/job/26c/')
-    globalVar.set_value('DDL_NAME', "job.ddl")
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/tpch/q18/')
+    globalVar.set_value('DDL_NAME', "tpch.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
     '''
