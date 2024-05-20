@@ -1,0 +1,13 @@
+create or replace view semiUp6883218146018314276 as select movie_id as v12, keyword_id as v1 from movie_keyword AS mk where (movie_id) in (select (id) from title AS t where production_year>1990);
+create or replace view semiUp8655451158977871483 as select v12, v1 from semiUp6883218146018314276 where (v12) in (select (movie_id) from movie_info AS mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American'));
+create or replace view semiUp9090980998835541130 as select v12, v1 from semiUp8655451158977871483 where (v1) in (select (id) from keyword AS k where keyword LIKE '%sequel%');
+create or replace view semiDown6936842002448128697 as select id as v1 from keyword AS k where (id) in (select (v1) from semiUp9090980998835541130) and keyword LIKE '%sequel%';
+create or replace view semiDown2349456380881203922 as select movie_id as v12 from movie_info AS mi where (movie_id) in (select (v12) from semiUp9090980998835541130) and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German','USA','American');
+create or replace view semiDown1661092670519268642 as select id as v12, title as v13 from title AS t where (id) in (select (v12) from semiUp9090980998835541130) and production_year>1990;
+create or replace view aggView1999291673030458549 as select v1 from semiDown6936842002448128697;
+create or replace view aggJoin2072674387663066211 as select v12 from semiUp9090980998835541130 join aggView1999291673030458549 using(v1);
+create or replace view aggView973860378794858409 as select v12 from semiDown2349456380881203922 group by v12;
+create or replace view aggJoin3585870045343402519 as select v12 from aggJoin2072674387663066211 join aggView973860378794858409 using(v12);
+create or replace view aggView5297211307243266209 as select v12, v13 as v24 from semiDown1661092670519268642;
+create or replace view aggJoin8443395173070864103 as select v24 from aggJoin3585870045343402519 join aggView5297211307243266209 using(v12);
+select MIN(v24) as v24 from aggJoin8443395173070864103;

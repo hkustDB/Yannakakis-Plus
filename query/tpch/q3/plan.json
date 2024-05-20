@@ -1,0 +1,14 @@
+{
+    "relation": "lineitem",
+    "children": [
+        {
+            "relation": "orders",
+            "children": [
+                {
+                    "relation": "customer",
+                    "children": []
+                }
+            ]
+        }
+    ]
+}

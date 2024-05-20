@@ -5,6 +5,8 @@ CREATE TABLE nation
     n_regionkey INTEGER,
     n_comment   VARCHAR,
     PRIMARY KEY (n_nationkey)
+) WITH (
+        'cardinality' = '25'
 );
 
 CREATE TABLE region
@@ -13,6 +15,8 @@ CREATE TABLE region
     r_name      VARCHAR,
     r_comment   VARCHAR,
     PRIMARY KEY (r_regionkey)
+) WITH (
+        'cardinality' = '5'
 );
 
 CREATE TABLE part
@@ -27,6 +31,8 @@ CREATE TABLE part
     p_retailprice DECIMAL,
     p_comment     VARCHAR,
     PRIMARY KEY (p_partkey)
+) WITH (
+        'cardinality' = '20000000'
 );
 
 CREATE TABLE supplier
@@ -39,6 +45,8 @@ CREATE TABLE supplier
     s_acctbal   DECIMAL,
     s_comment   VARCHAR,
     PRIMARY KEY (s_suppkey)
+) WITH (
+        'cardinality' = '1000000'
 );
 
 CREATE TABLE partsupp
@@ -49,6 +57,8 @@ CREATE TABLE partsupp
     ps_supplycost DECIMAL,
     ps_comment    VARCHAR,
     PRIMARY KEY (ps_partkey, ps_suppkey)
+) WITH (
+        'cardinality' = '80000000'
 );
 
 CREATE TABLE customer
@@ -62,6 +72,8 @@ CREATE TABLE customer
     c_mktsegment VARCHAR,
     c_comment    VARCHAR,
     PRIMARY KEY (c_custkey)
+) WITH (
+        'cardinality' = '15000000'
 );
 
 CREATE TABLE orders
@@ -76,6 +88,8 @@ CREATE TABLE orders
     o_shippriority  INTEGER,
     o_comment       VARCHAR,
     PRIMARY KEY (o_orderkey)
+) WITH (
+        'cardinality' = '150000000'
 );
 
 CREATE TABLE lineitem
@@ -97,4 +111,6 @@ CREATE TABLE lineitem
     l_shipmode      VARCHAR,
     l_comment       VARCHAR,
     PRIMARY KEY (l_orderkey, l_linenumber)
+) WITH (
+        'cardinality' = '600037902'
 );

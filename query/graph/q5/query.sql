@@ -1,4 +1,4 @@
-SELECT g2.src, g2.dst
+SELECT distinct g2.src, g2.dst
 FROM Graph AS g1, Graph AS g2, Graph AS g3, Graph AS g4, Graph AS g5,
     (SELECT src, COUNT(*) AS cnt FROM Graph GROUP BY src) AS c1,
     (SELECT src, COUNT(*) AS cnt FROM Graph GROUP BY src) AS c2,

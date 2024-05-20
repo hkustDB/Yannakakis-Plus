@@ -118,7 +118,8 @@ WHERE s_suppkey = ps_suppkey
   AND r_name = 'EUROPE'
 GROUP BY ps_partkey;
 
-create or replace view orderswithyear as select orders.*, year(o_orderdate) as o_year from orders;
+create or replace view orderswithyear as select orders.*, year(o_orderdate) AS as o_year from orders;
+
 
 create or replace view revenue0 (supplier_no, total_revenue) as select l_suppkey, sum(l_extendedprice * (1 - l_discount))
 from lineitem

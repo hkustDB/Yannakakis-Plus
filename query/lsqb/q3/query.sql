@@ -1,3 +1,4 @@
+EXPLAIN (ANALYZE true, COSTS true, FORMAT json)
 SELECT count(*)
 FROM City AS CityA, City AS CityB, City AS CityC, Person AS PersonA, Person AS PersonB, Person AS PersonC, Person_knows_Person AS pkp1, Person_knows_Person AS pkp2, Person_knows_Person AS pkp3
 WHERE PersonB.isLocatedIn_CityId = CityB.CityId

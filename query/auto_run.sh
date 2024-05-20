@@ -21,6 +21,8 @@ DATABASE=$1
 
 duckdb="/home/bchenba/duckdb"
 
+NUM_THREADS=${3:-1}
+
 # Suffix function
 function FileSuffix() {
     local filename="$1"
@@ -71,7 +73,7 @@ do
                         OUT_FILE="${CUR_PATH}/output.txt"
                         rm -f $OUT_FILE
                         touch $OUT_FILE
-                        timeout -s SIGKILL 10m $duckdb -c ".open ${DATABASE}_db" -c ".timer on" -c ".read ${SUBMIT_QUERY}" | grep "Run Time (s): real" >> $OUT_FILE
+                        timeout -s SIGKILL 30m $duckdb -c ".open ${DATABASE}_db" -c "SET threads TO ${NUM_THREADS};" -c ".timer on" -c ".read ${SUBMIT_QUERY}" | grep "Run Time (s): real" >> $OUT_FILE
                         status_code=$?
                         if [[ ${status_code} -eq 137 ]]; then
                             echo "duckdb task timed out." >> $LOG_FILE

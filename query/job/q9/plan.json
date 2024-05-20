@@ -1,0 +1,26 @@
+{
+    "relation": "supplier",
+    "children": [
+        {
+            "relation": "nation",
+            "children": []
+        },
+        {
+            "relation": "lineitem",
+            "children": [
+                {
+                    "relation": "orderswithyear",
+                    "children": []
+                },
+                {
+                    "relation": "partsupp",
+                    "children": []
+                },
+                {
+                    "relation": "part",
+                    "children": []
+                }
+            ]
+        }
+    ]
+}

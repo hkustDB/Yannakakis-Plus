@@ -1,0 +1,13 @@
+create or replace view semiUp1649641234430710721 as select id as v12, title as v13 from title AS t where (id) in (select (movie_id) from movie_info AS mi where info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German')) and production_year>2005;
+create or replace view semiUp4116412826487552741 as select movie_id as v12, keyword_id as v1 from movie_keyword AS mk where (keyword_id) in (select (id) from keyword AS k where keyword LIKE '%sequel%');
+create or replace view semiUp2958106188325501775 as select v12, v1 from semiUp4116412826487552741 where (v12) in (select (v12) from semiUp1649641234430710721);
+create or replace view semiDown7601533247947972916 as select id as v1 from keyword AS k where (id) in (select (v1) from semiUp2958106188325501775) and keyword LIKE '%sequel%';
+create or replace view semiDown3145871702238756975 as select v12, v13 from semiUp1649641234430710721 where (v12) in (select (v12) from semiUp2958106188325501775);
+create or replace view semiDown3765431733020799128 as select movie_id as v12 from movie_info AS mi where (movie_id) in (select (v12) from semiDown3145871702238756975) and info IN ('Sweden','Norway','Germany','Denmark','Swedish','Denish','Norwegian','German');
+create or replace view aggView1305660076324737133 as select v12 from semiDown3765431733020799128 group by v12;
+create or replace view aggJoin8286652169424652582 as select v12, v13 from semiDown3145871702238756975 join aggView1305660076324737133 using(v12);
+create or replace view aggView5576821195735016642 as select v1 from semiDown7601533247947972916;
+create or replace view aggJoin769155040078667795 as select v12 from semiUp2958106188325501775 join aggView5576821195735016642 using(v1);
+create or replace view aggView596999871616155576 as select v12, MIN(v13) as v24 from aggJoin8286652169424652582 group by v12;
+create or replace view aggJoin3531471483006654470 as select v24 from aggJoin769155040078667795 join aggView596999871616155576 using(v12);
+select MIN(v24) as v24 from aggJoin3531471483006654470;
