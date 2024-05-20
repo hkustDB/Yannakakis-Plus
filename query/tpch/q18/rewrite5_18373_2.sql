@@ -6,4 +6,4 @@ select pg_prewarm('part');
 select pg_prewarm('supplier');
 select pg_prewarm('nation');
 COPY (
-select c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice, sum(l_sum) from bag1, q_new where o_orderkey = v1_orderkey group by c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice) TO '/dev/null' DELIMITER ',' CSV;
+select c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice, sum(l_sum) from bag1_new, l_agg where o_orderkey = l_orderkey group by c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice) TO '/dev/null' DELIMITER ',' CSV;
