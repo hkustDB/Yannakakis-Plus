@@ -217,16 +217,16 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
                 if alias not in groupBy: groupBy.append(alias)
 
         # TODO: Add output vars to root node
-        '''
+        
         setOutVars = set(childNode.cols) & set(outputVariables)
-        if len(setOutVars):
+        if len(setOutVars) and JT.fixRoot:
             for alias in setOutVars:
                 if alias not in selectAttrAlias:
                     selectAttr.append(childNode.col2vars[1][childNode.cols.index(alias)])
                     selectAttrAlias.append(alias)
                 if alias not in aggPass2Join: aggPass2Join.append(alias)
                 if alias not in groupBy: groupBy.append(alias)
-        '''
+        
     else:
         ## -1. joinKey
         for key in joinKey:
@@ -474,16 +474,16 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
                         selectAttrAlias.append(alias)
                     if alias not in aggPass2Join: aggPass2Join.append(alias)
                     if alias not in groupBy: groupBy.append(alias)
-            '''
+            
             setOutVars = set(childNode.JoinResView.selectAttrAlias) & set(outputVariables)
-            if len(setOutVars):
+            if len(setOutVars) and JT.fixRoot:
                 for alias in setOutVars:
                     if alias not in selectAttrAlias:
                         selectAttr.append('')
                         selectAttrAlias.append(alias)
                     if alias not in aggPass2Join: aggPass2Join.append(alias)
                     if alias not in groupBy: groupBy.append(alias)
-            '''
+            
         else:
             setExtraCond: set[str] = set(childNode.JoinResView.selectAttrAlias) & JT.extraCondList.allAlias
             if len(setExtraCond):
@@ -493,16 +493,16 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
                         selectAttrAlias.append(alias)
                     if alias not in aggPass2Join: aggPass2Join.append(alias)
                     if alias not in groupBy: groupBy.append(alias)
-            '''
+            
             setOutVars = set(childNode.JoinResView.selectAttrAlias) & set(outputVariables)
-            if len(setOutVars):
+            if len(setOutVars) and JT.fixRoot:
                 for alias in setOutVars:
                     if alias not in selectAttrAlias:
                         selectAttr.append(childNode.col2vars[1][childNode.cols.index(alias)])
                         selectAttrAlias.append(alias)
                     if alias not in aggPass2Join: aggPass2Join.append(alias)
                     if alias not in groupBy: groupBy.append(alias)
-            '''
+            
     
     ## d. append annot
     # NOTE: Extra optimization for job benchmark
@@ -662,7 +662,9 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
                     selectAttr.append('')
                     selectAttrAlias.append(agg)
         else:
-            selectAttrAlias.extend(aggPass2Join)
+            for agg in aggPass2Join:
+                if agg not in selectAttrAlias:
+                    selectAttrAlias.append(agg)
 
     elif parentNode.relationType != RelationType.TableScanRelation:
         selectAttrAlias = parentNode.cols.copy()
@@ -757,7 +759,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
                     extraEqualWhere.append(eachExtra.cond)
                 else:
                     raise NotImplementedError("ExtraEqualCond not in 'a=b' case! ")
-            
+    
     aggJoin = AggJoin(viewName, selectAttr, selectAttrAlias, fromTable, joinTable, joinKey, usingJoinKey, joinCondList + addiSelfComp + condComp + extraEqualWhere)
     if fromTable == '' and len(aggJoin.whereCondList) == 0:
         aggJoin.viewName = aggView.viewName
@@ -779,8 +781,10 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
         aggs = []
         if node.parent:
             # For auxi->support, no aggregation process
+            '''
             if node.parent.relationType == RelationType.AuxiliaryRelation and node.parent.supRelationId == node.id:
                 return []
+            '''
             joinKeys = set(node.reserve) & set(node.parent.cols)
             if node.JoinResView:
                 satisKeys = [alias for alias in node.JoinResView.selectAttrAlias if alias not in joinKeys]
