@@ -1,0 +1,32 @@
+Relations:
+dict_values([an[2263301,aka_name, 2091100.0]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+['v2', 'v3']
+, ci[2263302,cast_info, 100.0]: ['v9', 'v2', 'v11', 'v12', 'v13', 'v14', 'v15']
+['v2']
+, cn[2263303,company_name, 675200]: ['v25', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22']
+['v25']
+, mc[2263304,movie_companies, 856900.0]: ['v23', 'v11', 'v25', 'v26', 'v27']
+['v11']
+, n[2263305,name, 2091100]: ['v2', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36']
+['v2']
+, rt[2263306,role_type, 100]: ['v15', 'v38']
+['v15']
+, t[2263307,title, 935.9182399750351]: ['v11', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50']
+['v40', 'v11']
+, anAux13[2263362,an, 787900.0]: ['v2', 'v3']
+[]
+, tAux82[2263370,t, 700]: ['v11', 'v40']
+['v11']
+])
+Edges:
+dict_values([tAux82->t, anAux13->an, an->n, ci->rt, ci->tAux82, t->mc, mc->cn, anAux13->ci])
+Root:
+2263362
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

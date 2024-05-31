@@ -1,0 +1,26 @@
+Relations:
+dict_values([part[756607,part, 79591]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']
+['v1']
+, supplier[756608,supplier, 1000000.0]: ['v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
+['v10']
+, partsupp[756609,partsupp, 79591.0]: ['v1', 'v10', 'v19', 'v20', 'v21']
+[]
+, nation[756610,nation, 5.0]: ['v13', 'v23', 'v24', 'v25']
+['v13']
+, region[756611,region, 1]: ['v24', 'v27', 'v28']
+['v24']
+, q2_inner[756612,q2_inner, 11829402]: ['v1', 'v20']
+['v1', 'v20']
+])
+Edges:
+dict_values([partsupp->q2_inner, nation->region, partsupp->supplier, supplier->nation, partsupp->part])
+Root:
+756609
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[]
+fixroot:
+False

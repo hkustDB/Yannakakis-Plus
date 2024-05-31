@@ -1,0 +1,58 @@
+{
+    "relation": "it2",
+    "children": [
+        {
+            "relation": "n",
+            "children": [
+                {
+                    "relation": "ci",
+                    "children": [
+                        {
+                            "relation": "mi_idx",
+                            "children": [
+                                {
+                                    "relation": "cct2",
+                                    "children": [
+                                        {
+                                            "relation": "it1",
+                                            "children": [
+                                                {
+                                                    "relation": "mi",
+                                                    "children": [
+                                                        {
+                                                            "relation": "cc",
+                                                            "children": [
+                                                                {
+                                                                    "relation": "cct1",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "relation": "t",
+                                                                    "children": [
+                                                                        {
+                                                                            "relation": "mk",
+                                                                            "children": [
+                                                                                {
+                                                                                    "relation": "k",
+                                                                                    "children": []
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

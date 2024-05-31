@@ -49,7 +49,7 @@ do
 
                 echo "Start DuckDB Task at ${QUERY}"
                 current_task=1
-                while [[ ${current_task} -le 3 ]]
+                while [[ ${current_task} -le 1 ]]
                 do
                     echo "Current Task: ${current_task}"
                     OUT_FILE="${CUR_PATH}/output.txt"
@@ -57,9 +57,9 @@ do
                     touch $OUT_FILE
                     if [ $OPT -eq 1 ]
                     then
-                        timeout -s SIGKILL 20m ${mysql} ${mysql1_config} < "${QUERY}" | grep "row in set" >> $OUT_FILE
+                        timeout -s SIGKILL 8h ${mysql} ${mysql1_config} < "${QUERY}" | grep "row in set" | tail -n 1 >> $OUT_FILE
                     else
-                        timeout -s SIGKILL 20m ${mysql} ${mysql4_config} < "${QUERY}" | grep "row in set" >> $OUT_FILE
+                        timeout -s SIGKILL 8h ${mysql} ${mysql4_config} < "${QUERY}" | grep "row in set" | tail -n 1 >> $OUT_FILE
                     fi
                     status_code=$?
                     if [[ ${status_code} -eq 137 ]]; then

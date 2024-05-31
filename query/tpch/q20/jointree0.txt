@@ -1,0 +1,24 @@
+Relations:
+dict_values([partsupp[757133,partsupp, 0]: ['v1', 'v2', 'v3', 'v4', 'v5']
+None
+, q20_inner1[757134,q20_inner1, 0]: ['v1']
+None
+, q20_inner2[757135,q20_inner2, 1]: ['v7']
+[]
+, bag757137[757137,['partsupp', 'q20_inner1'], 17377760000000]: ['v1', 'v2', 'v3', 'v4', 'v5']
+['v2']
+, bag757137Aux54[757138,bag757137, 1.0]: ['v2']
+[]
+])
+Edges:
+dict_values([bag757137Aux54->q20_inner2, bag757137Aux54->bag757137])
+Root:
+757138
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[757138]
+fixroot:
+False

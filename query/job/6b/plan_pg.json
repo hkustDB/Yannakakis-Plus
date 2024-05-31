@@ -1,0 +1,23 @@
+{
+    "relation": "ci",
+    "children": [
+        {
+            "relation": "n",
+            "children": []
+        },
+        {
+            "relation": "t",
+            "children": [
+                {
+                    "relation": "mk",
+                    "children": [
+                        {
+                            "relation": "k",
+                            "children": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

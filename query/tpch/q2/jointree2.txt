@@ -1,23 +1,32 @@
 Relations:
-dict_values([part[10983,part, 79591]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']
-, supplier[10984,supplier, 25.0]: ['v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
-, partsupp[10985,partsupp, 80000000]: ['v1', 'v10', 'v19', 'v20', 'v21']
-, nation[10986,nation, 5.0]: ['v13', 'v23', 'v24', 'v25']
-, region[10987,region, 1]: ['v24', 'v27', 'v28']
-, q2_inner[10988,q2_inner, 11829402]: ['v1', 'v20']
-, nationAux54[10994,nation, 25]: ['v13', 'v23']
-, partAux3[10997,part, 79591]: ['v1', 'v3']
-, partsuppAux22[11003,partsupp, 79591.0]: ['v1', 'v10', 'v20']
+dict_values([part[39,part, 79591]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']
+['v1', 'v3']
+, supplier[40,supplier, 1000000.0]: ['v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
+['v10']
+, partsupp[41,partsupp, 80000000]: ['v1', 'v10', 'v19', 'v20', 'v21']
+['v20', 'v10', 'v1']
+, nation[42,nation, 5.0]: ['v13', 'v23', 'v24', 'v25']
+['v23', 'v13']
+, region[43,region, 1]: ['v24', 'v27', 'v28']
+['v24']
+, q2_inner[44,q2_inner, 11829402]: ['v1', 'v20']
+['v1', 'v20']
+, nationAux89[50,nation, 25]: ['v13', 'v23']
+['v13']
+, partsuppAux52[53,partsupp, 946352160.0]: ['v1', 'v10', 'v20']
+['v1']
+, partAux36[59,part, 941513.934582]: ['v1', 'v3']
+[]
 ])
 Edges:
-dict_values([nationAux54->nation, partsuppAux22->partAux3, nation->region, partsuppAux22->partsupp, partAux3->part, supplier->nationAux54, partsuppAux22->q2_inner, supplier->partsuppAux22])
+dict_values([nationAux89->nation, partsuppAux52->q2_inner, partAux36->partsuppAux52, partsuppAux52->supplier, nation->region, partAux36->part, partsuppAux52->partsupp, supplier->nationAux89])
 Root:
-10984
+59
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[10997, 11003, 10984, 10994, 10988]
+[53, 44, 59, 50, 40]
 fixroot:
 False

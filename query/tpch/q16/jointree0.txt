@@ -1,17 +1,20 @@
 Relations:
-dict_values([partsupp[11114,partsupp, 80000000]: ['v6', 'v2', 'v3', 'v4', 'v5']
-, part[11115,part, 2971749.0]: ['v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14']
-, partAux95[11118,part, 2971749]: ['v9', 'v10', 'v11']
+dict_values([partsupp[2267780,partsupp, 80000000]: ['v6', 'v2', 'v3', 'v4', 'v5']
+['v6']
+, part[2267781,part, 2971749.0]: ['v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14']
+['v9', 'v11', 'v10']
+, partAux46[2267784,part, 2971749]: ['v9', 'v10', 'v11']
+[]
 ])
 Edges:
-dict_values([part->partsupp, partAux95->part])
+dict_values([part->partsupp, partAux46->part])
 Root:
-11118
+2267784
 isFull:
 False
 isFreeConnex:
 True
 subset:
-[11118]
+[2267784]
 fixroot:
 False
