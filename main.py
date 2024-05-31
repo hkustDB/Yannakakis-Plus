@@ -176,7 +176,8 @@ def connect(base: int, mode: int, type: GenType):
     try:
         json_file = open(BASE_PATH + globalVar.get_value('PLAN_NAME'))
         plan = json.load(json_file)
-        body['plan'] = plan
+        if globalVar.get_value("GEN_TYPE") != 'PG':
+            body['plan'] = plan
     except IOError:
         pass
     try:
@@ -205,7 +206,7 @@ def connect(base: int, mode: int, type: GenType):
         supId = set()
         nodes, edges, root, subset, comparisons, extraConditions, fixRoot = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraConditions'], jt['fixRoot']
         # FIXME: ERROR only for testing
-        fixRoot = True
+        # fixRoot = True
         
         # a. parse relations
         for node in nodes:
@@ -335,18 +336,18 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
 
 
 if __name__ == '__main__':
-    base, mode, type = 2, 0, GenType.DuckDB
+    base, mode, type = 2, 0, GenType.PG
     globalVar._init()
     globalVar.set_value('QUERY_NAME', 'query.sql')
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.csv')
     globalVar.set_value('PLAN_NAME', 'plan.json')
-    globalVar.set_value('GEN_TYPE', 'DuckDB')
+    globalVar.set_value('GEN_TYPE', 'PG')
     globalVar.set_value('YANNA', False)
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/tpch/q18/')
-    globalVar.set_value('DDL_NAME', "tpch.ddl")
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/graph/q1/')
+    globalVar.set_value('DDL_NAME', "graph.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
     '''
@@ -357,9 +358,16 @@ if __name__ == '__main__':
     mode=int(arguments['--mode'])
     yanna=True if arguments['--yanna'] == 'Y' else False
     globalVar.set_value('YANNA', yanna)
-    type=GenType.Mysql if arguments['--genType'] == 'M' else GenType.DuckDB
+    if arguments['--genType'] == 'M':
+        type=GenType.Mysql
+    elif arguments['--genType'] == 'D':
+        type=GenType.DuckDB
+    else:
+        type=GenType.PG
     if type == GenType.Mysql:
         globalVar.set_value('GEN_TYPE', 'Mysql')
+    elif type == GenType.PG:
+        globalVar.set_value('GEN_TYPE', 'PG')
     else:
         globalVar.set_value('GEN_TYPE', 'DuckDB')
     '''

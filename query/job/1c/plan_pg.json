@@ -1,0 +1,22 @@
+{
+    "relation": "mc",
+    "children": [
+        {
+            "relation": "t",
+            "children": []
+        },
+        {
+            "relation": "mi_idx",
+            "children": [
+                {
+                    "relation": "it",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "relation": "ct",
+            "children": []
+        }
+    ]
+}

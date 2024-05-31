@@ -1,0 +1,39 @@
+{
+    "relation": "ml",
+    "children": [
+        {
+            "relation": "lt",
+            "children": []
+        },
+        {
+            "relation": "an",
+            "children": [
+                {
+                    "relation": "t",
+                    "children": [
+                        {
+                            "relation": "ci",
+                            "children": [
+                                {
+                                    "relation": "n",
+                                    "children": [
+                                        {
+                                            "relation": "pi",
+                                            "children": [
+                                                {
+                                                    "relation": "it",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

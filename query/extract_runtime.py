@@ -25,6 +25,8 @@ if __name__ == "__main__":
                                     base_time_list.append(float(line.split(' ')[4][1:]))
                             elif line.startswith('Exec time'):
                                 base_time_list.append(float(line.split(' ')[2]))
+                            elif line.startswith('Time'):
+                                base_time_list.append(round(float(line.split(' ')[1]) / 1000, 2))
                         base_time_list.sort()
                         if len(base_time_list) >= 2:
                             base_time = base_time_list[1]
@@ -44,6 +46,8 @@ if __name__ == "__main__":
                                     rewrite_time_list.append([file_index, float(line.split(' ')[4][1:])])
                             elif line.startswith('Exec time'):
                                 rewrite_time_list.append([file_index, float(line.split(' ')[2])])
+                            elif line.startswith('Time'):
+                                rewrite_time_list.append([file_index, round(float(line.split(' ')[1]) / 1000, 2)])
                         rewrite_time_list.sort(key=lambda x: x[1])
                         if len(rewrite_time_list) >= 2:
                             rewrite_time.append(rewrite_time_list[1])
@@ -52,8 +56,8 @@ if __name__ == "__main__":
                         rewrite_file.close()
             rewrite_time.sort(key=lambda x: x[1])
             runtime_staistics = open(os.path.join(sub_path, 'log_overall.txt'), 'w')
-            if base_time != -1:
-                runtime_staistics.write('base_time: ' + str(base_time) + '\n')
+            """if base_time != -1:
+                runtime_staistics.write('base_time: ' + str(base_time) + '\n')"""
             if len(rewrite_time) != 0:
                 mean = statistics.mean([x[1] for x in rewrite_time])
                 min, max = rewrite_time[0][1], rewrite_time[-1][1]
@@ -62,8 +66,8 @@ if __name__ == "__main__":
                 except:
                     variance = -1
                 median = statistics.median([x[1] for x in rewrite_time])
-                runtime_staistics.write('min max mean variance\n')
-                runtime_staistics.write(str(min) + ' ' + str(max) + ' ' + str(round(mean, 2)) + ' ' + str(round(variance, 2)) + '\n')
+                runtime_staistics.write('base min max mean variance\n')
+                runtime_staistics.write(str(base_time) + ' ' + str(min) + ' ' + str(max) + ' ' + str(round(mean, 2)) + ' ' + str(round(variance, 2)) + '\n')
                 runtime_staistics.write('sorted time: \n')
                 runtime_staistics.write('\n'.join([str(x) for x in rewrite_time]))
             

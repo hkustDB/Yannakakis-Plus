@@ -1,26 +1,26 @@
 Relations:
-dict_values([g2[15270,Graph, 4290865.126017136]: ['v2', 'v4']
+dict_values([g2[4606412,Graph, 4290865.126017136]: ['v2', 'v4']
 ['v4']
-, c1[15272,Graph, 0]: ['v7', 'v8']
+, c1[4606414,Graph, 0]: ['v7', 'v8']
 None
-, c2[15273,Graph, 0]: ['v6', 'v10']
+, c2[4606415,Graph, 0]: ['v6', 'v10']
 None
-, g1[15274,Graph, 508837]: ['v7', 'v2', 'v8']
+, g1[4606416,Graph, 508837]: ['v7', 'v2', 'v8']
 ['v2']
-, g3[15275,Graph, 508837]: ['v4', 'v6', 'v10']
+, g3[4606417,Graph, 508837]: ['v4', 'v6', 'v10']
 ['v4', 'v6']
-, g3Aux5[15279,g3, 36183539.18773605]: ['v4', 'v6']
+, g3Aux52[4606421,g3, 36183539.18773605]: ['v4', 'v6']
 []
 ])
 Edges:
-dict_values([g3Aux5->g3, g2->g1, g3Aux5->g2])
+dict_values([g3Aux52->g3, g2->g1, g3Aux52->g2])
 Root:
-15279
+4606421
 isFull:
 False
 isFreeConnex:
 True
 subset:
-[15279]
+[4606421]
 fixroot:
 False

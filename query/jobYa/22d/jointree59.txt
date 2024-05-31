@@ -1,0 +1,42 @@
+Relations:
+dict_values([cn[2025436,company_name, 12623000]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+['v2', 'v1']
+, ct[2025437,company_type, 400]: ['v8', 'v9']
+['v8']
+, it1[2025438,info_type, 100]: ['v10', 'v11']
+['v10']
+, it2[2025439,info_type, 100]: ['v12', 'v13']
+['v12']
+, k[2025440,keyword, 300]: ['v14', 'v15', 'v16']
+['v14']
+, kt[2025441,kind_type, 200]: ['v17', 'v18']
+['v17']
+, mc[2025442,movie_companies, 400.0]: ['v19', 'v37', 'v1', 'v8', 'v23']
+['v1']
+, mi[2025443,movie_info, 8952625.0]: ['v24', 'v37', 'v10', 'v27', 'v28']
+['v37']
+, mi_idx[2025444,movie_info_idx, 100.0]: ['v29', 'v37', 'v12', 'v32', 'v33']
+['v37', 'v32']
+, mk[2025445,movie_keyword, 300.0]: ['v34', 'v37', 'v14']
+['v37']
+, t[2025446,title, 200.0]: ['v37', 'v38', 'v39', 'v17', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48']
+['v37', 'v38']
+, mi_idxAux38[2026311,mi_idx, 133763400]: ['v37', 'v32']
+['v37']
+, cnAux47[2026374,cn, 12623000.0]: ['v1', 'v2']
+[]
+, tAux15[2026446,t, 101292000]: ['v37', 'v38']
+['v37']
+])
+Edges:
+dict_values([cnAux47->mc, mk->k, t->mi, mc->tAux15, mi->it1, mi_idx->mk, mc->mi_idxAux38, cnAux47->cn, mi_idx->it2, t->kt, mc->ct, tAux15->t, mi_idxAux38->mi_idx])
+Root:
+2026374
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

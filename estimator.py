@@ -121,13 +121,16 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
                 except:
                     # bag
                     cardi, ndv = 1, 1
-                    for source in eval(node.source):
-                        if not hasAlias:
-                            cardi *= statistics[source][0][0]
-                            ndv *= statistics[source][0][1]
-                        else:
-                            cardi *= statistics[re.sub(r'[0-9]+', '', source)][0][0]
-                            ndv *= statistics[re.sub(r'[0-9]+', '', source)][0][1]
+                    try:
+                        for source in eval(node.source):
+                            if not hasAlias:
+                                cardi *= statistics[source][0][0]
+                                ndv *= statistics[source][0][1]
+                            else:
+                                cardi *= statistics[re.sub(r'[0-9]+', '', source)][0][0]
+                                ndv *= statistics[re.sub(r'[0-9]+', '', source)][0][1]
+                    except:
+                        pass
                     staP = [cardi, ndv]
             else:
                 staP = [1, 1]
@@ -242,10 +245,13 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
         nodeId = node.id
         jt.node[nodeId] = node
 
-    cost_estimate = -0.000000173953612 * join_cost + 0.000000151063199 * view_cost + 3.969433084056
+    if globalVar.get_value("GEN_TYPE") == 'PG':
+        cost_estimate = 2.89609637e-15 * join_cost * join_cost + 1.79049317e-13 * join_cost * view_cost + 3.54478511e-13 * view_cost * view_cost -3.33057118e-05 * join_cost - 4.07431212e-04 * view_cost + 5.57805967e+04
+    else:
+        cost_estimate = -3.62801400e-16 * join_cost * join_cost - 5.57463461e-15 * join_cost * view_cost - 7.24507109e-17 * view_cost * view_cost + 2.04620900e-07 * join_cost + 1.95467585e-07 * view_cost + 2.84751260e+00
     
     if cost_estimate < 0:
-        cost_estimate = 0.000000261898682 * join_cost + 0.000000124901126 * view_cost
+        cost_estimate = -9.01243445e-16 * join_cost * join_cost -1.88488717e-16 * join_cost * view_cost -6.45029976e-17 * view_cost * view_cost + 4.51001301e-07 * join_cost + 1.67076939e-07 * view_cost + 1.53898109e+00
 
     return cost_height, cost_fanout, cost_estimate
 

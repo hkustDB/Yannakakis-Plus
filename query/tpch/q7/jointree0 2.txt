@@ -1,0 +1,30 @@
+Relations:
+dict_values([supplier[756812,supplier, 40000.0]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+['v1']
+, lineitem[756813,lineitem, 182301190.0]: ['v24', 'v9', 'v1', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23']
+['v24']
+, orders[756814,orders, 182301190.0]: ['v24', 'v33', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32']
+['v33']
+, customer[756815,customer, 182301190.0]: ['v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39', 'v40']
+['v36']
+, n1[756816,nation, 1]: ['v4', 'v42', 'v43', 'v44']
+['v4', 'v42']
+, n2[756817,nation, 1]: ['v36', 'v46', 'v47', 'v48']
+['v36', 'v46']
+, n2Aux19[756823,n2, 7292047.6]: ['v36', 'v46']
+[]
+, n1Aux25[756825,n1, 1]: ['v4', 'v42']
+['v4']
+])
+Edges:
+dict_values([n2Aux19->customer, lineitem->supplier, customer->orders, n2Aux19->n2, supplier->n1Aux25, n1Aux25->n1, orders->lineitem])
+Root:
+756823
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[756814, 756825, 756813, 756812, 756823, 756815]
+fixroot:
+False

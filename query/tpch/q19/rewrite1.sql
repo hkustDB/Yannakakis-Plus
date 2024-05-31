@@ -1,3 +1,3 @@
-create or replace view aggView9069880025256164022 as select p_partkey as v17 from part as part where p_brand= 'Brand#34' and p_size>=1 and p_container IN ('LG CASE','LG BOX','LG PACK','LG PKG') and p_size<=15;
-create or replace view aggJoin3860003848381179901 as select l_extendedprice as v6, l_discount as v7 from lineitem as lineitem, aggView9069880025256164022 where lineitem.l_partkey=aggView9069880025256164022.v17 and l_quantity>=21 and l_shipinstruct= 'DELIVER IN PERSON' and l_quantity<=21 + 10 and l_shipmode IN ('AIR','AIR REG');
-select SUM((v6 * (1 - v7))) as v27 from aggJoin3860003848381179901;
+create or replace view aggView4498648271316713554 as select p_partkey as v17 from part as part where p_brand= 'Brand#34' and p_size>=1 and p_container IN ('LG CASE','LG BOX','LG PACK','LG PKG') and p_size<=15;
+create or replace view aggJoin8329298655178403841 as select l_extendedprice as v6, l_discount as v7 from lineitem as lineitem, aggView4498648271316713554 where lineitem.l_partkey=aggView4498648271316713554.v17 and l_quantity>=21 and l_shipinstruct= 'DELIVER IN PERSON' and l_quantity<=21 + 10 and l_shipmode IN ('AIR','AIR REG');
+select SUM((v6 * (1 - v7))) as v27 from aggJoin8329298655178403841;

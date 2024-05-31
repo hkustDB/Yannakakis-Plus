@@ -1,12 +1,15 @@
 Relations:
-dict_values([lineitem[10825,lineitem, 600037902.0]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
-, part[10826,part, 20000000]: ['v2', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25']
-, lineitemAux42[10829,lineitem, 600037902]: ['v6', 'v7']
+dict_values([lineitem[202,lineitem, 600037902.0]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
+['v7', 'v6']
+, part[203,part, 20000000]: ['v2', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25']
+['v2']
+, lineitemAux88[206,lineitem, 600037902]: ['v6', 'v7']
+[]
 ])
 Edges:
-dict_values([lineitem->part, lineitemAux42->lineitem])
+dict_values([lineitem->part, lineitemAux88->lineitem])
 Root:
-10829
+206
 isFull:
 False
 isFreeConnex:

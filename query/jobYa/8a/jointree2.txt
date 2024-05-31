@@ -1,0 +1,28 @@
+Relations:
+dict_values([an1[1888717,aka_name, 90134300]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+['v2']
+, ci[1888718,cast_info, 100.0]: ['v9', 'v2', 'v11', 'v12', 'v13', 'v14', 'v15']
+['v11']
+, cn[1888719,company_name, 675200]: ['v25', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22']
+['v25']
+, mc[1888720,movie_companies, 4889700.0]: ['v23', 'v11', 'v25', 'v26', 'v27']
+['v11']
+, n1[1888721,name, 2091100.0]: ['v2', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34', 'v35', 'v36']
+['v2']
+, rt[1888722,role_type, 100]: ['v15', 'v38']
+['v15']
+, t[1888723,title, 1105400.0]: ['v11', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50']
+[]
+])
+Edges:
+dict_values([t->ci, n1->an1, ci->rt, t->mc, ci->n1, mc->cn])
+Root:
+1888723
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[1888723]
+fixroot:
+True

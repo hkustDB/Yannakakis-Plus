@@ -1,4 +1,4 @@
-create or replace view aggView5511426168333583139 as select o_orderkey as v1, CASE WHEN (o_orderpriority IN ('1-URGENT','2-HIGH')) THEN 1 ELSE 0 END as v28, CASE WHEN (o_orderpriority NOT IN ('1-URGENT','2-HIGH')) THEN 1 ELSE 0 END as v29 from orders as orders;
-create or replace view aggJoin8154801201660817806 as select l_shipdate as v20, l_commitdate as v21, l_receiptdate as v22, l_shipmode as v24, v28, v29 from lineitem as lineitem, aggView5511426168333583139 where lineitem.l_orderkey=aggView5511426168333583139.v1 and l_shipmode IN ('MAIL','SHIP') and l_receiptdate>=DATE '1994-01-01' and l_shipdate<l_commitdate and l_receiptdate<DATE '1995-01-01' and l_commitdate<l_receiptdate;
-create or replace view aggView280855147917201819 as select v24, SUM(v28) as v28, SUM(v29) as v29 from aggJoin8154801201660817806;
-select v24,v28,v29 from aggView280855147917201819;
+create or replace view aggView7512387707647510660 as select o_orderkey as v1, CASE WHEN (o_orderpriority IN ('1-URGENT','2-HIGH')) THEN 1 ELSE 0 END as v28, CASE WHEN (o_orderpriority NOT IN ('1-URGENT','2-HIGH')) THEN 1 ELSE 0 END as v29 from orders as orders;
+create or replace view aggJoin6116226884291144436 as select l_shipdate as v20, l_commitdate as v21, l_receiptdate as v22, l_shipmode as v24, v28, v29 from lineitem as lineitem, aggView7512387707647510660 where lineitem.l_orderkey=aggView7512387707647510660.v1 and l_shipmode IN ('MAIL','SHIP') and l_receiptdate>=DATE '1994-01-01' and l_shipdate<l_commitdate and l_receiptdate<DATE '1995-01-01' and l_commitdate<l_receiptdate;
+create or replace view aggView278496334502497981 as select v24, SUM(v28) as v28, SUM(v29) as v29 from aggJoin6116226884291144436 group by v24;
+select v24,v28,v29 from aggView278496334502497981;

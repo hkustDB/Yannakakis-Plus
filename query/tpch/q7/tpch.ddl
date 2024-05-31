@@ -114,3 +114,27 @@ CREATE TABLE lineitem
 ) WITH (
         'cardinality' = '600037902'
 );
+
+CREATE TABLE lineitemwithyear
+(
+    l_orderkey      INTEGER,
+    l_year          INTEGER,
+    l_partkey       INTEGER,
+    l_suppkey       INTEGER,
+    l_linenumber    INTEGER,
+    l_quantity      DECIMAL,
+    l_extendedprice DECIMAL,
+    l_discount      DECIMAL,
+    l_tax           DECIMAL,
+    l_returnflag    VARCHAR,
+    l_linestatus    VARCHAR,
+    l_shipdate      DATE,
+    l_commitdate    DATE,
+    l_receiptdate   DATE,
+    l_shipinstruct  VARCHAR,
+    l_shipmode      VARCHAR,
+    l_comment       VARCHAR,
+    PRIMARY KEY (l_orderkey, l_linenumber)
+) WITH (
+        'cardinality' = '600037902'
+);

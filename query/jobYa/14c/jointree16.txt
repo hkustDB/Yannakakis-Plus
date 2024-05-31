@@ -1,0 +1,30 @@
+Relations:
+dict_values([it1[1889179,info_type, 100]: ['v1', 'v2']
+['v1']
+, it2[1889180,info_type, 100]: ['v3', 'v4']
+['v3']
+, k[1889181,keyword, 300]: ['v5', 'v6', 'v7']
+['v5']
+, kt[1889182,kind_type, 200]: ['v8', 'v9']
+['v8']
+, mi[1889183,movie_info, 100.0]: ['v10', 'v23', 'v1', 'v13', 'v14']
+['v23']
+, mi_idx[1889184,movie_info_idx, 26752680.0]: ['v15', 'v23', 'v3', 'v18', 'v19']
+['v23']
+, mk[1889185,movie_keyword, 200.0]: ['v20', 'v23', 'v5']
+[]
+, t[1889186,title, 112.38104204423314]: ['v23', 'v24', 'v25', 'v8', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33', 'v34']
+['v23']
+])
+Edges:
+dict_values([t->mi, mk->k, t->kt, mi_idx->it2, mk->t, mi->mi_idx, mi->it1])
+Root:
+1889185
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[1889185]
+fixroot:
+True
