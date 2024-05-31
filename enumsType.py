@@ -97,6 +97,7 @@ class IRType(Enum):
 class GenType(Enum):
     DuckDB = 0
     Mysql = 1
+    PG = 2
     
 class EdgeType(Enum):
     Child = 0

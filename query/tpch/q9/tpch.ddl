@@ -32,7 +32,7 @@ CREATE TABLE part
     p_comment     VARCHAR,
     PRIMARY KEY (p_partkey)
 ) WITH (
-        'cardinality' = '20000000'
+        'cardinality' = '79591'
 );
 
 CREATE TABLE supplier
@@ -92,6 +92,23 @@ CREATE TABLE orders
         'cardinality' = '150000000'
 );
 
+CREATE TABLE orderswithyear
+(
+    o_orderkey      INTEGER,
+    o_year	    INTEGER,
+    o_custkey       INTEGER,
+    o_orderstatus   VARCHAR,
+    o_totalprice    DECIMAL,
+    o_orderdate     DATE,
+    o_orderpriority VARCHAR,
+    o_clerk         VARCHAR,
+    o_shippriority  INTEGER,
+    o_comment       VARCHAR,
+    PRIMARY KEY (o_orderkey)
+) WITH (
+        'cardinality' = '150000000'
+);
+
 CREATE TABLE lineitem
 (
     l_orderkey      INTEGER,
@@ -113,4 +130,13 @@ CREATE TABLE lineitem
     PRIMARY KEY (l_orderkey, l_linenumber)
 ) WITH (
         'cardinality' = '600037902'
+);
+
+
+CREATE TABLE q2_inner
+(
+    v1_partkey        INTEGER,
+    v1_supplycost_min DECIMAL
+) WITH (
+        'cardinality' = '11829402'
 );

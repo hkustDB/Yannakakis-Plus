@@ -1,9 +1,9 @@
-create or replace view aggView4046107101686568695 as select c_name as v2, c_custkey as v1 from customer as customer;
-create or replace view aggView4401784617354897043 as select o_orderdate as v13, o_custkey as v1, o_totalprice as v12, o_orderkey as v9 from orders as orders;
-create or replace view aggView3854742481428702795 as select l_orderkey as v9, SUM(l_quantity) as v35, COUNT(*) as annot from lineitem as lineitem group by l_orderkey;
-create or replace view aggJoin2937730713494147008 as select v13, v1, v12, v9, v35, annot from aggView4401784617354897043 join aggView3854742481428702795 using(v9);
-create or replace view semiJoinView2844872778864589580 as select v13, v1, v12, v9, v35, annot from aggJoin2937730713494147008 where (v1) in (select (v1) from aggView4046107101686568695);
-create or replace view semiJoinView4820422771128807642 as select distinct v13, v1, v12, v9, v35, annot from semiJoinView2844872778864589580 where (v9) in (select (v1_orderkey) from q18_inner AS q18_inner);
-create or replace view semiEnum8773018411232269976 as select distinct v13, v35, v1, v9, annot, v12 from semiJoinView4820422771128807642, q18_inner as q18_inner where q18_inner.v1_orderkey=semiJoinView4820422771128807642.v9;
-create or replace view semiEnum8421251718745389798 as select v2, v9, annot, v13, v35, v1, v12 from semiEnum8773018411232269976 join aggView4046107101686568695 using(v1);
-select v2,v1,v9,v13,v12,v35 from semiEnum8421251718745389798;
+create or replace view aggView4693375675154081903 as select c_name as v2, c_custkey as v1 from customer as customer;
+create or replace view aggView792166705002098357 as select o_orderkey as v9, o_totalprice as v12, o_custkey as v1, o_orderdate as v13 from orders as orders;
+create or replace view aggView7079201872044084586 as select v1_orderkey as v9 from q18_inner as q18_inner;
+create or replace view aggJoin3136623008274062297 as select v9, v12, v1, v13 from aggView792166705002098357 join aggView7079201872044084586 using(v9);
+create or replace view aggView9162133196332433852 as select v1, v2, COUNT(*) as annot from aggView4693375675154081903 group by v1,v2;
+create or replace view aggJoin1902298781990882624 as select v9, v12, v1, v13, v2, annot from aggJoin3136623008274062297 join aggView9162133196332433852 using(v1);
+create or replace view aggView3235459124632175424 as select l_orderkey as v9, SUM(l_quantity) as v35 from lineitem as lineitem group by l_orderkey,v9;
+create or replace view aggJoin1145322285844224090 as select v9, v12, v1, v13, v2, v35 * aggJoin1902298781990882624.annot as v35 from aggJoin1902298781990882624 join aggView3235459124632175424 using(v9);
+select v2,v1,v9,v13,v12,SUM(v35) as v35 from aggJoin1145322285844224090 group by v1, v2, v9, v12, v13;

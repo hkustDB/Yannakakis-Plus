@@ -1,0 +1,54 @@
+{
+    "relation": "cn",
+    "children": [
+        {
+            "relation": "ct",
+            "children": [
+                {
+                    "relation": "cc",
+                    "children": [
+                        {
+                            "relation": "cct2",
+                            "children": []
+                        },
+                        {
+                            "relation": "cct1",
+                            "children": []
+                        },
+                        {
+                            "relation": "ml",
+                            "children": [
+                                {
+                                    "relation": "mc",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "mi",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "lt",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "t",
+                                    "children": [
+                                        {
+                                            "relation": "mk",
+                                            "children": [
+                                                {
+                                                    "relation": "k",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

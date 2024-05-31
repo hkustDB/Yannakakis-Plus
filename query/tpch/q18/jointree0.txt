@@ -1,20 +1,26 @@
 Relations:
-dict_values([customer[11086,customer, 15000000]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
-, orders[11087,orders, 150000000]: ['v9', 'v1', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17']
-, lineitem[11088,lineitem, 600037902]: ['v9', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33']
-, q18_inner[11089,q18_inner, 4252.26859884]: ['v9']
-, customerAux14[11092,customer, 9999832.0]: ['v1', 'v2']
-, ordersAux38[11095,orders, 4252.26859884]: ['v9', 'v1', 'v12', 'v13']
+dict_values([customer[276,customer, 15000000]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+['v2', 'v1']
+, orders[277,orders, 150000000]: ['v9', 'v1', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17']
+['v13', 'v12', 'v9', 'v1']
+, lineitem[278,lineitem, 600037902]: ['v9', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33']
+['v9']
+, q18_inner[279,q18_inner, 4252.26859884]: ['v9']
+['v9']
+, customerAux39[282,customer, 9999832.0]: ['v1', 'v2']
+[]
+, ordersAux11[285,orders, 4252.26859884]: ['v9', 'v1', 'v12', 'v13']
+['v1']
 ])
 Edges:
-dict_values([ordersAux38->orders, q18_inner->lineitem, ordersAux38->q18_inner, customerAux14->ordersAux38, customerAux14->customer])
+dict_values([ordersAux11->q18_inner, customerAux39->customer, q18_inner->lineitem, customerAux39->ordersAux11, ordersAux11->orders])
 Root:
-11092
+282
 isFull:
 False
 isFreeConnex:
-True
-subset:
-[11089, 11092, 11095]
-fixroot:
 False
+subset:
+[282]
+fixroot:
+True

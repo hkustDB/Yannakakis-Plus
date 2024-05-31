@@ -1,0 +1,62 @@
+{
+    "relation": "it1",
+    "children": [
+        {
+            "relation": "k",
+            "children": [
+                {
+                    "relation": "mc",
+                    "children": [
+                        {
+                            "relation": "cn",
+                            "children": []
+                        },
+                        {
+                            "relation": "ct",
+                            "children": []
+                        },
+                        {
+                            "relation": "cc",
+                            "children": [
+                                {
+                                    "relation": "cct2",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "cct1",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "t",
+                                    "children": [
+                                        {
+                                            "relation": "mk",
+                                            "children": []
+                                        },
+                                        {
+                                            "relation": "mi",
+                                            "children": []
+                                        },
+                                        {
+                                            "relation": "kt",
+                                            "children": []
+                                        },
+                                        {
+                                            "relation": "mi_idx",
+                                            "children": [
+                                                {
+                                                    "relation": "it2",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
