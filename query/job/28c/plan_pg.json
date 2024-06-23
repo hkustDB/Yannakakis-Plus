@@ -1,44 +1,52 @@
 {
-    "relation": "cn",
+    "relation": "k",
     "children": [
         {
-            "relation": "cc",
+            "relation": "mk",
             "children": [
                 {
-                    "relation": "cct2",
-                    "children": []
-                },
-                {
-                    "relation": "cct1",
-                    "children": []
-                },
-                {
-                    "relation": "k",
+                    "relation": "it1",
                     "children": [
                         {
-                            "relation": "kt",
+                            "relation": "mi",
                             "children": [
                                 {
-                                    "relation": "mk",
+                                    "relation": "ct",
                                     "children": [
                                         {
-                                            "relation": "mc",
+                                            "relation": "cct2",
                                             "children": [
                                                 {
-                                                    "relation": "mi",
+                                                    "relation": "cct1",
                                                     "children": [
                                                         {
-                                                            "relation": "it1",
-                                                            "children": []
-                                                        },
-                                                        {
-                                                            "relation": "t",
+                                                            "relation": "cn",
                                                             "children": [
                                                                 {
-                                                                    "relation": "mi_idx",
+                                                                    "relation": "mc",
                                                                     "children": [
                                                                         {
-                                                                            "relation": "it2"
+                                                                            "relation": "t",
+                                                                            "children": [
+                                                                                {
+                                                                                    "relation": "kt",
+                                                                                    "children": []
+                                                                                },
+                                                                                {
+                                                                                    "relation": "cc",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "relation": "mi_idx",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "relation": "it2",
+                                                                                                    "children": []
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
                                                                         }
                                                                     ]
                                                                 }

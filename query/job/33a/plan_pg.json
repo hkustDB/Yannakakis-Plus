@@ -31,7 +31,7 @@
                                                             "relation": "t2",
                                                             "children": [
                                                                 {
-                                                                    "relation": "kt",
+                                                                    "relation": "kt2",
                                                                     "children": []
                                                                 }
                                                             ]

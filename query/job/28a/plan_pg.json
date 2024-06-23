@@ -1,47 +1,50 @@
 {
-    "relation": "cn",
+    "relation": "k",
     "children": [
         {
-            "relation": "cct2",
+            "relation": "mk",
             "children": [
                 {
-                    "relation": "k",
+                    "relation": "it1",
                     "children": [
                         {
-                            "relation": "mk",
+                            "relation": "mi",
                             "children": [
                                 {
                                     "relation": "ct",
                                     "children": [
                                         {
-                                            "relation": "mi",
+                                            "relation": "cct2",
                                             "children": [
                                                 {
-                                                    "relation": "it1",
-                                                    "children": []
-                                                },
-                                                {
-                                                    "relation": "t",
+                                                    "relation": "cct1",
                                                     "children": [
                                                         {
-                                                            "relation": "kt",
-                                                            "children": []
-                                                        },
-                                                        {
-                                                            "relation": "cct1",
+                                                            "relation": "cn",
                                                             "children": [
                                                                 {
-                                                                    "relation": "cc",
+                                                                    "relation": "mc",
                                                                     "children": [
                                                                         {
-                                                                            "relation": "mi_idx",
+                                                                            "relation": "t",
                                                                             "children": [
                                                                                 {
-                                                                                    "relation": "mc",
+                                                                                    "relation": "kt",
                                                                                     "children": []
                                                                                 },
                                                                                 {
-                                                                                    "relation": "it2"
+                                                                                    "relation": "cc",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "relation": "mi_idx",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "relation": "it2",
+                                                                                                    "children": []
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
                                                                                 }
                                                                             ]
                                                                         }

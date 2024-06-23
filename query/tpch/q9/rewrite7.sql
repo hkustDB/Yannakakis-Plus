@@ -1,0 +1,12 @@
+create or replace view aggView1399268243303470379 as select n_nationkey as v13, n_name as v49 from nation as nation;
+create or replace view aggJoin7776283093957961327 as select s_suppkey as v10, v49 from supplier as supplier, aggView1399268243303470379 where supplier.s_nationkey=aggView1399268243303470379.v13;
+create or replace view aggView6709019205536107236 as select o_orderkey as v38, o_year as v39 from orderswithyear as orderswithyear;
+create or replace view aggJoin1314795381251412479 as select l_partkey as v33, l_suppkey as v10, l_quantity as v21, l_extendedprice as v22, l_discount as v23, v39 from lineitem as lineitem, aggView6709019205536107236 where lineitem.l_orderkey=aggView6709019205536107236.v38;
+create or replace view aggView6597584167759360938 as select ps_partkey as v33, ps_suppkey as v10, ps_supplycost as v36 from partsupp as partsupp;
+create or replace view aggJoin4341423128296324643 as select v33, v10, v21, v22, v23, v39, v36 from aggJoin1314795381251412479 join aggView6597584167759360938 using(v33,v10);
+create or replace view aggView933168960467681541 as select p_partkey as v33 from part as part where p_name LIKE '%green%';
+create or replace view aggJoin6342763861584856909 as select v10, v21, v22, v23, v39, v36 from aggJoin4341423128296324643 join aggView933168960467681541 using(v33);
+create or replace view aggView3546210889062599521 as select v10, v49, COUNT(*) as annot from aggJoin7776283093957961327 group by v10,v49;
+create or replace view aggJoin8470077312839840016 as select v21, v22, v23, v39, v36, v49, annot from aggJoin6342763861584856909 join aggView3546210889062599521 using(v10);
+create or replace view res as select v49, v39, SUM((v22 * (1 - v23))*annot) as v54, SUM((v36 * v21)*annot) as v55 from aggJoin8470077312839840016 group by v49, v39;
+select sum(v49), sum(v39), sum(v54), sum(v55) from res;

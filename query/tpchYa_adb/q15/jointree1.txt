@@ -1,0 +1,22 @@
+Relations:
+dict_values([supplier[429,supplier, 1000000]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']
+['v2', 'v5', 'v1', 'v3']
+, revenue0[430,revenue0, 1.000058003364195]: ['v1', 'v9']
+['v1']
+, q15_inner[431,q15_inner, 1]: ['v9']
+['v9']
+, supplierAux98[433,supplier, 1000000.0]: ['v1', 'v2', 'v3', 'v5']
+[]
+])
+Edges:
+dict_values([supplierAux98->supplier, revenue0->q15_inner, supplierAux98->revenue0])
+Root:
+433
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[430, 431, 433]
+fixroot:
+False

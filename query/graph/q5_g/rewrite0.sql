@@ -1,0 +1,14 @@
+create or replace view g4 as select google.src as v7, google.dst as v2, v16 from google, (SELECT dst, COUNT(*) AS v16 FROM google GROUP BY dst) AS c3 where google.src = c3.dst;
+create or replace view minView2075684770041518329 as select v2, min(v16) as mfL7785919405186192751 from g4 group by v2;
+create or replace view joinView4077016006782052883 as select src as v2, dst as v4, mfL7785919405186192751 from google AS g2, minView2075684770041518329 where g2.src=minView2075684770041518329.v2;
+create or replace view g1 as select google.src as v1, google.dst as v2, v12 from google, (SELECT src, COUNT(*) AS v12 FROM google GROUP BY src) AS c1 where google.src = c1.src;
+create or replace view minView7058909994677099214 as select v2, min(v12) as mfL5083900544533156654 from g1 group by v2;
+create or replace view joinView8632008462113449365 as select v2, v4, mfL7785919405186192751, mfL5083900544533156654 from joinView4077016006782052883 join minView7058909994677099214 using(v2);
+create or replace view g5 as select google.src as v4, google.dst as v10, v18 from google, (SELECT dst, COUNT(*) AS v18 FROM google GROUP BY dst) AS c4 where google.dst = c4.dst;
+create or replace view minView380845616385889634 as select v4, max(v18) as mfR5030972318635159989 from g5 group by v4;
+create or replace view joinView2360100828730534896 as select v2, v4, mfL7785919405186192751, mfL5083900544533156654, mfR5030972318635159989 from joinView8632008462113449365 join minView380845616385889634 using(v4) where mfL7785919405186192751<mfR5030972318635159989;
+create or replace view g3 as select google.src as v4, google.dst as v6, v14 from google, (SELECT src, COUNT(*) AS v14 FROM google GROUP BY src) AS c2 where google.dst = c2.src;
+create or replace view minView4984836797190294094 as select v4, max(v14) as mfR7258069369247551387 from g3 group by v4;
+create or replace view joinView8230094885307348624 as select v2, v4 from joinView2360100828730534896 join minView4984836797190294094 using(v4) where mfL5083900544533156654<mfR7258069369247551387;
+create or replace view res as select distinct v2, v4 from joinView8230094885307348624;
+select sum(v2+v4) FROM res;

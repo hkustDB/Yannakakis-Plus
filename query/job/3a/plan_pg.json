@@ -1,10 +1,6 @@
 {
-    "relation": "mc",
+    "relation": "mi",
     "children": [
-        {
-            "relation": "cn",
-            "children": []
-        },
         {
             "relation": "t",
             "children": [

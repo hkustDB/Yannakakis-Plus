@@ -19,49 +19,44 @@
                                     "children": []
                                 },
                                 {
-                                    "relation": "k",
+                                    "relation": "rt",
                                     "children": [
                                         {
-                                            "relation": "rt",
+                                            "relation": "mi",
                                             "children": [
                                                 {
-                                                    "relation": "mi",
+                                                    "relation": "chn",
                                                     "children": [
                                                         {
-                                                            "relation": "chn",
+                                                            "relation": "ci",
                                                             "children": [
                                                                 {
-                                                                    "relation": "ci",
+                                                                    "relation": "t",
                                                                     "children": [
                                                                         {
-                                                                            "relation": "t",
+                                                                            "relation": "mk",
                                                                             "children": [
                                                                                 {
-                                                                                    "relation": "mk",
-                                                                                    "children": [
-                                                                                        {
-                                                                                            "relation": "k",
-                                                                                            "children": []
-                                                                                        }
-                                                                                    ]
+                                                                                    "relation": "k",
+                                                                                    "children": []
                                                                                 }
                                                                             ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "relation": "n",
+                                                                    "children": [
+                                                                        {
+                                                                            "relation": "an",
+                                                                            "children": []
                                                                         },
                                                                         {
-                                                                            "relation": "n",
+                                                                            "relation": "pi",
                                                                             "children": [
                                                                                 {
-                                                                                    "relation": "an",
+                                                                                    "relation": "it3",
                                                                                     "children": []
-                                                                                },
-                                                                                {
-                                                                                    "relation": "pi",
-                                                                                    "children": [
-                                                                                        {
-                                                                                            "relation": "it3",
-                                                                                            "children": []
-                                                                                        }
-                                                                                    ]
                                                                                 }
                                                                             ]
                                                                         }

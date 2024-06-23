@@ -9,34 +9,25 @@
                     "children": []
                 },
                 {
-                    "relation": "mi",
+                    "relation": "mc",
                     "children": [
                         {
-                            "relation": "mc",
+                            "relation": "ct",
+                            "children": []
+                        },
+                        {
+                            "relation": "kt",
                             "children": [
                                 {
-                                    "relation": "ct",
-                                    "children": []
-                                },
-                                {
-                                    "relation": "t",
+                                    "relation": "mi",
                                     "children": [
                                         {
-                                            "relation": "kt",
+                                            "relation": "it2",
                                             "children": []
                                         },
                                         {
-                                            "relation": "mi",
-                                            "children": [
-                                                {
-                                                    "relation": "it2",
-                                                    "children": []
-                                                },
-                                                {
-                                                    "relation": "t",
-                                                    "children": []
-                                                }
-                                            ]
+                                            "relation": "t",
+                                            "children": []
                                         }
                                     ]
                                 }

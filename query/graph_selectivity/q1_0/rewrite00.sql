@@ -1,12 +1,4 @@
-drop view if exists c1 cascade;
-drop view if exists f1 cascade;
-drop view if exists f2 cascade;
-drop view if exists f3 cascade;
-drop view if exists f4 cascade;
-drop view if exists f5 cascade;
-drop view if exists f6 cascade;
-drop view if exists b1 cascade;
-drop view if exists b2 cascade;
+
 create or replace view c1 as select src, count(*) as cnt from Graph group by src; 
 create or replace view f1 as select g1.*, cnt as c1cnt from Graph g1 join c1 using(src);
 create or replace view f2 as select g3.*, cnt as c2cnt from Graph g3 join c1 c2 on g3.dst=c2.src;

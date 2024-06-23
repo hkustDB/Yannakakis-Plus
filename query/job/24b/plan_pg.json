@@ -37,12 +37,7 @@
                                                                 },
                                                                 {
                                                                     "relation": "mi",
-                                                                    "children": [
-                                                                        {
-                                                                            "relation": "t",
-                                                                            "children": []
-                                                                        }
-                                                                    ]
+                                                                    "children": []
                                                                 }
                                                             ]
                                                         }

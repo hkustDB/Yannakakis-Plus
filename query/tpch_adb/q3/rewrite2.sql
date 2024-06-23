@@ -1,0 +1,4 @@
+create or replace view aggView2790820673521399856 as select c_custkey as v1 from customer as customer where c_mktsegment= 'BUILDING';
+create or replace view aggJoin2980646461768795184 as select o_orderkey as v18, o_orderdate as v13, o_shippriority as v16 from orders as orders, aggView2790820673521399856 where orders.o_custkey=aggView2790820673521399856.v1 and o_orderdate<DATE '1995-03-15';
+create or replace view res as select l_orderkey, v13, v16, sum(l_extendedprice * (1 - l_discount)) as revenue from lineitem, aggJoin2980646461768795184 where lineitem.l_orderkey=v18 and l_shipdate>DATE '1995-03-15' group by l_orderkey, v13, v16;
+select sum(l_orderkey), sum(revenue), sum(v13), sum(v16) from res;

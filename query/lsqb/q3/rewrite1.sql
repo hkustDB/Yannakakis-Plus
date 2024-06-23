@@ -1,0 +1,5 @@
+create or replace view cp as select PersonId, isPartOf_CountryId from Person, City where isLocatedIn_CityId=CityId;
+create or replace view cpp as select isPartOf_CountryId, Person2Id, PersonId from Person_knows_Person, cp where Person_knows_Person.Person1Id=cp.PersonId;
+create or replace view bag1 as select cppA.isPartOf_CountryId, cppA.PersonId as cppA_PersonId, cpB.PersonId as cpB_PersonId from cpp as cppA, cp as cpB where cppA.Person2Id = cpB.PersonId and cppA.isPartOf_CountryId = cpB.isPartOf_CountryId;
+create or replace view bag2 as select cppC.PersonId as cppC_PersonId, bag1.cpB_PersonId from cpp as cppC, bag1 where cppC.Person2Id = bag1.cppA_PersonId and cppC.isPartOf_CountryId = bag1.isPartOf_CountryId;
+select count(*) from bag2, Person_knows_Person as pkp2 where bag2.cppC_PersonId = pkp2.Person2Id and bag2.cpB_PersonId = pkp2.Person1Id;

@@ -1,0 +1,26 @@
+Relations:
+dict_values([customer[127575,customer, 15000000]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+['v2', 'v5', 'v1', 'v3', 'v8', 'v6', 'v4']
+, orders[127576,orders, 5730378.0]: ['v18', 'v1', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17']
+['v1']
+, lineitem[127577,lineitem, 148067261]: ['v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32', 'v33']
+['v18']
+, nation[127578,nation, 25]: ['v4', 'v35', 'v36', 'v37']
+['v4', 'v35']
+, customerAux96[127583,customer, 32.870126479115484]: ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v8']
+[]
+, nationAux80[127592,nation, 25]: ['v4', 'v35']
+['v4']
+])
+Edges:
+dict_values([orders->lineitem, customerAux96->orders, nationAux80->nation, customerAux96->nationAux80, customerAux96->customer])
+Root:
+127583
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[127583, 127592]
+fixroot:
+False

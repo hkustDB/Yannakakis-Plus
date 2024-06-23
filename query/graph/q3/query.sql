@@ -9,4 +9,5 @@ WHERE g1.dst = g2.src AND g2.dst = g3.src
     AND c1.src = g1.src AND c2.src = g3.dst
     AND c3.src = g2.src AND c4.dst = g3.dst
     AND c1.cnt < c2.cnt AND c3.cnt < c4.cnt;
-/*+ QUERY_TIMEOUT=28800000*/select sum(src+via1+via2+dst+cnt1+cnt2+cnt3+cnt4) from res;
+
+select sum(src+via1+via2+dst+cnt1+cnt2+cnt3+cnt4) FROM res;

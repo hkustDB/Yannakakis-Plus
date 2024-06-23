@@ -18,23 +18,18 @@
                                     "relation": "mc",
                                     "children": [
                                         {
-                                            "relation": "t",
+                                            "relation": "mi",
                                             "children": [
                                                 {
-                                                    "relation": "mi",
+                                                    "relation": "it",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "relation": "t",
                                                     "children": [
                                                         {
-                                                            "relation": "it",
+                                                            "relation": "ci",
                                                             "children": []
-                                                        },
-                                                        {
-                                                            "relation": "t",
-                                                            "children": [
-                                                                {
-                                                                    "relation": "ci",
-                                                                    "children": []
-                                                                }
-                                                            ]
                                                         }
                                                     ]
                                                 }
