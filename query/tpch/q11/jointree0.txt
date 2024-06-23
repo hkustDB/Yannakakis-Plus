@@ -1,22 +1,22 @@
 Relations:
-dict_values([partsupp[2268007,partsupp, 80000000.0]: ['v1', 'v2', 'v3', 'v4', 'v5']
+dict_values([partsupp[127759,partsupp, 80000000.0]: ['v1', 'v2', 'v3', 'v4', 'v5']
 ['v1']
-, supplier[2268008,supplier, 40000.0]: ['v2', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12']
+, supplier[127760,supplier, 40000.0]: ['v2', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12']
 ['v2']
-, nation[2268009,nation, 1]: ['v9', 'v14', 'v15', 'v16']
+, nation[127761,nation, 1]: ['v9', 'v14', 'v15', 'v16']
 ['v9']
-, partsuppAux16[2268014,partsupp, 80000000]: ['v1']
+, partsuppAux11[127766,partsupp, 80000000]: ['v1']
 []
 ])
 Edges:
-dict_values([supplier->nation, partsupp->supplier, partsuppAux16->partsupp])
+dict_values([supplier->nation, partsupp->supplier, partsuppAux11->partsupp])
 Root:
-2268014
+127766
 isFull:
 False
 isFreeConnex:
 True
 subset:
-[2268014]
+[127766]
 fixroot:
 False

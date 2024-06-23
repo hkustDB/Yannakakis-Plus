@@ -1032,7 +1032,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                 if JT.isFreeConnex and len(jointree.subset): # select a, b, c-done, d*annot-undone from A; group by = a, b
                     if func.doneFlag: # not use annot
                         if func.funcName == AggFuncType.AVG:
-                            selectName.extend([out + '/annot' * finalAnnotFlag + 'as ' + out for _ in range(outputVariables.count(out))])
+                            selectName.extend([out + '/annot' * finalAnnotFlag + ' as ' + out for _ in range(outputVariables.count(out))])
                         elif func.funcName == AggFuncType.COUNT:
                             if finalAnnotFlag:
                                 selectName.extend(['annot as ' + out for _ in range(outputVariables.count(out))])

@@ -1,0 +1,2 @@
+create or replace view aggView6404743680324615135 as select p_partkey as v2, CASE WHEN p_type LIKE 'PROMO%' THEN 1 ELSE 0 END as caseCond from part as part;
+select ((100.0 * SUM( CASE WHEN caseCond = 1 THEN l_extendedprice * (1 - l_discount) ELSE 0.0 END)) / SUM(l_extendedprice * (1 - l_discount))) from lineitem as lineitem, aggView6404743680324615135 where lineitem.l_partkey=aggView6404743680324615135.v2 and l_shipdate>=DATE '1995-09-01' and l_shipdate<DATE '1995-10-01';

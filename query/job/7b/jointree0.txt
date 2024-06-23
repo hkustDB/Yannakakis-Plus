@@ -1,0 +1,30 @@
+Relations:
+dict_values([an[4607510,aka_name, 4343570.389765359]: ['v1', 'v24', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+[]
+, ci[4607511,cast_info, 9197600.0]: ['v9', 'v24', 'v38', 'v12', 'v13', 'v14', 'v15']
+['v24', 'v38']
+, it[4607512,info_type, 100]: ['v16', 'v17']
+['v16']
+, lt[4607513,link_type, 100]: ['v18', 'v19']
+['v18']
+, ml[4607514,movie_link, 100.0]: ['v20', 'v21', 'v38', 'v18']
+['v38']
+, n[4607515,name, 6400.0]: ['v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32']
+['v24']
+, pi[4607516,person_info, 6400.0]: ['v33', 'v24', 'v16', 'v36', 'v37']
+['v24']
+, t[4607517,title, 2999700.0]: ['v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49']
+['v24']
+])
+Edges:
+dict_values([t->ci, ci->n, t->ml, n->pi, ml->lt, an->t, pi->it])
+Root:
+4607510
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

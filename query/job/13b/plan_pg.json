@@ -1,10 +1,6 @@
 {
-    "relation": "t",
+    "relation": "kt",
     "children": [
-        {
-            "relation": "kt",
-            "children": []
-        },
         {
             "relation": "mi",
             "children": [

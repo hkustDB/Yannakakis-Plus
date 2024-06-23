@@ -2,29 +2,24 @@
     "relation": "t",
     "children": [
         {
-            "relation": "t",
+            "relation": "an1",
             "children": [
                 {
-                    "relation": "an1",
+                    "relation": "n1",
                     "children": [
                         {
-                            "relation": "n1",
+                            "relation": "ci",
                             "children": [
                                 {
-                                    "relation": "ci",
+                                    "relation": "rt",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "mc",
                                     "children": [
                                         {
-                                            "relation": "rt",
+                                            "relation": "cn",
                                             "children": []
-                                        },
-                                        {
-                                            "relation": "mc",
-                                            "children": [
-                                                {
-                                                    "relation": "cn",
-                                                    "children": []
-                                                }
-                                            ]
                                         }
                                     ]
                                 }

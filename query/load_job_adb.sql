@@ -8,9 +8,7 @@ CREATE TABLE IF NOT EXISTS aka_name (
     surname_pcode varchar(11),
     md5sum varchar(65),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS aka_title (
+);CREATE TABLE IF NOT EXISTS aka_title (
     id integer NOT NULL,
     movie_id integer NOT NULL,
     title varchar(553) NOT NULL,
@@ -24,9 +22,7 @@ CREATE TABLE IF NOT EXISTS aka_title (
     note varchar(72),
     md5sum varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS cast_info (
+);CREATE TABLE IF NOT EXISTS cast_info (
     id integer,
     person_id integer,
     movie_id integer,
@@ -35,9 +31,7 @@ CREATE TABLE IF NOT EXISTS cast_info (
     nr_order integer,
     role_id integer,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS char_name (
+);CREATE TABLE IF NOT EXISTS char_name (
     id integer,
     name varchar(512),
     imdb_index varchar(2),
@@ -46,15 +40,11 @@ CREATE TABLE IF NOT EXISTS char_name (
     surname_pcode varchar(5),
     md5sum varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS comp_cast_type (
+);CREATE TABLE IF NOT EXISTS comp_cast_type (
     id integer,
     kind varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS company_name (
+);CREATE TABLE IF NOT EXISTS company_name (
     id integer,
     name varchar(512),
     country_code varchar(6),
@@ -63,81 +53,59 @@ CREATE TABLE IF NOT EXISTS company_name (
     name_pcode_sf varchar(5),
     md5sum varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS company_type (
+);CREATE TABLE IF NOT EXISTS company_type (
     id integer,
     kind varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS complete_cast (
+);CREATE TABLE IF NOT EXISTS complete_cast (
     id integer,
     movie_id integer,
     subject_id integer,
     status_id integer,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS info_type (
+);CREATE TABLE IF NOT EXISTS info_type (
     id integer,
     info varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS keyword (
+);CREATE TABLE IF NOT EXISTS keyword (
     id integer,
     keyword varchar(512),
     phonetic_code varchar(5),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS kind_type (
+);CREATE TABLE IF NOT EXISTS kind_type (
     id integer,
     kind varchar(15),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS link_type (
+);CREATE TABLE IF NOT EXISTS link_type (
     id integer,
     link varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS movie_companies (
+);CREATE TABLE IF NOT EXISTS movie_companies (
     id integer,
     movie_id integer,
     company_id integer,
     company_type_id integer,
     note text,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS movie_info_idx (
+);CREATE TABLE IF NOT EXISTS movie_info_idx (
     id integer,
     movie_id integer,
     info_type_id integer,
     info text,
     note text,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS movie_keyword (
+);CREATE TABLE IF NOT EXISTS movie_keyword (
     id integer,
     movie_id integer,
     keyword_id integer,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS movie_link (
+);CREATE TABLE IF NOT EXISTS movie_link (
     id integer,
     movie_id integer,
     linked_movie_id integer,
     link_type_id integer,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS name (
+);CREATE TABLE IF NOT EXISTS name (
     id integer,
     name varchar(512),
     imdb_index varchar(9),
@@ -148,15 +116,11 @@ CREATE TABLE IF NOT EXISTS name (
     surname_pcode varchar(5),
     md5sum varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS role_type (
+);CREATE TABLE IF NOT EXISTS role_type (
     id integer,
     role varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS title (
+);CREATE TABLE IF NOT EXISTS title (
     id integer,
     title varchar(512),
     imdb_index varchar(5),
@@ -170,27 +134,21 @@ CREATE TABLE IF NOT EXISTS title (
     series_years varchar(49),
     md5sum varchar(32),
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS movie_info (
+);CREATE TABLE IF NOT EXISTS movie_info (
     id integer,
     movie_id integer,
     info_type_id integer,
     info text,
     note text,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS person_info (
+);CREATE TABLE IF NOT EXISTS person_info (
     id integer,
     person_id integer,
     info_type_id integer,
     info text,
     note text,
     PRIMARY KEY (id)
-);
-
-submit job insert overwrite into aka_name select * from oss_aka_name;
+);submit job insert overwrite into aka_name select * from oss_aka_name;
 submit job insert overwrite into aka_title select * from oss_aka_title;
 submit job insert overwrite into cast_info select * from oss_cast_info;
 submit job insert overwrite into char_name select * from oss_char_name;
@@ -210,9 +168,7 @@ submit job insert overwrite into name select * from oss_name;
 submit job insert overwrite into role_type select * from oss_role_type;
 submit job insert overwrite into title select * from oss_title;
 submit job insert overwrite into movie_info select * from oss_movie_info;
-submit job insert overwrite into person_info select * from oss_person_info;
-
-ANALYZE TABLE aka_name UPDATE HISTOGRAM;
+submit job insert overwrite into person_info select * from oss_person_info;ANALYZE TABLE aka_name UPDATE HISTOGRAM;
 ANALYZE TABLE aka_title UPDATE HISTOGRAM;
 ANALYZE TABLE cast_info UPDATE HISTOGRAM;
 ANALYZE TABLE char_name UPDATE HISTOGRAM;

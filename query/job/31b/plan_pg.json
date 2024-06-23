@@ -32,16 +32,11 @@
                                     "children": []
                                 },
                                 {
-                                    "relation": "",
+                                    "relation": "mc",
                                     "children": [
                                         {
-                                            "relation": "mc",
-                                            "children": [
-                                                {
-                                                    "relation": "cn",
-                                                    "children": []
-                                                }
-                                            ]
+                                            "relation": "cn",
+                                            "children": []
                                         }
                                     ]
                                 }
