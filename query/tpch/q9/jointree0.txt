@@ -1,26 +1,30 @@
 Relations:
-dict_values([part[143,part, 20000000]: ['v33', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']
+dict_values([part[127412,part, 20000000]: ['v33', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']
 ['v33']
-, supplier[144,supplier, 25.0]: ['v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
-[]
-, lineitem[145,lineitem, 1000000.0]: ['v38', 'v33', 'v10', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32']
-['v10']
-, partsupp[146,partsupp, 80000000]: ['v33', 'v10', 'v35', 'v36', 'v37']
-['v33', 'v10']
-, orderswithyear[147,orderswithyear, 150000000]: ['v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47']
-['v38']
-, nation[148,nation, 25]: ['v13', 'v49', 'v50', 'v51']
+, supplier[127413,supplier, 170677447.68]: ['v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
 ['v13']
+, lineitem[127414,lineitem, 170677447.68]: ['v38', 'v33', 'v10', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32']
+['v10']
+, partsupp[127415,partsupp, 20000000.0]: ['v33', 'v10', 'v35', 'v36', 'v37']
+['v33', 'v10']
+, orderswithyear[127416,orderswithyear, 150000000]: ['v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47']
+['v39', 'v38']
+, nation[127417,nation, 25]: ['v13', 'v49', 'v50', 'v51']
+['v13', 'v49']
+, nationAux13[127431,nation, 170677447.68]: ['v13', 'v49']
+[]
+, orderswithyearAux9[127435,orderswithyear, 150000000]: ['v38', 'v39']
+['v38']
 ])
 Edges:
-dict_values([supplier->lineitem, lineitem->orderswithyear, lineitem->partsupp, lineitem->part, supplier->nation])
+dict_values([orderswithyearAux9->orderswithyear, lineitem->orderswithyearAux9, lineitem->partsupp, partsupp->part, supplier->lineitem, nationAux13->supplier, nationAux13->nation])
 Root:
-144
+127431
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[144]
+[127414, 127413, 127435, 127431]
 fixroot:
-True
+False

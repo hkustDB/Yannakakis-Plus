@@ -14,7 +14,7 @@ keep: joinkey | output variables | comparison | aggregation | bag internal joink
 
 
 # delete extra column
-def removeAttrAlias(selectAttrs: list[str], selectAlias: list[str], containKeys: set[str], Agg: Aggregation = None, removeAnnot: bool = False):
+def removeAttrAlias(selectAttrs: list[str], selectAlias: list[str], containKeys: set[str], Agg: Aggregation = None, removeAnnot: bool = False, extraKeep: set[str] = set()):
     if removeAnnot:
         IG_SET = set({'oriLeft', 'oriRight', 'caseCond', 'caseRes'})
     else:
@@ -24,7 +24,10 @@ def removeAttrAlias(selectAttrs: list[str], selectAlias: list[str], containKeys:
     if Agg:
         for alias in Agg.allAggAlias:
             if alias in selectAlias:
-                containKeys = containKeys.difference(set(Agg.alias2AggFunc[alias].inVars))   
+                for inVar in Agg.alias2AggFunc[alias].inVars:
+                    if inVar in containKeys and inVar not in extraKeep:
+                        containKeys.remove(inVar)
+                        break
 
     if not len(selectAttrs):
         selectAlias = [alias for alias in selectAlias if alias in containKeys or 'mf' in alias or alias in IG_SET]
@@ -125,13 +128,13 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
         ## prune reduce
         if reduce.PhaseType == PhaseType.CQC:
             if reduce.orderView:
-                reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias = removeAttrAlias(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, orderRequireInit | allJoinKeys, Agg=Agg)
+                reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias = removeAttrAlias(reduce.orderView.selectAttrs, reduce.orderView.selectAttrAlias, orderRequireInit | allJoinKeys, Agg=Agg, extraKeep=outputVariables | compKeepSet | extraEqualSet | allExtraJoinKeys)
             
             if reduce.joinView:
-                reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias = removeAttrAlias(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias, orderRequireInit | allJoinKeys, Agg=Agg)
+                reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias = removeAttrAlias(reduce.joinView.selectAttrs, reduce.joinView.selectAttrAlias, orderRequireInit | allJoinKeys, Agg=Agg, extraKeep=outputVariables | compKeepSet | extraEqualSet | allExtraJoinKeys)
         else:
             if reduce.semiView:
-                reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys, Agg=Agg)
+                reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias = removeAttrAlias(reduce.semiView.selectAttrs, reduce.semiView.selectAttrAlias, orderRequireInit | allJoinKeys, Agg=Agg, extraKeep=outputVariables | compKeepSet | extraEqualSet | allExtraJoinKeys)
     
     aggHasLeft: bool = False
     if Agg:
@@ -151,9 +154,9 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
         else:
             # FIXME: use all joinKeys to prune
             if enum.corresNodeId in joinKeyEnum:
-                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[enum.corresNodeId], Agg=Agg)
+                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables | joinKeyEnum[enum.corresNodeId], Agg=Agg, extraKeep=outputVariables | compKeepSet | extraEqualSet | joinKeyEnum[enum.corresNodeId])
             else:
-                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables, Agg=Agg)
+                corEnum.selectAttrs, corEnum.selectAttrAlias = removeAttrAlias(corEnum.selectAttrs, corEnum.selectAttrAlias, requireVariables, Agg=Agg, extraKeep=outputVariables | compKeepSet | extraEqualSet)
     # step3: prune aggReduce (bottom up)
     if Agg:
         for index, aggReduce in enumerate(aggReduceList):
@@ -175,7 +178,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                     requireVariables = outputVariables
                 
             if index == len(aggReduceList)-1 and len(JT.subset) == 1:
-                curRequireSet = outputVariables | jkp | aggKeepSet | allExtraJoinKeys
+                curRequireSet = outputVariables | compKeepSet | extraEqualSet | jkp | aggKeepSet | allExtraJoinKeys
                 removeAnnotFlag = not 'annot' in finalResult
             else:
                 curRequireSet = outputVariables | compKeepSet | extraEqualSet | aggKeepSet | jkp | allExtraJoinKeys
@@ -188,7 +191,7 @@ def columnPrune(JT: JoinTree, aggReduceList: list[AggReducePhase], reduceList: l
                     index = aggReduce.aggView.selectAttrAlias.index('annot')
                     aggReduce.aggView.selectAttrAlias.pop(index)
                     aggReduce.aggView.selectAttrs.pop(index)
-            aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, Agg=Agg, removeAnnot=removeAnnotFlag)
+            aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias = removeAttrAlias(aggReduce.aggJoin.selectAttrs, aggReduce.aggJoin.selectAttrAlias, curRequireSet, Agg=Agg, removeAnnot=removeAnnotFlag, extraKeep=outputVariables | compKeepSet | extraEqualSet | jkp | allExtraJoinKeys)
     return aggReduceList, reduceList, enumerateList
 
 
