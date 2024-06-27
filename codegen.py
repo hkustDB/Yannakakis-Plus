@@ -183,9 +183,10 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
             outFile.write(line)
     
     def addGroupBy(action):
-        if not Agg:
+        if not Agg or (Agg and not isFreeConnex):
             return ''
         xannot = [alias for alias in action.selectAttrAlias if alias != 'annot' and alias not in Agg.allAggAlias]
+
         return ' group by ' + ','.join(xannot) if not isFreeConnex else ''
     
     # 2. enumerateList rewrite
@@ -416,7 +417,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             outFile.write(line)
     
     def addGroupBy(action):
-        if not Agg:
+        if not Agg or (Agg and not isFreeConnex):
             return ''
         xannot = [alias for alias in action.selectAttrAlias if alias != 'annot' and alias not in Agg.allAggAlias]
         return ' group by ' + ','.join(xannot) if not isFreeConnex else ''
