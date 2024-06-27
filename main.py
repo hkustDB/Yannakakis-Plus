@@ -176,7 +176,8 @@ def connect(base: int, mode: int, type: GenType):
     try:
         json_file = open(BASE_PATH + globalVar.get_value('PLAN_NAME'))
         plan = json.load(json_file)
-        body['plan'] = plan
+        # FIXME: Only for testing
+        # body['plan'] = plan
     except IOError:
         pass
     try:
@@ -341,14 +342,14 @@ if __name__ == '__main__':
     globalVar.set_value('OUT_NAME', 'rewrite.sql')
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.csv')
-    globalVar.set_value('GEN_TYPE', 'PG')
+    globalVar.set_value('GEN_TYPE', 'DuckDB')
     globalVar.set_value('YANNA', False)
     if globalVar.get_value("GEN_TYPE") != 'PG':
         globalVar.set_value('PLAN_NAME', 'plan.json')
     else:
         globalVar.set_value('PLAN_NAME', 'plan_pg.json')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/graph-agg/agg3/')
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/graph/q10/')
     globalVar.set_value('DDL_NAME', "graph.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
@@ -421,7 +422,7 @@ if __name__ == '__main__':
     else:
         fields = ['index', 'hight', 'width', 'estimate'] 
         cost_stat = PQ()
-        total_number = 8
+        total_number = 2
         fix_number, nonfix_number = total_number // 2, total_number // 2
         fix_iter, nonfix_iter = 0, 0
         best_res_nonfix, best_res_fix = [], []
