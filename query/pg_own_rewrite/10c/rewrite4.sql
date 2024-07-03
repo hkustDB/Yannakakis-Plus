@@ -1,0 +1,15 @@
+create or replace view aggView3582631164889536879 as select id as v1, name as v2 from char_name as chn;
+create or replace view aggView4763788613676208069 as select title as v32, id as v31 from title as t where production_year>1990;
+create or replace view aggView5668508883705767957 as select id as v22 from company_type as ct;
+create or replace view aggJoin6331783014463267738 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView5668508883705767957 where mc.company_type_id=aggView5668508883705767957.v22;
+create or replace view aggView2551676495061187085 as select id as v15 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin3492707005430455776 as select v31 from aggJoin6331783014463267738 join aggView2551676495061187085 using(v15);
+create or replace view aggView1401674351252867290 as select v1, MIN(v2) as v43 from aggView3582631164889536879 group by v1;
+create or replace view aggJoin2915611300418893802 as select movie_id as v31, note as v12, role_id as v29, v43 from cast_info as ci, aggView1401674351252867290 where ci.person_role_id=aggView1401674351252867290.v1 and note LIKE '%(producer)%';
+create or replace view aggView5536994668387476739 as select v31 from aggJoin3492707005430455776 group by v31;
+create or replace view aggJoin8697517107053171307 as select v31, v12, v29, v43 as v43 from aggJoin2915611300418893802 join aggView5536994668387476739 using(v31);
+create or replace view aggView8691699328320631511 as select id as v29 from role_type as rt;
+create or replace view aggJoin3671352968763483744 as select v31, v12, v43 from aggJoin8697517107053171307 join aggView8691699328320631511 using(v29);
+create or replace view aggView308637443499875444 as select v31, MIN(v43) as v43 from aggJoin3671352968763483744 group by v31;
+create or replace view aggJoin4385098093266451613 as select v32, v43 from aggView4763788613676208069 join aggView308637443499875444 using(v31);
+select MIN(v43) as v43,MIN(v32) as v44 from aggJoin4385098093266451613;

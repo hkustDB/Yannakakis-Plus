@@ -1,0 +1,15 @@
+create or replace view aggView5412839482409778432 as select id as v1, name as v2 from char_name as chn;
+create or replace view aggView8912676920471136347 as select id as v22 from company_type as ct;
+create or replace view aggJoin2534036930647421688 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView8912676920471136347 where mc.company_type_id=aggView8912676920471136347.v22;
+create or replace view aggView2084798723199914414 as select id as v15 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin1063557190956543767 as select v31 from aggJoin2534036930647421688 join aggView2084798723199914414 using(v15);
+create or replace view aggView2852549795765248327 as select v31 from aggJoin1063557190956543767 group by v31;
+create or replace view aggJoin1781143551002929410 as select id as v31, title as v32, production_year as v35 from title as t, aggView2852549795765248327 where t.id=aggView2852549795765248327.v31 and production_year>1990;
+create or replace view aggView6018866964874445086 as select v32, v31 from aggJoin1781143551002929410;
+create or replace view aggView9103705791891020454 as select v31, MIN(v32) as v44 from aggView6018866964874445086 group by v31;
+create or replace view aggJoin5061555629498399098 as select person_role_id as v1, note as v12, role_id as v29, v44 from cast_info as ci, aggView9103705791891020454 where ci.movie_id=aggView9103705791891020454.v31 and note LIKE '%(producer)%';
+create or replace view aggView1056938833172162031 as select id as v29 from role_type as rt;
+create or replace view aggJoin5815826428772441093 as select v1, v12, v44 from aggJoin5061555629498399098 join aggView1056938833172162031 using(v29);
+create or replace view aggView5411604384348334229 as select v1, MIN(v44) as v44 from aggJoin5815826428772441093 group by v1;
+create or replace view aggJoin8728989796734655485 as select v2, v44 from aggView5412839482409778432 join aggView5411604384348334229 using(v1);
+select MIN(v2) as v43,MIN(v44) as v44 from aggJoin8728989796734655485;

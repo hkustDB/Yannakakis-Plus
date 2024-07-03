@@ -1,0 +1,16 @@
+create or replace view aggView8065255642924646170 as select id as v22 from name as n where gender= 'm' and name LIKE '%Tim%';
+create or replace view aggJoin6875401103722337640 as select movie_id as v31, note as v5 from cast_info as ci, aggView8065255642924646170 where ci.person_id=aggView8065255642924646170.v22 and note IN ('(producer)','(executive producer)');
+create or replace view aggView7778407413333382202 as select v31 from aggJoin6875401103722337640 group by v31;
+create or replace view aggJoin1699042351694157904 as select id as v31, title as v32 from title as t, aggView7778407413333382202 where t.id=aggView7778407413333382202.v31;
+create or replace view aggView880665032774218344 as select v32, v31 from aggJoin1699042351694157904;
+create or replace view aggView482498771935236456 as select id as v8 from info_type as it1 where info= 'budget';
+create or replace view aggJoin7728380039021376423 as select movie_id as v31, info as v15 from movie_info as mi, aggView482498771935236456 where mi.info_type_id=aggView482498771935236456.v8;
+create or replace view aggView8948955946738968640 as select v15, v31 from aggJoin7728380039021376423;
+create or replace view aggView1718875339823752703 as select id as v10 from info_type as it2 where info= 'votes';
+create or replace view aggJoin3381163873400063361 as select movie_id as v31, info as v20 from movie_info_idx as mi_idx, aggView1718875339823752703 where mi_idx.info_type_id=aggView1718875339823752703.v10;
+create or replace view aggView8030527775309027688 as select v31, v20 from aggJoin3381163873400063361;
+create or replace view aggView7925052252191721666 as select v31, MIN(v32) as v45 from aggView880665032774218344 group by v31;
+create or replace view aggJoin3421321404618335467 as select v15, v31, v45 from aggView8948955946738968640 join aggView7925052252191721666 using(v31);
+create or replace view aggView4625227657188690138 as select v31, MIN(v45) as v45, MIN(v15) as v43 from aggJoin3421321404618335467 group by v31;
+create or replace view aggJoin4146857936316846953 as select v20, v45, v43 from aggView8030527775309027688 join aggView4625227657188690138 using(v31);
+select MIN(v43) as v43,MIN(v20) as v44,MIN(v45) as v45 from aggJoin4146857936316846953;

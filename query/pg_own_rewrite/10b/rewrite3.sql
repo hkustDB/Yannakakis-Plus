@@ -1,0 +1,15 @@
+create or replace view aggView6828359833970530368 as select title as v32, id as v31 from title as t where production_year>2010;
+create or replace view aggView660191635570310745 as select id as v1, name as v2 from char_name as chn;
+create or replace view aggView6951151260236128236 as select id as v22 from company_type as ct;
+create or replace view aggJoin8884519001794526142 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView6951151260236128236 where mc.company_type_id=aggView6951151260236128236.v22;
+create or replace view aggView677073931466760430 as select id as v15 from company_name as cn where country_code= '[ru]';
+create or replace view aggJoin6770137920629189126 as select v31 from aggJoin8884519001794526142 join aggView677073931466760430 using(v15);
+create or replace view aggView4996534639474618965 as select id as v29 from role_type as rt where role= 'actor';
+create or replace view aggJoin2648115655026454378 as select movie_id as v31, person_role_id as v1, note as v12 from cast_info as ci, aggView4996534639474618965 where ci.role_id=aggView4996534639474618965.v29 and note LIKE '%(producer)%';
+create or replace view aggView7820111066638121254 as select v31, MIN(v32) as v44 from aggView6828359833970530368 group by v31;
+create or replace view aggJoin8407058921156034960 as select v31, v1, v12, v44 from aggJoin2648115655026454378 join aggView7820111066638121254 using(v31);
+create or replace view aggView2488655651472118233 as select v31 from aggJoin6770137920629189126 group by v31;
+create or replace view aggJoin4278038370501133207 as select v1, v12, v44 as v44 from aggJoin8407058921156034960 join aggView2488655651472118233 using(v31);
+create or replace view aggView2675173455733358482 as select v1, MIN(v44) as v44 from aggJoin4278038370501133207 group by v1;
+create or replace view aggJoin2367646299359608913 as select v2, v44 from aggView660191635570310745 join aggView2675173455733358482 using(v1);
+select MIN(v2) as v43,MIN(v44) as v44 from aggJoin2367646299359608913;

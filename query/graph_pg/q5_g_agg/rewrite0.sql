@@ -1,0 +1,13 @@
+create or replace view g4 as select google.src as v7, google.dst as v2, v16 from google, (SELECT dst, COUNT(*) AS v16 FROM google GROUP BY dst) AS c3 where google.src = c3.dst;
+create or replace view g1 as select google.src as v1, google.dst as v2, v12 from google, (SELECT src, COUNT(*) AS v12 FROM google GROUP BY src) AS c1 where google.src = c1.src;
+create or replace view aggView7273517991653698647 as select v2, COUNT(*) as annot from g4 group by v2;
+create or replace view aggJoin8851573015328965878 as select v2, annot from g1 join aggView7273517991653698647 using(v2);
+create or replace view aggView7776144813478233556 as select v2, SUM(annot) as annot from aggJoin8851573015328965878 group by v2;
+create or replace view aggJoin7842412102771011127 as select dst as v4, annot from google as g2, aggView7776144813478233556 where g2.src=aggView7776144813478233556.v2;
+create or replace view g3 as select google.src as v4, google.dst as v6, v14 from google, (SELECT src, COUNT(*) AS v14 FROM google GROUP BY src) AS c2 where google.dst = c2.src;
+create or replace view aggView7733367002774864921 as select v4, SUM(annot) as annot from aggJoin7842412102771011127 group by v4;
+create or replace view aggJoin6601044118090617189 as select v4, annot from g3 join aggView7733367002774864921 using(v4);
+create or replace view g5 as select google.src as v4, google.dst as v10, v18 from google, (SELECT dst, COUNT(*) AS v18 FROM google GROUP BY dst) AS c4 where google.dst = c4.dst;
+create or replace view aggView5275729651525193405 as select v4, SUM(annot) as annot from aggJoin6601044118090617189 group by v4;
+create or replace view aggJoin8222019454173698427 as select annot from g5 join aggView5275729651525193405 using(v4);
+select SUM(annot) as v19 from aggJoin8222019454173698427;

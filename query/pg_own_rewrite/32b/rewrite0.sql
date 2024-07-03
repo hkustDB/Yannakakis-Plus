@@ -1,0 +1,13 @@
+create or replace view aggView1920332785849485466 as select title as v26, id as v11 from title as t2;
+create or replace view aggView7077962587883673100 as select id as v8 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin4860667969101153832 as select movie_id as v13 from movie_keyword as mk, aggView7077962587883673100 where mk.keyword_id=aggView7077962587883673100.v8;
+create or replace view aggView2133881240095247135 as select v13 from aggJoin4860667969101153832 group by v13;
+create or replace view aggJoin545226784961584009 as select id as v13, title as v14 from title as t1, aggView2133881240095247135 where t1.id=aggView2133881240095247135.v13;
+create or replace view aggView4658554390133526334 as select v14, v13 from aggJoin545226784961584009;
+create or replace view aggView9128545343696688743 as select id as v4, link as v37 from link_type as lt;
+create or replace view aggJoin8990036149768005515 as select movie_id as v13, linked_movie_id as v11, v37 from movie_link as ml, aggView9128545343696688743 where ml.link_type_id=aggView9128545343696688743.v4;
+create or replace view aggView6953030910466084974 as select v11, MIN(v26) as v39 from aggView1920332785849485466 group by v11;
+create or replace view aggJoin3326332300487950783 as select v13, v37 as v37, v39 from aggJoin8990036149768005515 join aggView6953030910466084974 using(v11);
+create or replace view aggView1722947990199412916 as select v13, MIN(v37) as v37, MIN(v39) as v39 from aggJoin3326332300487950783 group by v13;
+create or replace view aggJoin3169980625304597069 as select v14, v37, v39 from aggView4658554390133526334 join aggView1722947990199412916 using(v13);
+select MIN(v37) as v37,MIN(v14) as v38,MIN(v39) as v39 from aggJoin3169980625304597069;

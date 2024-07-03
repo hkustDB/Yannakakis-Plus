@@ -19,9 +19,9 @@ INPUT_DIR_PATH="${SCRIPT_PATH}/${INPUT_DIR}"
 # graph, tpch, lsqb
 DATABASE=$1
 
-duckdb="/home/bchenba/duckdb"
+duckdb="/home/bchenba/duckdb1.0"
 
-NUM_THREADS=${3:-1}
+NUM_THREADS=${3:-72}
 
 # Suffix function
 function FileSuffix() {
@@ -73,7 +73,7 @@ do
                         OUT_FILE="${CUR_PATH}/output.txt"
                         rm -f $OUT_FILE
                         touch $OUT_FILE
-                        timeout -s SIGKILL 30m $duckdb -c ".open ${DATABASE}_db" -c "SET threads TO ${NUM_THREADS};" -c ".timer on" -c ".read ${SUBMIT_QUERY}" | grep "Run Time (s): real" >> $OUT_FILE
+                        timeout -s SIGKILL 24h $duckdb -c ".open ${DATABASE}_db" -c "SET threads TO ${NUM_THREADS};" -c ".timer on" -c ".read ${SUBMIT_QUERY}" | grep "Run Time (s): real" >> $OUT_FILE
                         status_code=$?
                         if [[ ${status_code} -eq 137 ]]; then
                             echo "duckdb task timed out." >> $LOG_FILE
@@ -109,7 +109,7 @@ do
                         OUT_FILE="${CUR_PATH}/output.txt"
                         rm -f $OUT_FILE
                         touch $OUT_FILE
-                        timeout -s SIGKILL 10m $duckdb -c ".open ${DATABASE}_db" -c ".read ${SUBMIT_QUERY_1}" -c ".timer on" -c ".read ${SUBMIT_QUERY_2}" | grep "Run Time (s): real" >> $OUT_FILE
+                        timeout -s SIGKILL 24h $duckdb -c ".open ${DATABASE}_db" -c "SET threads TO ${NUM_THREADS};" -c ".read ${SUBMIT_QUERY_1}" -c ".timer on" -c ".read ${SUBMIT_QUERY_2}" | grep "Run Time (s): real" >> $OUT_FILE
                         status_code=$?
                         if [[ ${status_code} -eq 137 ]]; then
                             echo "duckdb task timed out." >> $LOG_FILE

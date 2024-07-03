@@ -1,0 +1,17 @@
+create or replace view aggView2836809048280739062 as select id as v22 from info_type as it1 where info= 'release dates';
+create or replace view aggJoin335863389267631090 as select movie_id as v40, note as v36 from movie_info as mi, aggView2836809048280739062 where mi.info_type_id=aggView2836809048280739062.v22 and note LIKE '%internet%';
+create or replace view aggView8245724715220182689 as select id as v20 from company_type as ct;
+create or replace view aggJoin3077668010900245067 as select movie_id as v40, company_id as v13 from movie_companies as mc, aggView8245724715220182689 where mc.company_type_id=aggView8245724715220182689.v20;
+create or replace view aggView2285772597302984266 as select v40 from aggJoin335863389267631090 group by v40;
+create or replace view aggJoin8923430402201722978 as select v40, v13 from aggJoin3077668010900245067 join aggView2285772597302984266 using(v40);
+create or replace view aggView852458586770504892 as select id as v13 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin1551302250888648610 as select v40 from aggJoin8923430402201722978 join aggView852458586770504892 using(v13);
+create or replace view aggView1475512861826633952 as select v40 from aggJoin1551302250888648610 group by v40;
+create or replace view aggJoin3392649476865951466 as select id as v40, title as v41, production_year as v44 from title as t, aggView1475512861826633952 where t.id=aggView1475512861826633952.v40 and production_year>1990;
+create or replace view aggView5811720715106741201 as select v40, MIN(v41) as v53 from aggJoin3392649476865951466 group by v40;
+create or replace view aggJoin2884854434334902255 as select movie_id as v40, title as v3, v53 from aka_title as aka_t, aggView5811720715106741201 where aka_t.movie_id=aggView5811720715106741201.v40;
+create or replace view aggView894571781964628325 as select id as v24 from keyword as k;
+create or replace view aggJoin2306013985325377871 as select movie_id as v40 from movie_keyword as mk, aggView894571781964628325 where mk.keyword_id=aggView894571781964628325.v24;
+create or replace view aggView5534425925203374161 as select v40, MIN(v53) as v53, MIN(v3) as v52 from aggJoin2884854434334902255 group by v40,v53;
+create or replace view aggJoin1022970771203069574 as select v53, v52 from aggJoin2306013985325377871 join aggView5534425925203374161 using(v40);
+select MIN(v52) as v52,MIN(v53) as v53 from aggJoin1022970771203069574;

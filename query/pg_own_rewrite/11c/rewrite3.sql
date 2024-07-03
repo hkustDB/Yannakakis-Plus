@@ -1,0 +1,18 @@
+create or replace view aggView3501895446914146632 as select name as v2, id as v17 from company_name as cn where country_code<> '[pl]' and ((name LIKE '20th Century Fox%') OR (name LIKE 'Twentieth Century Fox%'));
+create or replace view aggView8768830970261209570 as select id as v13 from link_type as lt;
+create or replace view aggJoin6628355401410794594 as select movie_id as v24 from movie_link as ml, aggView8768830970261209570 where ml.link_type_id=aggView8768830970261209570.v13;
+create or replace view aggView2211208778884106821 as select id as v22 from keyword as k where keyword IN ('sequel','revenge','based-on-novel');
+create or replace view aggJoin8064159400599157355 as select movie_id as v24 from movie_keyword as mk, aggView2211208778884106821 where mk.keyword_id=aggView2211208778884106821.v22;
+create or replace view aggView3016578528973415309 as select v24 from aggJoin6628355401410794594 group by v24;
+create or replace view aggJoin9175963918176709436 as select movie_id as v24, company_id as v17, company_type_id as v18, note as v19 from movie_companies as mc, aggView3016578528973415309 where mc.movie_id=aggView3016578528973415309.v24;
+create or replace view aggView6515164916918295434 as select id as v18 from company_type as ct where kind<> 'production companies';
+create or replace view aggJoin6157143954431171090 as select v24, v17, v19 from aggJoin9175963918176709436 join aggView6515164916918295434 using(v18);
+create or replace view aggView4107258244991447030 as select v24, v17, v19 from aggJoin6157143954431171090;
+create or replace view aggView120287730645547276 as select v24 from aggJoin8064159400599157355 group by v24;
+create or replace view aggJoin3997386630718755512 as select id as v24, title as v28, production_year as v31 from title as t, aggView120287730645547276 where t.id=aggView120287730645547276.v24 and production_year>1950;
+create or replace view aggView2261374903134698736 as select v24, v28 from aggJoin3997386630718755512;
+create or replace view aggView8516160706490375397 as select v17, MIN(v2) as v39 from aggView3501895446914146632 group by v17;
+create or replace view aggJoin5354422279750654672 as select v24, v19, v39 from aggView4107258244991447030 join aggView8516160706490375397 using(v17);
+create or replace view aggView5925776020374872151 as select v24, MIN(v39) as v39, MIN(v19) as v40 from aggJoin5354422279750654672 group by v24;
+create or replace view aggJoin7864089010336650478 as select v28, v39, v40 from aggView2261374903134698736 join aggView5925776020374872151 using(v24);
+select MIN(v39) as v39,MIN(v40) as v40,MIN(v28) as v41 from aggJoin7864089010336650478;

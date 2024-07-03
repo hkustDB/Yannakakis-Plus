@@ -1,0 +1,13 @@
+create or replace view aggView1194928993511590820 as select id as v1, name as v43 from char_name as chn;
+create or replace view aggJoin3455105442451367403 as select movie_id as v31, note as v12, role_id as v29, v43 from cast_info as ci, aggView1194928993511590820 where ci.person_role_id=aggView1194928993511590820.v1 and note LIKE '%(producer)%';
+create or replace view aggView5789021526054563559 as select id as v29 from role_type as rt;
+create or replace view aggJoin6885671917556534464 as select v31, v12, v43 from aggJoin3455105442451367403 join aggView5789021526054563559 using(v29);
+create or replace view aggView3490464590638221027 as select id as v22 from company_type as ct;
+create or replace view aggJoin1746485796073132116 as select movie_id as v31, company_id as v15 from movie_companies as mc, aggView3490464590638221027 where mc.company_type_id=aggView3490464590638221027.v22;
+create or replace view aggView6119185097862588654 as select id as v15 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin8526560135139332699 as select v31 from aggJoin1746485796073132116 join aggView6119185097862588654 using(v15);
+create or replace view aggView1921267979442501658 as select id as v31, title as v44 from title as t where production_year>1990;
+create or replace view aggJoin7133898153024159110 as select v31, v44 from aggJoin8526560135139332699 join aggView1921267979442501658 using(v31);
+create or replace view aggView9100256777066624087 as select v31, MIN(v43) as v43 from aggJoin6885671917556534464 group by v31,v43;
+create or replace view aggJoin8321616785673919632 as select v44 as v44, v43 from aggJoin7133898153024159110 join aggView9100256777066624087 using(v31);
+select MIN(v43) as v43,MIN(v44) as v44 from aggJoin8321616785673919632;

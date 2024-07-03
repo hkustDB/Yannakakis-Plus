@@ -1,0 +1,13 @@
+create or replace view aggView7715809354265508494 as select id as v25 from company_name as cn where country_code= '[us]';
+create or replace view aggJoin3841291704570274661 as select movie_id as v11 from movie_companies as mc, aggView7715809354265508494 where mc.company_id=aggView7715809354265508494.v25;
+create or replace view aggView1827510036693050751 as select v11 from aggJoin3841291704570274661 group by v11;
+create or replace view aggJoin8010149538134982179 as select id as v11, title as v40 from title as t, aggView1827510036693050751 where t.id=aggView1827510036693050751.v11;
+create or replace view aggView6487516422245515303 as select v11, MIN(v40) as v52 from aggJoin8010149538134982179 group by v11;
+create or replace view aggJoin6766021242738257194 as select person_id as v2, role_id as v15, v52 from cast_info as ci, aggView6487516422245515303 where ci.movie_id=aggView6487516422245515303.v11;
+create or replace view aggView3691541498506001487 as select id as v15 from role_type as rt where role= 'costume designer';
+create or replace view aggJoin1783351501887342340 as select v2, v52 from aggJoin6766021242738257194 join aggView3691541498506001487 using(v15);
+create or replace view aggView3061876769646764854 as select person_id as v2, MIN(name) as v51 from aka_name as an1 group by person_id;
+create or replace view aggJoin912756384360368046 as select v2, v52 as v52, v51 from aggJoin1783351501887342340 join aggView3061876769646764854 using(v2);
+create or replace view aggView2328484615085536499 as select id as v2 from name as n1;
+create or replace view aggJoin732161783930935603 as select v52, v51 from aggJoin912756384360368046 join aggView2328484615085536499 using(v2);
+select MIN(v51) as v51,MIN(v52) as v52 from aggJoin732161783930935603;

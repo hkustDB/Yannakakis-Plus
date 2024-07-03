@@ -1,0 +1,5 @@
+create or replace view semiUp2362960956268081423 as select p_partkey as v2, p_type as v21 from part AS part where (p_partkey) in (select l_partkey from lineitem AS lineitem where l_shipdate>=DATE '1995-09-01' and l_shipdate<DATE '1995-10-01');
+create or replace view semiDown3942022008518560946 as select l_partkey as v2, l_extendedprice as v6, l_discount as v7 from lineitem AS lineitem where (l_partkey) in (select v2 from semiUp2362960956268081423) and l_shipdate>=DATE '1995-09-01' and l_shipdate<DATE '1995-10-01';
+create or replace view aggView678501972524490325 as select v2, v6 * (1 - v7) as caseRes, SUM(v6 * (1 - v7)) as v29, COUNT(*) as annot from semiDown3942022008518560946 group by v2,caseRes;
+create or replace view aggJoin5771570822167424413 as select v21, caseRes, v29, annot from semiUp2362960956268081423 join aggView678501972524490325 using(v2);
+select ((100.0 * SUM(CASE WHEN (v21 LIKE 'PROMO%') THEN caseRes ELSE 0.0 END*annot)) / SUM(v29)) as v30 from aggJoin5771570822167424413;

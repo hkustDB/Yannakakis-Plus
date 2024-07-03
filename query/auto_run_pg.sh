@@ -14,7 +14,8 @@ SCRIPT=$(readlink -f $0)
 SCRIPT_PATH=$(dirname "${SCRIPT}")
 
 INPUT_DIR=$1
-PARALLEL=${2:-1}
+PARALLEL=${2:-2}
+HALF_PARALLEL=$(((PARALLEL + 1) / 2))
 INPUT_DIR_PATH="${SCRIPT_PATH}/${INPUT_DIR}"
 
 PG="/home/bchenba/postgresql-16.2/bin/psql"
@@ -62,25 +63,29 @@ do
                     touch "${SUBMIT_QUERY}"
                     # extra settings for parallelism
                     echo "SET max_parallel_workers_per_gather=${PARALLEL};" >> ${SUBMIT_QUERY}
-                    echo "SET max_parallel_workers=${PARALLEL};" >> ${SUBMIT_QUERY}
-                    echo "create extension if not exists pg_prewarm;" >> ${SUBMIT_QUERY}
-                    tables=('partsupp' 'part' 'supplier' 'nation')
-                    for table in ${tables[@]}; do
-                        echo "select pg_prewarm('${table}');" >> ${SUBMIT_QUERY}
-                    done
+                    echo "SET max_parallel_workers=${HALF_PARALLEL};" >> ${SUBMIT_QUERY}
+                    echo "SET work_mem = '5GB';" >> ${SUBMIT_QUERY}
+                    # echo "SET enable_mergejoin = off;" >> ${SUBMIT_QUERY}
+                    echo "SET enable_nestloop=off;" >> ${SUBMIT_QUERY}
+                    # echo "VACUUM;" >> ${SUBMIT_QUERY}
+                    # echo "create extension if not exists pg_prewarm;" >> ${SUBMIT_QUERY}
+                    # tables=('partsupp' 'part' 'supplier' 'nation')
+                    # for table in ${tables[@]}; do
+                    #     echo "select pg_prewarm('${table}');" >> ${SUBMIT_QUERY}
+                    # done
 
                     echo "COPY (" >> ${SUBMIT_QUERY}
                     cat ${QUERY} >> ${SUBMIT_QUERY}
                     echo ") TO '/dev/null' DELIMITER ',' CSV;" >> ${SUBMIT_QUERY}
                     echo "Start PG Task at ${QUERY}"
                     current_task=1
-                    while [[ ${current_task} -le 3 ]]
+                    while [[ ${current_task} -le 1 ]]
                     do
                         echo "Current Task: ${current_task}"
                         OUT_FILE="${CUR_PATH}/output.txt"
                         rm -f $OUT_FILE
                         touch $OUT_FILE
-                        timeout -s SIGKILL 2h $PG "-d" "${DB}" "-p" "${port}" "-c" "\timing" "-f" "${SUBMIT_QUERY}" | grep "Time: " | tail -n 1 >> $OUT_FILE
+                        timeout -s SIGKILL 8h $PG "-d" "${DB}" "-p" "${port}" "-c" "\timing" "-f" "${SUBMIT_QUERY}" | grep "Time: " | tail -n 1 >> $OUT_FILE
                         status_code=$?
                         if [[ ${status_code} -eq 137 ]]; then
                             echo "PG task timed out." >> $LOG_FILE
@@ -107,19 +112,27 @@ do
                     touch "${SUBMIT_QUERY_2}"
                     # extra settings for parallelism
                     echo "SET max_parallel_workers_per_gather=${PARALLEL};" >> ${SUBMIT_QUERY_1}
-                    echo "SET max_parallel_workers=${PARALLEL};" >> ${SUBMIT_QUERY_1}
-                    echo "create extension if not exists pg_prewarm;" >> ${SUBMIT_QUERY_1}
-                    tables=('partsupp' 'part' 'supplier' 'nation')
-                    for table in ${tables[@]}; do
-                        echo "select pg_prewarm('${table}');" >> ${SUBMIT_QUERY_1}
-                    done
+                    echo "SET max_parallel_workers=${HALF_PARALLEL};" >> ${SUBMIT_QUERY_1}
+                    echo "SET work_mem = '5GB';" >> ${SUBMIT_QUERY_1}
+                    # echo "SET enable_mergejoin = off;" >> ${SUBMIT_QUERY_1}
+                    echo "SET enable_nestloop=off;" >> ${SUBMIT_QUERY_1}
+                    # echo "VACUUM;" >> ${SUBMIT_QUERY_1}
+                    # echo "create extension if not exists pg_prewarm;" >> ${SUBMIT_QUERY}
+                    # tables=('partsupp' 'part' 'supplier' 'nation')
+                    # for table in ${tables[@]}; do
+                    #     echo "select pg_prewarm('${table}');" >> ${SUBMIT_QUERY}
+                    # done
                     echo "SET max_parallel_workers_per_gather=${PARALLEL};" >> ${SUBMIT_QUERY_2}
-                    echo "SET max_parallel_workers=${PARALLEL};" >> ${SUBMIT_QUERY_2}
-                    echo "create extension if not exists pg_prewarm;" >> ${SUBMIT_QUERY_2}
-                    tables=('partsupp' 'part' 'supplier' 'nation')
-                    for table in ${tables[@]}; do
-                        echo "select pg_prewarm('${table}');" >> ${SUBMIT_QUERY_2}
-                    done
+                    echo "SET max_parallel_workers=${HALF_PARALLEL};" >> ${SUBMIT_QUERY_2}
+                    echo "SET work_mem = '5GB';" >> ${SUBMIT_QUERY_2}
+                    # echo "SET enable_mergejoin = off;" >> ${SUBMIT_QUERY_2}
+                    echo "SET enable_nestloop = off;" >> ${SUBMIT_QUERY_2}
+                    # echo "VACUUM;" >> ${SUBMIT_QUERY_2}
+                    # echo "create extension if not exists pg_prewarm;" >> ${SUBMIT_QUERY}
+                    # tables=('partsupp' 'part' 'supplier' 'nation')
+                    # for table in ${tables[@]}; do
+                    #     echo "select pg_prewarm('${table}');" >> ${SUBMIT_QUERY}
+                    # done
 
                     ${COMMAND} -n -1 ${QUERY} >> ${SUBMIT_QUERY_1}
                     echo "COPY (" >> ${SUBMIT_QUERY_2}
@@ -127,13 +140,13 @@ do
                     echo ") TO '/dev/null' DELIMITER ',' CSV;" >> ${SUBMIT_QUERY_2}
                     echo "Start PG Task at ${QUERY}"
                     current_task=1
-                    while [[ ${current_task} -le 3 ]]
+                    while [[ ${current_task} -le 1 ]]
                     do
                         echo "Current Task: ${current_task}"
                         OUT_FILE="${CUR_PATH}/output.txt"
                         rm -f $OUT_FILE
                         touch $OUT_FILE
-                        timeout -s SIGKILL 2h $PG "-d" "${DB}" "-p" "${port}" "-f" "${SUBMIT_QUERY_1}" "-c" "\timing" "-f" "${SUBMIT_QUERY_2}" | grep "Time: " | tail -n 1 >> $OUT_FILE
+                        timeout -s SIGKILL 8h $PG "-d" "${DB}" "-p" "${port}" "-f" "${SUBMIT_QUERY_1}" "-c" "\timing" "-f" "${SUBMIT_QUERY_2}" | grep "Time: " | tail -n 1 >> $OUT_FILE
                         status_code=$?
                         if [[ ${status_code} -eq 137 ]]; then
                            echo "PG task timed out." >> $LOG_FILE

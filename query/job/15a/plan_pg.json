@@ -1,0 +1,42 @@
+{
+    "relation": "mk",
+    "children": [
+        {
+            "relation": "k",
+            "children": []
+        },
+        {
+            "relation": "ct",
+            "children": [
+                {
+                    "relation": "aka_t",
+                    "children": [
+                        {
+                            "relation": "t",
+                            "children": [
+                                {
+                                    "relation": "mi",
+                                    "children": [
+                                        {
+                                            "relation": "it1",
+                                            "children": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "relation": "mc",
+                                    "children": [
+                                        {
+                                            "relation": "cn",
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

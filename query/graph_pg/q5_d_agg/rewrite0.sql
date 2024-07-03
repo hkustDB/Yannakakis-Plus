@@ -1,0 +1,13 @@
+create or replace view g3 as select dblp.src as v4, dblp.dst as v6, v14 from dblp, (SELECT src, COUNT(*) AS v14 FROM dblp GROUP BY src) AS c2 where dblp.dst = c2.src;
+create or replace view g5 as select dblp.src as v4, dblp.dst as v10, v18 from dblp, (SELECT dst, COUNT(*) AS v18 FROM dblp GROUP BY dst) AS c4 where dblp.dst = c4.dst;
+create or replace view aggView2151555615895080546 as select v4, COUNT(*) as annot from g3 group by v4;
+create or replace view aggJoin1734188634901941261 as select v4, annot from g5 join aggView2151555615895080546 using(v4);
+create or replace view aggView5680450110312449830 as select v4, SUM(annot) as annot from aggJoin1734188634901941261 group by v4;
+create or replace view aggJoin6203618474142318825 as select src as v2, annot from dblp as g2, aggView5680450110312449830 where g2.dst=aggView5680450110312449830.v4;
+create or replace view g4 as select dblp.src as v7, dblp.dst as v2, v16 from dblp, (SELECT dst, COUNT(*) AS v16 FROM dblp GROUP BY dst) AS c3 where dblp.src = c3.dst;
+create or replace view aggView7284744340011779327 as select v2, SUM(annot) as annot from aggJoin6203618474142318825 group by v2;
+create or replace view aggJoin3536528501129178130 as select v2, annot from g4 join aggView7284744340011779327 using(v2);
+create or replace view g1 as select dblp.src as v1, dblp.dst as v2, v12 from dblp, (SELECT src, COUNT(*) AS v12 FROM dblp GROUP BY src) AS c1 where dblp.src = c1.src;
+create or replace view aggView1434202578998159508 as select v2, SUM(annot) as annot from aggJoin3536528501129178130 group by v2;
+create or replace view aggJoin3164298753597498516 as select annot from g1 join aggView1434202578998159508 using(v2);
+select SUM(annot) as v19 from aggJoin3164298753597498516;

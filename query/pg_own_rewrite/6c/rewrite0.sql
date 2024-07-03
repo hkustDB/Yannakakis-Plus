@@ -1,0 +1,14 @@
+create or replace view aggView377994806826488282 as select id as v8, keyword as v9 from keyword as k;
+create or replace view aggJoin5129260834706300532 as select v8, v9 from aggView377994806826488282 where v9= 'marvel-cinematic-universe';
+create or replace view aggView6552304865761975441 as select id as v23, title as v24 from title as t where production_year>2014;
+create or replace view aggView6957416018839469752 as select id as v14, name as v15 from name as n;
+create or replace view aggJoin7261299430054369853 as select v14, v15 from aggView6957416018839469752 where v15 LIKE '%Downey%Robert%';
+create or replace view aggView2269537752917405014 as select v8, MIN(v9) as v35 from aggJoin5129260834706300532 group by v8;
+create or replace view aggJoin1163360561908929603 as select movie_id as v23, v35 from movie_keyword as mk, aggView2269537752917405014 where mk.keyword_id=aggView2269537752917405014.v8;
+create or replace view aggView4220445954154692966 as select v23, MIN(v24) as v37 from aggView6552304865761975441 group by v23;
+create or replace view aggJoin5231762818742205338 as select v23, v35 as v35, v37 from aggJoin1163360561908929603 join aggView4220445954154692966 using(v23);
+create or replace view aggView5439859960930698154 as select v23, MIN(v35) as v35, MIN(v37) as v37 from aggJoin5231762818742205338 group by v23;
+create or replace view aggJoin227026835619037315 as select person_id as v14, v35, v37 from cast_info as ci, aggView5439859960930698154 where ci.movie_id=aggView5439859960930698154.v23;
+create or replace view aggView2474594540840434934 as select v14, MIN(v35) as v35, MIN(v37) as v37 from aggJoin227026835619037315 group by v14;
+create or replace view aggJoin5973343966036834953 as select v15, v35, v37 from aggJoin7261299430054369853 join aggView2474594540840434934 using(v14);
+select MIN(v35) as v35,MIN(v15) as v36,MIN(v37) as v37 from aggJoin5973343966036834953;

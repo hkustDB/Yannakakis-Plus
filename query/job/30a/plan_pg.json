@@ -1,0 +1,65 @@
+{
+    "relation": "cn",
+    "children": [
+        {
+            "relation": "cc",
+            "children": [
+                {
+                    "relation": "cct2",
+                    "children": []
+                },
+                {
+                    "relation": "cct1",
+                    "children": []
+                },
+                {
+                    "relation": "k",
+                    "children": [
+                        {
+                            "relation": "kt",
+                            "children": [
+                                {
+                                    "relation": "mk",
+                                    "children": [
+                                        {
+                                            "relation": "mc",
+                                            "children": [
+                                                {
+                                                    "relation": "ct",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "relation": "mi",
+                                                    "children": [
+                                                        {
+                                                            "relation": "it1",
+                                                            "children": []
+                                                        },
+                                                        {
+                                                            "relation": "t",
+                                                            "children": [
+                                                                {
+                                                                    "relation": "mi_idx",
+                                                                    "children": [
+                                                                        {
+                                                                            "relation": "it2",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

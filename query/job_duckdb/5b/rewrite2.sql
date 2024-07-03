@@ -1,0 +1,10 @@
+create or replace view aggView567413571711476199 as select id as v1 from company_type as ct where kind= 'production companies';
+create or replace view aggJoin3893023933574401687 as select movie_id as v15, note as v9 from movie_companies as mc, aggView567413571711476199 where mc.company_type_id=aggView567413571711476199.v1 and note LIKE '%(USA)%' and note LIKE '%(VHS)%' and note LIKE '%(1994)%';
+create or replace view aggView5137540950165989909 as select id as v3 from info_type as it;
+create or replace view aggJoin5352473611515681727 as select movie_id as v15, info as v13 from movie_info as mi, aggView5137540950165989909 where mi.info_type_id=aggView5137540950165989909.v3 and info IN ('USA','America');
+create or replace view aggView4834385144451553355 as select v15 from aggJoin3893023933574401687 group by v15;
+create or replace view aggJoin5800802504325075123 as select v15, v13 from aggJoin5352473611515681727 join aggView4834385144451553355 using(v15);
+create or replace view aggView8965705176399840386 as select v15 from aggJoin5800802504325075123 group by v15;
+create or replace view aggJoin6063503136974467621 as select title as v16, production_year as v19 from title as t, aggView8965705176399840386 where t.id=aggView8965705176399840386.v15 and production_year>2010;
+create or replace view aggView4464078680583816368 as select v16 from aggJoin6063503136974467621;
+select MIN(v16) as v27 from aggView4464078680583816368;

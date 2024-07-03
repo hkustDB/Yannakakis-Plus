@@ -1,0 +1,13 @@
+create or replace view aggView8581058272358097644 as select id as v25 from keyword as k where keyword= 'character-name-in-title';
+create or replace view aggJoin5607987817230791996 as select movie_id as v3 from movie_keyword as mk, aggView8581058272358097644 where mk.keyword_id=aggView8581058272358097644.v25;
+create or replace view aggView8490058614223656259 as select id as v20 from company_name as cn;
+create or replace view aggJoin4867668687539607008 as select movie_id as v3 from movie_companies as mc, aggView8490058614223656259 where mc.company_id=aggView8490058614223656259.v20;
+create or replace view aggView5317347267143899606 as select v3 from aggJoin5607987817230791996 group by v3;
+create or replace view aggJoin6063514595311396760 as select v3 from aggJoin4867668687539607008 join aggView5317347267143899606 using(v3);
+create or replace view aggView2638497665898613904 as select v3 from aggJoin6063514595311396760 group by v3;
+create or replace view aggJoin3957426007651676285 as select id as v3 from title as t, aggView2638497665898613904 where t.id=aggView2638497665898613904.v3;
+create or replace view aggView850526683528777274 as select v3 from aggJoin3957426007651676285 group by v3;
+create or replace view aggJoin5299926170819594291 as select person_id as v26 from cast_info as ci, aggView850526683528777274 where ci.movie_id=aggView850526683528777274.v3;
+create or replace view aggView7512747039053070344 as select id as v26, name as v47 from name as n where name LIKE '%Bert%';
+create or replace view aggJoin7587146081619135377 as select v47 from aggJoin5299926170819594291 join aggView7512747039053070344 using(v26);
+select MIN(v47) as v47 from aggJoin7587146081619135377;

@@ -1,0 +1,15 @@
+create or replace view aggView9146674463078038480 as select id as v16 from info_type as it where info= 'mini biography';
+create or replace view aggJoin6556829219088135782 as select person_id as v24, note as v37 from person_info as pi, aggView9146674463078038480 where pi.info_type_id=aggView9146674463078038480.v16 and note= 'Volker Boehm';
+create or replace view aggView3055210361325493988 as select id as v18 from link_type as lt where link= 'features';
+create or replace view aggJoin7467639862692540509 as select linked_movie_id as v38 from movie_link as ml, aggView3055210361325493988 where ml.link_type_id=aggView3055210361325493988.v18;
+create or replace view aggView1557867987897680929 as select v38 from aggJoin7467639862692540509 group by v38;
+create or replace view aggJoin6834653756033000536 as select id as v38, title as v39, production_year as v42 from title as t, aggView1557867987897680929 where t.id=aggView1557867987897680929.v38 and production_year>=1980 and production_year<=1995;
+create or replace view aggView548050269530023858 as select v24 from aggJoin6556829219088135782 group by v24;
+create or replace view aggJoin3669593214251039959 as select person_id as v24, name as v3 from aka_name as an, aggView548050269530023858 where an.person_id=aggView548050269530023858.v24 and name LIKE '%a%';
+create or replace view aggView7256747935660486830 as select v24 from aggJoin3669593214251039959 group by v24;
+create or replace view aggJoin7609976394739709649 as select person_id as v24, movie_id as v38 from cast_info as ci, aggView7256747935660486830 where ci.person_id=aggView7256747935660486830.v24;
+create or replace view aggView1866819328098786493 as select v38, MIN(v39) as v51 from aggJoin6834653756033000536 group by v38;
+create or replace view aggJoin4119070293722876565 as select v24, v51 from aggJoin7609976394739709649 join aggView1866819328098786493 using(v38);
+create or replace view aggView6624614097044378296 as select id as v24, name as v50 from name as n where name_pcode_cf>='A' and name LIKE 'B%' and name_pcode_cf<='F';
+create or replace view aggJoin2195016063098373081 as select v51, v50 from aggJoin4119070293722876565 join aggView6624614097044378296 using(v24);
+select MIN(v50) as v50,MIN(v51) as v51 from aggJoin2195016063098373081;

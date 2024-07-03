@@ -1,0 +1,17 @@
+create or replace view semiUp1932265231644694207 as select person_id as v14, movie_id as v23 from cast_info AS ci where (movie_id) in (select id from title AS t where production_year>2000);
+create or replace view semiUp6180808771232195165 as select v14, v23 from semiUp1932265231644694207 where (v14) in (select id from name AS n where name LIKE '%Downey%Robert%');
+create or replace view semiUp7419953788008071003 as select movie_id as v23, keyword_id as v8 from movie_keyword AS mk where (keyword_id) in (select id from keyword AS k where keyword= 'marvel-cinematic-universe');
+create or replace view semiUp6378767397414504617 as select v14, v23 from semiUp6180808771232195165 where (v23) in (select v23 from semiUp7419953788008071003);
+create or replace view semiDown5419153787831184806 as select id as v14, name as v15 from name AS n where (id) in (select v14 from semiUp6378767397414504617) and name LIKE '%Downey%Robert%';
+create or replace view semiDown8826187739396242487 as select id as v23, title as v24 from title AS t where (id) in (select v23 from semiUp6378767397414504617) and production_year>2000;
+create or replace view semiDown2381627552052074098 as select v23, v8 from semiUp7419953788008071003 where (v23) in (select v23 from semiUp6378767397414504617);
+create or replace view semiDown6494497719841340409 as select id as v8, keyword as v9 from keyword AS k where (id) in (select v8 from semiDown2381627552052074098) and keyword= 'marvel-cinematic-universe';
+create or replace view aggView8526013009339810563 as select v8, v9 as v35 from semiDown6494497719841340409;
+create or replace view aggJoin4875411858485667585 as select v23, v35 from semiDown2381627552052074098 join aggView8526013009339810563 using(v8);
+create or replace view aggView5608738192310086124 as select v23, v24 as v37 from semiDown8826187739396242487;
+create or replace view aggJoin6576846263653482394 as select v14, v23, v37 from semiUp6378767397414504617 join aggView5608738192310086124 using(v23);
+create or replace view aggView2216268591781725314 as select v23, MIN(v35) as v35 from aggJoin4875411858485667585 group by v23,v35;
+create or replace view aggJoin7406831481189396522 as select v14, v37 as v37, v35 from aggJoin6576846263653482394 join aggView2216268591781725314 using(v23);
+create or replace view aggView938778485695883920 as select v14, v15 as v36 from semiDown5419153787831184806;
+create or replace view aggJoin1756668665624678720 as select v37, v35, v36 from aggJoin7406831481189396522 join aggView938778485695883920 using(v14);
+select MIN(v35) as v35,MIN(v36) as v36,MIN(v37) as v37 from aggJoin1756668665624678720;

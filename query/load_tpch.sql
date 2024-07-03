@@ -102,6 +102,8 @@ GROUP BY ps_partkey;
 
 create or replace view orderswithyear as select orders.*, year(o_orderdate) as o_year from orders;
 
+create or replace view lineitemwithyear as select lineitem.*, year(l_shipdate) as l_year from lineitem;
+
 create or replace view revenue0 (supplier_no, total_revenue) as select l_suppkey, sum(l_extendedprice * (1 - l_discount))
 from lineitem
 where l_shipdate >= DATE '1995-02-01' and l_shipdate < DATE '1995-05-01'

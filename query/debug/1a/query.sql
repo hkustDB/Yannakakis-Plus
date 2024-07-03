@@ -1,1 +1,0 @@
-SELECT CONCAT('drop view ', group_concat(TABLE_NAME), ';') FROM information_schema.tables WHERE table_type = 'VIEW' AND table_name LIKE 'agg%' ;
