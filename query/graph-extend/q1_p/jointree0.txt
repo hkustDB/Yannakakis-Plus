@@ -1,0 +1,26 @@
+Relations:
+dict_values([g2[6293,Graph, 4290865.1260171365]: ['v2', 'v4']
+['v2']
+, c1[6295,Graph, 0]: ['v7', 'v8']
+None
+, c2[6296,Graph, 0]: ['v6', 'v10']
+None
+, g1[6297,Graph, 36183539.18773606]: ['v7', 'v2', 'v8']
+['v7']
+, g3[6298,Graph, 508837]: ['v4', 'v6', 'v10']
+['v4']
+, g1Aux6[6303,g1, 508837]: ['v7']
+[]
+])
+Edges:
+dict_values([g2->g3, g1->g2, g1Aux6->g1])
+Root:
+6303
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[6303]
+fixroot:
+False

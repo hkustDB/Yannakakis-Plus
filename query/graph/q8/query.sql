@@ -1,8 +1,6 @@
-create or replace view res as SELECT g1.src AS src, g3.dst AS dst, c1.cnt AS cnt1, c2.cnt AS cnt2
-FROM Graph AS g1, Graph AS g2, Graph AS g3,
-    (SELECT src, COUNT(*) AS cnt FROM Graph GROUP BY src) AS c1,
-    (SELECT src, COUNT(*) AS cnt FROM Graph GROUP BY src) AS c2
-WHERE c1.src = g1.src AND g1.dst = g2.src AND g2.dst = g3.src AND g3.dst = c2.src
-    AND c1.cnt < c2.cnt;
+create or replace view res as SELECT g2.src, COUNT(*) as cnt, SUM(g3.dst) as sum1, AVG(g4.dst) as avg1, AVG(g1.src) as avg2
+FROM Graph AS g1, Graph AS g2, Graph AS g3, Graph AS g4
+WHERE g1.dst = g2.src AND g2.dst = g3.src AND g3.dst = g4.src AND g1.src < g4.dst
+GROUP BY g2.src;
 
-/*+QUERY_TIMEOUT=172800000*/select sum(src + dst + cnt1 + cnt2) from res;
+/*+QUERY_TIMEOUT=172800000*/select sum(src + cnt + sum1 + cnt + avg1 + avg2) from res;
