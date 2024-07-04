@@ -1,7 +1,9 @@
-create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src and v8<Graph.dst;
-create or replace view semiJoinView2776714715599190402 as select src as v2, dst as v4 from Graph AS g2 where (src) in (select v2 from g1);
-create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v10 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src and v10<Graph.src;
-create or replace view semiJoinView8165854388528270015 as select v4, v6, v10 from g3 where (v4) in (select v4 from semiJoinView2776714715599190402);
-create or replace view semiEnum5440310001050102906 as select v6, v4, v2, v10 from semiJoinView8165854388528270015 join semiJoinView2776714715599190402 using(v4);
-create or replace view semiEnum8145927589356539693 as select v8, v6, v4, v7, v2, v10 from semiEnum5440310001050102906 join g1 using(v2);
-select sum(v4+v6) FROM semiEnum8145927589356539693;
+create or replace view aggView6328439021211489000 as select src as v8 from Graph as g5;
+create or replace view aggJoin1100051845837263031 as select src as v6, dst as v8 from Graph as g4, aggView6328439021211489000 where g4.dst=aggView6328439021211489000.v8;
+create or replace view aggView7086711534686667371 as select v6, SUM(v8 + v6) as v12, COUNT(*) as annot from aggJoin1100051845837263031 group by v6;
+create or replace view aggJoin8524680132817539633 as select src as v4, v12, annot from Graph as g3, aggView7086711534686667371 where g3.dst=aggView7086711534686667371.v6;
+create or replace view aggView4644602948599854019 as select v4, SUM(v12) as v12, SUM(annot) as annot from aggJoin8524680132817539633 group by v4;
+create or replace view aggJoin3810399316989836391 as select src as v2, dst as v4, v12, annot from Graph as g2, aggView4644602948599854019 where g2.dst=aggView4644602948599854019.v4;
+create or replace view aggView4611876661274631158 as select dst as v2 from Graph as g1;
+create or replace view aggJoin5310185265778202901 as select v2, v4, v12 from aggJoin3810399316989836391 join aggView4611876661274631158 using(v2);
+/*+QUERY_TIMEOUT=172800000*/select sum(v2 + v4 + v12) from aggJoin5310185265778202901;

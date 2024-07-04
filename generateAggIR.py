@@ -485,7 +485,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
                     if alias not in groupBy: groupBy.append(alias)
             
         else:
-            setExtraCond: set[str] = set(childNode.JoinResView.selectAttrAlias) & JT.extraCondList.allAlias
+            setExtraCond: set[str] = set(childNode.cols) & JT.extraCondList.allAlias
             if len(setExtraCond):
                 for alias in setExtraCond:
                     if alias not in selectAttrAlias:
@@ -494,7 +494,7 @@ def buildAggReducePhase(reduceRel: Edge, JT: JoinTree, Agg: Aggregation, outputV
                     if alias not in aggPass2Join: aggPass2Join.append(alias)
                     if alias not in groupBy: groupBy.append(alias)
             
-            setOutVars = set(childNode.JoinResView.selectAttrAlias) & set(outputVariables)
+            setOutVars = set(childNode.cols) & set(outputVariables)
             if len(setOutVars) and JT.fixRoot:
                 for alias in setOutVars:
                     if alias not in selectAttrAlias:
