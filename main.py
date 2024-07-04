@@ -349,7 +349,7 @@ if __name__ == '__main__':
     else:
         globalVar.set_value('PLAN_NAME', 'plan_pg.json')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/graph/q10/')
+    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/extra2/q10/')
     globalVar.set_value('DDL_NAME', "graph.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
@@ -422,7 +422,7 @@ if __name__ == '__main__':
     else:
         fields = ['index', 'hight', 'width', 'estimate'] 
         cost_stat = PQ()
-        total_number = 2
+        total_number = 6
         fix_number, nonfix_number = total_number // 2, total_number // 2
         fix_iter, nonfix_iter = 0, 0
         best_res_nonfix, best_res_fix = [], []

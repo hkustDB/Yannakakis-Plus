@@ -1,4 +1,6 @@
-CREATE TABLE Graph (
+create table bitcoin
+(
     src INT,
-    dst INT
-);
+    dst INT,
+    weight INT
+)

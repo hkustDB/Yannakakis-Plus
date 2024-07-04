@@ -1,0 +1,13 @@
+create or replace view g1 as select Graph.src as v1, Graph.dst as v2, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view g4 as select Graph.src as v7, Graph.dst as v2, v16 from Graph, (SELECT dst, COUNT(*) AS v16 FROM Graph GROUP BY dst) AS c3 where Graph.src = c3.dst;
+create or replace view aggView1555096383281438179 as select v2, COUNT(*) as annot from g1 group by v2;
+create or replace view aggJoin5797861731628855079 as select v2, annot from g4 join aggView1555096383281438179 using(v2);
+create or replace view aggView4543248365483638759 as select v2, SUM(annot) as annot from aggJoin5797861731628855079 group by v2;
+create or replace view aggJoin2018434629847756740 as select dst as v4, annot from Graph as g2, aggView4543248365483638759 where g2.src=aggView4543248365483638759.v2;
+create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v14 from Graph, (SELECT src, COUNT(*) AS v14 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create or replace view aggView6405822300453150470 as select v4, SUM(annot) as annot from aggJoin2018434629847756740 group by v4;
+create or replace view aggJoin2071687205213125608 as select v4, annot from g3 join aggView6405822300453150470 using(v4);
+create or replace view g5 as select Graph.src as v4, Graph.dst as v10, v18 from Graph, (SELECT dst, COUNT(*) AS v18 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c4.dst;
+create or replace view aggView6754526374930856008 as select v4, SUM(annot) as annot from aggJoin2071687205213125608 group by v4;
+create or replace view aggJoin8338142555718076872 as select annot from g5 join aggView6754526374930856008 using(v4);
+/*+QUERY_TIMEOUT=86400000*/select SUM(annot) as v19 from aggJoin8338142555718076872;
