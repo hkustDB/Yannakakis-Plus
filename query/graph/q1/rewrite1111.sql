@@ -14,4 +14,4 @@ create or replace view b1 as select v2, v4, v6, v10 from b1_semi join f4 using(v
 create or replace view b1_agg as select v2, max(v10) as upper from b1 group by v2;
 create or replace view b2_semi as select g1.* from g1 join b1_agg using(v2) where v8 < upper;
 create or replace view b2 as select v1, v2, v4, v8, v10 from b2_semi join b1 using(v2) where v8 < v10;
-select * from b2;
+select sum(v1 + v2 + v4 + v8 + v10) from b2;

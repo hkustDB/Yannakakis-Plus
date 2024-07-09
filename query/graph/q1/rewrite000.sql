@@ -25,4 +25,4 @@ create or replace view order1_1 as select * from orderView1 where 64 < rn and rn
 create or replace view res1_1 as select v1, v2, v4, v6, v8, v10 from border1_0 join order1_1 using(v2) where v8 < v10;
 create or replace view res1 as select v1, v2, v4, v8, v10 from res1_0 union all select v1, v2, v4, v8, v10 from res1_1;
 
-select * from res1;
+select sum(v1 + v2 + v4 + v8 + v10) from res1;
