@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "args": [
                 "<ddl>=lsqb",
-                "<query>=/Users/cbn/Desktop/SQLRewriter/query/extra/q1",
+                "<query>=",
                 "--base=2",
                 "--mode=0",
                 "--genType=D",

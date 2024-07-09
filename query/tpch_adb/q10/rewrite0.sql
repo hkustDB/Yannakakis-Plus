@@ -1,8 +1,0 @@
-create or replace view aggView2507563541009672573 as select n_nationkey as v4, n_name as v35 from nation as nation;
-create or replace view aggJoin4673585536693850995 as select c_custkey as v1, c_name as v2, c_address as v3, c_phone as v5, c_acctbal as v6, c_comment as v8, v35 from customer as customer, aggView2507563541009672573 where customer.c_nationkey=aggView2507563541009672573.v4;
-create or replace view aggView5702763303071022840 as select v1, v3, v8, v35, v6, v2, v5, COUNT(*) as annot from aggJoin4673585536693850995 group by v1,v3,v8,v35,v6,v2,v5;
-create or replace view aggJoin6457415406923486951 as select o_orderkey as v18, o_custkey as v1, o_orderdate as v13, v3, v8, v35, v6, v2, v5, annot from orders as orders, aggView5702763303071022840 where orders.o_custkey=aggView5702763303071022840.v1 and o_orderdate>=DATE '1993-10-01' and o_orderdate<DATE '1994-01-01';
-create or replace view aggView903544100099324181 as select v18, v3, v8, v35, v6, v1, v2, v5, SUM(annot) as annot from aggJoin6457415406923486951 group by v18,v3,v8,v35,v6,v1,v2,v5;
-create or replace view aggJoin7166360426036847577 as select l_extendedprice as v23, l_discount as v24, v3, v8, v35, v6, v1, v2, v5, annot from lineitem as lineitem, aggView903544100099324181 where lineitem.l_orderkey=aggView903544100099324181.v18 and l_returnflag= 'R';
-create or replace view res as select v1, v2, SUM((v23 * (1 - v24))*annot) as v39, v6, v35, v3, v5, v8 from aggJoin7166360426036847577 group by v1, v2, v6, v5, v35, v3, v8;
-select sum(v1), sum(v2), sum(v39), sum(v6), sum(v35), sum(v3), sum(v5), sum(v8) from res;

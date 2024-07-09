@@ -10,7 +10,7 @@ from treenode import *
 from sys import maxsize
 from random import choice
 
-STATIS_PATH="/Users/cbn/Desktop/SQLRewriter/"
+STATIS_PATH="PATH_TO_STATISTICS"
 
 def input_car_ndv(DDL_NAME: str):
     try:

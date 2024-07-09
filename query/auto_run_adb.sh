@@ -5,10 +5,10 @@ SCRIPT=$(readlink -f $0)
 SCRIPT_PATH=$(dirname "${SCRIPT}")
 
 OPT=$1
-export MYSQL_PWD="Cbn123456"
+export MYSQL_PWD="XXX"
 mysql="/opt/homebrew/bin/mysql"
-mysql1_config="-ham-bp1rz4j2kfzh2ly2i90650o.ads.aliyuncs.com -P3306 -uadbtest -Dchampion -Acc -vvv"
-mysql4_config="-hamv-bp1112t3l1u3l4zv100001847o.ads.aliyuncs.com -P3306 -uadbtest -Dchampion -Acc -vvv"
+mysql1_config="XXX"
+mysql4_config="XXX"
 
 INPUT_DIR=$2
 INPUT_DIR_PATH="${SCRIPT_PATH}/${INPUT_DIR}"

@@ -1,10 +1,10 @@
 import os
 import re
 import statistics
-
+ 
 
 if __name__ == "__main__":
-    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/graph-extend')
+    paths = os.walk('QUERY_DIR')
 
     for path, dir_lst, file_lst in paths:
         for dir_name in dir_lst:
@@ -19,16 +19,14 @@ if __name__ == "__main__":
                         base_time_list = []
                         for line in lines:
                             if line.startswith('1 row'):
-                                if 'hour' in line:
-                                    base_time_list.append(int(line.split(' ')[4][1:]) * 3600 + int(line.split(' ')[6]) * 60 + float(line.split(' ')[8]))
-                                elif 'min' in line:
+                                if 'min' in line:
                                     base_time_list.append(int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6]))
                                 else:
                                     base_time_list.append(float(line.split(' ')[4][1:]))
                             elif line.startswith('Exec time'):
                                 base_time_list.append(float(line.split(' ')[2]))
                             elif line.startswith('Time'):
-                                base_time_list.append(round(float(line.split(' ')[1]) / 1000, 2))
+                                base_time_list.append(float(line.split(' ')[1]) / 1000)
                         base_time_list.sort()
                         if len(base_time_list) >= 2:
                             base_time = base_time_list[1]
@@ -42,16 +40,14 @@ if __name__ == "__main__":
                         rewrite_time_list = []
                         for line in lines[:-1]:
                             if line.startswith('1 row'):
-                                if 'hours' in line:
-                                    rewrite_time_list.append([file_index, int(line.split(' ')[4][1:]) * 3600 + int(line.split(' ')[6]) * 60 + float(line.split(' ')[8])])
-                                elif 'min' in line:
+                                if 'min' in line:
                                     rewrite_time_list.append([file_index, int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6])])
                                 else:
                                     rewrite_time_list.append([file_index, float(line.split(' ')[4][1:])])
                             elif line.startswith('Exec time'):
                                 rewrite_time_list.append([file_index, float(line.split(' ')[2])])
                             elif line.startswith('Time'):
-                                rewrite_time_list.append([file_index, round(float(line.split(' ')[1]) / 1000, 2)])
+                                rewrite_time_list.append([file_index, float(line.split(' ')[1]) / 1000])
                         rewrite_time_list.sort(key=lambda x: x[1])
                         if len(rewrite_time_list) >= 2:
                             rewrite_time.append(rewrite_time_list[1])
