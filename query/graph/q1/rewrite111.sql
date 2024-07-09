@@ -1,6 +1,6 @@
 create or replace view g1 as select g1.src as v1, g1.dst as v2, v8 from Graph g1, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where c1.src = g1.src;
 create or replace view g2 as select g2.src as v2, g2.dst as v4 from Graph g2;
-create or replace view g3 as select g3.src as v4, g2.dst as v6, v10 from Graph g3, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c1 where c1.src = g3.dst;
+create or replace view g3 as select g3.src as v4, g3.dst as v6, v10 from Graph g3, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c1 where c1.src = g3.dst;
 
 create or replace view orderView1 as select v1, v2, v8, row_number() over (partition by v2 order by v8) as rn from g1;
 create or replace view minView1 as select v2, v8 as MFL from orderView1 where rn = 1;
@@ -24,4 +24,4 @@ create or replace view order1_1 as select * from orderView1 where 64 < rn and rn
 create or replace view res1_1 as select v1, v2, v4, v6, v8, v10 from border1_0 join order1_1 using(v2) where v8 < v10;
 create or replace view res1 as select v1, v2, v4, v8, v10 from res1_0 union all select v1, v2, v4, v8, v10 from res1_1;
 
-select * from res1;
+select sum(v1 + v2 + v4 + v8 + v10) from res1;

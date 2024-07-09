@@ -4,7 +4,7 @@ import statistics
 
 
 if __name__ == "__main__":
-    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/extra2')
+    paths = os.walk('/Users/cbn/Desktop/SQLRewriter/query/graph-extend')
 
     for path, dir_lst, file_lst in paths:
         for dir_name in dir_lst:
@@ -19,7 +19,7 @@ if __name__ == "__main__":
                         base_time_list = []
                         for line in lines:
                             if line.startswith('1 row'):
-                                if 'hours' in line:
+                                if 'hour' in line:
                                     base_time_list.append(int(line.split(' ')[4][1:]) * 3600 + int(line.split(' ')[6]) * 60 + float(line.split(' ')[8]))
                                 elif 'min' in line:
                                     base_time_list.append(int(line.split(' ')[4][1:]) * 60 + float(line.split(' ')[6]))

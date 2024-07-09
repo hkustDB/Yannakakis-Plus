@@ -12,4 +12,5 @@ create or replace view b1 as select mf2, f8.g2src, f8.g2dst, f6.dst as g3dst fro
 create or replace view b2 as select b1.g2src, b1.g2dst, b1.g3dst, c2.cnt as c2cnt from b1 join c1 c2 on b1.g3dst=c2.src where mf2 < c2.cnt;
 create or replace view b3 as select b2.g2dst, b2.g3dst, b2.c2cnt, f2.src as g1src, f2.dst as g1dst from b2 join f2 on b2.g2src=f2.dst where mf1 < c2cnt;
 create or replace view b4 as select b3.g2dst, b3.g3dst, b3.c2cnt, b3.g1src, b3.g1dst, c1.cnt as c1cnt from b3 join c1 on b3.g1src=c1.src where cnt < c2cnt;
-select g1src, g1dst, g2dst, g3dst, c1cnt, c2cnt from b4;
+create or replace view res as select g1src, g1dst, g2dst, g3dst, c1cnt, c2cnt from b4;
+select sum(g1src + g1dst + g2dst + g3dst + c1cnt + c2cnt) from res;
