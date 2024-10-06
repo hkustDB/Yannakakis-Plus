@@ -10,5 +10,4 @@ create or replace view aggView6497666239770059104 as select r_regionkey as v43 f
 create or replace view aggJoin720224728540669380 as select v4, v42, v49, v51, annot from aggJoin4831101878583587891 join aggView6497666239770059104 using(v43);
 create or replace view aggView3266836522032857665 as select v42, SUM(v49) as v49, v51, v4 from aggJoin720224728540669380 group by v42,v51,v4;
 create or replace view aggJoin681036334562688351 as select v42, v49 from aggView3266836522032857665 where v4 = v51;
-create or replace view res as select v42, v49 from aggJoin681036334562688351;
-select sum(v42), sum(v49) from res;
+select v42, v49 from aggJoin681036334562688351;

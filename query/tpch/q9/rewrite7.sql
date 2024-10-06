@@ -8,5 +8,4 @@ create or replace view aggView933168960467681541 as select p_partkey as v33 from
 create or replace view aggJoin6342763861584856909 as select v10, v21, v22, v23, v39, v36 from aggJoin4341423128296324643 join aggView933168960467681541 using(v33);
 create or replace view aggView3546210889062599521 as select v10, v49, COUNT(*) as annot from aggJoin7776283093957961327 group by v10,v49;
 create or replace view aggJoin8470077312839840016 as select v21, v22, v23, v39, v36, v49, annot from aggJoin6342763861584856909 join aggView3546210889062599521 using(v10);
-create or replace view res as select v49, v39, SUM((v22 * (1 - v23))*annot) as v54, SUM((v36 * v21)*annot) as v55 from aggJoin8470077312839840016 group by v49, v39;
-select sum(v49), sum(v39), sum(v54), sum(v55) from res;
+select v49, v39, SUM((v22 * (1 - v23))*annot) as v54, SUM((v36 * v21)*annot) as v55 from aggJoin8470077312839840016 group by v49, v39;

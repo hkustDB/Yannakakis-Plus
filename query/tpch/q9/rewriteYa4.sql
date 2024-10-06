@@ -1,0 +1,28 @@
+create or replace view orderswithyearAux39 as select o_orderkey as v38, o_year as v39 from orderswithyear;
+create or replace view nationAux5 as select n_nationkey as v13, n_name as v49 from nation;
+create or replace view semiUp6427230920383542512 as select l_orderkey as v38, l_partkey as v33, l_suppkey as v10, l_quantity as v21, l_extendedprice as v22, l_discount as v23 from lineitem AS lineitem where (l_orderkey) in (select v38 from orderswithyearAux39);
+create or replace view semiUp2137147162097380284 as select v38, v33, v10, v21, v22, v23 from semiUp6427230920383542512 where (v33) in (select p_partkey from part AS part where p_name LIKE '%green%');
+create or replace view semiUp8291628503374672145 as select v38, v33, v10, v21, v22, v23 from semiUp2137147162097380284 where (v10, v33) in (select ps_suppkey, ps_partkey from partsupp AS partsupp);
+create or replace view semiUp5706769741703895677 as select s_suppkey as v10, s_nationkey as v13 from supplier AS supplier where (s_suppkey) in (select v10 from semiUp8291628503374672145);
+create or replace view semiUp4972650210102339325 as select v13, v49 from nationAux5 where (v13) in (select v13 from semiUp5706769741703895677);
+create or replace view semiDown123551658229789339 as select n_nationkey as v13, n_name as v49 from nation AS nation where (n_name, n_nationkey) in (select v49, v13 from semiUp4972650210102339325);
+create or replace view semiDown565596565778812293 as select v10, v13 from semiUp5706769741703895677 where (v13) in (select v13 from semiUp4972650210102339325);
+create or replace view semiDown6991690343450762186 as select v38, v33, v10, v21, v22, v23 from semiUp8291628503374672145 where (v10) in (select v10 from semiDown565596565778812293);
+create or replace view semiDown1571319991955848306 as select p_partkey as v33 from part AS part where (p_partkey) in (select v33 from semiDown6991690343450762186) and p_name LIKE '%green%';
+create or replace view semiDown2688510426334405418 as select ps_partkey as v33, ps_suppkey as v10, ps_supplycost as v36 from partsupp AS partsupp where (ps_suppkey, ps_partkey) in (select v10, v33 from semiDown6991690343450762186);
+create or replace view semiDown3811813934771488458 as select v38, v39 from orderswithyearAux39 where (v38) in (select v38 from semiDown6991690343450762186);
+create or replace view semiDown1739801505064228579 as select o_orderkey as v38, o_year as v39 from orderswithyear AS orderswithyear where (o_orderkey, o_year) in (select v38, v39 from semiDown3811813934771488458);
+create or replace view aggView858231054684593781 as select v38, v39 from semiDown1739801505064228579;
+create or replace view aggView2191535017596204477 as select v49, v13 from semiDown123551658229789339;
+create or replace view aggView2375887679413408144 as select v38, v39, COUNT(*) as annot from aggView858231054684593781 group by v38,v39;
+create or replace view aggJoin5773764135205735891 as select v33, v10, v21, v22, v23, v39, annot from semiDown6991690343450762186 join aggView2375887679413408144 using(v38);
+create or replace view aggView7762547158791305486 as select v33 from semiDown1571319991955848306;
+create or replace view aggJoin7663706362302198147 as select v33, v10, v21, v22, v23, v39, annot from aggJoin5773764135205735891 join aggView7762547158791305486 using(v33);
+create or replace view aggView2420845018448635606 as select v10, v33, v36 from semiDown2688510426334405418;
+create or replace view aggJoin4709382475009709465 as select v10, v21, v22, v23, v39, annot, v36 from aggJoin7663706362302198147 join aggView2420845018448635606 using(v10,v33);
+create or replace view aggView3374264216982104337 as select v10, SUM((v22 * (1 - v23)) * annot) as v54, SUM((v36 * v21) * annot) as v55, v39, SUM(annot) as annot from aggJoin4709382475009709465 group by v10,v39;
+create or replace view aggJoin4821498515225797926 as select v13, v54, v55, v39, annot from semiDown565596565778812293 join aggView3374264216982104337 using(v10);
+create or replace view aggView1155808415436031407 as select v13, SUM(v54) as v54, SUM(v55) as v55, v39, SUM(annot) as annot from aggJoin4821498515225797926 group by v13,v54,v39,v55;
+create or replace view aggJoin3852925731216581487 as select v49, v54, v55, v39 from aggView2191535017596204477 join aggView1155808415436031407 using(v13);
+select v49, v39, SUM(v54) as v54, SUM(v55) as v55 from aggJoin3852925731216581487 group by v49, v39;
+

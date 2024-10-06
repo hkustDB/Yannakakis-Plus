@@ -62,5 +62,5 @@ create or replace view aggView1262470851893710825 as select v72, v74, MIN(v86) a
 create or replace view aggJoin4127811727478314140 as select v72, v74, v86, v87 from semiDown736574456749815201 join aggView1262470851893710825 using(v72);
 create or replace view aggView8028032287450370127 as select v74, MIN(v86) as v86, MIN(v87) as v87 from aggJoin4127811727478314140 group by v74,v86,v87;
 create or replace view aggJoin6286244305556644772 as select v74, v75, v86, v87 from semiUp8204387820082385846 join aggView8028032287450370127 using(v74);
-create or replace view res as select MIN(v86) as v86, MIN(v87) as v87, MIN(v75) as v88 from aggJoin6286244305556644772;
-select sum(v86+v87+v88) from res;
+select MIN(v86) as v86, MIN(v87) as v87, MIN(v75) as v88 from aggJoin6286244305556644772;
+

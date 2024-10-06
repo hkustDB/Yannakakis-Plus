@@ -32,5 +32,5 @@ create or replace view aggJoin83906431438418940 as select v29, v22 from semiDown
 create or replace view aggView3332439763917788581 as select v29, v22, MIN(v22) as v41 from aggJoin83906431438418940 group by v29,v22;
 create or replace view aggView3158815155086700815 as select v29, MIN(v42) as v42 from aggView5199882751506427872 group by v29,v42;
 create or replace view aggJoin8557991929759644714 as select v41 as v41, v42 from aggView3332439763917788581 join aggView3158815155086700815 using(v29);
-create or replace view res as select MIN(v41) as v41, MIN(v42) as v42 from aggJoin8557991929759644714;
-select sum(v41+v42) from res;
+select MIN(v41) as v41, MIN(v42) as v42 from aggJoin8557991929759644714;
+

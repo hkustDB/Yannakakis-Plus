@@ -11,6 +11,7 @@ querySum.sql
 # query/*/*/rewrite*.sql
 # query/job*/[1-9]*/rewrite*.sql
 query/extra*/*
+query/*/*/log_*
 
 query/extra*
 !query/extract_runtime.py
