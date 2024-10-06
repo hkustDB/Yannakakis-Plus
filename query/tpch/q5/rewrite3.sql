@@ -8,5 +8,4 @@ create or replace view aggView1755157739375188223 as select v18, v51, COUNT(*) a
 create or replace view aggJoin2552982140190429896 as select l_suppkey as v20, l_extendedprice as v23, l_discount as v24, v51, annot from lineitem as lineitem, aggView1755157739375188223 where lineitem.l_orderkey=aggView1755157739375188223.v18;
 create or replace view aggView4694757932270160466 as select v20, v4, v42, SUM(annot) as annot from aggJoin7734823747812352320 group by v20,v4,v42;
 create or replace view aggJoin5846684688025754180 as select v23, v24, aggJoin2552982140190429896.annot * aggView4694757932270160466.annot as annot, v42 from aggJoin2552982140190429896 join aggView4694757932270160466 using(v20) where v4 = v51;
-create or replace view res as select v42, SUM((v23 * (1 - v24))*annot) as v49 from aggJoin5846684688025754180 group by v42;
-select sum(v42), sum(v49) from res;
+select v42, SUM((v23 * (1 - v24))*annot) as v49 from aggJoin5846684688025754180 group by v42;

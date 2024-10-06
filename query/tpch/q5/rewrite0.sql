@@ -10,5 +10,4 @@ create or replace view aggView8769012484357935681 as select v4, SUM(v49) as v49,
 create or replace view aggJoin5214191593480029363 as select v4, v42, v49, v50, annot from aggJoin2280728738189861661 join aggView8769012484357935681 using(v4);
 create or replace view aggView5352480432310681933 as select v42, SUM(v49) as v49, v50, v4 from aggJoin5214191593480029363 group by v42,v50,v4;
 create or replace view aggJoin5794821157700753019 as select v42, v49 from aggView5352480432310681933 where v4 = v50;
-create or replace view res as select v42, v49 from aggJoin5794821157700753019;
-select sum(v42), sum(v49) from res;
+select v42, v49 from aggJoin5794821157700753019;
