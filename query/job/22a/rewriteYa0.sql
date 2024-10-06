@@ -38,5 +38,5 @@ create or replace view aggView2548987008787928255 as select v14, v8, MIN(v50) as
 create or replace view aggJoin2231735753103610084 as select v8, v50, v51, v49 from semiDown686291440570159896 join aggView2548987008787928255 using(v14);
 create or replace view aggView3439580683474914175 as select v8, MIN(v50) as v50, MIN(v51) as v51, MIN(v49) as v49 from aggJoin2231735753103610084 group by v8,v50,v51,v49;
 create or replace view aggJoin515409793480134498 as select v8, v50, v51, v49 from semiUp2168565615673408837 join aggView3439580683474914175 using(v8);
-create or replace view res as select MIN(v49) as v49, MIN(v50) as v50, MIN(v51) as v51 from aggJoin515409793480134498;
-select sum(v49+v50+v51) from res;
+select MIN(v49) as v49, MIN(v50) as v50, MIN(v51) as v51 from aggJoin515409793480134498;
+

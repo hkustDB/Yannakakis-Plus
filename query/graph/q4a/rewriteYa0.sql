@@ -1,0 +1,11 @@
+create temp table g3 as select Graph.src as v4, Graph.dst as v6, v10 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create temp table g3Aux25 as select v4, v6 from g3;
+create temp table g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src and v8<3;
+create temp table semiUp7277964324593556778 as select src as v2, dst as v4 from Graph AS g2 where (src) in (select v2 from g1);
+create temp table semiUp1334842616335434932 as select v4, v6 from g3Aux25 where (v4) in (select v4 from semiUp7277964324593556778);
+create temp table semiDown4572572954238197638 as select v4, v6 from g3 where (v6, v4) in (select v6, v4 from semiUp1334842616335434932);
+create temp table semiDown1502858613268124043 as select v2, v4 from semiUp7277964324593556778 where (v4) in (select v4 from semiUp1334842616335434932);
+create temp table semiDown5937332319596291859 as select v2 from g1 where (v2) in (select v2 from semiDown1502858613268124043);
+create temp table joinView456321466495783790 as select v4, v6 from semiUp1334842616335434932 join semiDown4572572954238197638 using(v6, v4) GROUP BY v4, v6;
+create temp table joinView4311024888302987779 as select v4 from semiDown1502858613268124043 join semiDown5937332319596291859 using(v2) GROUP BY v4;
+select v4, v6 from joinView456321466495783790 join joinView4311024888302987779 using(v4) GROUP BY v4, v6;

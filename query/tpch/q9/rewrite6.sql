@@ -8,5 +8,4 @@ create or replace view aggView8925997194671779403 as select v33, v10, SUM(v36)/C
 create or replace view aggJoin7382801126982810592 as select v33, v21, v22, v23, v39, v36, v49, annot from aggJoin4784942217881546757 join aggView8925997194671779403 using(v33,v10);
 create or replace view aggView7334361516641095690 as select p_partkey as v33 from part as part where p_name LIKE '%green%';
 create or replace view aggJoin871342816802933171 as select v21, v22, v23, v39, v36, v49, annot from aggJoin7382801126982810592 join aggView7334361516641095690 using(v33);
-create or replace view res as select v49, v39, SUM((v22 * (1 - v23))*annot) as v54, SUM((v36 * v21)*annot) as v55 from aggJoin871342816802933171 group by v49, v39;
-select sum(v49), sum(v39), sum(v54), sum(v55) from res;
+select v49, v39, SUM((v22 * (1 - v23))*annot) as v54, SUM((v36 * v21)*annot) as v55 from aggJoin871342816802933171 group by v49, v39;

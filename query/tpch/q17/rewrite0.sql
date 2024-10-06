@@ -3,5 +3,4 @@ create or replace view aggJoin7236056959625727510 as select p_partkey as v17, p_
 create or replace view aggView3560782076889309167 as select v17, COUNT(*) as annot, v27 from aggJoin7236056959625727510 group by v17,v27;
 create or replace view aggJoin8017813966117349601 as select l_quantity as v5, l_extendedprice as v6, v27, annot from lineitem as lineitem, aggView3560782076889309167 where lineitem.l_partkey=aggView3560782076889309167.v17 and l_quantity>v27;
 create or replace view aggView4731888685728949702 as select v6, SUM(annot) as annot from aggJoin8017813966117349601 group by v6;
-create or replace view res as select (SUM((v6)* annot) / 7.0) as v29 from aggView4731888685728949702;
-select sum(v29) from res;
+select (SUM((v6)* annot) / 7.0) as v29 from aggView4731888685728949702;

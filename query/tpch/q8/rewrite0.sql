@@ -13,5 +13,4 @@ create or replace view aggJoin8275573857747658376 as select o_orderkey as v17, o
 create or replace view aggView7651492454051075230 as select v17, SUM( CASE WHEN caseCond = 1 THEN v22 * (1 - v23)*annot ELSE 0.0 END) as v64, SUM((v22 * (1 - v23)) * annot) as v65, SUM(annot) as annot from aggJoin4762102163206951738 group by v17;
 create or replace view aggJoin7784806741428863974 as select v34, v38, aggJoin8275573857747658376.annot * aggView7651492454051075230.annot as annot, v64 * aggJoin8275573857747658376.annot as v64, v65 * aggJoin8275573857747658376.annot as v65 from aggJoin8275573857747658376 join aggView7651492454051075230 using(v17);
 create or replace view aggView5513490265490661424 as select v34, SUM(v64) as v64, SUM(v65) as v65 from aggJoin7784806741428863974 group by v34;
-create or replace view res as select v34, (v64 / v65) as v66 from aggView5513490265490661424;
-select sum(v34), sum(v66) from res;
+select v34, (v64 / v65) as v66 from aggView5513490265490661424;

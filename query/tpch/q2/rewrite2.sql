@@ -10,5 +10,4 @@ create or replace view semiEnum4955875388542018134 as select distinct v15, v10, 
 create or replace view semiEnum4953006106814465310 as select distinct v15, v1, v10, v13, v14, v12, v20, v16, v23, v11 from semiEnum4955875388542018134 join semiJoinView8141016330810043508 using(v10);
 create or replace view semiEnum6586272838961435330 as select distinct v15, v1, v10, v13, v14, v12, v20, v16, v23, v11 from semiEnum4953006106814465310, q2_inner as q2_inner where q2_inner.v1_supplycost_min=semiEnum4953006106814465310.v20 and q2_inner.v1_partkey=semiEnum4953006106814465310.v1;
 create or replace view semiEnum2148723606334221872 as select v3, v15, v1, v14, v12, v16, v23, v11 from semiEnum6586272838961435330 join partAux76 using(v1);
-create or replace view res as select distinct v15, v11, v23, v1, v3, v12, v14, v16 from semiEnum2148723606334221872;
-select sum(v15), sum(v11), sum(v23), sum(v1), sum(v3), sum(v12), sum(v14), sum(v16) from res;
+select distinct v15, v11, v23, v1, v3, v12, v14, v16 from semiEnum2148723606334221872;

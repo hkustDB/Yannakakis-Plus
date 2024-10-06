@@ -1,9 +1,0 @@
-create or replace view bag190 as select g1.dst as v2, g2.dst as v4, g1.src as v6, g1.weight*g2.weight*g3.weight as Left from bitcoin as g1, bitcoin as g2, bitcoin as g3 where g1.dst=g2.src and g2.dst=g3.src and g3.dst=g1.src;
-create or replace view orderView5619493252851297842 as select v2, min(Left) as oriLeft from bag190 group by v2;
-create or replace view joinView7069601001599074295 as select src as v2, dst as v12, oriLeft from bitcoin AS g7, orderView5619493252851297842 where g7.src=orderView5619493252851297842.v2;
-create or replace view bag191 as select g5.dst as v10, g4.src as v12, g4.dst as v8, g4.weight*g5.weight*g6.weight as Right from bitcoin as g4, bitcoin as g5, bitcoin as g6 where g4.dst=g5.src and g5.dst=g6.src and g6.dst=g4.src;
-create or replace view orderView512841384026446192 as select v12, max(Right) as oriRight from bag191 group by v12;
-create or replace view joinView5178584294044802749 as select v2, v12, oriRight, oriLeft from joinView7069601001599074295 join orderView512841384026446192 using(v12) where oriLeft<oriRight;
-create or replace view end2743540660618172977 as select v12, v10, v2, v8, Right from joinView5178584294044802749 join bag191 using(v12) where oriLeft<Right;
-create or replace view end2113906185786317813 as select v12, v10, v2, v8, v6, v4 from end2743540660618172977 join bag190 using(v2) where Left<Right;
-select sum(v2+v4+v6+v8+v10+v12) from end2113906185786317813;

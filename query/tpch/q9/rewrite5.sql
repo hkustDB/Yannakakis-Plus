@@ -8,5 +8,4 @@ create or replace view aggView8072325333474803967 as select v33, v10, SUM(v36)/C
 create or replace view aggJoin4813874533259116072 as select v10, v21, v22, v23, v39, v36, annot from aggJoin8141676436502663818 join aggView8072325333474803967 using(v33,v10);
 create or replace view aggView3997804558964120921 as select v10, v49, COUNT(*) as annot from aggJoin3238125336117307472 group by v10,v49;
 create or replace view aggJoin3987319765335577094 as select v21, v22, v23, v39, v36, aggJoin4813874533259116072.annot * aggView3997804558964120921.annot as annot, v49 from aggJoin4813874533259116072 join aggView3997804558964120921 using(v10);
-create or replace view res as select v49, v39, SUM((v22 * (1 - v23))*annot) as v54, SUM((v36 * v21)*annot) as v55 from aggJoin3987319765335577094 group by v49, v39;
-select sum(v49), sum(v39), sum(v54), sum(v55) from res;
+select v49, v39, SUM((v22 * (1 - v23))*annot) as v54, SUM((v36 * v21)*annot) as v55 from aggJoin3987319765335577094 group by v49, v39;

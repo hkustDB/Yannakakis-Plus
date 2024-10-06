@@ -12,5 +12,4 @@ create or replace view aggView847688974884380445 as select p_partkey as v1 from 
 create or replace view aggJoin2060493424438342409 as select v17, v22, v23, caseCond, annot from aggJoin7491697008462446019 join aggView847688974884380445 using(v1);
 create or replace view aggView334167296591672565 as select v17, v34, SUM(annot) as annot from aggJoin6739256466694953779 group by v17,v34;
 create or replace view aggJoin4928169839918387974 as select v22, v23, caseCond, aggJoin2060493424438342409.annot * aggView334167296591672565.annot as annot, v34 from aggJoin2060493424438342409 join aggView334167296591672565 using(v17);
-create or replace view res as select v34, (SUM( CASE WHEN caseCond = 1 THEN v22 * (1 - v23)* annot ELSE 0.0 END) / SUM((v22 * (1 - v23))*annot)) as v66 from aggJoin4928169839918387974 group by v34;
-select sum(v34), sum(v66) from res;
+select v34, (SUM( CASE WHEN caseCond = 1 THEN v22 * (1 - v23)* annot ELSE 0.0 END) / SUM((v22 * (1 - v23))*annot)) as v66 from aggJoin4928169839918387974 group by v34;

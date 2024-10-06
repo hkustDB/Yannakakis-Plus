@@ -1,0 +1,16 @@
+create temp table g3 as select Graph.src as v4, Graph.dst as v6, v14 from Graph, (SELECT src, COUNT(*) AS v14 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create temp table semiUp6097769221023935676 as select src as v2, dst as v4 from Graph AS g2 where (dst) in (select v4 from g3);
+create temp table g5 as select Graph.src as v4, Graph.dst as v10, v18 from Graph, (SELECT dst, COUNT(*) AS v18 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c4.dst;
+create temp table semiUp8957944261393458998 as select v2, v4 from semiUp6097769221023935676 where (v4) in (select v4 from g5);
+create temp table g4 as select Graph.src as v7, Graph.dst as v2, v16 from Graph, (SELECT dst, COUNT(*) AS v16 FROM Graph GROUP BY dst) AS c3 where Graph.src = c3.dst and v16<3;
+create temp table semiUp6286286585764294953 as select v2, v4 from semiUp8957944261393458998 where (v2) in (select v2 from g4);
+create temp table g1 as select Graph.src as v1, Graph.dst as v2, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src and v12<3;
+create temp table semiUp9007252576107481707 as select v2, v4 from semiUp6286286585764294953 where (v2) in (select v2 from g1);
+create temp table semiDown3246251602095379383 as select v2 from g1 where (v2) in (select v2 from semiUp9007252576107481707);
+create temp table semiDown2101874116264450669 as select v2 from g4 where (v2) in (select v2 from semiUp9007252576107481707);
+create temp table semiDown2130881749473810361 as select v4 from g3 where (v4) in (select v4 from semiUp9007252576107481707);
+create temp table semiDown8996661841407029727 as select v4 from g5 where (v4) in (select v4 from semiUp9007252576107481707);
+create temp table joinView351478079260247497 as select v2, v4 from semiUp9007252576107481707 join semiDown3246251602095379383 using(v2) GROUP BY v2, v4;
+create temp table joinView1302631262222361370 as select v2, v4 from joinView351478079260247497 join semiDown2101874116264450669 using(v2) GROUP BY v2, v4;
+create temp table joinView3689269788370948700 as select v2, v4 from joinView1302631262222361370 join semiDown2130881749473810361 using(v4) GROUP BY v2, v4;
+select v2, v4 from joinView3689269788370948700 join semiDown8996661841407029727 using(v4) GROUP BY v2, v4;
