@@ -1,0 +1,11 @@
+create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v10 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create or replace view semiUp2840270896805206823 as select src as v2, dst as v4 from Graph AS g2 where (dst) in (select v4 from g3);
+create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view semiUp2583512135664769354 as select v2, v4 from semiUp2840270896805206823 where (v2) in (select v2 from g1);
+create or replace view semiDown3640007907135690265 as select v2 from g1 where (v2) in (select v2 from semiUp2583512135664769354);
+create or replace view semiDown3416623434341082329 as select v4 from g3 where (v4) in (select v4 from semiUp2583512135664769354);
+create or replace view aggView2520116267196500815 as select v2, COUNT(*) as annot from semiDown3640007907135690265 group by v2;
+create or replace view aggJoin398103972918750179 as select v4, annot from semiUp2583512135664769354 join aggView2520116267196500815 using(v2);
+create or replace view aggView8661683512149844055 as select v4, COUNT(*) as annot from semiDown3416623434341082329 group by v4;
+create or replace view aggJoin8466883712251775125 as select aggJoin398103972918750179.annot * aggView8661683512149844055.annot as annot from aggJoin398103972918750179 join aggView8661683512149844055 using(v4);
+select SUM(annot) as v11 from aggJoin8466883712251775125;

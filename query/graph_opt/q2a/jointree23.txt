@@ -1,0 +1,32 @@
+Relations:
+dict_values([g1[184,bitcoin, 0]: ['v8', 'v2', 'v3']
+None
+, g2[185,bitcoin, 1719873.1200651373]: ['v2', 'v5', 'v6']
+['v2']
+, g3[186,bitcoin, 0]: ['v5', 'v8', 'v9']
+None
+, g4[187,bitcoin, 0]: ['v17', 'v11', 'v12']
+None
+, g5[188,bitcoin, 0]: ['v11', 'v14', 'v15']
+None
+, g6[189,bitcoin, 1719873.1200651373]: ['v14', 'v17', 'v18']
+['v17']
+, g7[190,bitcoin, 122300651.1668978]: ['v2', 'v17', 'v21']
+[]
+, bag237[237,['g1', 'g3'], 258915092569]: ['v2', 'v3', 'v5', 'v8', 'v9']
+['v2', 'v5']
+, bag238[238,['g4', 'g5'], 258915092569]: ['v11', 'v12', 'v14', 'v15', 'v17']
+['v14', 'v17']
+])
+Edges:
+dict_values([g2->bag237, g7->g2, g6->bag238, g7->g6])
+Root:
+190
+isFull:
+True
+isFreeConnex:
+False
+subset:
+[185, 189, 238, 237, 190]
+fixroot:
+False

@@ -1,0 +1,57 @@
+{
+    "relation": "cn",
+    "children": [
+        {
+            "relation": "mc",
+            "children": [
+                {
+                    "relation": "ct",
+                    "children": []
+                },
+                {
+                    "relation": "cct1",
+                    "children": [
+                        {
+                            "relation": "mi",
+                            "children": [
+                                {
+                                    "relation": "ml",
+                                    "children": [
+                                        {
+                                            "relation": "lt",
+                                            "children": []
+                                        },
+                                        {
+                                            "relation": "t",
+                                            "children": [
+                                                {
+                                                    "relation": "cct2",
+                                                    "children": [
+                                                        {
+                                                            "relation": "cc",
+                                                            "children": [
+                                                                {
+                                                                    "relation": "mk",
+                                                                    "children": [
+                                                                        {
+                                                                            "relation": "k",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

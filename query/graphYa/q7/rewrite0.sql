@@ -1,0 +1,15 @@
+create or replace view g5 as select Graph.src as v4, Graph.dst as v10, v18 from Graph, (SELECT dst, COUNT(*) AS v18 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c4.dst;
+create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v14 from Graph, (SELECT src, COUNT(*) AS v14 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create or replace view aggView3428984401659785529 as select v4, COUNT(*) as annot from g5 group by v4;
+create or replace view aggJoin2009425905376306103 as select v4, v6, annot from g3 join aggView3428984401659785529 using(v4);
+create or replace view aggView6530480303775709802 as select v4, v6, SUM(annot) as annot from aggJoin2009425905376306103 group by v4,v6;
+create or replace view g1 as select Graph.src as v1, Graph.dst as v2, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view aggView8487666849079161907 as select v2, COUNT(*) as annot from g1 group by v2;
+create or replace view aggJoin6673792256610481625 as select src as v2, dst as v4, annot from Graph as g2, aggView8487666849079161907 where g2.src=aggView8487666849079161907.v2;
+create or replace view g4 as select Graph.src as v7, Graph.dst as v2, v16 from Graph, (SELECT dst, COUNT(*) AS v16 FROM Graph GROUP BY dst) AS c3 where Graph.src = c3.dst;
+create or replace view aggView2475396895839092808 as select v2, SUM(v2 + v7) as v20, COUNT(*) as annot from g4 group by v2;
+create or replace view aggJoin4024458505529739148 as select v2, v4, aggJoin6673792256610481625.annot * aggView2475396895839092808.annot as annot, v20 * aggJoin6673792256610481625.annot as v20 from aggJoin6673792256610481625 join aggView2475396895839092808 using(v2);
+create or replace view semiJoinView2585587053485374160 as select distinct v4, v6, annot from aggView6530480303775709802 where (v4) in (select v4 from aggJoin4024458505529739148);
+create or replace view semiEnum7472786646862375547 as select v20*semiJoinView2585587053485374160.annot as v20, v6, v2 from semiJoinView2585587053485374160 join aggJoin4024458505529739148 using(v4);
+create or replace view res as select v2,v6,SUM(v20) as v20 from semiEnum7472786646862375547 group by v2, v6;
+select sum(v2), sum(v6), sum(v20) from res;

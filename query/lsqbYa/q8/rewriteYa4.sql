@@ -1,0 +1,13 @@
+create or replace view semiUp3356556383700478382 as select MessageId as v1, TagId as v2 from Message_hasTag_Tag AS Message_hasTag_Tag where (TagId) in (select (TagId) from Comment_hasTag_Tag AS cht1);
+create or replace view semiUp3209390018949973808 as select CommentId as v3, ParentMessageId as v1 from Comment_replyOf_Message AS Comment_replyOf_Message where (CommentId) in (select (CommentId) from Comment_hasTag_Tag AS cht2);
+create or replace view semiUp8786226536706841794 as select v1, v2 from semiUp3356556383700478382 where (v1) in (select (v1) from semiUp3209390018949973808);
+create or replace view semiDown2766094703914416888 as select v3, v1 from semiUp3209390018949973808 where (v1) in (select (v1) from semiUp8786226536706841794);
+create or replace view semiDown1708840539856906850 as select TagId as v2 from Comment_hasTag_Tag AS cht1 where (TagId) in (select (v2) from semiUp8786226536706841794);
+create or replace view semiDown86712505270874699 as select CommentId as v3, TagId as cht_TagId from Comment_hasTag_Tag AS cht2 where (CommentId) in (select (v3) from semiDown2766094703914416888);
+create or replace view aggView4649860394306442701 as select v3, cht_TagId, COUNT(*) as annot from semiDown86712505270874699 group by v3, cht_TagId;
+create or replace view aggJoin2156915102238139599 as select v1, cht_TagId, annot from semiDown2766094703914416888 join aggView4649860394306442701 using(v3);
+create or replace view aggView2535694215324152972 as select v2, COUNT(*) as annot from semiDown1708840539856906850 group by v2;
+create or replace view aggJoin312185876035250822 as select v1, v2, annot from semiUp8786226536706841794 join aggView2535694215324152972 using(v2);
+create or replace view aggView847361576925797345 as select v1, cht_TagId, SUM(annot) as annot from aggJoin2156915102238139599 group by v1, cht_TagId;
+create or replace view aggJoin4637557758406119853 as select aggJoin312185876035250822.annot * aggView847361576925797345.annot as annot from aggJoin312185876035250822 join aggView847361576925797345 using(v1) where v2 < cht_TagId;
+select SUM(annot) as v9 from aggJoin4637557758406119853;
