@@ -12,9 +12,9 @@ create or replace view aggView6801192298245722763 as select v9, v13, v12, v1 fro
 create or replace view aggView8987346919023879084 as select v1, v2 from semiDown2417852732374488186;
 create or replace view aggView7681236419956799272 as select v9, SUM(v22) as v35, COUNT(*) as annot from semiDown1828262363683112685 group by v9;
 create or replace view aggJoin552345312735070682 as select v9, v35, annot from semiDown9177164172758012579 join aggView7681236419956799272 using(v9);
-create or replace view aggView8671682838054428090 as select v9, SUM(v35) as v35, SUM(annot) as annot from aggJoin552345312735070682 group by v9,v35;
+create or replace view aggView8671682838054428090 as select v9, SUM(v35) as v35, SUM(annot) as annot from aggJoin552345312735070682 group by v9;
 create or replace view aggJoin1294730161042007916 as select v9, v13, v12, v1, v35, annot from aggView6801192298245722763 join aggView8671682838054428090 using(v9);
-create or replace view aggView6630586069941954010 as select v1, SUM(v35) as v35, v13, v12, v9, SUM(annot) as annot from aggJoin1294730161042007916 group by v1,v13,v12,v9,v35;
+create or replace view aggView6630586069941954010 as select v1, SUM(v35) as v35, v13, v12, v9, SUM(annot) as annot from aggJoin1294730161042007916 group by v1,v13,v12,v9;
 create or replace view aggJoin3214706737455387823 as select v1, v2, v35, v13, v12, v9 from aggView8987346919023879084 join aggView6630586069941954010 using(v1);
 select v2, v1, v9, v13, v12, v35 from aggJoin3214706737455387823;
 

@@ -5,6 +5,6 @@ create or replace view aggJoin5683738591821640939 as select v1_orderkey as v9, v
 create or replace view semiJoinView2893812994214089006 as select v1, v13, v12, v9 from aggView8462017849986585670 where (v9) in (select v9 from aggJoin5683738591821640939);
 create or replace view semiJoinView2988807664531565622 as select distinct v1, v2 from aggView54348403258017812 where (v1) in (select v1 from semiJoinView2893812994214089006);
 create or replace view semiEnum1859715929988935406 as select distinct v1, v13, v12, v2, v9 from semiJoinView2988807664531565622 join semiJoinView2893812994214089006 using(v1);
-create or replace view semiEnum8359210921319267879 as select v35, annot, v2, v1, v13, v12, v9 from semiEnum1859715929988935406 join aggJoin5683738591821640939 using(v9);
+create or replace view semiEnum8359210921319267879 as select v35, v2, v1, v13, v12, v9 from semiEnum1859715929988935406 join aggJoin5683738591821640939 using(v9);
 select v2, v1, v9, v13, v12, v35 from semiEnum8359210921319267879;
 

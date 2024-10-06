@@ -14,7 +14,7 @@ create or replace view aggView4784176415011407840 as select v9, SUM(v22) as v35,
 create or replace view aggJoin5682280519001506757 as select v9, v35, annot from semiDown5618841971323791256 join aggView4784176415011407840 using(v9);
 create or replace view aggView2605959947264103067 as select v1, v2, COUNT(*) as annot from aggView1088186780397555125 group by v1,v2;
 create or replace view aggJoin4148308853551141535 as select v9, v13, v12, v1, v2, annot from aggView3555028436363532345 join aggView2605959947264103067 using(v1);
-create or replace view aggView3931342452767786414 as select v9, SUM(v35) as v35, SUM(annot) as annot from aggJoin5682280519001506757 group by v9,v35;
+create or replace view aggView3931342452767786414 as select v9, SUM(v35) as v35, SUM(annot) as annot from aggJoin5682280519001506757 group by v9;
 create or replace view aggJoin5601167851679160563 as select v9, v13, v12, v1, v2, v35 * aggJoin4148308853551141535.annot as v35 from aggJoin4148308853551141535 join aggView3931342452767786414 using(v9);
 select v2, v1, v9, v13, v12, v35 from aggJoin5601167851679160563;
 

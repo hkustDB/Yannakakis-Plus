@@ -8,9 +8,9 @@ create temp table semiDown2429948664712842358 as select v4, v6 from semiUp772438
 create temp table semiDown510174255189781014 as select src as v6, dst as v8 from Graph AS g4 where (src) in (select v6 from semiDown2429948664712842358);
 create temp table aggView7638898707616593219 as select v6, SUM(v6) as v10, AVG(v8) as v11, COUNT(*) as annot from semiDown510174255189781014 group by v6;
 create temp table aggJoin7617242456334700164 as select v4, v10, v11, annot from semiDown2429948664712842358 join aggView7638898707616593219 using(v6);
-create temp table aggView4472190931395696711 as select v4, SUM(v10) as v10, SUM(v11) as v11, SUM(annot) as annot from aggJoin7617242456334700164 group by v4,v11,v10;
+create temp table aggView4472190931395696711 as select v4, SUM(v10) as v10, SUM(v11) as v11, SUM(annot) as annot from aggJoin7617242456334700164 group by v4;
 create temp table aggJoin8989669960921741508 as select v2, v10, v11, annot from semiDown426358137598212640 join aggView4472190931395696711 using(v4);
-create temp table aggView7712199933265918753 as select v2, SUM(v10) as v10, SUM(v11) as v11, SUM(annot) as annot from aggJoin8989669960921741508 group by v2,v11,v10;
+create temp table aggView7712199933265918753 as select v2, SUM(v10) as v10, SUM(v11) as v11, SUM(annot) as annot from aggJoin8989669960921741508 group by v2;
 create temp table aggView2181661825861792509 as select v2, AVG(v1) as v12, COUNT(*) as annot from semiDown2532802428671689344 group by v2;
 create temp table aggJoin3280712951289748297 as select v2, v10*aggView2181661825861792509.annot as v10, v11*aggView2181661825861792509.annot as v11, aggView7712199933265918753.annot * aggView2181661825861792509.annot as annot, v12 * aggView7712199933265918753.annot as v12 from aggView7712199933265918753 join aggView2181661825861792509 using(v2);
-select v2,annot as v9,v10,v11/annotas v11,v12/annotas v12 from aggJoin3280712951289748297;
+select v2,annot as v9,v10,v11/annot as v11,v12/annot as v12 from aggJoin3280712951289748297;
