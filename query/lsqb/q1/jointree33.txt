@@ -1,0 +1,34 @@
+Relations:
+dict_values([Country[119485,Country, 111]: ['v4', 'v2']
+['v4']
+, City[119486,City, 1343.0]: ['v6', 'v4']
+['v6']
+, Person[119487,Person, 184000.0]: ['v8', 'v6']
+['v8']
+, Forum_hasMember_Person[119488,Forum_hasMember_Person, 105337003.0]: ['v9', 'v8']
+['v9']
+, Forum[119489,Forum, 1831640]: ['v9', 'v10']
+['v9']
+, Post[119490,Post, 1375744154.2707374]: ['v18', 'v12', 'v9', 'v14']
+[]
+, Comment[119491,Comment, 96662059.0]: ['v20', 'v16', 'v17', 'v18', 'v19']
+['v18']
+, Comment_hasTag_Tag[119492,Comment_hasTag_Tag, 96662059.0]: ['v20', 'v22']
+['v20']
+, Tag[119493,Tag, 16080.0]: ['v22', 'v23']
+['v22']
+, TagClass[119494,TagClass, 71]: ['v23', 'v25']
+['v23']
+])
+Edges:
+dict_values([Comment_hasTag_Tag->Tag, Post->Comment, Person->City, Post->Forum_hasMember_Person, Comment->Comment_hasTag_Tag, Post->Forum, Tag->TagClass, City->Country, Forum_hasMember_Person->Person])
+Root:
+119490
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[]
+fixroot:
+False

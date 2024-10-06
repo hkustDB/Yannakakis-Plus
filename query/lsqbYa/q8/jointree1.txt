@@ -1,0 +1,22 @@
+Relations:
+dict_values([Message_hasTag_Tag[1609,Message_hasTag_Tag, 818083668576.7565]: ['v1', 'v2']
+['v1']
+, Comment_replyOf_Message[1610,Comment_replyOf_Message, 1883811395545.282]: ['v3', 'v1']
+['v3']
+, cht1[1611,Comment_hasTag_Tag, 96662059]: ['v5', 'v2']
+['v2']
+, cht2[1612,Comment_hasTag_Tag, 2361457193716.0703]: ['v3', 'v8']
+[]
+])
+Edges:
+dict_values([Message_hasTag_Tag->cht1, Comment_replyOf_Message->Message_hasTag_Tag, cht2->Comment_replyOf_Message])
+Root:
+1612
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[]
+fixroot:
+False

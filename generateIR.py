@@ -243,8 +243,11 @@ def buildPrepareView(JT: JoinTree, childNode: TreeNode, Agg: Aggregation = None,
                     leftVar[i] = originalVars[index] if originalVars[index] != '' else leftVar[i]
                     
                 for i in range(len(rightVar)):
-                    index = childNode.cols.index(rightVar[i])
-                    rightVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i]
+                    try:
+                        index = childNode.cols.index(rightVar[i])
+                        rightVar[i] = originalVars[index] if len(originalVars) and originalVars[index] != '' else rightVar[i]
+                    except:
+                        continue
                 
                 if comp.op == ' OR ':
                     whereCondList.append('(' + opL.join(leftVar) + comp.op + opR.join(rightVar) + ')')

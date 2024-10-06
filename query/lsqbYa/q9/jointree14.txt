@@ -1,0 +1,22 @@
+Relations:
+dict_values([pkp1[1657,Person_knows_Person, 321991902151.9758]: ['v1', 'v2']
+[]
+, pkp2[1658,Person_knows_Person, 7389219361.580986]: ['v2', 'v4']
+['v2']
+, Person_hasInterest_Tag[1659,Person_hasInterest_Tag, 4289970]: ['v4', 'v6']
+['v4']
+, pkp3[1660,Person_knows_Person, 7273036]: ['v4', 'v8']
+['v4']
+])
+Edges:
+dict_values([pkp2->Person_hasInterest_Tag, pkp2->pkp3, pkp1->pkp2])
+Root:
+1657
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[1657]
+fixroot:
+True

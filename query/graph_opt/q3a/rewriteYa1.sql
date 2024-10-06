@@ -1,0 +1,10 @@
+create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src and v8<5;
+create or replace view g2 as select Graph.src as v2, Graph.dst as v4, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c3 where Graph.src = c3.src;
+create or replace view semiUp955750110907120044 as select v2, v4, v12 from g2 where (v2) in (select v2 from g1);
+create or replace view g3 as select Graph.src as v4, Graph.dst as v9, v10, v14 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2, (SELECT dst, COUNT(*) AS v14 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c2.src and Graph.dst = c4.dst;
+create or replace view semiUp3517572420805207803 as select v4, v9, v10, v14 from g3 where (v4) in (select v4 from semiUp955750110907120044);
+create or replace view semiDown2802933996917154775 as select v2, v4, v12 from semiUp955750110907120044 where (v4) in (select v4 from semiUp3517572420805207803);
+create or replace view semiDown4036467304996317791 as select v7, v2, v8 from g1 where (v2) in (select v2 from semiDown2802933996917154775);
+create or replace view joinView786322991104552459 as select v2, v4, v12, v7, v8 from semiDown2802933996917154775 join semiDown4036467304996317791 using(v2);
+create or replace view joinView7833727801962842095 as select v4, v9, v10, v14, v2, v12, v7, v8 from semiUp3517572420805207803 join joinView786322991104552459 using(v4);
+/*+QUERY_TIMEOUT=86400000*/select sum(v4+v9+v10+v14+v2+v12+v7+v8) from joinView7833727801962842095;
