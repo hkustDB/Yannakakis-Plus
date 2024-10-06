@@ -1,0 +1,14 @@
+create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v14 from Graph, (SELECT src, COUNT(*) AS v14 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
+create or replace view g3Aux10 as select v4, v6 from g3;
+create or replace view g4 as select Graph.src as v7, Graph.dst as v2, v16 from Graph, (SELECT dst, COUNT(*) AS v16 FROM Graph GROUP BY dst) AS c3 where Graph.src = c3.dst;
+create or replace view g1 as select Graph.src as v1, Graph.dst as v2, v12 from Graph, (SELECT src, COUNT(*) AS v12 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src;
+create or replace view semiJoinView2173894412359144194 as select v1, v2 from g1 where (v2) in (select v2 from g4);
+create or replace view g1Aux77 as select v1, v2 from semiJoinView2173894412359144194;
+create or replace view g5 as select Graph.src as v4, Graph.dst as v10, v18 from Graph, (SELECT dst, COUNT(*) AS v18 FROM Graph GROUP BY dst) AS c4 where Graph.dst = c4.dst;
+create or replace view semiJoinView9007374798883466683 as select src as v2, dst as v4 from Graph AS g2 where (dst) in (select v4 from g5);
+create or replace view semiJoinView1726548705296041498 as select v2, v4 from semiJoinView9007374798883466683 where (v2) in (select v2 from g1Aux77);
+create or replace view semiJoinView2301534927657724779 as select distinct v4, v6 from g3Aux10 where (v4) in (select v4 from semiJoinView1726548705296041498);
+create or replace view semiEnum740370284190054001 as select distinct v6, v4, v2 from semiJoinView2301534927657724779 join semiJoinView1726548705296041498 using(v4);
+create or replace view semiEnum4838356287325487779 as select v6, v1 from semiEnum740370284190054001 join g1Aux77 using(v2);
+create or replace view res as select distinct v1, v6 from semiEnum4838356287325487779;
+select sum(v1+v6) from res;

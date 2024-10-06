@@ -5,9 +5,9 @@ SCRIPT=$(readlink -f $0)
 SCRIPT_PATH=$(dirname "${SCRIPT}")
 
 OPT=$1
-export MYSQL_PWD="Cbn123456"
-mysql="/opt/homebrew/bin/mysql"
-mysql1_config="-ham-bp1rz4j2kfzh2ly2i90650o.ads.aliyuncs.com -P3306 -uadbtest -Dchampion -Acc -vvv"
+export MYSQL_PWD="Champion123"
+mysql="mysql"
+mysql1_config="-hamv-2ze236am4sh3i1bb1020004563o.ads.aliyuncs.com -P3306 -ubingnan -Djob -Acc -vvv"
 mysql4_config="-hamv-bp1112t3l1u3l4zv100001847o.ads.aliyuncs.com -P3306 -uadbtest -Dchampion -Acc -vvv"
 
 INPUT_DIR=$2
@@ -57,9 +57,9 @@ do
                     touch $OUT_FILE
                     if [ $OPT -eq 1 ]
                     then
-                        timeout -s SIGKILL 24h ${mysql} ${mysql1_config} < "${QUERY}" | grep "row in set" | tail -n 1 >> $OUT_FILE
+                        timeout -s SIGKILL 30m ${mysql} ${mysql1_config} < "${QUERY}" | grep "row in set" >> $OUT_FILE
                     else
-                        timeout -s SIGKILL 24h ${mysql} ${mysql4_config} < "${QUERY}" | grep "row in set" | tail -n 1 >> $OUT_FILE
+                        timeout -s SIGKILL 30m ${mysql} ${mysql4_config} < "${QUERY}" | grep "row in set" >> $OUT_FILE
                     fi
                     status_code=$?
                     if [[ ${status_code} -eq 137 ]]; then

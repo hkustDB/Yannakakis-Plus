@@ -1,0 +1,13 @@
+create or replace view semiUp1357193913807290145 as select Person1Id as v2, Person2Id as v4 from Person_knows_Person AS pkp2 where (Person1Id) in (select (Person2Id) from Person_knows_Person AS pkp1);
+create or replace view semiUp7635982815190449025 as select Person1Id as v4 from Person_knows_Person AS pkp3 where (Person1Id) in (select (v4) from semiUp1357193913807290145);
+create or replace view semiUp1924644023812991184 as select PersonId as v4 from Person_hasInterest_Tag AS Person_hasInterest_Tag where (PersonId) in (select (v4) from semiUp7635982815190449025);
+create or replace view semiDown4242703335779135794 as select v4 from semiUp7635982815190449025 where (v4) in (select (v4) from semiUp1924644023812991184);
+create or replace view semiDown2847605775212246079 as select v2, v4 from semiUp1357193913807290145 where (v4) in (select (v4) from semiDown4242703335779135794);
+create or replace view semiDown1291741225883763943 as select Person2Id as v2, Person1Id as pkp1_person1Id from Person_knows_Person AS pkp1 where (Person2Id) in (select (v2) from semiDown2847605775212246079);
+create or replace view aggView2516784922982551548 as select v2, pkp1_person1Id, COUNT(*) as annot from semiDown1291741225883763943 group by v2, pkp1_person1Id;
+create or replace view aggJoin6952190449399580054 as select v4, pkp1_person1Id, annot from semiDown2847605775212246079 join aggView2516784922982551548 using(v2) where pkp1_person1Id < v4;
+create or replace view aggView2208969385493656091 as select v4, SUM(annot) as annot from aggJoin6952190449399580054 group by v4;
+create or replace view aggJoin8532894604757072968 as select v4, annot from semiDown4242703335779135794 join aggView2208969385493656091 using(v4);
+create or replace view aggView8386015474905072079 as select v4, SUM(annot) as annot from aggJoin8532894604757072968 group by v4;
+create or replace view aggJoin1720209929344140770 as select annot from semiUp1924644023812991184 join aggView8386015474905072079 using(v4);
+select SUM(annot) as v9 from aggJoin1720209929344140770;

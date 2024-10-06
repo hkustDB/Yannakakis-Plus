@@ -806,7 +806,7 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
     compKeys = list(computations.allAlias)
     finalResult = ''
     
-    if isAgg:
+    if isAgg and len(lastUp) > 0:
         lastView = lastUp[-1].aggJoin if 'Join' in lastUp[-1].aggJoin.viewName else lastUp[-1].aggView
         fromTable = lastView.viewName
         finalAnnotFlag = True if 'annot' in lastView.selectAttrAlias else False

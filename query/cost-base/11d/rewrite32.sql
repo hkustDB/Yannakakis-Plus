@@ -1,0 +1,15 @@
+create or replace view aggView3021775072503587956 as select id as v13 from link_type as lt;
+create or replace view aggJoin4690654987645332429 as select movie_id as v24 from movie_link as ml, aggView3021775072503587956 where ml.link_type_id=aggView3021775072503587956.v13;
+create or replace view aggView3373115012939202621 as select id as v18 from company_type as ct where kind<> 'production companies';
+create or replace view aggJoin7262876121998334836 as select movie_id as v24, company_id as v17, note as v19 from movie_companies as mc, aggView3373115012939202621 where mc.company_type_id=aggView3373115012939202621.v18;
+create or replace view aggView8300716777451418881 as select id as v17, name as v39 from company_name as cn where country_code<> '[pl]';
+create or replace view aggJoin4535135399778098604 as select v24, v19, v39 from aggJoin7262876121998334836 join aggView8300716777451418881 using(v17);
+create or replace view aggView3332919915192397167 as select id as v24, title as v41 from title as t where production_year>1950;
+create or replace view aggJoin1021239681837218649 as select v24, v19, v39, v41 from aggJoin4535135399778098604 join aggView3332919915192397167 using(v24);
+create or replace view aggView4618947863509820254 as select v24, MIN(v39) as v39, MIN(v41) as v41, MIN(v19) as v40 from aggJoin1021239681837218649 group by v24,v39,v41;
+create or replace view aggJoin4114396916060560685 as select movie_id as v24, keyword_id as v22, v39, v41, v40 from movie_keyword as mk, aggView4618947863509820254 where mk.movie_id=aggView4618947863509820254.v24;
+create or replace view aggView531137309491247188 as select v24 from aggJoin4690654987645332429 group by v24;
+create or replace view aggJoin6327737015748456248 as select v22, v39 as v39, v41 as v41, v40 as v40 from aggJoin4114396916060560685 join aggView531137309491247188 using(v24);
+create or replace view aggView2572890920383512877 as select id as v22 from keyword as k where keyword IN ('sequel','revenge','based-on-novel');
+create or replace view aggJoin9200451641232227906 as select v39, v41, v40 from aggJoin6327737015748456248 join aggView2572890920383512877 using(v22);
+select MIN(v39) as v39,MIN(v40) as v40,MIN(v41) as v41 from aggJoin9200451641232227906;

@@ -1,30 +1,30 @@
 Relations:
-dict_values([part[126854,part, 20000000]: ['v33', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']
+dict_values([part[273,part, 20000000]: ['v33', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9']
 ['v33']
-, supplier[126855,supplier, 20000000.0]: ['v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
-['v13']
-, lineitem[126856,lineitem, 20000000.0]: ['v38', 'v33', 'v10', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32']
+, supplier[274,supplier, 1000000.0]: ['v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16']
 ['v10']
-, partsupp[126857,partsupp, 80000000]: ['v33', 'v10', 'v35', 'v36', 'v37']
-['v33', 'v10']
-, orderswithyear[126858,orderswithyear, 150000000]: ['v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47']
-['v39', 'v38']
-, nation[126859,nation, 25]: ['v13', 'v49', 'v50', 'v51']
-['v13', 'v49']
-, orderswithyearAux48[126871,orderswithyear, 150000000]: ['v38', 'v39']
+, lineitem[275,lineitem, 80000000.0]: ['v38', 'v33', 'v10', 'v20', 'v21', 'v22', 'v23', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29', 'v30', 'v31', 'v32']
 ['v38']
-, nationAux19[126875,nation, 20000000.0]: ['v13', 'v49']
+, partsupp[276,partsupp, 80000000]: ['v33', 'v10', 'v35', 'v36', 'v37']
+['v33', 'v10']
+, orderswithyear[277,orderswithyear, 150000000]: ['v38', 'v39', 'v40', 'v41', 'v42', 'v43', 'v44', 'v45', 'v46', 'v47']
+['v39', 'v38']
+, nation[278,nation, 25]: ['v13', 'v49', 'v50', 'v51']
+['v13', 'v49']
+, nationAux5[290,nation, 25]: ['v13', 'v49']
+['v13']
+, orderswithyearAux39[294,orderswithyear, 150000000.0]: ['v38', 'v39']
 []
 ])
 Edges:
-dict_values([lineitem->part, orderswithyearAux48->orderswithyear, lineitem->partsupp, nationAux19->supplier, nationAux19->nation, lineitem->orderswithyearAux48, supplier->lineitem])
+dict_values([nationAux5->nation, lineitem->supplier, orderswithyearAux39->lineitem, lineitem->part, lineitem->partsupp, supplier->nationAux5, orderswithyearAux39->orderswithyear])
 Root:
-126875
+294
 isFull:
 False
 isFreeConnex:
 False
 subset:
-[126875, 126856, 126855, 126871]
+[275, 274, 290, 294]
 fixroot:
 False

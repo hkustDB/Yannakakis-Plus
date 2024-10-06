@@ -1,0 +1,38 @@
+Relations:
+dict_values([cc[1861765,complete_cast, 200.0]: ['v1', 'v40', 'v5', 'v7']
+['v40']
+, cct1[1861766,comp_cast_type, 200]: ['v5', 'v6']
+['v5']
+, cct2[1861767,comp_cast_type, 200]: ['v7', 'v8']
+['v7']
+, chn[1861768,char_name, 18015200]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+['v9']
+, ci[1861769,cast_info, 13508600.0]: ['v16', 'v31', 'v40', 'v9', 'v20', 'v21', 'v22']
+['v40']
+, k[1861770,keyword, 1000]: ['v23', 'v24', 'v25']
+['v23']
+, kt[1861771,kind_type, 100]: ['v26', 'v27']
+['v26']
+, mk[1861772,movie_keyword, 1000.0]: ['v28', 'v40', 'v23']
+['v40']
+, n[1861773,name, 416749100]: ['v31', 'v32', 'v33', 'v34', 'v35', 'v36', 'v37', 'v38', 'v39']
+['v32', 'v31']
+, t[1861774,title, 23024216.666666668]: ['v40', 'v41', 'v42', 'v26', 'v44', 'v45', 'v46', 'v47', 'v48', 'v49', 'v50', 'v51']
+['v41', 'v40']
+, nAux45[1862152,n, 416749100]: ['v31', 'v32']
+['v31']
+, tAux23[1862168,t, 13508600.0]: ['v40', 'v41']
+[]
+])
+Edges:
+dict_values([nAux45->n, t->kt, ci->mk, ci->chn, mk->k, cc->cct2, tAux23->ci, tAux23->t, ci->nAux45, ci->cc, cc->cct1])
+Root:
+1862168
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[]
+fixroot:
+False

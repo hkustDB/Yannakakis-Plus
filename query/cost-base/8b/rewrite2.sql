@@ -1,0 +1,13 @@
+create or replace view aggView4507639064998079669 as select id as v25 from company_name as cn where country_code= '[jp]';
+create or replace view aggJoin2420645357331097395 as select movie_id as v11, note as v27 from movie_companies as mc, aggView4507639064998079669 where mc.company_id=aggView4507639064998079669.v25 and ((note LIKE '%(2006)%') OR (note LIKE '%(2007)%')) and note NOT LIKE '%(USA)%' and note LIKE '%(Japan)%';
+create or replace view aggView142462661923506283 as select v11 from aggJoin2420645357331097395 group by v11;
+create or replace view aggJoin4258126144484669175 as select id as v11, title as v40, production_year as v43 from title as t, aggView142462661923506283 where t.id=aggView142462661923506283.v11 and production_year<=2007 and ((title LIKE 'One Piece%') OR (title LIKE 'Dragon Ball Z%')) and production_year>=2006;
+create or replace view aggView5090390216171069302 as select id as v15 from role_type as rt where role= 'actress';
+create or replace view aggJoin3660952980847525448 as select person_id as v2, movie_id as v11, note as v13 from cast_info as ci, aggView5090390216171069302 where ci.role_id=aggView5090390216171069302.v15 and note= '(voice: English version)';
+create or replace view aggView3826291283462566145 as select v11, MIN(v40) as v52 from aggJoin4258126144484669175 group by v11;
+create or replace view aggJoin4226885066907651602 as select v2, v13, v52 from aggJoin3660952980847525448 join aggView3826291283462566145 using(v11);
+create or replace view aggView5197054083050116635 as select v2, MIN(v52) as v52 from aggJoin4226885066907651602 group by v2,v52;
+create or replace view aggJoin4290232023139237818 as select person_id as v2, name as v3, v52 from aka_name as an, aggView5197054083050116635 where an.person_id=aggView5197054083050116635.v2;
+create or replace view aggView5544496502346963120 as select id as v2 from name as n where name LIKE '%Yo%' and name NOT LIKE '%Yu%';
+create or replace view aggJoin5744512533047055205 as select v3, v52 from aggJoin4290232023139237818 join aggView5544496502346963120 using(v2);
+select MIN(v3) as v51,MIN(v52) as v52 from aggJoin5744512533047055205;

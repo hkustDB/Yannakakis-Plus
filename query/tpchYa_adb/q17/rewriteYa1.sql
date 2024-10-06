@@ -1,0 +1,12 @@
+create or replace view semiUp233709284730402223 as select p_partkey as v17 from part AS part where (p_partkey) in (select (v1_partkey) from q17_inner AS q17_inner) and p_brand= 'Brand#23' and p_container= 'MED BOX';
+create or replace view semiUp7504634116242826857 as select l_partkey as v17, l_extendedprice as v6, l_quantity from lineitem AS lineitem where (l_partkey) in (select (v17) from semiUp233709284730402223);
+create or replace view lineitemAux40 as select v6 from semiUp7504634116242826857;
+create or replace view semiDown1261959528405814647 as select v17, v6, l_quantity from semiUp7504634116242826857 where (v6) in (select (v6) from lineitemAux40);
+create or replace view semiDown4667052730740742726 as select v17 from semiUp233709284730402223 where (v17) in (select (v17) from semiDown1261959528405814647);
+create or replace view semiDown3189659010044065367 as select v1_partkey as v17, v1_quantity_avg from q17_inner AS q17_inner where (v1_partkey) in (select (v17) from semiDown4667052730740742726);
+create or replace view aggView7909602317173720807 as select v17, v1_quantity_avg from semiDown3189659010044065367;
+create or replace view aggJoin2969091730063991290 as select v17, v1_quantity_avg from semiDown4667052730740742726 join aggView7909602317173720807 using(v17);
+create or replace view aggView3644130353502210853 as select v17, v1_quantity_avg, COUNT(*) as annot from aggJoin2969091730063991290 group by v17, v1_quantity_avg;
+create or replace view aggJoin4173918770351747712 as select v6, annot from semiDown1261959528405814647 join aggView3644130353502210853 using(v17) where l_quantity > v1_quantity_avg;
+create or replace view aggView7940716052841421634 as select v6, SUM(v6 * annot) as v28, SUM(annot) as annot from aggJoin4173918770351747712 group by v6;
+select (SUM(v28) / 7.0) as v29 from aggView7940716052841421634;

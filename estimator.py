@@ -239,7 +239,7 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
                 node.estimateSize = inter_size
                 view_cost += child.estimateSize / child.statistics[1]
                 join_cost += inter_size
-            
+
         else:
             node.estimateSize = node.statistics[0]
         nodeId = node.id

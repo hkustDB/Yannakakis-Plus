@@ -1,0 +1,30 @@
+Relations:
+dict_values([an[1545414,aka_name, 5001100.0]: ['v1', 'v35', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8']
+['v35']
+, chn[1545415,char_name, 314033900]: ['v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
+['v9']
+, ci[1545416,cast_info, 100.0]: ['v16', 'v35', 'v18', 'v9', 'v20', 'v21', 'v22']
+['v18']
+, cn[1545417,company_name, 8484300]: ['v32', 'v24', 'v25', 'v26', 'v27', 'v28', 'v29']
+['v32']
+, mc[1545418,movie_companies, 100.0]: ['v30', 'v18', 'v32', 'v33', 'v34']
+[]
+, n[1545419,name, 5001100]: ['v35', 'v36', 'v37', 'v38', 'v39', 'v40', 'v41', 'v42', 'v43']
+['v35']
+, rt[1545420,role_type, 100]: ['v22', 'v45']
+['v22']
+, t[1545421,title, 252831200]: ['v18', 'v47', 'v48', 'v49', 'v50', 'v51', 'v52', 'v53', 'v54', 'v55', 'v56', 'v57']
+['v18']
+])
+Edges:
+dict_values([ci->t, ci->an, an->n, mc->ci, mc->cn, ci->rt, ci->chn])
+Root:
+1545418
+isFull:
+False
+isFreeConnex:
+False
+subset:
+[1545418]
+fixroot:
+True
