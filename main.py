@@ -349,7 +349,7 @@ if __name__ == '__main__':
     else:
         globalVar.set_value('PLAN_NAME', 'plan_pg.json')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/Users/cbn/Desktop/SQLRewriter/query/tpchYa_adb/q20/')
+    globalVar.set_value('BASE_PATH', '/PATH_TO_CERTAIN_QUERY')
     globalVar.set_value('DDL_NAME', "tpch.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
