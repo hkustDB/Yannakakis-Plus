@@ -3,7 +3,7 @@
 *.pyc
 __pycache__/*.pyc
 # *.csv
-
+.vscode/*
 .DS_Store
 rewrite_and_run.result
 
