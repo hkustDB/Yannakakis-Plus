@@ -1,7 +1,4 @@
-<h1 style="display: flex; justify-content: space-between; align-items: center;">
-  <span>Yannakakis</span>
-  <sup>+</sup>
-</h1>
+# Yannakakis <sup style="float: right;">+</sup>
 
 ## Experiments
 
@@ -15,7 +12,9 @@
 2. Execute the following command to get the rewrite querys. The rewrite time is shown in `rewrite_time.txt`
 3. OPTIONS
 - Mode: Set generate code mode D(DuckDB)/M(MySql) [default: D]
-- Yannakakis/Yannakakis <sup style="float: right;">+</sup>: Set Y for Yannakakis; N for Yannakakis <sup style="float: right;">+</sup> [default: N]
+- Yannakakis/# Yannakakis <sup style="float: right;">+</sup>
+: Set Y for Yannakakis; N for # Yannakakis <sup style="float: right;">+</sup>
+ [default: N]
 ```
 $ bash start_parser.sh
 $ Parser started.
