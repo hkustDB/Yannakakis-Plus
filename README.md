@@ -12,19 +12,18 @@
 
 ### Steps
 1. Modify path for `python` in `auto_rewrite.sh`.
-2. Execute the following command to get the rewrite querys. The rewrite time is shown in `rewrite_time.txt`.
+2. Execute the following command to get the rewrite querys. The rewrite time is shown in `rewrite_time.txt`
+3. OPTIONS
+- Mode: Set generate code mode D(DuckDB)/M(MySql) [default: D]
+- Yannakakis/Yannakakis <sup style="float: right;">+</sup>: Set Y for Yannakakis; N for Yannakakis <sup style="float: right;">+</sup> [default: N]
 ```
 $ bash start_parser.sh
 $ Parser started.
 $ ./auto_rewrite.sh ${DDL_NAME} ${QUERY_DIR} [OPTIONS]
-e.g ./auto_rewrite.sh lsqb lsqb -g M -y N
+e.g ./auto_rewrite.sh lsqb lsqb M N
 ```
 
 #### NOTE
- 1. Use `jps` command to get the parser pid which name is `jar`, and then kill it. 
- 2. For adb, use `1` or `4` to select different sets of machines. 
- 3. options
-```
--g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
--y, --yanna yanna     Set Y for yannakakis generation; N for our rewrite [default: N]
-```
+- Use `jps` command to get the parser pid which name is `jar`, and then kill it. 
+
+
