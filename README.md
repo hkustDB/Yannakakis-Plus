@@ -1,4 +1,4 @@
-# Yannakakis <sup style="float: right;">+</sup>
+# Yannakakis-Plus
 
 ## Experiments
 
@@ -12,8 +12,8 @@
 2. Execute the following command to get the rewrite querys. The rewrite time is shown in `rewrite_time.txt`
 3. OPTIONS
 - Mode: Set generate code mode D(DuckDB)/M(MySql) [default: D]
-- Yannakakis/# Yannakakis <sup style="float: right;">+</sup>
-: Set Y for Yannakakis; N for # Yannakakis <sup style="float: right;">+</sup>
+- Yannakakis/Yannakakis-Plus
+: Set Y for Yannakakis; N for Yannakakis-Plus
  [default: N]
 ```
 $ bash start_parser.sh
