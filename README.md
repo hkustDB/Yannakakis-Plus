@@ -1,4 +1,7 @@
-# Query Optimization By Rewriting
+<h1 style="display: flex; justify-content: space-between; align-items: center;">
+  <span>Yannakakis</span>
+  <sup>+</sup>
+</h1>
 
 ## Experiments
 
