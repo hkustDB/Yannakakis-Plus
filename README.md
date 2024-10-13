@@ -8,7 +8,7 @@
 - Python package requirements: docopt, requests
 
 ### Steps
-1. Preprocessing[option]. For generating new statistics (`cost.csv`), we offer the DuckDB version scripts `preprocess.sh` and `gen_cost.sh`. Modify the configurations in them, and execute the following command. 
+0. Preprocessing[option]. For generating new statistics (`cost.csv`), we offer the DuckDB version scripts `preprocess.sh` and `gen_cost.sh`. Modify the configurations in them, and execute the following command. 
 ```
 $ ./preprocess.sh
 ```
@@ -25,8 +25,8 @@ $ Parser started.
 $ ./auto_rewrite.sh ${DDL_NAME} ${QUERY_DIR} [OPTIONS]
 e.g ./auto_rewrite.sh lsqb lsqb M N
 ```
-1. Modify configurations in `load_XXX.sql` (load table schemas) and `auto_run_XXX.sh` (auto-run script for different DBMSs). 
-2. Execute the following command to execute the queries in different DBMSs.
+4. Modify configurations in `load_XXX.sql` (load table schemas) and `auto_run_XXX.sh` (auto-run script for different DBMSs). 
+5. Execute the following command to execute the queries in different DBMSs.
 ```
 $ ./auto_run_XXX.sh [OPTIONS]
 ```
