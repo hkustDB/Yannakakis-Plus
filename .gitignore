@@ -18,3 +18,12 @@ query/extra*
 graph_db*
 tpch_db*
 lsqb_db*
+
+# Project exclude paths
+/out/
+/target/
+/.idea/
+*/target/
+config.properties
+/Data*/*
+/log*/*
