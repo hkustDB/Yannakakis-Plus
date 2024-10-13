@@ -8,13 +8,13 @@
 - Python package requirements: docopt, requests
 
 ### Steps
-1. Preprocessing[option]. For generating new statistics (`cost.csv`), we offer the duckdb version scripts `preprocess.sh` and `gen_cost.sh`. Modify the confiurations in them, and execute the following command. 
+1. Preprocessing[option]. For generating new statistics (`cost.csv`), we offer the DuckDB version scripts `preprocess.sh` and `gen_cost.sh`. Modify the configurations in them, and execute the following command. 
 ```
-$ ./preprocess.sh 
+$ ./preprocess.sh
 ```
-2. Modify path for `python` in `auto_rewrite.sh`.
-3. Execute the following command to get the rewrite querys. The rewrite time is shown in `rewrite_time.txt`
-4. OPTIONS
+1. Modify path for `python` in `auto_rewrite.sh`.
+2. Execute the following command to get the rewrite querys. The rewrite time is shown in `rewrite_time.txt`
+3. OPTIONS
 - Mode: Set generate code mode D(DuckDB)/M(MySql) [default: D]
 - Yannakakis/Yannakakis-Plus
 : Set Y for Yannakakis; N for Yannakakis-Plus
@@ -25,8 +25,8 @@ $ Parser started.
 $ ./auto_rewrite.sh ${DDL_NAME} ${QUERY_DIR} [OPTIONS]
 e.g ./auto_rewrite.sh lsqb lsqb M N
 ```
-5. Modify configurations in `load_XXX.sql` (load table schemas) and `auto_run_XXX.sh` (auto-run script for different DBMSs). 
-6. Execute the following command to execute the queries in different DBMSs.
+1. Modify configurations in `load_XXX.sql` (load table schemas) and `auto_run_XXX.sh` (auto-run script for different DBMSs). 
+2. Execute the following command to execute the queries in different DBMSs.
 ```
 $ ./auto_run_XXX.sh [OPTIONS]
 ```
