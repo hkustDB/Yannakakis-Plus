@@ -21,6 +21,11 @@ $ Parser started.
 $ ./auto_rewrite.sh ${DDL_NAME} ${QUERY_DIR} [OPTIONS]
 e.g ./auto_rewrite.sh lsqb lsqb M N
 ```
+4. Modify configurations in `load_XXX.sql` (load table schemas) and `auto_run_XXX.sh` (auto run script for different DBMSs). 
+5. Execute the following command to execute the queries in different DBMSs.
+```
+$ ./auto_run_XXX.sh [OPTIONS]
+```
 
 #### NOTE
 - Use `jps` command to get the parser pid which name is `jar`, and then kill it. 
