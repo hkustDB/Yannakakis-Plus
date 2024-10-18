@@ -32,12 +32,12 @@ $ ./auto_run_XXX.sh [OPTIONS]
 ```
 
 ### Structure
-- `/query/[graph|lsqb|tpch|job]`: plans for different DBMSs
-- `/query/*.sh`: auto-run scripts
-- `/query/*.sql`: load data scripts
-- `/query/[src|Schema]`: files for auto-run SparkSQL
-- `/*.py`: code for rewriter and optimizer
-- `/sparksql-plus-web-jar-with-dependencies.jar`: parser jar file
+- `./query/[graph|lsqb|tpch|job]`: plans for different DBMSs
+- `./query/*.sh`: auto-run scripts
+- `./query/*.sql`: load data scripts
+- `./query/[src|Schema]`: files for auto-run SparkSQL
+- `./*.py`: code for rewriter and optimizer
+- `./sparksql-plus-web-jar-with-dependencies.jar`: parser jar file
 
 #### NOTE
 - Use `jps` command to get the parser pid which name is `jar`, and then kill it. 
