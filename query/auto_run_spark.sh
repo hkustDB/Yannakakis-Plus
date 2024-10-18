@@ -29,7 +29,7 @@ function execute_sparksql {
     current_task=1
     while [[ ${current_task} -le ${repeat_count} ]]
     do
-        ${spark_submit} --class SparkSQLRunner --master "local[*]" --driver-memory 360G --executor-memory 20G --conf "spark.shuffle.service.removeShuffle=true" --conf "spark.local.dir=/home/data/spark_temp" --conf "spark.sql.catalogImplementation=hive" ${sparkJar} ${dataPath} "${queryPath}" "${SCRIPT_PATH}/Schema/${schema}.sql" >> ${log_file} 2>&1
+        ${spark_submit} --class SparkSQLRunner --master "local[*]" --driver-memory 360G --executor-memory 20G --conf "spark.shuffle.service.removeShuffle=true" --conf "spark.local.dir=/PATH_TO_TEMP/spark_temp" --conf "spark.sql.catalogImplementation=hive" ${sparkJar} ${dataPath} "${queryPath}" "${SCRIPT_PATH}/Schema/${schema}.sql" >> ${log_file} 2>&1
 
         current_task=$(($current_task+1))
     done
