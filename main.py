@@ -205,8 +205,9 @@ def connect(base: int, mode: int, type: GenType):
         allNodes = dict()
         supId = set()
         nodes, edges, root, subset, comparisons, extraConditions, fixRoot = jt['nodes'], jt['edges'], jt['root'], jt['subset'], jt['comparisons'], jt['extraConditions'], jt['fixRoot']
-        # FIXME: ERROR only for testing
-        # fixRoot = True
+        # optimization for simple queries
+        if len(nodes) <= 2:
+            fixRoot = True
         
         # a. parse relations
         for node in nodes:
