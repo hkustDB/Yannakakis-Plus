@@ -423,7 +423,8 @@ if __name__ == '__main__':
     else:
         fields = ['index', 'hight', 'width', 'estimate'] 
         cost_stat = PQ()
-        total_number = 4
+        # NOTE: Change the number of MAXIMUM generated plans
+        total_number = 10
         fix_number, nonfix_number = total_number // 2, total_number // 2
         fix_iter, nonfix_iter = 0, 0
         best_res_nonfix, best_res_fix = [], []

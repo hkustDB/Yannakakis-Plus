@@ -40,6 +40,7 @@ $ ./auto_run_XXX.sh [OPTIONS]
 - `./sparksql-plus-web-jar-with-dependencies.jar`: parser jar file
 
 #### NOTE
+- For queries like `SELECT DISTINCT ...`, please remove `DISTINCT` keyword before parsing. 
 - Use `jps` command to get the parser pid which name is `jar`, and then kill it. 
 
 
