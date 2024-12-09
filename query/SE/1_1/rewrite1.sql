@@ -1,0 +1,13 @@
+create or replace view aggView4496977286760768914 as select site_id as v1 from site as s where site_name IN ('academia','rpg','travel');
+create or replace view aggJoin4317837560037800346 as select id as v9, site_id as v1, upvotes as v6 from so_user as u1, aggView4496977286760768914 where u1.site_id=aggView4496977286760768914.v1 and upvotes>=10 and upvotes<=1000000;
+create or replace view aggView3194477802617865297 as select v1, v9, COUNT(*) as annot from aggJoin4317837560037800346 group by v1,v9;
+create or replace view aggJoin5480603343483239612 as select question_id as v14, owner_user_id as v9, site_id as v1, annot from answer as a1, aggView3194477802617865297 where a1.site_id=aggView3194477802617865297.v1 and a1.owner_user_id=aggView3194477802617865297.v9;
+create or replace view aggView9155681363380540363 as select v14, v1, v9, SUM(annot) as annot from aggJoin5480603343483239612 group by v14,v1,v9;
+create or replace view aggJoin2261572518090626706 as select id as v14, site_id as v1, score as v12, annot from question as q1, aggView9155681363380540363 where q1.id=aggView9155681363380540363.v14 and q1.site_id=aggView9155681363380540363.v1 and q1.owner_user_id=aggView9155681363380540363.v9 and score<=10 and score>=1;
+create or replace view aggView5705822229533277260 as select v14, v1, SUM(annot) as annot from aggJoin2261572518090626706 group by v14,v1;
+create or replace view aggJoin8512968134286004655 as select tag_id as v17, site_id as v1, annot from tag_question as tq1, aggView5705822229533277260 where tq1.question_id=aggView5705822229533277260.v14 and tq1.site_id=aggView5705822229533277260.v1;
+create or replace view aggView8350901995643719587 as select v1, v17, SUM(annot) as annot from aggJoin8512968134286004655 group by v1,v17;
+create or replace view aggJoin1099580778902220160 as select name as v19, annot from tag as t1, aggView8350901995643719587 where t1.site_id=aggView8350901995643719587.v1 and t1.id=aggView8350901995643719587.v17;
+create or replace view aggView3853866356111452016 as select v19, SUM(annot) as annot from aggJoin1099580778902220160 group by v19;
+create or replace view aggJoin5039247230887966895 as select v19, annot from aggView3853866356111452016 where v19 IN ('customs-and-immigration','indian-citizens','magic-items','pathfinder-1e','schengen','spells','usa');
+select v19,annot as v23 from aggJoin5039247230887966895;

@@ -1,0 +1,15 @@
+create or replace view aggView4113329168752475869 as select id as v27 from account as acc;
+create or replace view aggJoin357600953903737379 as select id as v15, site_id as v1, downvotes as v7 from so_user as u1, aggView4113329168752475869 where u1.account_id=aggView4113329168752475869.v27 and downvotes<=10 and downvotes>=0;
+create or replace view aggView4416859890937613072 as select v15, v1, COUNT(*) as annot from aggJoin357600953903737379 group by v15,v1;
+create or replace view aggJoin9114834182378449584 as select user_id as v15, site_id as v1, annot from badge as b, aggView4416859890937613072 where b.user_id=aggView4416859890937613072.v15 and b.site_id=aggView4416859890937613072.v1;
+create or replace view aggView1183678982159309090 as select v15, v1, SUM(annot) as annot from aggJoin9114834182378449584 group by v15,v1;
+create or replace view aggJoin2196528351615830779 as select question_id as v8, site_id as v1, annot from answer as a1, aggView1183678982159309090 where a1.owner_user_id=aggView1183678982159309090.v15 and a1.site_id=aggView1183678982159309090.v1;
+create or replace view aggView6854351059333368712 as select v1, v8, SUM(annot) as annot from aggJoin2196528351615830779 group by v1,v8;
+create or replace view aggJoin7115057533954299945 as select id as v8, site_id as v1, view_count as v11, annot from question as q1, aggView6854351059333368712 where q1.site_id=aggView6854351059333368712.v1 and q1.id=aggView6854351059333368712.v8 and view_count>=100 and view_count<=100000;
+create or replace view aggView245849839505156116 as select v1, v8, SUM(annot) as annot from aggJoin7115057533954299945 group by v1,v8;
+create or replace view aggJoin1387758669791273790 as select tag_id as v17, site_id as v1, annot from tag_question as tq1, aggView245849839505156116 where tq1.site_id=aggView245849839505156116.v1 and tq1.question_id=aggView245849839505156116.v8;
+create or replace view aggView9107192539859434892 as select v1, v17, SUM(annot) as annot from aggJoin1387758669791273790 group by v1,v17;
+create or replace view aggJoin284374799275801587 as select site_id as v1, name as v19, annot from tag as t1, aggView9107192539859434892 where t1.site_id=aggView9107192539859434892.v1 and t1.id=aggView9107192539859434892.v17 and name IN ('alamofire','asp.net-mvc','botframework','cakephp-3.0','cross-compiling','http','internet-explorer-8','ipad','log4net','rsa','singleton','software-recommendation','visual-studio-code','webpack');
+create or replace view aggView5742725734151113248 as select v1, SUM(annot) as annot from aggJoin284374799275801587 group by v1;
+create or replace view aggJoin4480710004002970523 as select site_name as v2, annot from site as s, aggView5742725734151113248 where s.site_id=aggView5742725734151113248.v1 and site_name IN ('askubuntu','stackoverflow','stats');
+select SUM(annot) as v30 from aggJoin4480710004002970523;
