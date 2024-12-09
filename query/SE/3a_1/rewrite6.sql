@@ -1,0 +1,16 @@
+create or replace view aggView1975193295626210369 as select site_id as v1 from site as s where site_name IN ('askubuntu','math');
+create or replace view aggJoin5061536487044024377 as select id as v17, site_id as v1, name as v19 from tag as t1, aggView1975193295626210369 where t1.site_id=aggView1975193295626210369.v1 and name IN ('convergence','derivatives','finite-groups','limits','linear-algebra','logarithms','ordinary-differential-equations','proof-writing','representation-theory','systems-of-equations');
+create or replace view aggView7234972483225316870 as select id as v8, site_id as v1 from question as q1 where view_count>=0 and view_count<=100;
+create or replace view aggJoin6591749946776917819 as select tag_id as v17, question_id as v8, site_id as v1 from tag_question as tq1, aggView7234972483225316870 where tq1.question_id=aggView7234972483225316870.v8 and tq1.site_id=aggView7234972483225316870.v1;
+create or replace view aggView2209269217329319259 as select v17, v1, COUNT(*) as annot from aggJoin5061536487044024377 group by v17,v1;
+create or replace view aggJoin4090928046945922366 as select v8, v1, annot from aggJoin6591749946776917819 join aggView2209269217329319259 using(v17,v1);
+create or replace view aggView4816925247080795656 as select v8, v1, SUM(annot) as annot from aggJoin4090928046945922366 group by v8,v1;
+create or replace view aggJoin5834186204071287818 as select owner_user_id as v15, site_id as v1, annot from answer as a1, aggView4816925247080795656 where a1.question_id=aggView4816925247080795656.v8 and a1.site_id=aggView4816925247080795656.v1;
+create or replace view aggView7081332153157695289 as select v15, v1, SUM(annot) as annot from aggJoin5834186204071287818 group by v15,v1;
+create or replace view aggJoin2484760655543603779 as select user_id as v15, site_id as v1, name as v26, annot from badge as b, aggView7081332153157695289 where b.user_id=aggView7081332153157695289.v15 and b.site_id=aggView7081332153157695289.v1 and name IN ('Critic','Good Question','Informed','Necromancer','Popular Question','Supporter','Yearling');
+create or replace view aggView7126701695970688080 as select v15, v1, SUM(annot) as annot from aggJoin2484760655543603779 group by v15,v1;
+create or replace view aggJoin2908850430588055842 as select account_id as v27, downvotes as v7, annot from so_user as u1, aggView7126701695970688080 where u1.id=aggView7126701695970688080.v15 and u1.site_id=aggView7126701695970688080.v1 and downvotes>=0 and downvotes<=1;
+create or replace view aggView3152614472339388119 as select v27, SUM(annot) as annot from aggJoin2908850430588055842 group by v27;
+create or replace view aggJoin6301029946594843505 as select location as v29, annot from account as acc, aggView3152614472339388119 where acc.id=aggView3152614472339388119.v27;
+create or replace view aggView3498357162322269736 as select v29, SUM(annot) as annot from aggJoin6301029946594843505 group by v29;
+select v29,annot as v30 from aggView3498357162322269736;

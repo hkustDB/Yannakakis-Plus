@@ -1,0 +1,14 @@
+create or replace view aggView3852882739887328874 as select site_id as v1 from site as s where site_name IN ('chemistry','diy','gaming','judaism','softwareengineering');
+create or replace view aggJoin402718008703635481 as select id as v8, site_id as v1, name as v10 from tag as t1, aggView3852882739887328874 where t1.site_id=aggView3852882739887328874.v1 and name IN ('chazzan-prayer-leader','cheats','hechsher-certification','melting-point','messiah','purification','wire','xcom-enemy-unknown');
+create or replace view aggView2404223930884749336 as select v1, v8, COUNT(*) as annot from aggJoin402718008703635481 group by v1,v8;
+create or replace view aggJoin7948436880616328052 as select question_id as v14, site_id as v1, annot from tag_question as tq1, aggView2404223930884749336 where tq1.site_id=aggView2404223930884749336.v1 and tq1.tag_id=aggView2404223930884749336.v8;
+create or replace view aggView3049612173869286345 as select v14, v1, SUM(annot) as annot from aggJoin7948436880616328052 group by v14,v1;
+create or replace view aggJoin5834294259566222642 as select owner_user_id as v15, site_id as v1, score as v18, annot from question as q1, aggView3049612173869286345 where q1.id=aggView3049612173869286345.v14 and q1.site_id=aggView3049612173869286345.v1 and score>=0 and score<=1000;
+create or replace view aggView4627080818958965933 as select v1, v15, SUM(annot) as annot from aggJoin5834294259566222642 group by v1,v15;
+create or replace view aggJoin523762713796143065 as select id as v15, site_id as v1, account_id as v23, annot from so_user as u1, aggView4627080818958965933 where u1.site_id=aggView4627080818958965933.v1 and u1.id=aggView4627080818958965933.v15;
+create or replace view aggView8783958987711768829 as select id as v23 from account as acc;
+create or replace view aggJoin2204614427947879624 as select v15, v1, annot from aggJoin523762713796143065 join aggView8783958987711768829 using(v23);
+create or replace view aggView2426985824864446221 as select v1, v15, SUM(annot) as annot from aggJoin2204614427947879624 group by v1,v15;
+create or replace view aggJoin4780361233304844186 as select name as v22, annot from badge as b1, aggView2426985824864446221 where b1.site_id=aggView2426985824864446221.v1 and b1.user_id=aggView2426985824864446221.v15;
+create or replace view aggView4692824614579555667 as select v22, SUM(annot) as annot from aggJoin4780361233304844186 group by v22;
+select v22,annot as v26 from aggView4692824614579555667;

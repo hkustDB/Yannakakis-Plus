@@ -1,0 +1,13 @@
+create or replace view aggView7371280811248522435 as select id as v23 from account as acc;
+create or replace view aggJoin7079922075035626922 as select id as v15, site_id as v1 from so_user as u1, aggView7371280811248522435 where u1.account_id=aggView7371280811248522435.v23;
+create or replace view aggView739817749923671520 as select v15, v1, COUNT(*) as annot from aggJoin7079922075035626922 group by v15,v1;
+create or replace view aggJoin4492273232780787764 as select user_id as v15, site_id as v1, annot from badge as b1, aggView739817749923671520 where b1.user_id=aggView739817749923671520.v15 and b1.site_id=aggView739817749923671520.v1;
+create or replace view aggView8370471451789571918 as select v15, v1, SUM(annot) as annot from aggJoin4492273232780787764 group by v15,v1;
+create or replace view aggJoin2736184619667698990 as select id as v14, site_id as v1, view_count as v17, annot from question as q1, aggView8370471451789571918 where q1.owner_user_id=aggView8370471451789571918.v15 and q1.site_id=aggView8370471451789571918.v1 and view_count>=100 and view_count<=100000;
+create or replace view aggView3110604529637549210 as select v14, v1, SUM(annot) as annot from aggJoin2736184619667698990 group by v14,v1;
+create or replace view aggJoin3324100558867179886 as select tag_id as v8, site_id as v1, annot from tag_question as tq1, aggView3110604529637549210 where tq1.question_id=aggView3110604529637549210.v14 and tq1.site_id=aggView3110604529637549210.v1;
+create or replace view aggView8715827375154919567 as select v8, v1, SUM(annot) as annot from aggJoin3324100558867179886 group by v8,v1;
+create or replace view aggJoin612179207985797117 as select site_id as v1, name as v10, annot from tag as t1, aggView8715827375154919567 where t1.id=aggView8715827375154919567.v8 and t1.site_id=aggView8715827375154919567.v1 and name IN ('abort','android-9.0-pie','application-loader','nsexception');
+create or replace view aggView5061481066133048401 as select v1, SUM(annot) as annot from aggJoin612179207985797117 group by v1;
+create or replace view aggJoin6827694360686168105 as select site_name as v2, annot from site as s, aggView5061481066133048401 where s.site_id=aggView5061481066133048401.v1 and site_name= 'stackoverflow';
+select SUM(annot) as v26 from aggJoin6827694360686168105;
