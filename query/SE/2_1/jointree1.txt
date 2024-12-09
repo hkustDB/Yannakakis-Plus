@@ -1,0 +1,30 @@
+Relations:
+dict_values([s[3680,site, 0]: ['v1', 'v2']
+['v1']
+, u1[3681,so_user, 0]: ['v15', 'v1', 'v27', 'v6', 'v7']
+['v27']
+, q1[3682,question, 0]: ['v8', 'v9', 'v1', 'v11', 'v12']
+['v8', 'v1']
+, a1[3683,answer, 0]: ['v13', 'v8', 'v15', 'v1']
+['v1', 'v15']
+, t1[3684,tag, 0]: ['v17', 'v1', 'v19']
+['v17', 'v1']
+, tq1[3685,tag_question, 0]: ['v17', 'v8', 'v1']
+['v8', 'v1']
+, b[3686,badge, 0]: ['v23', 'v15', 'v1', 'v26']
+['v1', 'v15']
+, acc[3687,account, 0]: ['v27', 'v28', 'v29']
+[]
+])
+Edges:
+dict_values([b->a1, tq1->t1, a1->q1, acc->u1, q1->tq1, u1->b, t1->s])
+Root:
+3687
+isFull:
+False
+isFreeConnex:
+True
+subset:
+[]
+fixroot:
+False
