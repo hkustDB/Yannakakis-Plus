@@ -27,3 +27,4 @@ lsqb_db*
 config.properties
 /Data*/*
 /log*/*
+temp*

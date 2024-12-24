@@ -79,6 +79,23 @@ def input_car_ndv(DDL_NAME: str):
                         col_sta.append([cardinality, ndv])
                 sta_graph[name] = col_sta
             return sta_graph
+        
+        elif DDL_NAME == 'se':
+            data_se = pd.read_excel(BASE_PATH + 'se.xlsx', header=None, keep_default_na=False)
+            se = data_se.values.tolist()
+            sta_se = dict()
+            for table in se:
+                name = table[0]
+                col_sta = []
+                for col in table[1:]:
+                    if col != '':
+                        if col.split(';')[1] == '':
+                            cardinality, ndv = int(col.split(';')[0]), int(col.split(';')[0])
+                        else:
+                            cardinality, ndv = int(col.split(';')[0]), int(col.split(';')[1])
+                        col_sta.append([cardinality, ndv])
+                sta_se[name] = col_sta
+            return sta_se
 
 
     except:
@@ -243,7 +260,7 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
             node.estimateSize = node.statistics[0]
         nodeId = node.id
         jt.node[nodeId] = node
-
+    '''
     if globalVar.get_value("GEN_TYPE") == 'PG':
         cost_estimate = 2.89609637e-15 * join_cost * join_cost + 1.79049317e-13 * join_cost * view_cost + 3.54478511e-13 * view_cost * view_cost -3.33057118e-05 * join_cost - 4.07431212e-04 * view_cost + 5.57805967e+04
     else:
@@ -251,13 +268,14 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
     
     if cost_estimate < 0:
         cost_estimate = -9.01243445e-16 * join_cost * join_cost -1.88488717e-16 * join_cost * view_cost -6.45029976e-17 * view_cost * view_cost + 4.51001301e-07 * join_cost + 1.67076939e-07 * view_cost + 1.53898109e+00
-
+    '''
+    cost_estimate = join_cost * view_cost
     return cost_height, cost_fanout, cost_estimate
 
 
 def getEstimation(DDL_NAME: str, jt: JoinTree):
     sta = input_car_ndv(DDL_NAME)
-    if DDL_NAME == 'tpch' or DDL_NAME == 'lsqb' or DDL_NAME == 'job' or DDL_NAME == 'graph':
+    if DDL_NAME == 'tpch' or DDL_NAME == 'lsqb' or DDL_NAME == 'job' or DDL_NAME == 'graph' or DDL_NAME == 'se':
         return cal_cost(sta, jt)
     else:
         return cal_cost(None, jt)

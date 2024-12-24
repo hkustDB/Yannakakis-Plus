@@ -1,0 +1,13 @@
+create or replace view aggView714725302658326128 as select site_id as v1 from site as s where site_name= 'stackoverflow';
+create or replace view aggJoin5742570816680485021 as select id as v11, site_id as v1, name as v13 from tag as t1, aggView714725302658326128 where t1.site_id=aggView714725302658326128.v1 and name IN ('angular-dart','cells','distutils','exchange-server','graphviz','layer','outlook-addin','prism','spark-dataframe','spring-security-oauth2','statusbar');
+create or replace view aggView7416424532935924916 as select v1, v11, COUNT(*) as annot from aggJoin5742570816680485021 group by v1,v11;
+create or replace view aggJoin8766744586268694857 as select question_id as v17, site_id as v1, annot from tag_question as tq1, aggView7416424532935924916 where tq1.site_id=aggView7416424532935924916.v1 and tq1.tag_id=aggView7416424532935924916.v11;
+create or replace view aggView4874441235793626411 as select v1, v17, SUM(annot) as annot from aggJoin8766744586268694857 group by v1,v17;
+create or replace view aggJoin6136926457949502087 as select site_id as v1, view_count as v23, owner_user_id as v25, annot from question as q1, aggView4874441235793626411 where q1.site_id=aggView4874441235793626411.v1 and q1.id=aggView4874441235793626411.v17 and view_count>=1 and view_count<=10000000;
+create or replace view aggView8774704651849752624 as select v1, v25, SUM(annot) as annot from aggJoin6136926457949502087 group by v1,v25;
+create or replace view aggJoin460700784928551800 as select id as v25, site_id as v1, account_id as v37, annot from so_user as u1, aggView8774704651849752624 where u1.site_id=aggView8774704651849752624.v1 and u1.id=aggView8774704651849752624.v25;
+create or replace view aggView3893991457660894163 as select site_id as v1, user_id as v25 from badge as b1;
+create or replace view aggJoin7958918238801284337 as select v37, annot from aggJoin460700784928551800 join aggView3893991457660894163 using(v1,v25);
+create or replace view aggView8583151254902864629 as select id as v37 from account as acc;
+create or replace view aggJoin4467468435341046231 as select annot from aggJoin7958918238801284337 join aggView8583151254902864629 using(v37);
+select SUM(annot) as v42 from aggJoin4467468435341046231;
