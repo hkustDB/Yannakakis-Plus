@@ -8,7 +8,7 @@ import globalVar
 BEGIN = 'create or replace view '
 END = ';\n'
 
-def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_numer: bool = False, max_rn: bool = False) -> str:
+def transSelectDataWrap(selectAttrs: list[str], selectAttrAlias: list[str], row_numer: bool = False, max_rn: bool = False) -> str:
     extraAdd = (', row_number()' if row_numer else '') + (', max(rn) as mrn' if max_rn else '')
     if len(selectAttrs) == 0: return ', '.join(selectAttrAlias) + extraAdd
     if len(selectAttrs) != len(selectAttrAlias):
@@ -26,6 +26,11 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
     
     ret = ', '.join(selectData) + extraAdd
     return ret
+
+def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_numer: bool = False, max_rn: bool = False) -> str:
+    ret = transSelectDataWrap(selectAttrs, selectAttrAlias, row_numer, max_rn)
+    if (ret == ''): return '*'
+    else: return ret
 
 def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, aggList: list[AggReducePhase] = [], isFreeConnex: bool = True, Agg: Aggregation = None):
     outFile = open(outPath, 'w+')
