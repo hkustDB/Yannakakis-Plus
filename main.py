@@ -182,7 +182,7 @@ def connect(base: int, mode: int, type: GenType):
         pass
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
-        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000&fixRootEnable=true", headers=headers, json=body).json()['data']
+        response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true&timeout=200", headers=headers, json=body).json()['data']
     except:
         print(BASE_PATH + QUERY_NAME)
     # 1. 
@@ -344,14 +344,14 @@ if __name__ == '__main__':
     globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
     globalVar.set_value('COST_NAME', 'cost.csv')
     globalVar.set_value('GEN_TYPE', 'DuckDB')
-    globalVar.set_value('YANNA', True)
+    globalVar.set_value('YANNA', False)
     if globalVar.get_value("GEN_TYPE") != 'PG':
         globalVar.set_value('PLAN_NAME', 'plan.json')
     else:
         globalVar.set_value('PLAN_NAME', 'plan_pg.json')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', '/PATH_TO_CERTAIN_QUERY')
-    globalVar.set_value('DDL_NAME', "tpch.ddl")
+    globalVar.set_value('BASE_PATH', 'query/se/1/')
+    globalVar.set_value('DDL_NAME', "se.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
     
@@ -392,7 +392,7 @@ if __name__ == '__main__':
     # sign for whether process all JT
     optFlag = False
     if optFlag:
-        
+
         cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], optJT)
         costOutName = COST_NAME.split('.')[0] + 'opt' + '.' + COST_NAME.split('.')[1]
         costout = open(BASE_PATH + costOutName, 'w+')
@@ -424,7 +424,7 @@ if __name__ == '__main__':
         fields = ['index', 'hight', 'width', 'estimate'] 
         cost_stat = PQ()
         # NOTE: Change the number of MAXIMUM generated plans
-        total_number = 10
+        total_number = 6
         fix_number, nonfix_number = total_number // 2, total_number // 2
         fix_iter, nonfix_iter = 0, 0
         best_res_nonfix, best_res_fix = [], []
@@ -503,6 +503,8 @@ if __name__ == '__main__':
 
     end2 = time.time()
     with open(BASE_PATH + REWRITE_TIME, 'a+') as f:
-        print("Rewrite time(s): " + str(end2-end))
+        print("Rewrite time(s): " + str(end2-end) + "\n")
+        print("Total time(s): " + str(end2-start) + "\n")
+        print("Total plans: " + str(len(allRes)))
         f.write("Rewrite time(s): " + str(end2-end) + '\n')
     

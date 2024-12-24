@@ -1,4 +1,4 @@
-SELECT b1.name, count(*)
+SELECT COUNT(*)
 FROM
 site as s,
 so_user as u1,
@@ -18,8 +18,7 @@ AND q1.id = tq1.question_id
 AND q1.owner_user_id = u1.id
 AND acc.id = u1.account_id
 AND b1.user_id = u1.id
-AND (q1.score >= 0)
-AND (q1.score <= 1000)
-AND (s.site_name in ('chemistry','diy','gaming','judaism','softwareengineering'))
-AND (t1.name in ('chazzan-prayer-leader','cheats','hechsher-certification','melting-point','messiah','purification','wire','xcom-enemy-unknown'))
-GROUP BY b1.name
+AND (q1.view_count >= 1)
+AND (q1.view_count <= 10000000)
+AND s.site_name = 'stackoverflow'
+AND (t1.name in ('angular-dart','cells','distutils','exchange-server','graphviz','layer','outlook-addin','prism','spark-dataframe','spring-security-oauth2','statusbar'))

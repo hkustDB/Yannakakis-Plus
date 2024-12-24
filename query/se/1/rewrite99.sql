@@ -1,0 +1,15 @@
+create or replace view aggView5416604822714802839 as select id as v11, site_id as v1 from question as q1 where score<=100000 and score>=1;
+create or replace view aggJoin3607079295876063995 as select question_id as v11, tag_id as v40, site_id as v1 from tag_question as tq1, aggView5416604822714802839 where tq1.question_id=aggView5416604822714802839.v11 and tq1.site_id=aggView5416604822714802839.v1;
+create or replace view aggView5605847162144800061 as select id as v40, site_id as v1 from tag as t1 where name IN ('algebra-precalculus','definite-integrals','general-topology','inequality','prime-numbers','probability','reference-request');
+create or replace view aggJoin4394387583409181219 as select v11, v1 from aggJoin3607079295876063995 join aggView5605847162144800061 using(v40,v1);
+create or replace view aggView5848086860093556740 as select site_id as v1 from site as s where site_name IN ('math','pt','serverfault');
+create or replace view aggJoin5339825108907575580 as select site_id as v1, question_id as v11, owner_user_id as v35 from answer as a1, aggView5848086860093556740 where a1.site_id=aggView5848086860093556740.v1;
+create or replace view aggView2858917951935762208 as select v11, v1, COUNT(*) as annot from aggJoin4394387583409181219 group by v11,v1;
+create or replace view aggJoin3044318167218668532 as select v1, v35, annot from aggJoin5339825108907575580 join aggView2858917951935762208 using(v11,v1);
+create or replace view aggView6746247049134764014 as select v1, v35, SUM(annot) as annot from aggJoin3044318167218668532 group by v1,v35;
+create or replace view aggJoin2241072190509520912 as select id as v35, site_id as v1, upvotes as v8, account_id as v50, annot from so_user as u1, aggView6746247049134764014 where u1.site_id=aggView6746247049134764014.v1 and u1.id=aggView6746247049134764014.v35 and upvotes>=10 and upvotes<=10000;
+create or replace view aggView3791943108467226660 as select id as v50 from account as acc;
+create or replace view aggJoin554831166958763861 as select v35, v1, v8, annot from aggJoin2241072190509520912 join aggView3791943108467226660 using(v50);
+create or replace view aggView6540036683406831637 as select v1, v35, SUM(annot) as annot from aggJoin554831166958763861 group by v1,v35;
+create or replace view aggJoin6655477097140220440 as select name as v48, annot from badge as b, aggView6540036683406831637 where b.site_id=aggView6540036683406831637.v1 and b.user_id=aggView6540036683406831637.v35 and name IN ('Announcer','Caucus','Commentator','Critic','Custodian','Editor','Enthusiast','Good Answer','Informed','Nice Answer','Nice Question','Notable Question','Organizer','Popular Question','Tumbleweed');
+select SUM(annot) as v55 from aggJoin6655477097140220440;
