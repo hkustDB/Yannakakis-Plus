@@ -1,0 +1,51 @@
+{
+    "relation": "n",
+    "children": [
+        {
+            "relation": "mi",
+            "children": [
+                {
+                    "relation": "it1",
+                    "children": []
+                },
+                {
+                    "relation": "ci",
+                    "children": [
+                        {
+                            "relation": "mc",
+                            "children": [
+                                {
+                                    "relation": "cn",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "t",
+                                    "children": [
+                                        {
+                                            "relation": "mi_idx",
+                                            "children": [
+                                                {
+                                                    "relation": "it2",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "relation": "mk",
+                                                    "children": [
+                                                        {
+                                                            "relation": "k",
+                                                            "children": []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

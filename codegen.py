@@ -35,6 +35,7 @@ def transSelectData(selectAttrs: list[str], selectAttrAlias: list[str], row_nume
 def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], finalResult: str, outPath: str, aggList: list[AggReducePhase] = [], isFreeConnex: bool = True, Agg: Aggregation = None):
     outFile = open(outPath, 'w+')
     dropView = []
+    queries = ""
     # 0. aggReduceList
     for agg in aggList:
         # outFile.write('\n# AggReduce' + str(agg.aggReducePhaseId) + '\n')
@@ -52,6 +53,7 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 
                 dropView.append(prepare.viewName)
+                queries += line
                 outFile.write(line)
                 
         def getAggViewLine(aggView: AggView, isWith: bool):
@@ -83,6 +85,7 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
             line += ' where ' if len(agg.aggJoin.whereCondList) else ''
             line += ' and '.join(agg.aggJoin.whereCondList) + ');\n'
             dropView.append(agg.aggJoin.viewName)
+            queries += line
             outFile.write(line)
         else:
             outFile.write(getAggViewLine(agg.aggView, False))
@@ -104,6 +107,7 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 
                 dropView.append(prepare.viewName)
+                queries += line
                 outFile.write(line)
         
         if reduce.semiView is not None and not 'Aux' in reduce.semiView.viewName:
@@ -116,6 +120,7 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
             line += ' and '.join(reduce.semiView.whereCondList) + ')' 
             line += ' and ' if len(reduce.semiView.outerWhereCondList) else ''
             line += ' and '.join(reduce.semiView.outerWhereCondList) + END
+            queries += line
             outFile.write(line)
             dropView.append(reduce.semiView.viewName)
             continue
@@ -173,6 +178,7 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
         whereSentence = reduce.joinView.joinCond + (' and ' if reduce.joinView.joinCond != '' and len(reduce.joinView.whereCondList) else '') + ' and '.join(reduce.joinView.whereCondList)
         line += joinSentence + ((' where ' + whereSentence) if whereSentence != '' else '')
         line += ');\n'
+        queries += line
         outFile.write(line)
         
         if reduce.bagAuxView:
@@ -185,6 +191,7 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
             line += (' where ' + ' and '.join(reduce.bagAuxView.whereCondList)) if len(reduce.bagAuxView.whereCondList) else ''
             line += END
             dropView.append(reduce.bagAuxView.viewName)
+            queries += line
             outFile.write(line)
     
     def addGroupBy(action):
@@ -212,6 +219,7 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
                     elif len(enum.semiEnumerate.whereCondList):
                         line += ' where ' + ' and '.join(enum.semiEnumerate.whereCondList)
                     line += ');\n'
+                    queries += line
                     outFile.write(line)
                     continue
 
@@ -233,6 +241,7 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
                     line += ' where ' + ' and '.join(enum.semiEnumerate.whereCondList)
             
                 line += ')\n'
+                queries += line
                 outFile.write(line)
                 dropView.append(enum.semiEnumerate.viewName)
                 continue
@@ -277,10 +286,12 @@ def codeGenD(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase],
                 line += ')\n'
             else:
                 line += ');\n'
-        
+
+        queries += line
         outFile.write(line)
     
     # outFile.write('# Final result: \n')
+    queries += finalResult
     outFile.write(finalResult)
     outFile.close()
 
@@ -293,7 +304,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         codeGenD(reduceList, enumerateList, finalResult, outPath, aggList, isFreeConnex, Agg)
         return
     '''
-    
+    queries = ""
     outFile = open(outPath, 'w+')
     dropView = []
     # 0. aggReduceList
@@ -313,6 +324,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 
                 dropView.append(prepare.viewName)
+                queries += line
                 outFile.write(line)
                 
         # outFile.write('# 1. aggView\n')
@@ -322,6 +334,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line += ' group by ' + ','.join(agg.aggView.groupBy)
         line += END
         dropView.append(agg.aggView.viewName)
+        queries += line
         outFile.write(line)
         if 'Join' in agg.aggJoin.viewName:
             # outFile.write('# 2. aggJoin\n')
@@ -338,6 +351,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line += ' where ' if len(agg.aggJoin.whereCondList) else ''
             line += ' and '.join(agg.aggJoin.whereCondList) + END
             dropView.append(agg.aggJoin.viewName)
+            queries += line
             outFile.write(line)
     
     # 1. reduceList rewrite
@@ -357,6 +371,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                     line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
                 
                 dropView.append(prepare.viewName)
+                queries += line
                 outFile.write(line)
         
         if reduce.semiView is not None and not 'Aux' in reduce.semiView.viewName:
@@ -372,6 +387,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line += ' and '.join(reduce.semiView.whereCondList) + ')' 
             line += ' and ' if len(reduce.semiView.outerWhereCondList) else ''
             line += ' and '.join(reduce.semiView.outerWhereCondList) + END
+            queries += line
             outFile.write(line)
             dropView.append(reduce.semiView.viewName)
             continue
@@ -383,6 +399,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line += ' where ' if len(reduce.orderView.selfComp) != 0 else ''
             line += ' and '.join(reduce.orderView.selfComp) + END
             dropView.append(reduce.orderView.viewName)
+            queries += line
             outFile.write(line)
         
         # Add optiomization for non-full (delete orderView)
@@ -393,6 +410,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line += ' group by ' + ', '.join(reduce.minView.groupBy) if len(reduce.minView.groupBy) else ''
             line += END
             dropView.append(reduce.minView.viewName)
+            queries += line
             outFile.write(line)
             # outFile.write('# 3. joinView\n')
             if not isFull and index == len(reduceList) - 1:
@@ -407,6 +425,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             whereSentence = reduce.joinView.joinCond + (' and ' if reduce.joinView.joinCond != '' and len(reduce.joinView.whereCondList) else '') + ' and '.join(reduce.joinView.whereCondList)
             line += joinSentence + ((' where ' + whereSentence) if whereSentence != '' else '') + END
             dropView.append(reduce.joinView.viewName)
+            queries += line
             outFile.write(line)
         
         if reduce.bagAuxView:
@@ -419,6 +438,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             line += (' where ' + ' and '.join(reduce.bagAuxView.whereCondList)) if len(reduce.bagAuxView.whereCondList) else ''
             line += END
             dropView.append(reduce.bagAuxView.viewName)
+            queries += line
             outFile.write(line)
     
     def addGroupBy(action):
@@ -448,6 +468,7 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
                 line += ' where ' + ' and '.join(enum.semiEnumerate.whereCondList)
             
             line += END
+            queries += line
             outFile.write(line)
             dropView.append(enum.semiEnumerate.viewName)
             continue
@@ -456,18 +477,21 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
             # outFile.write('# 1. createSample\n')
             line = BEGIN + enum.createSample.viewName + ' as select ' + enum.createSample.selectAttrAlias[0] + ' from ' + enum.createSample.fromTable + ' where ' + enum.createSample.whereCond + END
             dropView.append(enum.createSample.viewName)
+            queries += line
             outFile.write(line)
         
         if enum.selectMax:
             # outFile.write('# 2. selectMax\n')
             line = BEGIN + enum.selectMax.viewName + ' as select ' + transSelectData(enum.selectMax.selectAttrs, enum.selectMax.selectAttrAlias, row_numer=False, max_rn=True) + ' from ' + enum.selectMax.fromTable + ' join ' + enum.selectMax.joinTable + ' using(' + ', '.join(enum.selectMax.joinKey) + ') where ' + enum.selectMax.whereCond + ' group by ' + ', '.join(enum.selectMax.groupCond) + END 
             dropView.append(enum.selectMax.viewName)
+            queries += line
             outFile.write(line)
         
         if enum.selectTarget:
             # outFile.write('# 3. selectTarget\n')
             line = BEGIN + enum.selectTarget.viewName + ' as select ' + ', '.join(enum.selectTarget.selectAttrAlias) + ' from ' + enum.selectTarget.fromTable + ' join ' + enum.selectTarget.joinTable + ' using(' + ', '.join(enum.selectTarget.joinKey) + ')' + ' where ' + enum.selectTarget.whereCond + END
             dropView.append(enum.selectTarget.viewName)
+            queries += line
             outFile.write(line)
         
         # outFile.write('# 4. stageEnd\n')
@@ -484,9 +508,11 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         line += ' and ' if len(enum.stageEnd.whereCondList) else ''
         line += ' and '.join(enum.stageEnd.whereCondList) + addGroupBy(enum.stageEnd) + END
         dropView.append(enum.stageEnd.viewName)
+        queries += line
         outFile.write(line)
     
     # outFile.write('# Final result: \n')
+    queries += finalResult
     outFile.write(finalResult)
     
     ''' drop view summary
@@ -495,3 +521,4 @@ def codeGen(reduceList: list[ReducePhase], enumerateList: list[EnumeratePhase], 
         outFile.write(line)
     '''
     outFile.close()
+    return queries

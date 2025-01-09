@@ -1,17 +1,3 @@
-"""
-Usage:
-  main.py <query> <ddl> [options]
-  
-Options:
-  -h --help     Show help.
-  <query>       Set execute query path, like topk1/
-  <ddl>         Set ddl filename
-  -b, --base base   Set level-k log base [default: 32]
-  -m, --mode mode   Set topK algorithm mode. 0: level-k, 1: product-k [default: 0]
-  -g, --genType type    Set generate code mode D(DuckDB)/M(MySql) [default: D]
-  -y, --yanna yanna     Set Y for yannakakis generation; N for our rewrite [default: N]
-"""
-
 from docopt import docopt
 from treenode import *
 from comparison import Comparison
@@ -39,6 +25,7 @@ import re
 import time
 import traceback
 import requests
+from flask import Flask, request, jsonify
 
 
 # AddiRelationNames = set(['TableAggRelation', 'AuxiliaryRelation', 'BagRelation']) #5, 5, 6
@@ -96,12 +83,15 @@ def parseRelRecur(node: str, allNodes: dict[int, TreeNode], supId: set[int]):
     elif name == 'TableAggRelation':
         source, cols, alias, aggList = removeEqual(line, 3)
         cols = pattern.findall(cols)
+        '''
         aggList, aggs = aggList.split('\n', 1)
         aggList = aggList.split(',')
         aggList = [int(agg) for agg in aggList]
         aggs = aggs.split('\n')
         for index, each_agg in enumerate(aggs):
             if each_agg != '' and aggList[index] not in allNodes: parseRel(each_agg)
+        '''
+        aggList = node['aggList']
         taNode = TableAggTreeNode(id, source, cols, [], alias, None, [], aggList)
         allNodes[id] = taNode
     elif name == 'BagRelation':
@@ -124,12 +114,15 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
     id, name, cols, alias, reserve, hintJoinOrder = node['id'], node['type'], node['columns'], node['alias'], node['reserves'], node["hintJoinOrder"]
     if name == 'BagRelation':
         inAlias = node['internal']
+        '''
         inId, internal = node['internalRelations'].split('\n', 1)
         inId = inId.split(',')
         inId = [int(each) for each in inId][::-1]
         internal = internal.split('\n')
         for inter in internal:
             if inter != '': parseRelRecur(inter, allNodes, supId)
+        '''
+        inId = node['inId']
         bagNode = BagTreeNode(id, str(inAlias), cols, [], alias, reserve, hintJoinOrder, inId, inAlias)
         allNodes[id] = bagNode
     
@@ -147,21 +140,30 @@ def parseRel(node: dict[str, str], allNodes: dict[int, TreeNode], supId: set[int
         
     elif name == 'TableAggRelation':
         source = node['source']
+        '''
         aggList, aggs = node['aggList'].split('\n', 1)
         aggList = aggList.split(',')
         aggList = [int(agg) for agg in aggList]
         aggs = aggs.split('\n')
         for each_agg in aggs:
             if each_agg != '': parseRelRecur(each_agg, allNodes, supId)
+        '''
+        aggList = node['aggList']
         taNode = TableAggTreeNode(id, source, cols, [], alias, reserve, hintJoinOrder, aggList)
         allNodes[id] = taNode
+
+    elif name == 'AggregatedRelation':
+        source = node['source']
+        group = int(node['group'][0])
+        func = node['func']
+        aNode = AggTreeNode(id, source, cols, [], alias, None, [], group, func)
+        allNodes[id] = aNode
             
     else:
         raise NotImplementedError("Error Realtion type! ")
     return 
 
-
-def connect(base: int, mode: int, type: GenType):
+def connectJava(Java: bool = False):
     BASE_PATH = globalVar.get_value('BASE_PATH')
     DDL_NAME = globalVar.get_value('DDL_NAME')
     QUERY_NAME = globalVar.get_value('QUERY_NAME')
@@ -183,8 +185,14 @@ def connect(base: int, mode: int, type: GenType):
     try:
         # http://localhost:8848/api/v1/parse?orderBy=fanout&sample=true&sampleSize=5000&limit=5000, http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true
         response = requests.post(url="http://localhost:8848/api/v1/parse?orderBy=fanout&fixRootEnable=true&timeout=200", headers=headers, json=body).json()['data']
+        return response
     except:
         print(BASE_PATH + QUERY_NAME)
+
+
+def connect(base: int, mode: int, type: GenType, response, responseType: int = 1) -> tuple:
+    if responseType == 0:
+        response = connectJava()
     # 1. 
     table2vars = dict([(t['name'], t['columns']) for t in response['tables']])
     # 3. parse outputVariables
@@ -230,7 +238,7 @@ def connect(base: int, mode: int, type: GenType):
                     child.reduceOrder = len(node.hintJoinOrder) - node.hintJoinOrder.index(child.id)
         # c. parse comparison
         for compId, comp in enumerate(comparisons):
-            opName, path, left, right, cond, op = comp['opName'], comp['path'], comp['left'], comp['right'], comp['cond'], comp['op']
+            opName, path, left, right, cond, op = comp['op'], comp['path'], comp['left'], comp['right'], comp['cond'], comp['cond']
             Compare = Comparison()
             Compare.setAttr(compId, opName, left, right, path, cond, op)
             leftAlias = JT.node[Compare.beginNodeId].cols
@@ -336,107 +344,43 @@ def parse_col2var(allNodes: dict[int, TreeNode], table2vars: dict[str, list[str]
     return ret
 
 
-if __name__ == '__main__':
-    base, mode, type = 2, 0, GenType.PG
-    globalVar._init()
-    globalVar.set_value('QUERY_NAME', 'query.sql')
-    globalVar.set_value('OUT_NAME', 'rewrite.sql')
-    globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
-    globalVar.set_value('COST_NAME', 'cost.csv')
-    globalVar.set_value('GEN_TYPE', 'DuckDB')
-    globalVar.set_value('YANNA', False)
-    if globalVar.get_value("GEN_TYPE") != 'PG':
-        globalVar.set_value('PLAN_NAME', 'plan.json')
-    else:
-        globalVar.set_value('PLAN_NAME', 'plan_pg.json')
-    # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/se/1/')
-    globalVar.set_value('DDL_NAME', "se.ddl")
-    globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
-    # auto-rewrite keep here
-    
-    arguments = docopt(__doc__)
-    globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
-    globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
-    base = int(arguments['--base'])
-    mode=int(arguments['--mode'])
-    yanna=True if arguments['--yanna'] == 'Y' else False
-    globalVar.set_value('YANNA', yanna)
-    if arguments['--genType'] == 'M':
-        type=GenType.Mysql
-    elif arguments['--genType'] == 'D':
-        type=GenType.DuckDB
-    else:
-        type=GenType.PG
-    if type == GenType.Mysql:
-        globalVar.set_value('GEN_TYPE', 'Mysql')
-    elif type == GenType.PG:
-        globalVar.set_value('GEN_TYPE', 'PG')
-    else:
-        globalVar.set_value('GEN_TYPE', 'DuckDB')
-    
-    BASE_PATH = globalVar.get_value('BASE_PATH')
-    OUT_NAME = globalVar.get_value('OUT_NAME')
-    OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
-    COST_NAME = globalVar.get_value('COST_NAME')
-    REWRITE_TIME = globalVar.get_value('REWRITE_TIME')
-    start = time.time()
-    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=base, mode=mode, type=type)
-    end = time.time()
-    with open(BASE_PATH + REWRITE_TIME, 'w+') as f:
-        print('Parser time(s): ', end-start)
-        f.write('Parser time(s): ' + str(end-start) + '\n')
+app = Flask(__name__)
+
+@app.route('/python-api', methods=['POST'])
+def pass2Java():
+    # setting for demo response
+    responseType = 1
+    response = None
+    response_data = {
+        "data": []
+    }
+    if responseType == 1:
+        response = request.get_json()
+        if response['message'] == 'success':
+            response = response['data']
+    optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=2, mode=0, type=GenType.PG, response=response, responseType=responseType)
+
     IRmode = IRType.Report if not Agg else IRType.Aggregation
     IRmode = IRType.Level_K if topK and topK.mode == 0 else IRmode
     IRmode = IRType.Product_K if topK and topK.mode == 1 else IRmode
-    # sign for whether process all JT
-    optFlag = False
-    if optFlag:
-
-        cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], optJT)
-        costOutName = COST_NAME.split('.')[0] + 'opt' + '.' + COST_NAME.split('.')[1]
-        costout = open(BASE_PATH + costOutName, 'w+')
-        costout.write(str(cost_height) + '\n' + str(cost_fanout) + '\n' + str(cost_estimate))
-        costout.close()
+    
+    fields = ['index', 'hight', 'width', 'estimate'] 
+    cost_stat = PQ()
+    # NOTE: Change the number of MAXIMUM generated plans
+    total_number = 8
+    fix_number, nonfix_number = total_number // 2, total_number // 2
+    fix_iter, nonfix_iter = 0, 0
+    best_res_nonfix, best_res_fix = [], []
+    all_res = []
+    has_nonfix: bool = False
         
-        if IRmode == IRType.Report:
-            if globalVar.get_value('YANNA'):
-                semiUp, semiDown, lastUp, finalResult = yaGenerateIR(optJT, optCOMP, outputVariables, computationList)
-                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_YA_NAME, genType=type, isAgg=False)
-            else:
-                reduceList, enumerateList, finalResult = generateIR(optJT, optCOMP, outputVariables, computationList)
-                codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, isFull=optJT.isFull, genType=type)
-        elif IRmode == IRType.Aggregation:
-            if globalVar.get_value('YANNA'):
-                semiUp, semiDown, lastUp, finalResult = yaGenerateIR(optJT, optCOMP, outputVariables, computationList, isAgg=True, Agg=Agg)
-                codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + 'opt' +OUT_YA_NAME, genType=type, isAgg=True)
-            else:
-                aggList, reduceList, enumerateList, finalResult = generateAggIR(optJT, optCOMP, outputVariables, computationList, Agg)
-                codeGen(reduceList, enumerateList, finalResult, BASE_PATH + 'opt' +OUT_NAME, aggList=aggList, isFreeConnex=optJT.isFreeConnex, Agg=Agg, isFull=optJT.isFull, genType=type)
-        # NOTE: No comparison for TopK yet
-        elif IRmode == IRType.Level_K:
-            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
-            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Level_K, genType=topK.genType)
-        elif IRmode == IRType.Product_K:
-            reduceList, enumerateList, finalResult = generateTopKIR(optJT, outputVariables, computationList, IRmode=IRType.Product_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
-            codeGenTopK(reduceList, enumerateList, finalResult,  BASE_PATH + 'opt' +OUT_NAME, IRmode=IRType.Product_K, genType=topK.genType)  
-    else:
-        fields = ['index', 'hight', 'width', 'estimate'] 
-        cost_stat = PQ()
-        # NOTE: Change the number of MAXIMUM generated plans
-        total_number = 6
-        fix_number, nonfix_number = total_number // 2, total_number // 2
-        fix_iter, nonfix_iter = 0, 0
-        best_res_nonfix, best_res_fix = [], []
-        all_res = []
-        has_nonfix: bool = False
-        
-        for jt, comp, index in allRes:
-            cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
-            cost_stat.put((cost_estimate, jt, comp, index))
-            all_res.append([index, cost_height, cost_fanout, cost_estimate])
-            if not has_nonfix and not jt.fixRoot:
-                has_nonfix = True
+    for jt, comp, index in allRes:
+        queries = ""
+        cost_height, cost_fanout, cost_estimate = getEstimation(globalVar.get_value('DDL_NAME').split('.')[0], jt)
+        cost_stat.put((cost_estimate, jt, comp, index))
+        all_res.append([index, cost_height, cost_fanout, cost_estimate])
+        if not has_nonfix and not jt.fixRoot:
+            has_nonfix = True
 
         if not has_nonfix:
             fix_number = total_number
@@ -471,40 +415,90 @@ if __name__ == '__main__':
                 if IRmode == IRType.Report:
                     if globalVar.get_value('YANNA'):
                         semiUp, semiDown, lastUp, finalResult = yaGenerateIR(jt, comp, outputVariables, computationList)
-                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outYaName, genType=type, isAgg=False)
+                        queries = codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outYaName, genType=type, isAgg=False)
                     else:
                         reduceList, enumerateList, finalResult = generateIR(jt, comp, outputVariables, computationList)
-                        codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, isFull=jt.isFull, genType=type)
+                        queries = codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, isFull=jt.isFull, genType=type)
                 elif IRmode == IRType.Aggregation:
                     Agg.initDoneFlag()
                     if globalVar.get_value('YANNA'):
                         semiUp, semiDown, lastUp, finalResult = yaGenerateIR(jt, comp, outputVariables, computationList, isAgg=True, Agg=Agg)
-                        codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outYaName, genType=type, isAgg=True)
+                        queries = codeGenYa(semiUp, semiDown, lastUp, finalResult, BASE_PATH + outYaName, genType=type, isAgg=True)
                     else:
                         aggList, reduceList, enumerateList, finalResult = generateAggIR(jt, comp, outputVariables, computationList, Agg)
-                        codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, isFull=jt.isFull, genType=type)
+                        queries = codeGen(reduceList, enumerateList, finalResult, BASE_PATH + outName, aggList=aggList, isFreeConnex=jt.isFreeConnex, Agg=Agg, isFull=jt.isFull, genType=type)
                 # NOTE: No comparison for TopK yet
                 elif IRmode == IRType.Level_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Level_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
-                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Level_K, genType=topK.genType)
+                    queries = codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Level_K, genType=topK.genType)
                 elif IRmode == IRType.Product_K:
                     reduceList, enumerateList, finalResult = generateTopKIR(jt, outputVariables, computationList, IRmode=IRType.Product_K, base=topK.base, DESC=topK.DESC, limit=topK.limit)
-                    codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Product_K, genType=topK.genType)
+                    queries = codeGenTopK(reduceList, enumerateList, finalResult, BASE_PATH + outName, IRmode=IRType.Product_K, genType=topK.genType)
 
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + str(index))
-        with open(BASE_PATH + COST_NAME, 'w+') as f:
-            write = csv.writer(f)
-            write.writerow(fields)
-            write.writerows(all_res)
-            write.writerow(best_res_nonfix)
-            write.writerow(best_res_fix)
 
-    end2 = time.time()
-    with open(BASE_PATH + REWRITE_TIME, 'a+') as f:
-        print("Rewrite time(s): " + str(end2-end) + "\n")
-        print("Total time(s): " + str(end2-start) + "\n")
-        print("Total plans: " + str(len(allRes)))
-        f.write("Rewrite time(s): " + str(end2-end) + '\n')
+        temp_res = {"index": index, "queries": queries}
+        response_data["data"].append(temp_res)
+    
+    return jsonify(response_data)
+
+
+if __name__ == '__main__':
+    
+    base, mode, type = 2, 0, GenType.PG
+    ddl_contend, query_contend = "CREATE table T(a integer, b integer);", "SELECT * FROM T"
+    globalVar._init()
+    globalVar.set_value('QUERY_NAME', 'query.sql')
+    globalVar.set_value('OUT_NAME', 'rewrite.sql')
+    globalVar.set_value('OUT_YA_NAME', 'rewriteYa.sql')
+    globalVar.set_value('COST_NAME', 'cost.csv')
+    globalVar.set_value('GEN_TYPE', 'DuckDB')
+    globalVar.set_value('YANNA', False)
+    if globalVar.get_value("GEN_TYPE") != 'PG':
+        globalVar.set_value('PLAN_NAME', 'plan.json')
+    else:
+        globalVar.set_value('PLAN_NAME', 'plan_pg.json')
+    # code debug keep here
+    globalVar.set_value('BASE_PATH', 'query/graph/q1a/')
+    globalVar.set_value('DDL_NAME', "graph.ddl")
+    globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
+    # auto-rewrite keep here
+    '''
+    arguments = docopt(__doc__)
+    globalVar.set_value('BASE_PATH', arguments['<query>'] + '/')
+    globalVar.set_value('DDL_NAME', arguments['<ddl>'] + '.ddl')
+    base = int(arguments['--base'])
+    mode=int(arguments['--mode'])
+    yanna=True if arguments['--yanna'] == 'Y' else False
+    globalVar.set_value('YANNA', yanna)
+    ddl_contend = arguments['--ddl_contend']
+    query_contend = arguments['--query_contend']
+    globalVar.set_value('DDL_CONTEND', ddl_contend)
+    globalVar.set_value('QUERY_CONTEND', query_contend)
+    
+    if arguments['--genType'] == 'M':
+        type=GenType.Mysql
+    elif arguments['--genType'] == 'D':
+        type=GenType.DuckDB
+    else:
+        type=GenType.PG
+    if type == GenType.Mysql:
+        globalVar.set_value('GEN_TYPE', 'Mysql')
+    elif type == GenType.PG:
+        globalVar.set_value('GEN_TYPE', 'PG')
+    else:
+        globalVar.set_value('GEN_TYPE', 'DuckDB')
+    '''
+    BASE_PATH = globalVar.get_value('BASE_PATH')
+    OUT_NAME = globalVar.get_value('OUT_NAME')
+    OUT_YA_NAME = globalVar.get_value('OUT_YA_NAME')
+    COST_NAME = globalVar.get_value('COST_NAME')
+    REWRITE_TIME = globalVar.get_value('REWRITE_TIME')
+    
+    app.run(host='0.0.0.0', port=8000)
+    
+
+    
     

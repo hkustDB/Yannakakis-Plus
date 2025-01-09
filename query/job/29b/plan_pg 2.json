@@ -1,0 +1,81 @@
+{
+    "relation": "cn",
+    "children": [
+        {
+            "relation": "it3",
+            "children": [
+                {
+                    "relation": "pi",
+                    "children": [
+                        {
+                            "relation": "cc",
+                            "children": [
+                                {
+                                    "relation": "cct2",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "cct1",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "k",
+                                    "children": [
+                                        {
+                                            "relation": "mk",
+                                            "children": [
+                                                {
+                                                    "relation": "it",
+                                                    "children": [
+                                                        {
+                                                            "relation": "chn",
+                                                            "children": [
+                                                                {
+                                                                    "relation": "rt",
+                                                                    "children": [
+                                                                        {
+                                                                            "relation": "mc",
+                                                                            "children": [
+                                                                                {
+                                                                                    "relation": "n",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "relation": "an",
+                                                                                            "children": []
+                                                                                        },
+                                                                                        {
+                                                                                            "relation": "ci",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "relation": "t",
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "relation": "mi",
+                                                                                                            "children": []
+                                                                                                        }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

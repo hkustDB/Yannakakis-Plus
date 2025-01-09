@@ -12,6 +12,7 @@ END = ';\n'
 
 def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union[list[AggReducePhase], list[Join2tables]], finalResult: str, outPath: str, genType: GenType = GenType.DuckDB, isAgg: bool = False):
     outFile = open(outPath, 'w')
+    queries = ""
 
     for semi in semiUp:
         for prepare in semi.prepareView:
@@ -23,6 +24,7 @@ def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union
                 line += ' and '.join(prepare.whereCondList) + END
             else:   # TableAgg
                 line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + prepare.fromTable + ', ' + ', '.join(prepare.joinTableList) + ' where ' + ' and '.join(prepare.whereCondList) + END
+            queries += line
             outFile.write(line)
 
         if semi.semiView is not None and not 'Aux' in semi.semiView.viewName:
@@ -42,6 +44,7 @@ def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union
                 else:
                     line += ' and '
             line += ' and '.join(semi.semiView.outerWhereCondList) + END
+            queries += line
             outFile.write(line)
 
     for semi in semiDown:
@@ -61,7 +64,7 @@ def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union
             else:
                 line += ' and '
         line += ' and '.join(semi.outerWhereCondList) + END
-
+        queries += line
         outFile.write(line)
 
     for last in lastUp:
@@ -71,6 +74,7 @@ def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union
             if len(last.aggView.groupBy):
                 line += ' group by ' + ','.join(last.aggView.groupBy)
             line += END
+            queries += line
             outFile.write(line)
             if 'Join' in last.aggJoin.viewName:
                 line = BEGIN + last.aggJoin.viewName + ' as select ' + transSelectData(last.aggJoin.selectAttrs, last.aggJoin.selectAttrAlias) + ' from '
@@ -85,6 +89,7 @@ def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union
                     line += last.aggJoin.joinTable
                 line += ' where ' if len(last.aggJoin.whereCondList) else ''
                 line += ' and '.join(last.aggJoin.whereCondList) + END
+                queries += line
                 outFile.write(line)
         else:
             line = BEGIN + last.viewName + ' as select ' + transSelectData(last.selectAttrs, last.selectAttrAlias) + ' from '
@@ -95,7 +100,10 @@ def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union
                 joinSentence += ', ' + last.joinTable
             whereSentence = last.joinCond + (' and ' if last.joinCond != '' and len(last.whereCondList) else '') + ' and '.join(last.whereCondList)
             line += joinSentence + ((' where ' + whereSentence) if whereSentence != '' else '') + END
+            queries += line
             outFile.write(line)
 
+    queries += finalResult
     outFile.write(finalResult)
     outFile.close()
+    return queries

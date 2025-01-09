@@ -1,7 +1,7 @@
-create or replace view g1 as select Graph.src as v7, Graph.dst as v2, v8 from Graph, (SELECT src, COUNT(*) AS v8 FROM Graph GROUP BY src) AS c1 where Graph.src = c1.src and v8<2;
-create or replace view semiJoinView7627369833810680766 as select src as v2, dst as v4 from Graph AS g2 where (src) in (select v2 from g1);
-create or replace view g3 as select Graph.src as v4, Graph.dst as v6, v10 from Graph, (SELECT src, COUNT(*) AS v10 FROM Graph GROUP BY src) AS c2 where Graph.dst = c2.src;
-create or replace view semiJoinView6077623104081581704 as select v4, v6, v10 from g3 where (v4) in (select v4 from semiJoinView7627369833810680766);
-create or replace view semiEnum2569224710753344310 as select v2, v6, v10, v4 from semiJoinView6077623104081581704 join semiJoinView7627369833810680766 using(v4);
-create or replace view semiEnum6682564033682477993 as select v2, v7, v6, v10, v8, v4 from semiEnum2569224710753344310 join g1 using(v2);
-select v7, v2, v4, v6, v8, v10 from semiEnum6682564033682477993;
+create or replace view bag164 as select g1.dst as v2, g2.dst as v4, g1.src as v6 from Graph as g1, Graph as g2, Graph as g3 where g1.dst=g2.src and g2.dst=g3.src and g3.dst=g1.src;
+create or replace view minView242038739598304311 as select v2, ((v6 + v2) + v4) as mfL5149293421847384589 from bag164;
+create or replace view joinView7337953160279779502 as select src as v2, dst as v12, mfL5149293421847384589 from Graph AS g7, minView242038739598304311 where g7.src=minView242038739598304311.v2;
+create or replace view bag162 as select g5.dst as v10, g4.src as v12, g4.dst as v8 from Graph as g4, Graph as g5, Graph as g6 where g4.dst=g5.src and g5.dst=g6.src and g6.dst=g4.src;
+create or replace view minView2360617349282300890 as select v12, ((v12 + v8) + v10) as mfR2162038404136278361 from bag162;
+create or replace view joinView4494497198944197876 as select distinct v2, v12 from joinView7337953160279779502 join minView2360617349282300890 using(v12) where mfL5149293421847384589<mfR2162038404136278361;
+select distinct v2, v12 from joinView4494497198944197876;

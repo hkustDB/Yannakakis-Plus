@@ -225,6 +225,8 @@ def cal_cost(statistics: dict[str, list[list[int, int]]], jt: JoinTree):
             else:
                 staC = statistics[node.source][0]
         
+        if len(staC) == 0:
+            staC = [1, 1]
         return staP, staC, staP[0]
 
     for node in all_jt_nodes:

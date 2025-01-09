@@ -94,6 +94,9 @@ class TreeNode:
 '''only one Support Relation now, jar code only provide one support relation'''
 class AuxTreeNode(TreeNode):
     def __init__(self, id: int, source: str, cols: list[str], col2vars: list[list[str], list[str]], alias: str, reserve: list[str], hintJoinOrder: list[int], supRelationId: int, reduceOrder: int = maxsize):
+        if '[' in alias:
+            alias = alias.replace('[', '').replace(']', '')
+            alias = alias + 'Aux' + str(randint(0, 100))
         super().__init__(id, source, cols, col2vars, alias, reserve, hintJoinOrder, reduceOrder)
         self.relationType = RelationType.AuxiliaryRelation
         self.supRelationId = supRelationId # supporting TreeNode Id

@@ -1,0 +1,46 @@
+{
+    "relation": "chn",
+    "children": [
+        {
+            "relation": "ci",
+            "children": [
+                {
+                    "relation": "n",
+                    "children": []
+                },
+                {
+                    "relation": "cct2",
+                    "children": [
+                        {
+                            "relation": "cc",
+                            "children": [
+                                {
+                                    "relation": "cct1",
+                                    "children": []
+                                },
+                                {
+                                    "relation": "t",
+                                    "children": [
+                                        {
+                                            "relation": "kt",
+                                            "children": []
+                                        },
+                                        {
+                                            "relation": "mk",
+                                            "children": [
+                                                {
+                                                    "relation": "k",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

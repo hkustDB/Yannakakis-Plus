@@ -1046,10 +1046,13 @@ def buildEnumeratePhase(previousView: Action, corReducePhase: ReducePhase, JT: J
                 leftMf = alias
             elif 'mfR' in alias:
                 rightMf = alias
+        # FIXME: Comparison attributes change
+        '''
         if corReducePhase.reduceDirection == Direction.Left and leftMf == oriMfTo:
             leftMf = oriMfFrom
         elif corReducePhase.reduceDirection == Direction.Right and rightMf == oriMfTo:
             rightMf = oriMfFrom
+        '''
         # used as stageEnd whereCond as well
         if leftMf == '':
             leftMf = corReducePhase.incidentComp[0].left
