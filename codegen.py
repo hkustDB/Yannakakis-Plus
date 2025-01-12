@@ -5,7 +5,7 @@ from enumsType import *
 from treenode import *
 import globalVar
 
-BEGIN = 'create or replace view '
+BEGIN = 'create or replace TEMP view '
 END = ';\n'
 
 def transSelectDataWrap(selectAttrs: list[str], selectAttrAlias: list[str], row_numer: bool = False, max_rn: bool = False) -> str:

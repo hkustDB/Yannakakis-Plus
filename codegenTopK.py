@@ -3,7 +3,7 @@ from levelK import *
 from productK import *
 from enumsType import *
 
-BEGIN = 'create or replace view '
+BEGIN = 'create or replace TEMP view '
 DROP = 'drop table if exists '
 END = ');\n'
 BEGIN_TABLE = 'create table '

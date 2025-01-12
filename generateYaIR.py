@@ -1032,7 +1032,7 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
                     raise NotImplementedError("Other output variables exists! ")
                 
         if globalVar.get_value('GEN_TYPE') == 'Mysql':
-            finalResult = 'create or replace view res as select ' + ', '.join(selectName) + ' from ' + fromTable + (' group by ' + ', '.join(Agg.groupByVars) if not JT.isFreeConnex and len(Agg.groupByVars) else '') + ';\n'
+            finalResult = 'create or replace TEMP view res as select ' + ', '.join(selectName) + ' from ' + fromTable + (' group by ' + ', '.join(Agg.groupByVars) if not JT.isFreeConnex and len(Agg.groupByVars) else '') + ';\n'
             for id, alias in enumerate(selectName):
                 if 'as' in alias:
                     selectName[id] = alias.split(' as ')[1]
@@ -1058,7 +1058,7 @@ def yaGenerateIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: lis
             if JT.isFull:
                 finalResult = 'select sum(' + '+'.join(selectName) +') from ' + fromTable + ';\n'
             else:
-                finalResult = 'create or replace view res as select distinct ' + ', '.join(selectName) +' from ' + fromTable + ';\n'
+                finalResult = 'create or replace TEMP view res as select distinct ' + ', '.join(selectName) +' from ' + fromTable + ';\n'
                 finalResult += 'select sum(' + '+'.join(selectName) +') from res;\n'
         else:
             finalResult = 'select ' + ('distinct ' if not JT.isFull else '') + ', '.join(selectName) +' from ' + fromTable + ';\n'

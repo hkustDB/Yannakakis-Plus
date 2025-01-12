@@ -7,7 +7,7 @@ from codegen import transSelectData
 
 import globalVar
 
-BEGIN = 'create or replace view '
+BEGIN = 'create or replace TEMP view '
 END = ';\n'
 
 def codeGenYa(semiUp: list[SemiUpPhase], semiDown: list[SemiJoin], lastUp: Union[list[AggReducePhase], list[Join2tables]], finalResult: str, outPath: str, genType: GenType = GenType.DuckDB, isAgg: bool = False):

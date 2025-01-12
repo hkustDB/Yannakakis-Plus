@@ -972,7 +972,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
             if ret != 0: prepareView.extend(ret)
         
         buildSent = ''
-        BEGIN = 'create or replace view '
+        BEGIN = 'create or replace TEMP view '
         for prepare in prepareView:
             if prepare.reduceType == ReduceType.CreateBagView:
                 line = BEGIN + prepare.viewName + ' as select ' + transSelectData(prepare.selectAttrs, prepare.selectAttrAlias) + ' from ' + ', '.join(prepare.joinTableList) + ((' where ' + ' and '.join(prepare.whereCondList)) if len(prepare.whereCondList) else '') + ';\n'
@@ -1282,7 +1282,7 @@ def generateAggIR(JT: JoinTree, COMP: dict[int, Comparison], outputVariables: li
                 raise NotImplementedError("Other output variables exists! ")
 
     if globalVar.get_value('GEN_TYPE') == 'Mysql':
-        finalResult = 'create or replace view res as select ' + ', '.join(selectName) + ' from '
+        finalResult = 'create or replace TEMP view res as select ' + ', '.join(selectName) + ' from '
     else:
         finalResult = 'select ' + ','.join(selectName) + ' from '
     

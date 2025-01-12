@@ -354,10 +354,27 @@ def pass2Java():
     response_data = {
         "data": []
     }
+    ddl_name = None
     if responseType == 1:
         response = request.get_json()
         if response['message'] == 'success':
+            ddl_name = response['ddl_name']
             response = response['data']
+            
+    if ddl_name is not None:
+        if ddl_name == 'graph':
+            globalVar.set_value('BASE_PATH', 'query/graph/q1a/')
+            globalVar.set_value('DDL_NAME', "graph.ddl")
+        elif ddl_name == 'tpch':
+            globalVar.set_value('BASE_PATH', 'query/tpch/q2/')
+            globalVar.set_value('DDL_NAME', "tpch.ddl")
+        elif ddl_name == 'lsqb':
+            globalVar.set_value('BASE_PATH', 'query/lsqb/q1/')
+            globalVar.set_value('DDL_NAME', "lsqb.ddl")
+        elif ddl_name == 'job':
+            globalVar.set_value('BASE_PATH', 'query/job/1a/')
+            globalVar.set_value('DDL_NAME', "job.ddl")
+        
     optJT, optCOMP, allRes, outputVariables, Agg, topK, computationList, table2vars = connect(base=2, mode=0, type=GenType.PG, response=response, responseType=responseType)
 
     IRmode = IRType.Report if not Agg else IRType.Aggregation
@@ -438,8 +455,11 @@ def pass2Java():
             except Exception as e:
                 traceback.print_exc()
                 print("Error JT: " + str(index))
-
-        temp_res = {"index": index, "queries": queries}
+        
+        node_stat = []
+        for id, node in jt.node.items():
+            node_stat.append([node.id, node.alias, node.trueSize, node.estimateSize])
+        temp_res = {"index": index, "queries": queries, "cost": cost_estimate, "node_stat": node_stat}
         response_data["data"].append(temp_res)
     
     return jsonify(response_data)
