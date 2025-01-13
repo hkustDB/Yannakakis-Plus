@@ -230,7 +230,7 @@ def connect(base: int, mode: int, type: GenType):
                     child.reduceOrder = len(node.hintJoinOrder) - node.hintJoinOrder.index(child.id)
         # c. parse comparison
         for compId, comp in enumerate(comparisons):
-            opName, path, left, right, cond, op = comp['opName'], comp['path'], comp['left'], comp['right'], comp['cond'], comp['op']
+            opName, path, left, right, cond, op = comp['op'], comp['path'], comp['left'], comp['right'], comp['cond'], comp['op']
             Compare = Comparison()
             Compare.setAttr(compId, opName, left, right, path, cond, op)
             leftAlias = JT.node[Compare.beginNodeId].cols
