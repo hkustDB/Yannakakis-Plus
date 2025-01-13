@@ -1,0 +1,13 @@
+create or replace view aggView2609586453505916783 as select site_id as v1, id as v11 from tag as t1 where name IN ('data-visualization','encryption','hex','influxdb','jquery-ui-droppable','portability','telerik-grid','thinking-sphinx');
+create or replace view aggJoin3411629030187910865 as select question_id as v17, site_id as v1 from tag_question as tq1, aggView2609586453505916783 where tq1.site_id=aggView2609586453505916783.v1 and tq1.tag_id=aggView2609586453505916783.v11;
+create or replace view aggView7928259776540121151 as select v17, v1, COUNT(*) as annot from aggJoin3411629030187910865 group by v17,v1;
+create or replace view aggJoin134083445948399914 as select site_id as v1, view_count as v23, owner_user_id as v25, annot from question as q1, aggView7928259776540121151 where q1.id=aggView7928259776540121151.v17 and q1.site_id=aggView7928259776540121151.v1 and view_count>=1 and view_count<=1000000;
+create or replace view aggView2398048676338043953 as select site_id as v1 from site as s where site_name= 'stackoverflow';
+create or replace view aggJoin6288090375537038541 as select v1, v23, v25, annot from aggJoin134083445948399914 join aggView2398048676338043953 using(v1);
+create or replace view aggView3285799276875880489 as select id as v37 from account as acc;
+create or replace view aggJoin4555045441458860517 as select id as v25, site_id as v1 from so_user as u1, aggView3285799276875880489 where u1.account_id=aggView3285799276875880489.v37;
+create or replace view aggView8444358505228920425 as select v1, v25, SUM(annot) as annot from aggJoin6288090375537038541 group by v1,v25;
+create or replace view aggJoin3567103593667616993 as select v25, v1, annot from aggJoin4555045441458860517 join aggView8444358505228920425 using(v1,v25);
+create or replace view aggView5056319636086129326 as select v1, v25, SUM(annot) as annot from aggJoin3567103593667616993 group by v1,v25;
+create or replace view aggJoin7890430831533412095 as select annot from badge as b1, aggView5056319636086129326 where b1.site_id=aggView5056319636086129326.v1 and b1.user_id=aggView5056319636086129326.v25;
+select SUM(annot) as v42 from aggJoin7890430831533412095;
