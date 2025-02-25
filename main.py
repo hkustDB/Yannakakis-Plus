@@ -350,8 +350,8 @@ if __name__ == '__main__':
     else:
         globalVar.set_value('PLAN_NAME', 'plan_pg.json')
     # code debug keep here
-    globalVar.set_value('BASE_PATH', 'query/se/1/')
-    globalVar.set_value('DDL_NAME', "se.ddl")
+    globalVar.set_value('BASE_PATH', 'query/graph/q1a/')
+    globalVar.set_value('DDL_NAME', "graph.ddl")
     globalVar.set_value('REWRITE_TIME', 'rewrite_time.txt')
     # auto-rewrite keep here
     
